@@ -13,6 +13,7 @@ Un parcours **à un bouton principal** : **Créer mon projet**. Le serveur orche
 | PATCH /api/v1/projects/{id} | Corriger la fiche (slug toujours unique) |
 | POST /api/v1/projects/{id}/setup | Reprise après échec partiel : identité + dépôt, **idempotent**, sans doublon |
 | POST /api/v1/forge-access | Toujours disponible pour reprise identité seule (preuves de corrélation inchangées) |
+| POST /api/v1/forge-access/reset-password | Réémet le secret Git de la **ForgeIdentity** de l’utilisateur connecté (aucun login client) ; affichage une seule fois dans le Hub |
 | POST /api/v1/projects/{id}/provision | Reprise dépôt seule (idempotent si `ready`) |
 | GET /api/v1/projects/{id}/repository | État, `clone_url`, `is_empty`, `current_sha` ; pas d’URL fictive |
 | POST /api/v1/projects/{id}/initialize | `{ "mode": "readme" \| "push_existing" }` — README/LICENSE/.gitignore via API Gitea, ou consignes de push |

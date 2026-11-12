@@ -78,7 +78,8 @@ export default function ProjectDetailPage() {
   }
 
   const project = detail.project;
-  const browseUrl = detail.repository?.browse_url ?? null;
+  const repository = detail.repository;
+  const repositoryReady = repository?.status === "ready";
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -92,7 +93,7 @@ export default function ProjectDetailPage() {
         canCreateTask={detail.access.canCreateTask}
         canAnalyze={detail.isOwner && detail.access.canAnalyze}
         canReview={detail.isOwner && detail.access.canReviewContributions}
-        browseUrl={browseUrl}
+        canOpenCode={Boolean(repositoryReady)}
         isBusy={detail.isBusy}
         onToggleStar={() => {
           void detail.toggleStar();
@@ -111,6 +112,7 @@ export default function ProjectDetailPage() {
           detail.setTab("contribute");
           setShowTaskForm(true);
         }}
+        onOpenCode={() => detail.setTab("code")}
       />
 
       <ProjectDetailTabs active={detail.tab} onChange={detail.setTab} />
@@ -119,7 +121,16 @@ export default function ProjectDetailPage() {
         <PresentationPanel project={project} />
       ) : null}
 
-      {detail.tab === "code" ? <CodePanel repository={detail.repository} /> : null}
+      {detail.tab === "code" ? (
+        <CodePanel
+          projectId={project.id}
+          projectTitle={project.title}
+          isOwner={detail.isOwner}
+          repositoryReady={Boolean(repositoryReady)}
+          namespace={repository?.namespace}
+          repoName={repository?.name}
+        />
+      ) : null}
 
       {detail.tab === "contribute" ? (
         <div className="flex flex-col gap-4">

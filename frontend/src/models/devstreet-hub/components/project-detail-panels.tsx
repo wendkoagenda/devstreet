@@ -1,4 +1,4 @@
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,10 +19,10 @@ import type {
   Project,
   ProjectMember,
   ProjectMemberWrite,
-  Repository,
   TaskWrite,
 } from "../schema";
 import type { Paginated } from "@/helpers/api/pagination";
+import { CodeBrowser } from "./code-browser";
 
 interface PresentationPanelProps {
   project: Project;
@@ -43,51 +43,44 @@ export function PresentationPanel({ project }: PresentationPanelProps) {
 }
 
 interface CodePanelProps {
-  repository: Repository | null;
+  projectId: number;
+  projectTitle: string;
+  isOwner: boolean;
+  repositoryReady: boolean;
+  namespace?: string | null;
+  repoName?: string | null;
 }
 
-export function CodePanel({ repository }: CodePanelProps) {
+export function CodePanel({
+  projectId,
+  projectTitle,
+  isOwner,
+  repositoryReady,
+  namespace,
+  repoName,
+}: CodePanelProps) {
   const { t } = useTranslation();
-  const ready = repository?.status === "ready";
-  const browseUrl = repository?.browse_url ?? null;
-  const cloneUrl = repository?.clone_url ?? null;
 
-  return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="text-sm font-bold text-foreground">{t("hub.detail.code.title")}</h2>
-      <p className="text-sm text-muted-foreground">{t("hub.detail.code.hint")}</p>
-      {!ready ? (
+  if (!repositoryReady) {
+    return (
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+        <h2 className="text-sm font-bold text-foreground">{t("hub.detail.code.title")}</h2>
         <p className="rounded-lg border border-dashed border-border bg-secondary/60 px-3 py-3 text-xs text-muted-foreground">
           {t("hub.detail.code.not_ready")}
         </p>
-      ) : (
-        <dl className="grid gap-3 text-xs sm:grid-cols-2">
-          <div className="rounded-lg border border-border bg-secondary/50 p-3">
-            <dt className="mb-1 text-muted-foreground">{t("hub.detail.code.branch")}</dt>
-            <dd className="font-semibold text-foreground">
-              {repository?.default_branch || "main"}
-            </dd>
-          </div>
-          <div className="rounded-lg border border-border bg-secondary/50 p-3">
-            <dt className="mb-1 text-muted-foreground">{t("hub.detail.code.status")}</dt>
-            <dd className="font-semibold text-success">{t("hub.detail.code.ready")}</dd>
-          </div>
-          {cloneUrl ? (
-            <div className="sm:col-span-2 rounded-lg border border-border bg-secondary/50 p-3">
-              <dt className="mb-1 text-muted-foreground">{t("hub.detail.code.clone")}</dt>
-              <dd className="break-all font-medium text-foreground">{cloneUrl}</dd>
-            </div>
-          ) : null}
-        </dl>
-      )}
-      {browseUrl ? (
-        <Button asChild className="h-9 w-fit gap-1.5 rounded-lg text-xs font-semibold">
-          <a href={browseUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink aria-hidden className="size-3.5" />
-            {t("hub.detail.actions.open_code")}
-          </a>
-        </Button>
-      ) : null}
+      </section>
+    );
+  }
+
+  return (
+    <section className="flex flex-col gap-3">
+      <CodeBrowser
+        projectId={projectId}
+        projectTitle={projectTitle}
+        isOwner={isOwner}
+        namespaceHint={namespace}
+        repoNameHint={repoName}
+      />
     </section>
   );
 }

@@ -195,6 +195,60 @@ class ForgeIdentityProvisioningTests(DevStreetHubAPITestCase):
         )
         self.assertNotIn(secret, blob)
 
+    def test_reset_password_uses_linked_identity_not_client_login(self):
+        first = self.client.post("/api/v1/forge-access")
+        self.assertEqual(first.status_code, 200)
+        identity = ForgeIdentity.objects.get(user=self.aicha)
+        real_login = identity.login
+
+        response = self.client.post(
+            "/api/v1/forge-access/reset-password",
+            {"login": "attacker-chosen-login"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertTrue(response.data["reset"])
+        self.assertEqual(response.data["login"], real_login)
+        self.assertNotEqual(response.data["login"], "attacker-chosen-login")
+        self.assertEqual(response.data["initial_password"], "reissued-secret")
+        self.assertFalse(response.data["change_password_required"])
+        self.forge.reissue_password.assert_called()
+        kwargs = self.forge.reissue_password.call_args.kwargs
+        self.assertEqual(kwargs["login"], real_login)
+        self.assertEqual(kwargs["email"], self.aicha.email)
+        self.assertFalse(kwargs["must_change_password"])
+        # Secret jamais persisté localement.
+        identity.refresh_from_db()
+        self.assertNotIn("reissued-secret", str(identity.__dict__))
+
+    def test_reset_password_requires_linked_identity_and_permission(self):
+        self.assertEqual(
+            self.client.post("/api/v1/forge-access/reset-password").status_code,
+            409,
+        )
+        self.client.post("/api/v1/forge-access")
+        self.login(self.outsider)
+        self.assertEqual(
+            self.client.post("/api/v1/forge-access/reset-password").status_code,
+            403,
+        )
+        self.login(self.aicha)
+        self.forge.reissue_password.side_effect = ExternalUnavailable()
+        self.assertEqual(
+            self.client.post("/api/v1/forge-access/reset-password").status_code,
+            503,
+        )
+
+    def test_reset_password_conflict_identity_is_rejected(self):
+        self.client.post("/api/v1/forge-access")
+        identity = ForgeIdentity.objects.get(user=self.aicha)
+        identity.status = ForgeIdentity.STATUS_CONFLICT
+        identity.conflict_reason = "Conflit de test"
+        identity.save(update_fields=["status", "conflict_reason"])
+        response = self.client.post("/api/v1/forge-access/reset-password")
+        self.assertEqual(response.status_code, 409)
+        self.forge.reissue_password.assert_not_called()
+
 
 class ForgeIdentityConcurrencyTests(TransactionTestCase):
     def setUp(self):

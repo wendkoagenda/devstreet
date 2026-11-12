@@ -216,6 +216,7 @@ export default function CreateProjectPage() {
               forgeLogin={wizard.forgeLogin}
               hasInitialPassword={wizard.hasInitialPassword}
               isBusy={wizard.isBusy}
+              isResettingPassword={wizard.isResettingPassword}
               setupFailed={wizard.setupFailed}
               initMode={wizard.initMode}
               onRetrySetup={() => {
@@ -228,6 +229,9 @@ export default function CreateProjectPage() {
                 void wizard.choosePushExisting();
               }}
               onDismissPassword={wizard.dismissInitialPassword}
+              onResetPassword={() => {
+                void wizard.resetGitPassword();
+              }}
             />
           ) : null}
 

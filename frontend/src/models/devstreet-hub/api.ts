@@ -12,6 +12,10 @@ import type {
   ContributionWrite,
   Discussion,
   DiscussionWrite,
+  CodeBlob,
+  CodeBranch,
+  CodeSummary,
+  CodeTree,
   ForgeAccess,
   InitializeRepositoryPayload,
   InitializeRepositoryResult,
@@ -219,6 +223,14 @@ export const devstreetHubApi = createApi({
       }),
     }),
 
+    resetForgePassword: builder.mutation<ForgeAccess, void>({
+      query: () => ({
+        url: "/forge-access/reset-password",
+        method: "POST",
+        body: {},
+      }),
+    }),
+
     provisionRepository: builder.mutation<Repository, number>({
       query: (projectId) => ({
         url: `/projects/${projectId}/provision`,
@@ -400,6 +412,33 @@ export const devstreetHubApi = createApi({
         { type: "Contributions", id: contributionId },
       ],
     }),
+
+    getProjectCodeSummary: builder.query<CodeSummary, number>({
+      query: (projectId) => `/projects/${projectId}/code/summary`,
+    }),
+
+    getProjectCodeBranches: builder.query<CodeBranch[], number>({
+      query: (projectId) => `/projects/${projectId}/code/branches`,
+    }),
+
+    getProjectCodeTree: builder.query<
+      CodeTree,
+      { projectId: number; ref?: string; path?: string }
+    >({
+      query: ({ projectId, ref, path }) =>
+        `/projects/${projectId}/code/tree${toQueryString({
+          ref: ref || undefined,
+          path: path || undefined,
+        })}`,
+    }),
+
+    getProjectCodeBlob: builder.query<
+      CodeBlob,
+      { projectId: number; ref: string; path: string }
+    >({
+      query: ({ projectId, ref, path }) =>
+        `/projects/${projectId}/code/blob${toQueryString({ ref, path })}`,
+    }),
   }),
 });
 
@@ -421,6 +460,7 @@ export const {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useProvisionForgeAccessMutation,
+  useResetForgePasswordMutation,
   useProvisionRepositoryMutation,
   useResumeProjectSetupMutation,
   useInitializeRepositoryMutation,
@@ -438,4 +478,8 @@ export const {
   useGetProjectProfileQuery,
   useGetProjectEvidenceQuery,
   useLazyGetProjectEvidenceQuery,
+  useGetProjectCodeSummaryQuery,
+  useGetProjectCodeBranchesQuery,
+  useGetProjectCodeTreeQuery,
+  useGetProjectCodeBlobQuery,
 } = devstreetHubApi;

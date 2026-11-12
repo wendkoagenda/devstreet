@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckSquare,
+  Code2,
   ExternalLink,
   HelpCircle,
   Send,
@@ -78,7 +79,7 @@ export default function TaskContributionPage() {
 
   const task = detail.task;
   const project = detail.project;
-  const browseUrl = project.repository?.browse_url ?? null;
+  const repositoryReady = project.repository?.status === "ready";
   const criteria = task.acceptance_criteria ?? [];
   const sources = task.source_references ?? [];
   const closed = task.status === "closed";
@@ -108,12 +109,12 @@ export default function TaskContributionPage() {
           {task.description || t("hub.task.no_description")}
         </p>
         <div className="flex flex-wrap gap-2">
-          {browseUrl ? (
+          {repositoryReady ? (
             <Button asChild variant="outline" className="h-9 gap-1.5 rounded-lg text-xs">
-              <a href={browseUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink aria-hidden className="size-3.5" />
+              <Link to={`/hub/projects/${project.id}?tab=code`}>
+                <Code2 aria-hidden className="size-3.5" />
                 {t("hub.detail.actions.open_code")}
-              </a>
+              </Link>
             </Button>
           ) : null}
           {detail.access.canDiscuss ? (

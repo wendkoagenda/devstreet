@@ -16,12 +16,14 @@ interface CreateProjectRepoSectionProps {
   forgeLogin: string | null;
   hasInitialPassword: boolean;
   isBusy: boolean;
+  isResettingPassword: boolean;
   setupFailed: boolean;
   initMode: "readme" | "push_existing" | null;
   onRetrySetup: () => void;
   onInitReadme: () => void;
   onInitPush: () => void;
   onDismissPassword: () => void;
+  onResetPassword: () => void;
 }
 
 async function copyText(value: string): Promise<boolean> {
@@ -43,19 +45,23 @@ export function CreateProjectRepoSection({
   forgeLogin,
   hasInitialPassword,
   isBusy,
+  isResettingPassword,
   setupFailed,
   initMode,
   onRetrySetup,
   onInitReadme,
   onInitPush,
   onDismissPassword,
+  onResetPassword,
 }: CreateProjectRepoSectionProps) {
   const { t } = useTranslation();
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCli, setCopiedCli] = useState(false);
   const [copiedPassword, setCopiedPassword] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const focused = progressStep === "identity" || progressStep === "repository" || progressStep === "init";
   const initialPassword = forgeAccess?.initial_password ?? null;
+  const showSecretPanel = Boolean(hasInitialPassword && initialPassword);
   const showInitChoices = repoReady && repoEmpty && !initMode;
   const showPushCommands = Boolean(initMode === "push_existing" || (repoReady && !repoEmpty && initMode !== "readme"));
 
@@ -257,19 +263,67 @@ export function CreateProjectRepoSection({
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <KeyRound aria-hidden className="size-4" />
         </div>
-        <div className="flex flex-col gap-1 text-xs">
+        <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
           <span className="font-semibold text-foreground">
             {t("hub.create.repo.auth_title")}
           </span>
           <p className="leading-relaxed text-muted-foreground">
-            {t("hub.create.repo.auth_text", {
-              login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
-            })}
+            {showSecretPanel
+              ? t("hub.create.repo.auth_text_with_secret", {
+                  login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
+                })
+              : t("hub.create.repo.auth_text_no_secret", {
+                  login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
+                })}
           </p>
+          {!showSecretPanel && forgeLogin ? (
+            confirmReset ? (
+              <div className="mt-1 flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning-soft/80 p-3">
+                <p className="leading-relaxed text-foreground">
+                  {t("hub.create.repo.reset_confirm_text")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    className="h-8 text-xs"
+                    disabled={isBusy || isResettingPassword}
+                    onClick={() => {
+                      setConfirmReset(false);
+                      onResetPassword();
+                    }}
+                  >
+                    {isResettingPassword
+                      ? t("hub.create.repo.resetting")
+                      : t("hub.create.repo.reset_confirm")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    disabled={isResettingPassword}
+                    onClick={() => setConfirmReset(false)}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-1 h-8 w-fit gap-1.5 text-xs"
+                disabled={isBusy || isResettingPassword}
+                onClick={() => setConfirmReset(true)}
+              >
+                <KeyRound aria-hidden className="size-3.5" />
+                {t("hub.create.repo.reset_password")}
+              </Button>
+            )
+          ) : null}
         </div>
       </div>
 
-      {hasInitialPassword && initialPassword ? (
+      {showSecretPanel && initialPassword ? (
         <div
           role="dialog"
           aria-labelledby="forge-password-title"
@@ -282,12 +336,16 @@ export function CreateProjectRepoSection({
                 id="forge-password-title"
                 className="text-sm font-bold text-foreground"
               >
-                {t("hub.create.repo.password_panel_title")}
+                {forgeAccess?.reset
+                  ? t("hub.create.repo.password_reset_panel_title")
+                  : t("hub.create.repo.password_panel_title")}
               </h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                {forgeAccess?.password_recovery_required
-                  ? t("hub.create.repo.password_recovery_text")
-                  : t("hub.create.repo.password_panel_text")}
+                {forgeAccess?.reset
+                  ? t("hub.create.repo.password_reset_panel_text")
+                  : forgeAccess?.password_recovery_required
+                    ? t("hub.create.repo.password_recovery_text")
+                    : t("hub.create.repo.password_panel_text")}
               </p>
               <p className="mt-3 break-all rounded-md border border-border bg-card px-3 py-2 font-sans text-sm font-semibold text-foreground">
                 {initialPassword}

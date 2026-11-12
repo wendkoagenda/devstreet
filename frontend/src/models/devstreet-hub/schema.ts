@@ -75,11 +75,12 @@ export const projectWriteSchema = z.object({
 
 export const forgeAccessSchema = z.object({
   login: z.string(),
-  created: z.boolean(),
+  created: z.boolean().optional().default(false),
   initial_password: z.string().optional(),
   change_password_required: z.boolean().optional(),
   recovered: z.boolean().optional(),
   password_recovery_required: z.boolean().optional(),
+  reset: z.boolean().optional(),
 });
 
 export const projectSetupSchema = z.object({
@@ -200,6 +201,89 @@ export type ProjectDetailTab =
   | "code"
   | "contribute"
   | "team";
+
+export type CodeViewMode = "tree" | "blob";
+
+export const codeCommitSchema = z.object({
+  sha: z.string(),
+  short_sha: z.string(),
+  message: z.string(),
+  author_name: z.string().nullable().optional(),
+  authored_at: z.string().nullable().optional(),
+});
+
+export const codeLanguageSchema = z.object({
+  name: z.string(),
+  bytes: z.number(),
+  percent: z.number(),
+});
+
+export const codeSummarySchema = z.object({
+  default_branch: z.string(),
+  is_empty: z.boolean(),
+  clone_url: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  size_kib: z.number().nullable().optional(),
+  stats: z.object({
+    commits: z.number().nullable().optional(),
+    branches: z.number().nullable().optional(),
+    tags: z.number().nullable().optional(),
+  }),
+  languages: z.array(codeLanguageSchema).default([]),
+  repository: repositorySchema.optional(),
+});
+
+export const codeBranchSchema = z.object({
+  name: z.string(),
+  commit: codeCommitSchema.nullable().optional(),
+});
+
+export const codeTreeEntrySchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  type: z.enum(["file", "dir"]),
+  size: z.number().nullable().optional(),
+  sha: z.string().nullable().optional(),
+});
+
+export const codeReadmeSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  content: z.string(),
+  truncated: z.boolean(),
+});
+
+export const codeTreeSchema = z.object({
+  ref: z.string(),
+  path: z.string(),
+  is_empty: z.boolean(),
+  entries: z.array(codeTreeEntrySchema),
+  latest_commit: codeCommitSchema.nullable().optional(),
+  readme: codeReadmeSchema.nullable().optional(),
+});
+
+export const codeBlobSchema = z.object({
+  ref: z.string(),
+  path: z.string(),
+  name: z.string(),
+  size: z.number(),
+  sha: z.string().nullable().optional(),
+  encoding: z.enum(["utf-8", "none", "base64"]),
+  content: z.string().nullable().optional(),
+  is_binary: z.boolean(),
+  is_too_large: z.boolean(),
+  language: z.string().nullable().optional(),
+  latest_commit: codeCommitSchema.nullable().optional(),
+});
+
+export type CodeCommit = z.infer<typeof codeCommitSchema>;
+export type CodeLanguage = z.infer<typeof codeLanguageSchema>;
+export type CodeSummary = z.infer<typeof codeSummarySchema>;
+export type CodeBranch = z.infer<typeof codeBranchSchema>;
+export type CodeTreeEntry = z.infer<typeof codeTreeEntrySchema>;
+export type CodeReadme = z.infer<typeof codeReadmeSchema>;
+export type CodeTree = z.infer<typeof codeTreeSchema>;
+export type CodeBlob = z.infer<typeof codeBlobSchema>;
 
 export type ProjectTasksParams = {
   page?: number;

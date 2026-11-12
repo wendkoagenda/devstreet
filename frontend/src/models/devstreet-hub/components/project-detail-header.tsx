@@ -1,4 +1,4 @@
-import { ExternalLink, MoreHorizontal, Sparkles } from "lucide-react";
+import { Code2, ExternalLink, MoreHorizontal, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -24,12 +24,13 @@ interface ProjectDetailHeaderProps {
   canCreateTask: boolean;
   canAnalyze: boolean;
   canReview: boolean;
-  browseUrl: string | null;
+  canOpenCode: boolean;
   isBusy: boolean;
   onToggleStar: () => void;
   onPublish: () => void;
   onArchive: () => void;
   onCreateTask: () => void;
+  onOpenCode: () => void;
 }
 
 export function ProjectDetailHeader({
@@ -42,12 +43,13 @@ export function ProjectDetailHeader({
   canCreateTask,
   canAnalyze,
   canReview,
-  browseUrl,
+  canOpenCode,
   isBusy,
   onToggleStar,
   onPublish,
   onArchive,
   onCreateTask,
+  onOpenCode,
 }: ProjectDetailHeaderProps) {
   const { t } = useTranslation();
   const demoUrl = project.demo_url?.trim() || null;
@@ -91,12 +93,15 @@ export function ProjectDetailHeader({
               </a>
             </Button>
           ) : null}
-          {browseUrl ? (
-            <Button asChild variant="outline" className="h-9 gap-1.5 rounded-lg text-xs font-semibold">
-              <a href={browseUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink aria-hidden className="size-3.5" />
-                {t("hub.detail.actions.open_code")}
-              </a>
+          {canOpenCode ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 gap-1.5 rounded-lg text-xs font-semibold"
+              onClick={onOpenCode}
+            >
+              <Code2 aria-hidden className="size-3.5" />
+              {t("hub.detail.actions.open_code")}
             </Button>
           ) : null}
           {canAnalyze ? (

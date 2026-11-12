@@ -148,6 +148,11 @@ class InitializeRepositoryResponseSerializer(serializers.Serializer):
     repository = RepositorySerializer()
 
 
+class CodeQuerySerializer(serializers.Serializer):
+    ref = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    path = serializers.CharField(required=False, allow_blank=True, max_length=500)
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     repository = RepositorySerializer(read_only=True)
     star_count = serializers.SerializerMethodField()
