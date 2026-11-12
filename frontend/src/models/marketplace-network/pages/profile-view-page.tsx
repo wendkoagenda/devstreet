@@ -1,10 +1,13 @@
 import { Link, useParams } from "react-router-dom";
-import { ExternalLink, Star } from "lucide-react";
+import { useState } from "react";
+import { Download, ExternalLink, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CreationErrorSonner } from "@/helpers/api/feed-backs";
 import { formatDate, initialsOf } from "@/models/marketplace-offers/labels";
+import { downloadCv } from "@/models/marketplace-profile/download-cv";
 import { RequireProfil } from "@/models/marketplace-space/components/guards";
 import { countryName } from "@/models/marketplace-space/options";
 import { useGetPublicProfileQuery } from "../api";
@@ -14,6 +17,19 @@ function ProfileViewContent() {
   const { data: profil, isLoading, isError } = useGetPublicProfileQuery(Number(id), {
     skip: !id,
   });
+  const [downloading, setDownloading] = useState(false);
+
+  const download = async () => {
+    if (!profil) return;
+    setDownloading(true);
+    try {
+      await downloadCv(profil.id);
+    } catch {
+      CreationErrorSonner("Impossible de télécharger le CV");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (isLoading) return <Skeleton className="mx-auto h-72 w-full max-w-5xl" />;
   if (isError || !profil) {
@@ -150,6 +166,12 @@ function ProfileViewContent() {
               Les coordonnées sont visibles après une candidature, une connexion ou l'ajout au vivier.
             </p>
           )}
+          {profil.can_download_cv ? (
+            <Button type="button" variant="outline" disabled={downloading} onClick={download}>
+              <Download className="size-4" />
+              Télécharger le CV (PDF)
+            </Button>
+          ) : null}
           {links.map((link) => (
             <a
               key={link.label}

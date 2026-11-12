@@ -1,7 +1,7 @@
 """Validation des corps de requête des écrans utilisateur (offres, candidatures, compétences)."""
 from rest_framework import serializers
 
-from app.marketplace.models import Offer
+from app.marketplace.models import Availability, Experience, Offer
 
 _choice = lambda field: [value for value, _label in Offer._meta.get_field(field).choices]  # noqa: E731
 
@@ -69,7 +69,43 @@ class ProfilSkillsSerializer(serializers.Serializer):
     skills = ProfilSkillItemSerializer(many=True, max_length=60)
 
 
+class AvailabilityWriteSerializer(serializers.Serializer):
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    status = serializers.ChoiceField(choices=[value for value, _label in Availability._meta.get_field("status").choices])
+    hours_per_week = serializers.IntegerField(min_value=0, max_value=80, required=False, allow_null=True)
+    note = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        start, end = attrs.get("start_date"), attrs.get("end_date")
+        if start and end and end < start:
+            raise serializers.ValidationError({"end_date": "La fin doit suivre le début."})
+        return attrs
+
+
+class ExperienceWriteSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=150)
+    company_name = serializers.CharField(max_length=150)
+    location = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    contract_type = serializers.ChoiceField(
+        choices=[value for value, _label in Experience._meta.get_field("contract_type").choices], required=False, allow_blank=True
+    )
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(required=False, allow_null=True)
+    is_current = serializers.BooleanField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
+    technologies = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        start, end = attrs.get("start_date"), attrs.get("end_date")
+        if start and end and end < start and not attrs.get("is_current"):
+            raise serializers.ValidationError({"end_date": "La fin doit suivre le début."})
+        return attrs
+
+
 __all__ = [
+    "AvailabilityWriteSerializer",
+    "ExperienceWriteSerializer",
     "OfferWriteSerializer",
     "ApplySerializer",
     "DecisionSerializer",

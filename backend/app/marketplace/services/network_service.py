@@ -14,6 +14,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied, ValidationErro
 
 from app.marketplace.models import Availability, Candidature, Connection, Offer, Profil, Review, Swipe
 from app.marketplace.presenters import profil_card
+from app.marketplace.services.cv_service import can_download_cv
 from app.marketplace.services.me_service import MeService
 from app.marketplace.services.scoring import build_contexts, compute_score
 
@@ -230,6 +231,7 @@ class NetworkService:
                 "linkedin_url": target.linkedin_url,
                 "portfolio_url": target.portfolio_url,
                 "cv_visibility": target.cv_visibility,
+                "can_download_cv": can_download_cv(viewer, target),
                 "member_since": target.created_at.date().isoformat(),
                 "skills_detail": [
                     {"name": item.skill.name, "level": item.level, "years": item.years}

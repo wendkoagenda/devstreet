@@ -40,6 +40,8 @@ export const marketplaceNetworkApi = marketplaceSpaceApi.injectEndpoints({
     }),
     getPublicProfile: builder.query<PublicProfile, number>({
       query: (id) => `/marketplace/profils/${id}`,
+      // l'aperçu de mon propre profil / CV suit mes modifications
+      providesTags: ["MySpace", "MySkills", "Experiences"],
     }),
   }),
 });

@@ -46,6 +46,8 @@ export default function AppLayout() {
     "/marketplace/network": t("breadcrumb_titles.marketplace_network"),
     "/marketplace/profiles": t("breadcrumb_titles.marketplace_profiles"),
     "/marketplace/profiles/*": t("breadcrumb_titles.marketplace_profile_view"),
+    "/marketplace/availability": t("breadcrumb_titles.marketplace_availability"),
+    "/marketplace/cv": t("breadcrumb_titles.marketplace_cv"),
     "/admin": t("breadcrumb_titles.admin"),
     "/admin/marketplace": t("breadcrumb_titles.marketplace_admin"),
     "/admin/marketplace/companies": t("breadcrumb_titles.marketplace_companies"),

@@ -71,7 +71,11 @@ function ApplicationCard({ candidature }: { candidature: Candidature }) {
         </ol>
         {candidature.status === "accepted" ? (
           <p className="rounded-lg border border-border bg-muted/40 p-3 text-xs leading-relaxed text-foreground">
-            {offer?.company.name} vous a choisi. La mission est ajoutée à votre calendrier de disponibilité.
+            {offer?.company.name} vous a choisi. La mission est ajoutée à votre{" "}
+            <Link to="/marketplace/availability" className="underline">
+              calendrier de disponibilité
+            </Link>
+            .
           </p>
         ) : null}
       </CardContent>

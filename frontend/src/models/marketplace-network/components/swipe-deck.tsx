@@ -114,11 +114,8 @@ export function SwipeDeck({
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     if (busy.current) return;
     startX.current = event.clientX;
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      /* capture indisponible : le glissement reste utilisable dans la carte */
-    }
+    // suit le doigt ou la souris même hors de la carte (absent de certains environnements de test)
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     setDragging(true);
   };
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {

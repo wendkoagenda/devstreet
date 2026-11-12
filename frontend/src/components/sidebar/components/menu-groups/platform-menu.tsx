@@ -46,6 +46,12 @@ export default function PlatformMenu() {
     { title: "Talents", url: "/marketplace/talents", visible: isRecruiter },
     { title: "Vivier", url: "/marketplace/talents/pool", visible: isRecruiter },
     { title: "Réseau", url: "/marketplace/network", visible: hasProfil },
+    {
+      title: "Mes disponibilités",
+      url: "/marketplace/availability",
+      visible: hasProfil,
+    },
+    { title: "Mon CV", url: "/marketplace/cv", visible: hasProfil },
   ].filter((item) => item.visible);
   // L'administration (listes CRUD) n'apparaît que pour les rôles qui ont au moins une permission de lecture
   const canAdministerMarketplace = MARKETPLACE_ADMIN_PAGES.some(

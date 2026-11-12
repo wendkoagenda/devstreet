@@ -1,4 +1,5 @@
 """Vues des écrans utilisateur : offres, candidatures, compétences (tout utilisateur connecté, règles dans le service)."""
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -19,6 +20,7 @@ def _valid(serializer_class, request, partial=False):
     return serializer.validated_data
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def skills_list(request):
@@ -26,6 +28,8 @@ def skills_list(request):
     return Response(MarketService.list_skills(request.query_params.get("search")))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
+@swagger_auto_schema(method="put", tags=["V1 - Marketplace offres"])
 @api_view(["GET", "PUT"])
 @permission_classes([IsAuthenticated])
 def my_skills(request):
@@ -36,6 +40,7 @@ def my_skills(request):
     return Response(MarketService.get_my_skills(request.user))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def offers_list(request):
@@ -46,6 +51,7 @@ def offers_list(request):
     )
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def offer_detail(request, offer_id):
@@ -53,6 +59,7 @@ def offer_detail(request, offer_id):
     return Response(MarketService.get_offer(request.user, offer_id))
 
 
+@swagger_auto_schema(method="post", tags=["V1 - Marketplace offres"])
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def offer_apply(request, offer_id):
@@ -61,6 +68,7 @@ def offer_apply(request, offer_id):
     return Response(MarketService.apply(request.user, offer_id, data["message"]), status=status.HTTP_201_CREATED)
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def my_candidatures(request):
@@ -68,6 +76,8 @@ def my_candidatures(request):
     return Response(MarketService.my_candidatures(request.user))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
+@swagger_auto_schema(method="post", tags=["V1 - Marketplace offres"])
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def my_offers(request):
@@ -78,6 +88,8 @@ def my_offers(request):
     return Response(MarketService.my_offers(request.user))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
+@swagger_auto_schema(method="patch", tags=["V1 - Marketplace offres"])
 @api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def my_offer_detail(request, offer_id):
@@ -88,6 +100,7 @@ def my_offer_detail(request, offer_id):
     return Response(MarketService.get_my_offer(request.user, offer_id))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def offer_candidatures(request, offer_id):
@@ -95,6 +108,7 @@ def offer_candidatures(request, offer_id):
     return Response(MarketService.offer_candidatures(request.user, offer_id))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def offer_recommended_profils(request, offer_id):
@@ -102,6 +116,7 @@ def offer_recommended_profils(request, offer_id):
     return Response(MarketService.recommended_profils(request.user, offer_id))
 
 
+@swagger_auto_schema(method="post", tags=["V1 - Marketplace offres"])
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def candidature_decision(request, candidature_id):

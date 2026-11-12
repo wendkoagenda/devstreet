@@ -32,6 +32,7 @@ export type PublicProfile = TalentCard & {
   linkedin_url: string;
   portfolio_url: string;
   cv_visibility: "public" | "companies" | "private";
+  can_download_cv: boolean;
   member_since: string;
   skills_detail: { name: string; level: number; years: number }[];
   experiences: {

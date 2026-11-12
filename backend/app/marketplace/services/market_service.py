@@ -345,7 +345,7 @@ class MarketService:
                     "La période de mission a été ajoutée à votre calendrier de disponibilité.\n\n"
                     "L'équipe DevStreet"
                 ),
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[candidature.profil.user.email],
                 fail_silently=False,
             )

@@ -150,7 +150,9 @@
     "marketplace_pool": "Talent pool",
     "marketplace_network": "Network",
     "marketplace_profiles": "Profiles",
-    "marketplace_profile_view": "Profile"
+    "marketplace_profile_view": "Profile",
+    "marketplace_availability": "Availability",
+    "marketplace_cv": "My CV"
   },
   "hub": {
     "common": {

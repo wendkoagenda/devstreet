@@ -203,7 +203,9 @@
     "marketplace_pool": "Vivier",
     "marketplace_network": "Réseau",
     "marketplace_profiles": "Profils",
-    "marketplace_profile_view": "Fiche profil"
+    "marketplace_profile_view": "Fiche profil",
+    "marketplace_availability": "Disponibilités",
+    "marketplace_cv": "Mon CV"
   },
   "hub": {
     "common": {

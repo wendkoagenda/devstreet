@@ -1,4 +1,5 @@
 """Vues de découverte : paquet de cartes, swipes, vivier, connexions et fiche publique d'un profil."""
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -17,6 +18,7 @@ def _context(request) -> str:
     return request.query_params.get("context", "")
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace réseau"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def deck(request):
@@ -24,6 +26,7 @@ def deck(request):
     return Response(NetworkService.deck(request.user, _context(request)))
 
 
+@swagger_auto_schema(method="post", tags=["V1 - Marketplace réseau"])
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def swipe(request):
@@ -35,6 +38,7 @@ def swipe(request):
     return Response(result, status=status.HTTP_201_CREATED)
 
 
+@swagger_auto_schema(method="delete", tags=["V1 - Marketplace réseau"])
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def undo_swipe(request):
@@ -42,6 +46,7 @@ def undo_swipe(request):
     return Response(NetworkService.undo_last_swipe(request.user, _context(request)))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace réseau"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def pool(request):
@@ -49,6 +54,7 @@ def pool(request):
     return Response(NetworkService.pool(request.user))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace réseau"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def connections(request):
@@ -56,6 +62,7 @@ def connections(request):
     return Response(NetworkService.connections(request.user))
 
 
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace réseau"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def public_profile(request, profil_id):

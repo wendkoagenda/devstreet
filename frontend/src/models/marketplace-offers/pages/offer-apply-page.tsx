@@ -68,12 +68,17 @@ function OfferApplyContent() {
 
         <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
           <FileText className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="flex flex-col text-sm">
+          <span className="flex flex-1 flex-col text-sm">
             <span className="font-medium text-foreground">CV automatique</span>
             <span className="text-xs text-muted-foreground">
               Généré depuis votre profil, vos compétences et vos expériences.
             </span>
           </span>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/marketplace/cv" target="_blank" rel="noopener noreferrer">
+              Aperçu
+            </Link>
+          </Button>
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">

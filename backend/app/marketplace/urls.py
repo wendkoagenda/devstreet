@@ -14,7 +14,7 @@ from app.marketplace.views.availability_viewset import AvailabilityViewSet
 from app.marketplace.views.review_viewset import ReviewViewSet
 from app.marketplace.views.swipe_viewset import SwipeViewSet
 from app.marketplace.views.connection_viewset import ConnectionViewSet
-from app.marketplace.views import market_views, network_views
+from app.marketplace.views import market_views, network_views, profile_views
 from app.marketplace.views.me_views import MeCompanyView, MeProfilView, MeView
 
 router = DefaultRouter(trailing_slash=False)
@@ -53,6 +53,12 @@ urlpatterns = [
     path('v1/marketplace/me/pool', network_views.pool, name='marketplace-me-pool'),
     path('v1/marketplace/me/connections', network_views.connections, name='marketplace-me-connections'),
     path('v1/marketplace/profils/<int:profil_id>', network_views.public_profile, name='marketplace-profil'),
+    path('v1/marketplace/me/availabilities', profile_views.my_availabilities, name='marketplace-me-availabilities'),
+    path('v1/marketplace/me/availabilities/<int:availability_id>', profile_views.my_availability, name='marketplace-me-availability'),
+    path('v1/marketplace/me/experiences', profile_views.my_experiences, name='marketplace-me-experiences'),
+    path('v1/marketplace/me/experiences/<int:experience_id>', profile_views.my_experience, name='marketplace-me-experience'),
+    path('v1/marketplace/me/cv', profile_views.my_cv, name='marketplace-me-cv'),
+    path('v1/marketplace/profils/<int:profil_id>/cv', profile_views.profil_cv, name='marketplace-profil-cv'),
     path('v1/', include(router.urls)),
 ]
 

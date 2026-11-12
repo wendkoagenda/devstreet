@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSlice } from "@/models/auth/slice";
+import { ExperiencesCard } from "@/models/marketplace-profile/components/experiences-card";
 import { SkillsCard } from "@/models/marketplace-offers/components/skills-card";
 import { CompanyForm } from "../components/company-form";
 import { ProfilForm } from "../components/profil-form";
@@ -102,6 +103,8 @@ export default function MyProfilePage() {
       </Card>
 
       {hasProfil ? <SkillsCard /> : null}
+
+      {hasProfil ? <ExperiencesCard /> : null}
 
       {hasProfil ? (
         <Card>
