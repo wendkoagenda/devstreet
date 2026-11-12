@@ -1,5 +1,7 @@
-from django.db import models
+import uuid
+
 from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
@@ -356,3 +358,97 @@ class ProjectDiscussionLink(models.Model):
 class WebhookDelivery(models.Model):
     delivery_id = models.CharField(max_length=100, unique=True)
     received_at = models.DateTimeField(auto_now_add=True)
+
+
+class GitDeviceAuthRequest(models.Model):
+    """Demande d'autorisation CLI ↔ navigateur DevStreet (pas Gitea)."""
+
+    STATUS_PENDING = "pending"
+    STATUS_AUTHORIZED = "authorized"
+    STATUS_DENIED = "denied"
+    STATUS_EXPIRED = "expired"
+    STATUS_CONSUMED = "consumed"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "En attente"),
+        (STATUS_AUTHORIZED, "Autorisée"),
+        (STATUS_DENIED, "Refusée"),
+        (STATUS_EXPIRED, "Expirée"),
+        (STATUS_CONSUMED, "Consommée"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="git_device_auth_requests",
+    )
+    computer_name = models.CharField(max_length=120)
+    hub_base_url = models.URLField(max_length=400)
+    code_challenge = models.CharField(max_length=128)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    grant_payload = models.TextField(blank=True, default="")
+    poll_count = models.PositiveIntegerField(default=0)
+    last_poll_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    decided_at = models.DateTimeField(null=True, blank=True)
+    connected_computer = models.ForeignKey(
+        "GitConnectedComputer",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="auth_requests",
+    )
+
+    class Meta:
+        db_table = "projects_git_device_auth_request"
+        indexes = [
+            models.Index(
+                fields=["status", "expires_at"],
+                name="projects_gi_status_3c8e2b_idx",
+            ),
+        ]
+
+
+class GitConnectedComputer(models.Model):
+    """Ordinateur autorisé : PAT Gitea réel lié à ForgeIdentity."""
+
+    STATUS_ACTIVE = "active"
+    STATUS_REVOKED = "revoked"
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, "Actif"),
+        (STATUS_REVOKED, "Révoqué"),
+    ]
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="git_connected_computers"
+    )
+    name = models.CharField(max_length=120)
+    forge_login = models.CharField(max_length=40)
+    gitea_token_id = models.BigIntegerField()
+    token_last_eight = models.CharField(max_length=8)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "projects_git_connected_computer"
+        indexes = [
+            models.Index(
+                fields=["user", "status"],
+                name="projects_gi_user_id_7f2a1c_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "gitea_token_id"],
+                name="unique_user_gitea_token",
+            )
+        ]

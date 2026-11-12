@@ -187,6 +187,90 @@ class GiteaClient:
         )
         return password
 
+    def create_user_access_token(
+        self,
+        *,
+        login: str,
+        email: str,
+        name: str,
+        scopes: list[str] | None = None,
+    ) -> dict:
+        """Crée un PAT Gitea réel pour l'utilisateur lié (BasicAuth temporaire).
+
+        Le jeton admin n'est jamais exposé. Le mot de passe temporaire sert uniquement
+        à POST /users/{login}/tokens puis est invalidé immédiatement.
+        """
+        scopes = scopes or [
+            "write:repository",
+            "read:repository",
+            "read:user",
+        ]
+        temp_password = self.reissue_password(
+            login=login, email=email, must_change_password=False
+        )
+        try:
+            with httpx.Client(
+                timeout=20, follow_redirects=False, trust_env=False
+            ) as client:
+                response = client.request(
+                    "POST",
+                    self.url + "/api/v1/users/" + quote(login, safe="") + "/tokens",
+                    headers={"Content-Type": "application/json"},
+                    auth=(login, temp_password),
+                    json={"name": name[:255], "scopes": scopes},
+                )
+            if response.status_code == 409:
+                raise Conflict(
+                    "Un accès Git porte déjà ce nom ; choisissez un autre libellé."
+                )
+            response.raise_for_status()
+            payload = response.json()
+        except Conflict:
+            raise
+        except (httpx.HTTPError, ValueError) as error:
+            raise ExternalUnavailable(
+                "La forge ne répond pas correctement ; réessayez."
+            ) from error
+        finally:
+            # Invalide le mot de passe temporaire : seul le PAT reste utilisable.
+            self.reissue_password(
+                login=login, email=email, must_change_password=True
+            )
+        if not isinstance(payload, dict) or not payload.get("sha1"):
+            raise ExternalUnavailable(
+                "La forge n'a pas renvoyé de jeton d'accès utilisable."
+            )
+        return payload
+
+    def delete_user_access_token(self, *, login: str, email: str, token_id: int) -> None:
+        """Révoque un PAT Gitea (BasicAuth temporaire, puis invalidation du mot de passe)."""
+        temp_password = self.reissue_password(
+            login=login, email=email, must_change_password=False
+        )
+        try:
+            with httpx.Client(
+                timeout=20, follow_redirects=False, trust_env=False
+            ) as client:
+                response = client.request(
+                    "DELETE",
+                    self.url
+                    + "/api/v1/users/"
+                    + quote(login, safe="")
+                    + "/tokens/"
+                    + str(int(token_id)),
+                    auth=(login, temp_password),
+                )
+            if response.status_code not in (204, 404):
+                response.raise_for_status()
+        except (httpx.HTTPError, ValueError) as error:
+            raise ExternalUnavailable(
+                "La forge ne répond pas correctement ; réessayez."
+            ) from error
+        finally:
+            self.reissue_password(
+                login=login, email=email, must_change_password=True
+            )
+
     def provision_identity(self, actor, *, login: str, provisioning_key):
         """Compatibilité de signature pour les mocks de tests existants."""
         return self.create_user(

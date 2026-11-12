@@ -83,6 +83,36 @@ export const forgeAccessSchema = z.object({
   reset: z.boolean().optional(),
 });
 
+export const gitDeviceAuthRequestSchema = z.object({
+  id: z.string(),
+  computer_name: z.string(),
+  hub_base_url: z.string(),
+  status: z.enum([
+    "pending",
+    "authorized",
+    "denied",
+    "expired",
+    "consumed",
+  ]),
+  expires_at: z.string(),
+  created_at: z.string(),
+  decided_at: z.string().nullable().optional(),
+  scopes: z.array(z.string()),
+  scope_labels: z.array(z.string()),
+  gitea_host: z.string(),
+});
+
+export const gitConnectedComputerSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  forge_login: z.string(),
+  token_last_eight: z.string(),
+  status: z.enum(["active", "revoked"]),
+  created_at: z.string(),
+  revoked_at: z.string().nullable().optional(),
+  last_used_at: z.string().nullable().optional(),
+});
+
 export const projectSetupSchema = z.object({
   draft: z.literal("ok"),
   identity: z.enum(["pending", "ok", "failed", "conflict"]),
@@ -114,6 +144,8 @@ export type StarResponse = StarResult;
 export type ProjectLicense = z.infer<typeof projectLicenseSchema>;
 export type ProjectWrite = z.infer<typeof projectWriteSchema>;
 export type ForgeAccess = z.infer<typeof forgeAccessSchema>;
+export type GitDeviceAuthRequest = z.infer<typeof gitDeviceAuthRequestSchema>;
+export type GitConnectedComputer = z.infer<typeof gitConnectedComputerSchema>;
 export type ProjectSetup = z.infer<typeof projectSetupSchema>;
 export type ProjectCreateResult = z.infer<typeof projectCreateResultSchema>;
 export type InitializeRepositoryPayload = z.infer<typeof initializeRepositorySchema>;

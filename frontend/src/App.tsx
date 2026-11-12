@@ -15,6 +15,7 @@ import TaskContributionPage from "./models/devstreet-hub/pages/task-contribution
 import ContributionReviewPage from "./models/devstreet-hub/pages/contribution-review-page";
 import AiWorkshopPage from "./models/devstreet-hub/pages/ai-workshop-page";
 import ProjectProfilePage from "./models/devstreet-hub/pages/project-profile-page";
+import GitAuthAuthorizePage from "./models/devstreet-hub/pages/git-auth-authorize-page";
 import { useAuthSlice } from "./models/auth/slice";
 import { useEffect } from "react";
 
@@ -44,6 +45,10 @@ function App() {
           <Route
             element={<ProjectProfilePage />}
             path="/hub/profiles/:userId"
+          />
+          <Route
+            element={<GitAuthAuthorizePage />}
+            path="/hub/git-auth/authorize"
           />
 
           <Route element={<PrivateRoute />}>
