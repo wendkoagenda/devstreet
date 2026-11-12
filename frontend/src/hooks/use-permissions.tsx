@@ -22,22 +22,53 @@ export const usePermissions = () => {
         canUpdateRoles: false,
         canDeleteRoles: false,
 
+        canCreateProjects: false,
+        canStarProjects: false,
+
         isSuperAdmin: false,
         permissions: [],
       };
     }
 
     return {
-      hasPermission: (permission: string) => hasPermission(permissions, permission),
+      hasPermission: (permission: string) =>
+        hasPermission(permissions, permission),
       canViewUsers: hasPermission(permissions, getPermission("USER", "VIEW")),
-      canCreateUsers: hasPermission(permissions, getPermission("USER", "CREATE")),
-      canUpdateUsers: hasPermission(permissions, getPermission("USER", "UPDATE")),
-      canDeleteUsers: hasPermission(permissions, getPermission("USER", "DELETE")),
+      canCreateUsers: hasPermission(
+        permissions,
+        getPermission("USER", "CREATE")
+      ),
+      canUpdateUsers: hasPermission(
+        permissions,
+        getPermission("USER", "UPDATE")
+      ),
+      canDeleteUsers: hasPermission(
+        permissions,
+        getPermission("USER", "DELETE")
+      ),
 
       canViewRoles: hasPermission(permissions, getPermission("ROLE", "VIEW")),
-      canCreateRoles: hasPermission(permissions, getPermission("ROLE", "CREATE")),
-      canUpdateRoles: hasPermission(permissions, getPermission("ROLE", "UPDATE")),
-      canDeleteRoles: hasPermission(permissions, getPermission("ROLE", "DELETE")),
+      canCreateRoles: hasPermission(
+        permissions,
+        getPermission("ROLE", "CREATE")
+      ),
+      canUpdateRoles: hasPermission(
+        permissions,
+        getPermission("ROLE", "UPDATE")
+      ),
+      canDeleteRoles: hasPermission(
+        permissions,
+        getPermission("ROLE", "DELETE")
+      ),
+
+      canCreateProjects: hasPermission(
+        permissions,
+        getPermission("DEVSTREET_HUB_PROJECT", "CREATE")
+      ),
+      canStarProjects: hasPermission(
+        permissions,
+        getPermission("DEVSTREET_HUB_PROJECT", "STAR")
+      ),
 
       isSuperAdmin: hasPermission(permissions, "*"),
       permissions,

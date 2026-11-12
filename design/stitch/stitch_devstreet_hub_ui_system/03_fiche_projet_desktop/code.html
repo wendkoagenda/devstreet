@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"surface-tint": "#565e74", "secondary-fixed": "#ffdbce", "primary-container": "#131b2e", "on-primary-fixed": "#131b2e", "on-error-container": "#93000a", "inverse-primary": "#bec6e0", surface: "#fcf8fa", "on-surface": "#1b1b1d", "error-container": "#ffdad6", "on-background": "#1b1b1d", primary: "#000000", "surface-dim": "#dcd9db", "surface-container-lowest": "#ffffff", outline: "#76777d", "outline-variant": "#c6c6cd", "tertiary-fixed-dim": "#dec29a", "on-surface-variant": "#45464d", "surface-container-highest": "#e4e2e4", "surface-bright": "#fcf8fa", "on-secondary-fixed": "#370e00", "on-tertiary-fixed": "#271901", "on-secondary": "#ffffff", background: "#fcf8fa", "on-tertiary-container": "#98805d", "on-primary": "#ffffff", "secondary-fixed-dim": "#ffb599", "surface-container-high": "#eae7e9", "on-error": "#ffffff", "on-secondary-fixed-variant": "#7f2b00", "on-primary-container": "#7c839b", "surface-container-low": "#f6f3f5", "tertiary-fixed": "#fcdeb5", "tertiary-container": "#271901", "surface-variant": "#e4e2e4", error: "#ba1a1a", "secondary-container": "#fd651e", "on-tertiary": "#ffffff", "on-secondary-container": "#571a00", secondary: "#a73a00", "inverse-surface": "#303032", "primary-fixed": "#dae2fd", "on-tertiary-fixed-variant": "#574425", "inverse-on-surface": "#f3f0f2", "surface-container": "#f0edef", tertiary: "#000000", "primary-fixed-dim": "#bec6e0", "on-primary-fixed-variant": "#3f465c"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"space-lg": "1.5rem", "space-sm": "0.5rem", margin: "2rem", "space-xl": "2rem", "space-md": "1rem", "space-2xl": "3rem", "margin-sm": "1rem", "space-xs": "0.25rem", gutter: "1.5rem", "gutter-sm": "1rem"}, fontFamily: {"headline-xl-mobile": ["Hanken Grotesk"], "headline-md": ["Hanken Grotesk"], "label-md": ["JetBrains Mono"], "code-inline": ["JetBrains Mono"], "label-lg": ["JetBrains Mono"], "headline-sm": ["Hanken Grotesk"], "body-md": ["Hanken Grotesk"], "headline-xl": ["Hanken Grotesk"], "body-lg": ["Hanken Grotesk"], "headline-lg-mobile": ["Hanken Grotesk"], "headline-lg": ["Hanken Grotesk"], "body-sm": ["Hanken Grotesk"], "label-sm": ["JetBrains Mono"], headline: ["Poppins"], display: ["Poppins"], body: ["Poppins"], label: ["JetBrains Mono"]}, fontSize: {"headline-xl-mobile": ["30px", {lineHeight: "38px", letterSpacing: "-0.015em", fontWeight: "700"}], "headline-md": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}], "label-md": ["12px", {lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500"}], "code-inline": ["13px", {lineHeight: "18px", fontWeight: "400"}], "label-lg": ["14px", {lineHeight: "20px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-sm": ["18px", {lineHeight: "26px", fontWeight: "600"}], "body-md": ["14px", {lineHeight: "22px", fontWeight: "400"}], "headline-xl": ["40px", {lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700"}], "body-lg": ["16px", {lineHeight: "26px", fontWeight: "400"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.015em", fontWeight: "600"}], "body-sm": ["12px", {lineHeight: "18px", fontWeight: "400"}], "label-sm": ["11px", {lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[264px] bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-7 h-7 rounded bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">terminal</span></div><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">DevStreet</span></div><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-bold tracking-wide uppercase">HUB</span></div><nav class="flex flex-col gap-space-xs px-space-sm mt-space-sm" data-active-classes="bg-primary-container text-on-primary font-semibold rounded-lg"><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="marketplace" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Marketplace</span></a><div class="flex flex-col gap-space-xs"><a aria-current="page" class="flex items-center gap-space-sm px-space-sm py-2 transition-colors bg-primary-container text-on-primary font-semibold rounded-lg" data-path="devstreet-hub" href="#"><span class="material-symbols-outlined text-[20px]">hub</span><span>DevStreet Hub</span></a><div class="flex flex-col pl-7 pr-space-xs py-1 gap-1"><a class="px-space-xs py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm flex items-center gap-2" data-path="explorer-les-projets" href="#"><span class="material-symbols-outlined text-[14px]">travel_explore</span><span>Explorer les projets</span></a><a class="px-space-xs py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm flex items-center gap-2" data-path="mes-projets" href="#"><span class="material-symbols-outlined text-[14px]">folder_managed</span><span>Mes projets</span></a></div></div><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="forum" href="#"><span class="material-symbols-outlined text-[20px]">forum</span><span>Forum</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="mon-profil" href="#"><span class="material-symbols-outlined text-[20px]">person</span><span>Mon profil</span></a></nav></div><div class="p-space-sm m-space-sm rounded-xl bg-surface-container-low flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex flex-col truncate"><span class="font-headline-sm text-body-md font-semibold text-on-surface truncate leading-tight">Aïcha Diallo</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">@aicha</span></div></div><a class="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-container-high transition-colors shrink-0" data-path="settings" href="#"><span class="material-symbols-outlined text-[18px]">more_vert</span></a></div></aside><div class="pl-[264px]"><header class="fixed top-0 left-[264px] right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant"><span class="hover:text-on-surface transition-colors cursor-pointer">DevStreet Hub</span><span class="material-symbols-outlined text-[14px]">chevron_right</span><span class="hover:text-on-surface transition-colors cursor-pointer">Projets</span><span class="material-symbols-outlined text-[14px]">chevron_right</span><span class="text-on-surface font-semibold">Stock</span></div><div class="flex items-center gap-space-md"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-[18px] text-on-surface-variant pointer-events-none">search</span><input class="w-64 lg:w-80 h-10 pl-9 pr-12 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none shadow-[0_1px_3px_rgba(15,23,42,0.04)]" placeholder="Rechercher dans DevStreet..." type="text"/><div class="absolute right-2 px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm pointer-events-none">⌘K</div></div><div class="flex items-center gap-space-xs"><button class="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface px-space-xl py-space-xl"><div class="flex flex-col w-full gap-space-lg">
+<!-- Interactive Role Switcher & Context Bar -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-secondary text-[22px]">admin_panel_settings</span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface">Simulateur d'accès contextuel</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold uppercase tracking-wider" id="role-badge">
+            Mode Propriétaire
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant" id="role-explanation">
+          Permissions complètes : création de tâches, préparation IA et revue des contributions en attente.
+        </p>
+</div>
+</div>
+<!-- Toggle Controls -->
+<div class="flex items-center bg-surface-container-low p-1 rounded-lg shrink-0">
+<button class="px-3 py-1.5 rounded-md font-label-md text-label-md transition-all font-semibold bg-surface-container-lowest text-on-surface shadow-sm" id="btn-role-owner" onclick="switchRole('owner')" type="button">
+        Vue Propriétaire (Aïcha)
+      </button>
+<button class="px-3 py-1.5 rounded-md font-label-md text-label-md transition-all font-medium text-on-surface-variant hover:text-on-surface" id="btn-role-visitor" onclick="switchRole('visitor')" type="button">
+        Vue Visiteur (Moussa)
+      </button>
+</div>
+</div>
+<!-- Project Header Card -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-xl shadow-sm relative overflow-hidden">
+<div class="absolute -right-16 -top-16 w-72 h-72 rounded-full bg-secondary-fixed/30 pointer-events-none blur-3xl"></div>
+<div class="flex flex-col lg:flex-row lg:items-start justify-between gap-space-lg relative z-10">
+<!-- Left side: Identity & Description -->
+<div class="flex flex-col gap-space-sm max-w-3xl">
+<div class="flex flex-wrap items-center gap-2">
+<h1 class="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight">Stock</h1>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-bold uppercase">
+            Public
+          </span>
+<span class="font-label-md text-label-md px-2.5 py-0.5 rounded bg-surface-container font-mono text-on-surface">
+            v1.4
+          </span>
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-secondary bg-secondary-fixed/50 px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Sync Actif (Gitea)
+          </span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+          Outil de gestion de stock et de traçabilité pour petits commerces et grossistes de quartier, adapté aux connexions intermittentes.
+        </p>
+<!-- Maintainer info -->
+<div class="flex items-center gap-space-sm mt-1">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">
+            AD
+          </div>
+<div class="flex items-center gap-1.5 font-body-sm text-body-sm">
+<span class="font-semibold text-on-surface">Aïcha Diallo</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">@aicha</span>
+<span class="text-outline-variant">•</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">Mainteneuse &amp; Propriétaire</span>
+</div>
+</div>
+<!-- Tech tags -->
+<div class="flex flex-wrap items-center gap-2 mt-space-xs">
+<span class="font-label-md text-label-md px-2.5 py-1 rounded bg-surface-container-low text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span> Python
+          </span>
+<span class="font-label-md text-label-md px-2.5 py-1 rounded bg-surface-container-low text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Django
+          </span>
+<span class="font-label-md text-label-md px-2.5 py-1 rounded bg-surface-container-low text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-surface-tint"></span> PostgreSQL
+          </span>
+<span class="font-label-md text-label-md px-2.5 py-1 rounded bg-surface-container-low text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline"></span> IndexedDB PWA
+          </span>
+</div>
+</div>
+<!-- Right side: Global Actions & Star counter -->
+<div class="flex flex-col items-start lg:items-end gap-space-sm shrink-0">
+<div class="flex items-center gap-2">
+<!-- Star Action -->
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" id="star-btn" onclick="toggleStar()" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary" id="star-icon">star</span>
+<span id="star-text">Étoiler</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-mono text-[11px] font-bold" id="star-count">48</span>
+</button>
+<!-- Live Demo Link -->
+<a class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-colors shadow-sm" href="https://stock-demo.devstreet.org" rel="noopener noreferrer" target="_blank">
+<span>Démo en ligne</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+</div>
+<!-- Owner Specific Actions Group -->
+<div class="flex flex-wrap items-center gap-2 mt-2" id="owner-actions-container">
+<a class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container transition-colors font-label-md text-label-md font-semibold shadow-sm" data-path="ecran-06-preparation-ia" href="#">
+<span class="material-symbols-outlined text-[18px]">neurology</span>
+<span>Préparer contribution IA</span>
+</a>
+<a class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed-dim transition-colors font-label-md text-label-md font-bold" data-path="ecran-05-revue-contributions" href="#">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Examiner (1 en attente)</span>
+</a>
+<button class="flex items-center gap-1 px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" onclick="openCreateTaskModal()" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Créer tâche</span>
+</button>
+<button class="p-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" title="Paramètres du projet" type="button">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+</button>
+</div>
+<!-- Visitor Placeholder Action (Shown when in Visitor mode) -->
+<div class="hidden flex-wrap items-center gap-2 mt-2" id="visitor-actions-container">
+<button class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container transition-colors font-label-md text-label-md font-semibold shadow-sm" onclick="switchTab('contribuer')" type="button">
+<span class="material-symbols-outlined text-[18px]">handshake</span>
+<span>Rejoindre et contribuer</span>
+</button>
+<a class="flex items-center gap-1 px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">fork_right</span>
+<span>Forker</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Tab Navigation -->
+<div class="flex items-center gap-space-md border-b-0 mt-space-xl pt-space-sm">
+<button class="tab-button active flex items-center gap-2 pb-2.5 px-1 font-label-lg text-label-lg font-bold border-b-2 text-primary border-primary transition-all" id="tab-btn-presentation" onclick="switchTab('presentation')" type="button">
+<span class="material-symbols-outlined text-[20px]">overview</span>
+<span>Présentation</span>
+</button>
+<button class="tab-button flex items-center gap-2 pb-2.5 px-1 font-label-lg text-label-lg font-medium text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-code" onclick="switchTab('code')" type="button">
+<span class="material-symbols-outlined text-[20px]">code</span>
+<span>Code</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono">Gitea forge</span>
+</button>
+<button class="tab-button flex items-center gap-2 pb-2.5 px-1 font-label-lg text-label-lg font-medium text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-contribuer" onclick="switchTab('contribuer')" type="button">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+<span>Contribuer</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-bold font-mono">3 tâches</span>
+</button>
+<button class="tab-button flex items-center gap-2 pb-2.5 px-1 font-label-lg text-label-lg font-medium text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-equipe" onclick="switchTab('equipe')" type="button">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span>Équipe</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono">2 membres</span>
+</button>
+</div>
+</div>
+<!-- Main Body Grid: 2/3 Content + 1/3 Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Primary Column (Left 8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg min-w-0">
+<!-- TAB 1: PRESENTATION CONTENT -->
+<div class="flex flex-col gap-space-lg" id="view-presentation">
+<!-- Local Context & Impact Banner -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-md relative">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[24px]">signal_cellular_connected_no_internet_0_bar</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Contexte et impact local</h2>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-medium">Architecture Résiliente</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            Dans les marchés de quartier à Bamako, Dakar et Abidjan, les interruptions de courant et les pannes réseau coupent régulièrement les commerces de leurs outils comptables en ligne. Stock fonctionne sur une architecture locale décentralisée : chaque transaction est validée localement sur le terminal du commerçant, stockée en base chiffrée, puis synchronisée en différé dès qu'une connectivité 3G/4G est restaurée.
+          </p>
+<!-- Key Metrics Grid -->
+<div class="grid grid-cols-3 gap-space-sm pt-space-xs">
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mode Déconnecté</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">100% autonome</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Poids PWA initial</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold font-mono">1.2 MB</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Commerces pilotes</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">14 boutiques</span>
+</div>
+</div>
+</div>
+<!-- Current Sprint Objective -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">flag</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Objectif actuel du sprint (Sprint #4)</h3>
+</div>
+<span class="font-label-sm text-label-sm font-mono text-secondary bg-secondary-fixed/40 px-2 py-0.5 rounded font-bold">Fin dans 4 jours</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            Finalisation de l'export CSV structuré des mouvements de caisse et de stocks journaliers pour permettre la remise comptable aux micro-entrepreneurs sans ordinateur centralisé.
+          </p>
+<!-- Sprint Progress Bar -->
+<div class="mt-space-xs flex flex-col gap-1.5">
+<div class="flex justify-between items-center font-label-sm text-label-sm">
+<span class="text-on-surface font-medium">Progression globale du jalon</span>
+<span class="font-mono text-on-surface font-bold">66% achevé</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 66%;"></div>
+</div>
+</div>
+</div>
+<!-- Priority Tasks Section -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Tâches prioritaires ouvertes</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Prêtes à être prises en charge ou assignées pour ce sprint.</p>
+</div>
+<button class="font-label-md text-label-md text-secondary hover:text-on-secondary-container font-semibold flex items-center gap-1" onclick="switchTab('contribuer')" type="button">
+<span>Voir les 3 tâches</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Task #1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm min-w-0">
+<span class="font-label-md text-label-md font-mono text-secondary font-bold shrink-0 mt-0.5">#01</span>
+<div class="flex flex-col min-w-0">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">
+                      Ajouter l'export CSV des mouvements de stock
+                    </span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-error-container text-on-error-container font-bold">
+                      Priorité Haute
+                    </span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">
+                      À pourvoir
+                    </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">
+                    Générateur Python léger en flux continu (streamed CSV) sans surcharge mémoire sur terminaux mobiles. Assignable à Moussa Traoré.
+                  </p>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<a class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-medium transition-colors" data-path="ecran-04-details-tache" href="#">
+<span>Consulter la tâche</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Task #2 -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm min-w-0">
+<span class="font-label-md text-label-md font-mono text-on-surface-variant font-bold shrink-0 mt-0.5">#02</span>
+<div class="flex flex-col min-w-0">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">
+                      Gestion du cache hors-ligne IndexedDB / ServiceWorker
+                    </span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-bold">
+                      En cours
+                    </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">
+                    Mise en cache statique des manifests de produits et des inventaires récents.
+                  </p>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm text-on-surface-variant">
+<span class="w-5 h-5 rounded-full bg-primary text-on-primary text-[10px] flex items-center justify-center font-bold">MT</span>
+<span>Moussa</span>
+</div>
+</div>
+</div>
+<!-- Task #3 -->
+<div class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm min-w-0">
+<span class="font-label-md text-label-md font-mono text-on-surface-variant font-bold shrink-0 mt-0.5">#03</span>
+<div class="flex flex-col min-w-0">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">
+                      Test de charge de synchronisation multi-terminaux
+                    </span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">
+                      Ouvert
+                    </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">
+                    Simuler la reconnexion de 50 tablettes simultanées après coupure réseau de 4 heures.
+                  </p>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" type="button">
+                  Détails
+                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB 2: CODE GITEA TAB (Strictly compliant with specs: no invented mock file explorer) -->
+<div class="hidden flex-col gap-space-lg" id="view-code">
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">fork_right</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Dépôt Gitea souverain synchronisé</h2>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">Dernier commit : feat: init DevStreet forge (branche main)</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-bold font-mono">
+              SHA: e8f4c91
+            </span>
+</div>
+<!-- Transparency Notice -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5">info</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Transparence de l'architecture DevStreet</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Pour le MVP, les fichiers sources, arborescences de branches et pull requests sont consultés et audités directement dans l'instance Gitea souveraine hébergée par DevStreet. Aucun faux explorateur n'est simulé sur cette interface.
+              </p>
+</div>
+</div>
+<!-- Prominent External Gitea Forge Button -->
+<div class="p-space-xl rounded-xl bg-primary text-on-primary flex flex-col sm:flex-row sm:items-center justify-between gap-space-md shadow-md">
+<div class="flex flex-col max-w-md">
+<span class="font-headline-sm text-headline-sm font-bold">Explorer le code source complet</span>
+<p class="font-body-sm text-body-sm text-on-primary-container mt-1">
+                Accédez à l'arbre Git complet, à l'historique des commits, aux revues de code et aux workflows CI/CD.
+              </p>
+</div>
+<a class="flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-secondary-container hover:bg-secondary text-on-secondary font-label-md text-label-md font-bold transition-all shadow-sm" href="https://git.devstreet.org/aicha/stock" rel="noopener noreferrer" target="_blank">
+<span>Ouvrir le code sur Gitea Forge</span>
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</a>
+</div>
+<!-- Clone Instructions Box -->
+<div class="flex flex-col gap-2">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Cloner ce dépôt en local :</span>
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low font-mono text-label-sm text-on-surface">
+<span class="truncate">git clone https://git.devstreet.org/aicha/stock.git</span>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" onclick="copyCloneUrl()" title="Copier la commande" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB 3: CONTRIBUER CONTENT -->
+<div class="hidden flex-col gap-space-lg" id="view-contribuer">
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Toutes les contributions ouvertes (3)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Prenez part aux évolutions du moteur de stock en autonomie ou en binôme.</p>
+</div>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container font-label-md text-label-md font-semibold transition-colors" id="btn-contrib-create" onclick="openCreateTaskModal()" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Nouvelle tâche</span>
+</button>
+</div>
+<!-- Detailed list -->
+<div class="flex flex-col gap-space-sm mt-space-xs">
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md font-mono text-secondary font-bold">#01</span>
+<span class="font-headline-sm text-body-md font-bold text-on-surface">Export CSV des mouvements de stock journaliers</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-error-container text-on-error-container font-bold">Priorité Haute</span>
+</div>
+<a class="px-3 py-1 rounded-md bg-primary text-on-primary font-label-sm text-label-sm font-semibold hover:bg-primary-container" data-path="ecran-04-details-tache" href="#">
+                  Postuler / Traiter
+                </a>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Permettre l'exportation des écritures en mémoire tampon vers un format tableur standard universel lisible sans internet.
+              </p>
+<div class="flex items-center gap-3 font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>Assigné à : <strong class="text-on-surface font-semibold">Moussa Traoré</strong> (En attente d'acceptation)</span>
+<span>•</span>
+<span>Type : Backend Django</span>
+</div>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md font-mono text-on-surface-variant font-bold">#02</span>
+<span class="font-headline-sm text-body-md font-bold text-on-surface">Gestion du cache hors-ligne IndexedDB</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-bold">En cours</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">Assigné</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Intégration d'un ServiceWorker avec stratégie Network-First puis fallback LocalStorage chiffré.
+              </p>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md font-mono text-on-surface-variant font-bold">#03</span>
+<span class="font-headline-sm text-body-md font-bold text-on-surface">Test de charge de synchronisation multi-terminaux</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">Ouvert</span>
+</div>
+<button class="px-3 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold" type="button">
+                  Prendre en charge
+                </button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Script de tests Locust pour vérifier l'intégrité des clés primaires UUID lors des fusions différées.
+              </p>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB 4: EQUIPE CONTENT -->
+<div class="hidden flex-col gap-space-lg" id="view-equipe">
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Membres du projet (2)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Collaborateurs disposant d'accès directs sur le dépôt et la forge.</p>
+</div>
+</div>
+<div class="flex flex-col gap-space-sm">
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-sm">
+                  AD
+                </div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-body-md font-bold text-on-surface">Aïcha Diallo</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">@aicha • Bamako, Mali</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-bold">
+                Propriétaire &amp; Lead
+              </span>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-sm">
+                  MT
+                </div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-body-md font-bold text-on-surface">Moussa Traoré</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">@mtraore • Dakar, Sénégal</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-1 rounded bg-surface-container-highest text-on-surface-variant font-medium">
+                Contributeur régulier
+              </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar Column (Right 4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Card: A propos du depot -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">À propos du dépôt</h3>
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">balance</span> Licence
+            </span>
+<span class="font-mono font-semibold text-on-surface">MIT License</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">commit</span> Commits
+            </span>
+<span class="font-mono font-semibold text-on-surface">142 commits</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">sell</span> Releases
+            </span>
+<span class="font-mono font-semibold text-on-surface">3 versions</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">group</span> Contributeurs
+            </span>
+<span class="font-mono font-semibold text-on-surface">5 devs</span>
+</div>
+</div>
+<!-- Sovereign Forge Git URL -->
+<div class="flex flex-col gap-1.5 pt-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Forge souveraine :</span>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low font-mono text-[11px] text-on-surface">
+<span class="truncate">git.devstreet.org/aicha/stock.git</span>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface" onclick="copyRepoUrl()" title="Copier l'URL" type="button">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card: Équipe du projet & Ajout de membre direct -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Équipe active</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">2 / 10 max</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Member 1 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs shrink-0">
+                AD
+              </div>
+<div class="flex flex-col truncate">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface truncate">Aïcha Diallo</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Lead Maintainer</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-mono font-bold">@aicha</span>
+</div>
+<!-- Member 2 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-xs shrink-0">
+                MT
+              </div>
+<div class="flex flex-col truncate">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface truncate">Moussa Traoré</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Contributeur</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">@mtraore</span>
+</div>
+</div>
+<!-- Add Member Input (Restricted strictly to owner, no invented directory) -->
+<div class="pt-space-xs flex flex-col gap-1.5" id="add-member-section">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="member-handle-input">
+            Ajouter un membre (identifiant DevStreet) :
+          </label>
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<span class="absolute left-2.5 top-2 font-mono text-label-sm text-outline-variant">@</span>
+<input class="w-full h-8 pl-7 pr-2 rounded-lg bg-surface-container-low font-mono text-label-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-secondary placeholder:text-outline-variant" id="member-handle-input" placeholder="identifiant" type="text"/>
+</div>
+<button class="h-8 px-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm font-medium transition-colors shrink-0" onclick="inviteMember()" type="button">
+              Inviter
+            </button>
+</div>
+<span class="font-label-sm text-label-sm text-secondary hidden" id="invite-feedback">Invitation envoyée avec succès.</span>
+</div>
+</div>
+<!-- Card: Raccourcis de collaboration -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Raccourcis de collaboration</h3>
+<a class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between group" data-path="forum-stock" href="#">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-secondary text-[20px]">forum</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface group-hover:text-secondary transition-colors">Poser une question sur le Forum</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Fil d'entraide dédié : #stock-dev</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+</a>
+<a class="p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between group" href="https://git.devstreet.org/aicha/stock/issues" rel="noopener noreferrer" target="_blank">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">bug_report</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface group-hover:text-secondary transition-colors">Signaler une anomalie</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Ouvrir un ticket sur Gitea</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Bottom Functional UX Simulator Dock (Dev & QA quick tests) -->
+<div class="w-full bg-primary-container text-on-primary rounded-xl p-space-md shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-space-md mt-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-7 h-7 rounded bg-secondary flex items-center justify-center font-bold text-on-secondary text-xs">
+        QA
+      </div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-primary">Console de test de la fiche projet</span>
+<span class="font-label-sm text-label-sm text-on-primary-container">Basculez instantanément entre les vues et validez les parcours utilisateur.</span>
+</div>
+</div>
+<!-- Quick Switch Buttons -->
+<div class="flex flex-wrap items-center gap-2">
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 font-label-sm text-label-sm text-on-primary font-mono transition-colors" onclick="switchTab('presentation')" type="button">
+        Onglet Présentation
+      </button>
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 font-label-sm text-label-sm text-on-primary font-mono transition-colors" onclick="switchTab('code')" type="button">
+        Onglet Code (Forge)
+      </button>
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 font-label-sm text-label-sm text-on-primary font-mono transition-colors" onclick="switchTab('contribuer')" type="button">
+        Onglet Contribuer
+      </button>
+<button class="px-2.5 py-1 rounded bg-secondary text-on-secondary hover:bg-secondary-container font-label-sm text-label-sm font-mono font-bold transition-colors" onclick="toggleRoleShortcut()" type="button">
+        Alterner Rôle (Propriétaire / Visiteur)
+      </button>
+</div>
+</div>
+</div>
+<!-- Inline JavaScript strictly adhering to constraints and zero-dependencies -->
+<script>
+  let currentRole = 'owner';
+  let isStarred = false;
+  let starCount = 48;
+
+  function switchRole(role) {
+    currentRole = role;
+    const btnOwner = document.getElementById('btn-role-owner');
+    const btnVisitor = document.getElementById('btn-role-visitor');
+    const roleBadge = document.getElementById('role-badge');
+    const roleExplanation = document.getElementById('role-explanation');
+    const ownerActions = document.getElementById('owner-actions-container');
+    const visitorActions = document.getElementById('visitor-actions-container');
+    const addMemberSec = document.getElementById('add-member-section');
+    const btnContribCreate = document.getElementById('btn-contrib-create');
+
+    if (role === 'owner') {
+      btnOwner.className = "px-3 py-1.5 rounded-md font-label-md text-label-md transition-all font-semibold bg-surface-container-lowest text-on-surface shadow-sm";
+      btnVisitor.className = "px-3 py-1.5 rounded-md font-label-md text-label-md transition-all font-medium text-on-surface-variant hover:text-on-surface";
+      roleBadge.textContent = "Mode Propriétaire";
+      roleBadge.className = "font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold uppercase tracking-wider";
+      roleExplanation.textContent = "Permissions complètes : création de tâches, préparation IA et revue des contributions en attente.";
+      
+      ownerActions.classList.remove('hidden');
+      ownerActions.classList.add('flex');
+      visitorActions.classList.add('hidden');
+      visitorActions.classList.remove('flex');
+      addMemberSec.classList.remove('hidden');
+      if (btnContribCreate) btnContribCreate.classList.remove('hidden');
+    } else {
+      btnVisitor.className = "px-3 py-1.5 rounded-md font-label-md text-label-md transition-all font-semibold bg-surface-container-lowest text-on-surface shadow-sm";
+      btnOwner.className = "px-3 py-1.5 rounded-md font-label-md text-label-md transition-all font-medium text-on-surface-variant hover:text-on-surface";
+      roleBadge.textContent = "Mode Visiteur (Moussa)";
+      roleBadge.className = "font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-bold uppercase tracking-wider";
+      roleExplanation.textContent = "Accès en lecture et contribution : postulation sur tâches ouvertes et navigation vers la forge publique.";
+      
+      ownerActions.classList.add('hidden');
+      ownerActions.classList.remove('flex');
+      visitorActions.classList.remove('hidden');
+      visitorActions.classList.add('flex');
+      addMemberSec.classList.add('hidden');
+      if (btnContribCreate) btnContribCreate.classList.add('hidden');
+    }
+  }
+
+  function toggleRoleShortcut() {
+    switchRole(currentRole === 'owner' ? 'visitor' : 'owner');
+  }
+
+  function switchTab(tabId) {
+    const tabs = ['presentation', 'code', 'contribuer', 'equipe'];
+    tabs.forEach(tab => {
+      const viewEl = document.getElementById(`view-${tab}`);
+      const btnEl = document.getElementById(`tab-btn-${tab}`);
+      if (!viewEl || !btnEl) return;
+
+      if (tab === tabId) {
+        viewEl.classList.remove('hidden');
+        viewEl.classList.add('flex');
+        btnEl.className = "tab-button active flex items-center gap-2 pb-2.5 px-1 font-label-lg text-label-lg font-bold border-b-2 text-primary border-primary transition-all";
+      } else {
+        viewEl.classList.add('hidden');
+        viewEl.classList.remove('flex');
+        btnEl.className = "tab-button flex items-center gap-2 pb-2.5 px-1 font-label-lg text-label-lg font-medium text-on-surface-variant hover:text-on-surface transition-all";
+      }
+    });
+  }
+
+  function toggleStar() {
+    isStarred = !isStarred;
+    const starIcon = document.getElementById('star-icon');
+    const starText = document.getElementById('star-text');
+    const starCountEl = document.getElementById('star-count');
+
+    if (isStarred) {
+      starCount += 1;
+      starIcon.setAttribute('style', "font-variation-settings: 'FILL' 1;");
+      starText.textContent = "Étoilé";
+    } else {
+      starCount -= 1;
+      starIcon.removeAttribute('style');
+      starText.textContent = "Étoiler";
+    }
+    starCountEl.textContent = starCount;
+  }
+
+  function copyRepoUrl() {
+    const url = "git.devstreet.org/aicha/stock.git";
+    navigator.clipboard?.writeText(url);
+    alert("URL de dépôt copiée : " + url);
+  }
+
+  function copyCloneUrl() {
+    const cmd = "git clone https://git.devstreet.org/aicha/stock.git";
+    navigator.clipboard?.writeText(cmd);
+    alert("Commande de clonage copiée dans le presse-papier !");
+  }
+
+  function inviteMember() {
+    const input = document.getElementById('member-handle-input');
+    const feedback = document.getElementById('invite-feedback');
+    if (!input.value.trim()) {
+      alert("Veuillez saisir un identifiant utilisateur valide (ex: mtraore).");
+      return;
+    }
+    feedback.classList.remove('hidden');
+    input.value = '';
+    setTimeout(() => {
+      feedback.classList.add('hidden');
+    }, 4000);
+  }
+
+  function openCreateTaskModal() {
+    alert("Ouverture de l'assistant de création de tâche pour le projet Stock.");
+  }
+</script></main></div></body></html>

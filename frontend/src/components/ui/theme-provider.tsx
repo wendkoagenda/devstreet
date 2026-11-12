@@ -20,52 +20,44 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+const resolveSystemTheme = (): "dark" | "light" =>
+  window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
-
-  // Effet pour forcer le thème au premier chargement
-  useEffect(() => {
-    const savedTheme = localStorage.getItem(storageKey);
-    if (!savedTheme) {
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      const initialTheme: Theme = prefersDark ? "dark" : "light";
-      setTheme(initialTheme);
-      localStorage.setItem(storageKey, initialTheme);
-    }
-  }, [storageKey]);
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem(storageKey) as Theme | null;
+    return saved ?? defaultTheme;
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const apply = (value: "dark" | "light") => {
+      root.classList.remove("light", "dark");
+      root.classList.add(value);
+    };
 
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
+    if (theme !== "system") {
+      apply(theme);
       return;
     }
 
-    root.classList.add(theme);
+    apply(resolveSystemTheme());
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => apply(resolveSystemTheme());
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
   }, [theme]);
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
+    setTheme: (next: Theme) => {
+      localStorage.setItem(storageKey, next);
+      setTheme(next);
     },
   };
 

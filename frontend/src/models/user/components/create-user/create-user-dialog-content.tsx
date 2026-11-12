@@ -259,8 +259,8 @@ export default function CreateUserDialogContent() {
                         <div className="flex items-center gap-2 text-xs mt-1">
                           {watchedPassword === watchedConfirmPassword ? (
                             <>
-                              <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                              <span className="text-green-700 dark:text-green-400">
+                              <Check className="h-3 w-3 text-success" />
+                              <span className="text-success">
                                 Les mots de passe correspondent
                               </span>
                             </>

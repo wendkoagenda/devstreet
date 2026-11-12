@@ -92,7 +92,15 @@
     "my_account": "My Account",
     "disconnect": "Disconnect",
     "home": "Home",
-    "roles": "Roles"
+    "roles": "Roles",
+    "marketplace": "Marketplace",
+    "hub": "DevStreet Hub",
+    "forum": "Forum",
+    "profile": "My profile",
+    "explore_projects": "Explore projects",
+    "brand": "DevStreet",
+    "brand_badge": "Hub",
+    "brand_home": "DevStreet Hub home"
   },
   "language": {
     "toggle": "Toggle language",
@@ -108,7 +116,102 @@
   "breadcrumb_titles": {
     "home": "Home",
     "users_list": "Users List",
-    "roles_list": "Roles List"
+    "roles_list": "Roles List",
+    "hub": "DevStreet Hub",
+    "hub_projects": "Explore projects",
+    "hub_project_new": "Create a project",
+    "hub_project_detail": "Project page"
+  },
+  "hub": {
+    "common": {
+      "login": "Sign in",
+      "retry": "Retry",
+      "rate_limited": "Too many requests. Wait a moment before trying again."
+    },
+    "status": {
+      "draft": "Draft — visible only to you",
+      "published": "Public",
+      "archived": "Archived"
+    },
+    "explorer": {
+      "eyebrow": "DevStreet Repository Registry",
+      "title": "What do you want to build with others?",
+      "mobile_title": "Explore projects",
+      "description": "Discover community-led projects, understand their needs, and offer your contributions.",
+      "metric_projects": "Visible projects",
+      "metric_technologies": "Technologies",
+      "search_label": "Search projects",
+      "search_placeholder": "Search by keyword, project name, problem solved...",
+      "clear_search": "Clear search",
+      "technology_label": "Technology",
+      "all_technologies": "All technologies",
+      "all_short": "All",
+      "catalog_loading": "Loading catalog...",
+      "catalog_retry": "Retry",
+      "create": "Create a project",
+      "create_login": "Sign in to create",
+      "filter_search": "Search: {{search}}",
+      "filter_mine": "My projects",
+      "filter_owner": "Owner #{{id}}",
+      "active_filters": "Active filters",
+      "clear_all": "Clear all filters",
+      "remove_filter": "Remove filter {{filter}}",
+      "projects_available": "{{count}} projects available",
+      "list_label": "Project list",
+      "loading": "Loading projects"
+    },
+    "empty": {
+      "title": "No projects yet",
+      "text": "Published projects will appear here.",
+      "filtered_title": "No project matches your filters",
+      "filtered_text": "Widen your search by clearing the technology filter or changing the keyword."
+    },
+    "error": {
+      "title": "Unable to load projects",
+      "generic": "An error prevents the registry from loading. Retry or widen your filters.",
+      "network": "Connection failed. Check the network then retry.",
+      "forbidden": "You do not have access to these projects."
+    },
+    "pagination": {
+      "label": "Pagination",
+      "range_prefix": "Showing",
+      "range_to": "to",
+      "range_of": "of",
+      "projects": "projects",
+      "previous": "Previous",
+      "next": "Next",
+      "previous_short": "Previous",
+      "next_short": "Next",
+      "page": "Page {{page}}",
+      "mobile_summary": "Page {{page}} of {{pageCount}} • {{count}} projects found"
+    },
+    "card": {
+      "open": "Open {{title}}",
+      "discover": "Discover the project",
+      "open_draft": "Open draft",
+      "discover_hint": "Discover the project need",
+      "draft_ready": "Draft ready to publish",
+      "draft_git": "Git setup in progress"
+    },
+    "star": {
+      "add": "Star {{title}}",
+      "remove": "Unstar {{title}}",
+      "unavailable": "Drafts cannot be starred",
+      "login_required": "Sign in to star a project.",
+      "forbidden": "You are not allowed to star this project.",
+      "not_found": "Project not found.",
+      "conflict": "This action is no longer possible for this project.",
+      "error": "Unable to update the star."
+    },
+    "upcoming": {
+      "badge": "Coming soon",
+      "text": "This screen is not delivered yet. Exploration remains available.",
+      "back": "Back to exploration",
+      "screens": {
+        "create_project": "Create a project",
+        "project_detail": "Project page"
+      }
+    }
   },
   "auth": {
     "logout_title": "Logout",
@@ -142,7 +245,6 @@
     "name": "Roles and Permissions",
     "description": "Roles and Permissions management"
   },
-
   "pagination": {
     "previous": "Previous",
     "next": "Next",
@@ -191,7 +293,6 @@
     "success": "Your password has been changed successfully",
     "error": "An error occurred while changing your password"
   },
-
   "forgot_password": {
     "title": "Forgot password",
     "email_description": "Enter the email address of your account. We will send you a verification code.",
@@ -253,9 +354,7 @@
     "permissionsAssignedSuccess": "Permissions assigned successfully!",
     "assignmentError": "Failed to assign permissions",
     "role": "Role",
-
     "selectRoleFirst": "Please select a role first",
-
     "title": "Roles and Permissions",
     "description": "Roles and Permissions Management",
     "permissions": "Permissions",
@@ -280,7 +379,6 @@
     "roleName": "Name",
     "nameLabel": "Nom",
     "namePlaceholder": "",
-
     "descriptionLabel": "",
     "descriptionPlaceholder": "",
     "roleDescription": "Description",

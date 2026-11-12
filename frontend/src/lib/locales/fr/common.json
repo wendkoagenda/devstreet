@@ -87,8 +87,8 @@
   "login_form_forgot_password": "Mot de passe oublié ?",
   "login_form_register": "Inscription",
   "sidebar": {
-    "title": "devstreet",
-    "version": "1.0.0",
+    "title": "DevStreet",
+    "version": "Hub",
     "logo": "/devstreet-logo.png",
     "users": "Utilisateurs",
     "departments": "Departements",
@@ -96,7 +96,15 @@
     "my_account": "Mon compte",
     "disconnect": "Déconnexion",
     "home": "Accueil",
-    "roles": "Roles"
+    "roles": "Roles",
+    "marketplace": "Marketplace",
+    "hub": "DevStreet Hub",
+    "forum": "Forum",
+    "profile": "Mon profil",
+    "explore_projects": "Explorer les projets",
+    "brand": "DevStreet",
+    "brand_badge": "Hub",
+    "brand_home": "Accueil DevStreet Hub"
   },
   "language": {
     "toggle": "Changer de langue",
@@ -161,7 +169,102 @@
   "breadcrumb_titles": {
     "home": "Accueil",
     "users_list": "Liste des utilisateurs",
-    "roles_list": "Liste des rôles"
+    "roles_list": "Liste des rôles",
+    "hub": "DevStreet Hub",
+    "hub_projects": "Explorer les projets",
+    "hub_project_new": "Créer un projet",
+    "hub_project_detail": "Fiche projet"
+  },
+  "hub": {
+    "common": {
+      "rate_limited": "Trop de requêtes. Attendez un instant avant de réessayer.",
+      "retry": "Réessayer",
+      "login": "Se connecter"
+    },
+    "status": {
+      "archived": "Archivé",
+      "published": "Public",
+      "draft": "Brouillon — visible uniquement par vous"
+    },
+    "explorer": {
+      "catalog_loading": "Chargement du catalogue...",
+      "description": "Découvre des projets portés par la communauté, comprends leurs enjeux et propose tes contributions.",
+      "catalog_retry": "Réessayer",
+      "all_short": "Tous",
+      "metric_projects": "Projets visibles",
+      "projects_available": "{{count}} projets disponibles",
+      "loading": "Chargement des projets",
+      "filter_search": "Recherche : {{search}}",
+      "filter_mine": "Mes projets",
+      "list_label": "Liste des projets",
+      "active_filters": "Filtres actifs",
+      "eyebrow": "DevStreet Repository Registry",
+      "search_placeholder": "Rechercher par mot-clé, nom de projet, problème résolu...",
+      "title": "Sur quoi veux-tu construire avec d'autres ?",
+      "clear_search": "Effacer la recherche",
+      "technology_label": "Technologie",
+      "create_login": "Se connecter pour créer",
+      "remove_filter": "Retirer le filtre {{filter}}",
+      "mobile_title": "Explorer les projets",
+      "create": "Créer un projet",
+      "search_label": "Rechercher des projets",
+      "metric_technologies": "Technologies",
+      "clear_all": "Effacer tous les filtres",
+      "all_technologies": "Toutes les technologies",
+      "filter_owner": "Propriétaire #{{id}}"
+    },
+    "empty": {
+      "title": "Aucun projet pour le moment",
+      "filtered_title": "Aucun projet ne correspond à vos filtres",
+      "text": "Quand des projets seront publiés, ils apparaîtront ici.",
+      "filtered_text": "Élargis ta recherche en réinitialisant le filtre de technologie ou en modifiant le mot-clé saisi."
+    },
+    "error": {
+      "title": "Impossible de charger les projets",
+      "generic": "Une erreur empêche l'affichage du registre. Réessayez ou élargissez vos filtres.",
+      "network": "Connexion impossible. Vérifiez le réseau puis réessayez.",
+      "forbidden": "Vous n'avez pas accès à ces projets."
+    },
+    "pagination": {
+      "range_of": "sur",
+      "range_to": "à",
+      "projects": "projets",
+      "previous": "Précédent",
+      "label": "Pagination",
+      "page": "Page {{page}}",
+      "next": "Suivant",
+      "mobile_summary": "Page {{page}} sur {{pageCount}} • {{count}} projets trouvés",
+      "next_short": "Suivante",
+      "previous_short": "Précédente",
+      "range_prefix": "Affichage de"
+    },
+    "card": {
+      "draft_ready": "Brouillon prêt à publier",
+      "open": "Ouvrir {{title}}",
+      "discover_hint": "Découvrir le besoin du projet",
+      "draft_git": "En cours de configuration Git",
+      "discover": "Découvrir le projet",
+      "open_draft": "Ouvrir le brouillon"
+    },
+    "star": {
+      "not_found": "Projet introuvable.",
+      "add": "Étoiler {{title}}",
+      "remove": "Retirer l'étoile de {{title}}",
+      "login_required": "Connectez-vous pour étoiler un projet.",
+      "forbidden": "Vous n'avez pas le droit d'étoiler ce projet.",
+      "error": "Impossible de mettre à jour l'étoile.",
+      "conflict": "Cette action n'est plus possible pour ce projet.",
+      "unavailable": "Les brouillons ne peuvent pas être étoilés"
+    },
+    "upcoming": {
+      "back": "Retour à l'exploration",
+      "screens": {
+        "project_detail": "Fiche projet",
+        "create_project": "Créer un projet"
+      },
+      "badge": "À venir",
+      "text": "Cet écran n'est pas encore livré. L'exploration reste disponible."
+    }
   },
   "auth": {
     "logout_title": "Déconnexion",
@@ -200,7 +303,6 @@
     "success": "Votre mot de passe a été changé avec succès",
     "error": "Une erreur est survenue lors du changement de mot de passe"
   },
-
   "forgot_password": {
     "title": "Mot de passe oublié",
     "email_description": "Saisissez l'adresse e-mail de votre compte. Nous vous enverrons un code de vérification.",
@@ -262,9 +364,7 @@
     "permissionsAssignedSuccess": "Permissions attribuées avec succès !",
     "assignmentError": "Erreur lors de l'attribution des permissions",
     "role": "Rôle",
-
     "selectRoleFirst": "Veuillez d'abord sélectionner un rôle",
-
     "title": "Rôles et permissions",
     "description": "Gestion des rôles et permissions",
     "permissions": "Permissions",

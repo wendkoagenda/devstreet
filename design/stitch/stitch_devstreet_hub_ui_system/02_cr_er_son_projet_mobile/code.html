@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="mobile_tab" name="shell-type"/>
+<title>DevStreet - Explorer les projets</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#000000", "primary-light": "#1E293B", accent: "#EA580C", "accent-hover": "#C2410C", "accent-light": "#FFF7ED", "slate-sub": "#64748B", "slate-border": "#E2E8F0", "slate-bg": "#F1F5F9", background: "#fcf8fa", card: "#FFFFFF", "on-surface": "#1b1b1d", "on-surface-variant": "#45464d", "on-tertiary": "#ffffff", "surface-container-lowest": "#ffffff", surface: "#fcf8fa", "secondary-fixed-dim": "#ffb599", "secondary-container": "#fd651e", "on-secondary": "#ffffff", "outline-variant": "#c6c6cd", tertiary: "#000000", secondary: "#a73a00", "surface-container-low": "#f6f3f5", "on-secondary-fixed-variant": "#7f2b00", "primary-container": "#131b2e", "inverse-primary": "#bec6e0", "surface-container": "#f0edef", "on-tertiary-container": "#98805d", "tertiary-container": "#271901", "on-secondary-fixed": "#370e00", error: "#ba1a1a", "inverse-surface": "#303032", "surface-tint": "#565e74", "surface-variant": "#e4e2e4", "on-secondary-container": "#571a00", "on-background": "#1b1b1d", "on-error-container": "#93000a", "tertiary-fixed-dim": "#dec29a", "on-primary-fixed-variant": "#3f465c", outline: "#76777d", "tertiary-fixed": "#fcdeb5", "surface-dim": "#dcd9db", "on-tertiary-fixed-variant": "#574425", "inverse-on-surface": "#f3f0f2", "on-primary-container": "#7c839b", "on-primary-fixed": "#131b2e", "surface-container-highest": "#e4e2e4", "on-tertiary-fixed": "#271901", "primary-fixed": "#dae2fd", "on-primary": "#ffffff", "surface-bright": "#fcf8fa", "on-error": "#ffffff", "primary-fixed-dim": "#bec6e0", "surface-container-high": "#eae7e9", "error-container": "#ffdad6", "secondary-fixed": "#ffdbce"}, fontFamily: {sans: ["Poppins", "sans-serif"], mono: ["JetBrains Mono", "monospace"], headline: ["Poppins"], display: ["Poppins"], body: ["Poppins"], label: ["JetBrains Mono"]}, fontSize: {}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};
+  </script>
+<style>
+    @layer base {
+      html, body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background-color: #F8FAFC;
+        font-family: 'Poppins', sans-serif;
+      }
+      body {
+        overscroll-behavior-y: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-sans text-on-surface flex flex-col min-h-screen">
+<!-- Header Mobile -->
+<header class="fixed top-0 w-full z-40 pt-safe bg-card/90 backdrop-blur-md border-b border-slate-border">
+<div class="h-14 px-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button aria-label="Open drawer navigation" class="w-10 h-10 flex items-center justify-center rounded-xl text-primary hover:bg-slate-bg transition-colors" type="button">
+<span class="material-symbols-outlined text-[24px]">menu</span>
+</button>
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined text-[17px]">terminal</span>
+</div>
+<span class="font-bold text-lg text-primary tracking-tight">DevStreet</span>
+</div>
+</div>
+<div class="flex items-center">
+<button aria-label="Profil utilisateur" class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Contenu Principal -->
+<main class="flex-1 w-full pt-14 pb-24 px-4 py-4 max-w-md mx-auto"><div class="flex flex-col w-full pb-6">
+<!-- En-tête de page & Statut de sauvegarde auto -->
+<div class="flex items-center justify-between gap-2 mb-3">
+<div class="flex flex-col min-w-0">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Nouveau projet</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Déploie ton code sur la vitrine DevStreet</p>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant shrink-0 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-sm text-label-sm font-medium">Brouillon sauvé</span>
+</div>
+</div>
+<!-- Stepper tactile compact adapté mobile (390px) -->
+<div class="w-full bg-surface-container-lowest p-2 rounded-xl mb-4 shadow-sm">
+<div class="grid grid-cols-3 gap-1">
+<!-- Étape 1 : Validée -->
+<div class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium truncate">1. Pitch</span>
+</div>
+</div>
+<!-- Étape 2 : Active -->
+<div class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-primary text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary-container">source</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-primary font-bold truncate">2. Dépôt</span>
+</div>
+</div>
+<!-- Étape 3 : Suivante -->
+<div class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-surface text-on-surface-variant opacity-70">
+<span class="material-symbols-outlined text-[16px] text-outline">rocket_launch</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm font-medium truncate">3. Déployer</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Formulaire principal Mobile First -->
+<form class="flex flex-col gap-4" id="project-form" onsubmit="event.preventDefault();">
+<!-- Bloc 1 : Métadonnées Identité & Visuel -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Identité du build</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Public</span>
+</div>
+<!-- Nom du projet & Slug unifiés -->
+<div class="flex flex-col gap-1.5">
+<label class="font-body-sm text-body-sm font-semibold text-on-surface" for="project-name">Nom du projet</label>
+<div class="flex items-center bg-surface-container-low rounded-lg px-3 py-2 focus-within:bg-surface-container-lowest shadow-inner transition-colors">
+<input class="w-full bg-transparent p-0 text-on-surface font-body-md text-body-md border-0 focus:ring-0 focus:outline-none" id="project-name" placeholder="Ex: Stock" type="text" value="Stock"/>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5 px-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Slug généré :</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold bg-surface-container px-2 py-0.5 rounded">aicha/stock</span>
+</div>
+</div>
+<!-- Problème résolu / Description courte -->
+<div class="flex flex-col gap-1.5">
+<label class="font-body-sm text-body-sm font-semibold text-on-surface" for="project-desc">Problème résolu en une phrase</label>
+<div class="bg-surface-container-low rounded-lg p-3 focus-within:bg-surface-container-lowest shadow-inner transition-colors">
+<textarea class="w-full bg-transparent p-0 text-on-surface font-body-sm text-body-sm border-0 focus:ring-0 focus:outline-none resize-none" id="project-desc" placeholder="Ex: Synchronisation omnicanale en temps réel pour boutiques indépendantes sans ERP lourd." rows="2">Gestionnaire d'inventaire automatisé éliminant 90% des ruptures de stock grâce à des alertes webhook prédictives.</textarea>
+</div>
+</div>
+<!-- Tags technologiques cliquables & ajout rapide -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Technologies clés</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">3 sélectionnées</span>
+</div>
+<div class="flex flex-wrap gap-1.5">
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+<span>Python</span>
+<button aria-label="Supprimer Python" class="text-on-surface-variant hover:text-error flex items-center" type="button">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+<span>Django</span>
+<button aria-label="Supprimer Django" class="text-on-surface-variant hover:text-error flex items-center" type="button">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-secondary text-on-secondary font-label-sm text-label-sm shadow-sm">
+<span>PostgreSQL</span>
+<button aria-label="Supprimer PostgreSQL" class="text-on-secondary hover:opacity-80 flex items-center" type="button">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<button class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-surface-container text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">add</span>
+<span>Tag</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bloc 2 : Dépôt Git & Connecteur Repo -->
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[20px]">terminal</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Configuration Git</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface px-2 py-0.5 rounded font-mono">SSH / HTTPS</span>
+</div>
+<!-- URL du Dépôt avec action copier rapide -->
+<div class="flex flex-col gap-1.5">
+<label class="font-body-sm text-body-sm font-semibold text-on-surface">URL du Remote Git</label>
+<div class="flex items-center justify-between bg-surface-container-low rounded-lg p-2.5">
+<div class="flex items-center gap-2 min-w-0 pr-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">link</span>
+<span class="font-code-inline text-code-inline text-on-surface truncate" id="repo-url-text">https://git.devstreet.io/aicha/stock.git</span>
+</div>
+<button aria-label="Copier l'URL du dépôt" class="h-9 px-3 shrink-0 rounded-lg bg-surface-container-highest text-on-surface hover:bg-primary hover:text-on-primary transition-all flex items-center gap-1 active:scale-95 shadow-sm" id="copy-repo-btn" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span class="font-label-sm text-label-sm">Copier</span>
+</button>
+</div>
+</div>
+<!-- Commandes d'initialisation Git avec ascenseur horizontal ergonomique -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lier un dépôt existant</span>
+<button class="font-label-sm text-label-sm text-secondary hover:underline flex items-center gap-1" id="copy-script-btn" type="button">
+<span class="material-symbols-outlined text-[14px]">inventory_2</span>
+<span>Tout copier</span>
+</button>
+</div>
+<div class="relative bg-primary-container rounded-lg p-3 text-on-primary-container overflow-hidden shadow-inner">
+<div class="overflow-x-auto no-scrollbar py-0.5">
+<pre class="font-code-inline text-code-inline leading-relaxed select-all whitespace-pre text-surface-bright"><span class="text-outline-variant font-mono select-none"># Initialisation</span>
+git init
+git remote add origin https://git.devstreet.io/aicha/stock.git
+git branch -M main
+git add .
+git commit -m <span class="text-secondary-fixed">"feat: init DevStreet bundle"</span>
+git push -u origin main</pre>
+</div>
+<div class="absolute right-2 top-2">
+<span class="font-label-sm text-label-sm text-outline-variant uppercase font-mono px-1.5 py-0.5 bg-tertiary-container rounded">bash</span>
+</div>
+</div>
+</div>
+<!-- Aperçu d'état de l'intégration continue -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface">Webhook d'auto-build activé</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-mono">v1.0.0-rc</span>
+</div>
+</div>
+<!-- Bannière de Sécurité & Confidentialité -->
+<div class="bg-surface-container-high rounded-xl p-3.5 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary shrink-0 text-[20px] mt-0.5">verified_user</span>
+<div class="flex flex-col gap-0.5 min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface">Sécurité &amp; Confidentialité</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-tight">
+          DevStreet n'embarque aucun secret (.env). L'analyse automatique de vulnérabilités et la signature de commits sont appliquées par défaut.
+        </p>
+</div>
+</div>
+<!-- Actions Tactiles Ancrées (44px min pour la conformité tactile) -->
+<div class="flex flex-col gap-2.5 mt-2">
+<button class="w-full min-h-[48px] rounded-xl bg-primary text-on-primary font-headline-sm text-headline-sm flex items-center justify-center gap-2 hover:bg-surface-tint active:scale-[0.99] transition-all shadow-md" id="submit-step-btn" type="button">
+<span>Enregistrer &amp; Étape suivante</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<button class="w-full min-h-[44px] rounded-xl bg-surface-container text-on-surface font-body-md text-body-md font-medium hover:bg-surface-container-highest active:scale-[0.99] transition-all flex items-center justify-center gap-1.5" id="save-draft-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span>Enregistrer le brouillon</span>
+</button>
+</div>
+</form>
+</div>
+<script>
+  // Toast micro-interaction
+  function triggerToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-xl text-body-sm font-medium shadow-xl z-50 flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-2';
+    toast.innerHTML = '<span class="material-symbols-outlined text-[18px] text-secondary">check_circle</span>' + message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.classList.remove('opacity-0', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+    });
+
+    setTimeout(() => {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => toast.remove(), 300);
+    }, 2200);
+  }
+
+  // Copie URL Repo
+  const copyRepoBtn = document.getElementById('copy-repo-btn');
+  if (copyRepoBtn) {
+    copyRepoBtn.addEventListener('click', () => {
+      navigator.clipboard?.writeText('https://git.devstreet.io/aicha/stock.git');
+      triggerToast('URL Git copiée dans le presse-papiers');
+    });
+  }
+
+  // Copie Script Shell
+  const copyScriptBtn = document.getElementById('copy-script-btn');
+  if (copyScriptBtn) {
+    copyScriptBtn.addEventListener('click', () => {
+      const commands = `git init\ngit remote add origin https://git.devstreet.io/aicha/stock.git\ngit branch -M main\ngit add .\ngit commit -m "feat: init DevStreet bundle"\ngit push -u origin main`;
+      navigator.clipboard?.writeText(commands);
+      triggerToast('Script complet copié !');
+    });
+  }
+
+  // Actions de validation
+  const saveDraftBtn = document.getElementById('save-draft-btn');
+  if (saveDraftBtn) {
+    saveDraftBtn.addEventListener('click', () => {
+      triggerToast('Brouillon synchronisé avec succès');
+    });
+  }
+
+  const submitStepBtn = document.getElementById('submit-step-btn');
+  if (submitStepBtn) {
+    submitStepBtn.addEventListener('click', () => {
+      triggerToast('Étape validée, chargement du déploiement...');
+    });
+  }
+</script></main>
+<!-- Barre de navigation basse (Mobile Bottom Navigation) -->
+<nav class="fixed bottom-0 w-full z-40 pb-safe bg-card/95 backdrop-blur-md border-t border-slate-border">
+<div class="h-16 px-2 flex items-center justify-around max-w-md mx-auto">
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="explorer" href="#">
+<span class="material-symbols-outlined text-[22px]">explore</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Explorer</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="marketplace" href="#">
+<span class="material-symbols-outlined text-[22px]">storefront</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="mes-projets" href="#">
+<span class="material-symbols-outlined text-[22px]">folder_code</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Projets</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="forum" href="#">
+<span class="material-symbols-outlined text-[22px]">forum</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Forum</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="mon-profil" href="#">
+<span class="material-symbols-outlined text-[22px]">account_circle</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Profil</span>
+</a>
+</div>
+</nav>
+<script>
+    // Micro-interaction toggle drawer
+    const drawer = document.getElementById('mobile-drawer');
+    const scrim = document.getElementById('drawer-scrim');
+    const closeBtn = document.getElementById('close-drawer');
+    const menuButton = document.querySelector('header button[aria-label="Open drawer navigation"]');
+
+    function openDrawer() {
+      if (!drawer || !scrim) return;
+      drawer.classList.remove('-translate-x-full');
+      scrim.classList.remove('opacity-0', 'pointer-events-none');
+      scrim.classList.add('opacity-100');
+    }
+
+    function closeDrawer() {
+      if (!drawer || !scrim) return;
+      drawer.classList.add('-translate-x-full');
+      scrim.classList.remove('opacity-100');
+      scrim.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    if (menuButton) {
+      menuButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDrawer();
+      });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (scrim) scrim.addEventListener('click', closeDrawer);
+
+    // Micro-interaction étoiles
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const countSpan = this.querySelector('span:last-child');
+        const starIcon = this.querySelector('.material-symbols-outlined');
+        let count = parseInt(countSpan.textContent, 10);
+        const isStarred = starIcon.getAttribute('style')?.includes('FILL');
+
+        if (isStarred) {
+          starIcon.removeAttribute('style');
+          starIcon.classList.remove('text-accent');
+          starIcon.classList.add('text-slate-sub');
+          countSpan.textContent = count - 1;
+        } else {
+          starIcon.setAttribute('style', "font-variation-settings: 'FILL' 1;");
+          starIcon.classList.remove('text-slate-sub');
+          starIcon.classList.add('text-accent');
+          countSpan.textContent = count + 1;
+        }
+      });
+    });
+  </script>
+</body></html>
