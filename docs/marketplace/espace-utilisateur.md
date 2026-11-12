@@ -53,3 +53,27 @@ Les endpoints `/api/v1/marketplace/...` sont ouverts à tout utilisateur connect
 ## Hors périmètre pour l'instant
 
 Génération d'offre par IA, part IA du score, messagerie intégrée (« Contacter » ouvre un `mailto:`), photo de profil, gestion des prestations et dépôt d'avis, historique des modifications du profil (`ProfilHistory`), `Skill.forum_tag`.
+
+## Données de démonstration
+
+```powershell
+# depuis backend/, venv active, DEBUG=True
+python manage.py seed_marketplace_demo            # crée ou met à jour (idempotent)
+python manage.py seed_marketplace_demo --reset    # supprime d'abord les données de démonstration
+```
+
+La commande remplit les 13 tables : 4 entreprises, 16 profils (5 recruteurs, 11 développeurs), compétences de profil, expériences, prestations, historique, calendriers, 8 offres (ouvertes, brouillon, clôturée), 15 candidatures dans tous les statuts, avis publics et privé, swipes et connexions (réciproques et bloquée). Les dates suivent « aujourd'hui » : les offres démarrent bientôt, les calendriers sont en cours. Une candidature acceptée ajoute sa période « occupé », comme dans l'application.
+
+Les comptes ont une adresse `@marketplace.example.test` et un mot de passe commun généré, lu dans `backend/.local/demo.credentials.json` (hors dépôt, partagé avec le seed du Hub). Pour parcourir les écrans :
+
+| Compte | Rôle | À regarder |
+| --- | --- | --- |
+| `awa@…` | Dev React et Node | Offres classées, candidature acceptée, CV PDF |
+| `ibrahim@…` | Dev junior | Profil à compléter, 2 connexions, rencontres entre devs |
+| `fatou@…` | Recruteuse Faso Pay (propriétaire) | Offres, candidatures reçues, vivier de 4 talents |
+| `seydou@…` | Recruteur Faso Pay (non propriétaire) | Ne peut pas modifier l'entreprise |
+| `koffi@…` | Directeur Resto Express | Offre clôturée avec avis |
+| `binta@…` | Cofondatrice AgriConnect (non vérifiée) | Offre en brouillon |
+| `grace@…` | Dev front, non disponible | Profil masqué des recommandations |
+
+Les seeds générés `seed_<modèle>` (3 lignes aléatoires par table) restent disponibles ; `seed_marketplace_demo` les remplace pour une démonstration cohérente.
