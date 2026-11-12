@@ -34,7 +34,7 @@ python manage.py runserver    # :8000
 
 Détail : [`backend/README.md`](backend/README.md)
 
-Module projets Chantier (backend uniquement) : [`docs/chantier/README.md`](docs/chantier/README.md), collection Postman et fiches d'interfaces numérotées incluses.
+Module projets DevStreet Hub (backend uniquement) : [`docs/devstreet_hub/README.md`](docs/devstreet_hub/README.md), collection Postman et fiches d'interfaces numérotées incluses.
 
 ### Frontend
 

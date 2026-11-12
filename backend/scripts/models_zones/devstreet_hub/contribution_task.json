@@ -1,0 +1,43 @@
+{
+  "model_name": "ContributionTask",
+  "app_name": "devstreet_hub",
+  "fields": [
+    {
+      "name": "title",
+      "type": "CharField",
+      "max_length": 180
+    },
+    {
+      "name": "description",
+      "type": "TextField",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "status",
+      "type": "CharField",
+      "max_length": 20,
+      "default": "draft",
+      "choices": [
+        [
+          "draft",
+          "Brouillon"
+        ],
+        [
+          "open",
+          "Ouverte"
+        ],
+        [
+          "closed",
+          "Fermée"
+        ]
+      ]
+    }
+  ],
+  "meta": {
+    "db_table": "projects_contribution_task",
+    "resource_plural": "contribution-tasks",
+    "verbose_name": "Tâche de contribution",
+    "verbose_name_plural": "Tâches de contribution"
+  }
+}

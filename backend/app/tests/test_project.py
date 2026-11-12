@@ -1,11 +1,11 @@
 from django.db import IntegrityError, transaction
 from rest_framework_simplejwt.tokens import RefreshToken
-from app.projects.models import Project, Star, ProjectMember
-from app.projects.services.errors import ExternalUnavailable
-from app.tests.projects_base import ProjectsAPITestCase
+from app.devstreet_hub.models import Project, Star, ProjectMember
+from app.devstreet_hub.services.errors import ExternalUnavailable
+from app.tests.devstreet_hub_base import DevStreetHubAPITestCase
 
 
-class ProjectRoutesTests(ProjectsAPITestCase):
+class ProjectRoutesTests(DevStreetHubAPITestCase):
     def test_filters_remain_scoped_and_reject_invalid_ids(self):
         self.project()
         other = self.project(owner=self.moussa, status="draft")

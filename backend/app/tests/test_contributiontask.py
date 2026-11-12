@@ -1,7 +1,7 @@
-from app.tests.projects_base import ProjectsAPITestCase
+from app.tests.devstreet_hub_base import DevStreetHubAPITestCase
 
 
-class ContributionRoutesTests(ProjectsAPITestCase):
+class ContributionRoutesTests(DevStreetHubAPITestCase):
     def test_manual_task_workflow_and_public_visibility(self):
         project = self.project()
         path = f"/api/v1/projects/{project.pk}/tasks"

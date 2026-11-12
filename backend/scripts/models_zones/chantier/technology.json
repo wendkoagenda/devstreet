@@ -1,9 +1,0 @@
-{
-  "model_name": "Technology",
-  "app_name": "projects",
-  "fields": [
-    {"name": "label", "type": "CharField", "max_length": 80},
-    {"name": "slug", "type": "SlugField", "max_length": 80, "unique": true}
-  ],
-  "meta": {"db_table": "projects_technology", "resource_plural": "technologies", "verbose_name": "Technologie", "verbose_name_plural": "Technologies"}
-}

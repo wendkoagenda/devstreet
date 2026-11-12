@@ -53,7 +53,7 @@ LOCAL_APPS = [
     'app.core',
     'app.metier',
     'app.garoapp',
-    'app.projects',
+    'app.devstreet_hub',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

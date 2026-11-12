@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "created_at": "2025-08-13T11:13:13.513780",
-  "last_updated": "2026-11-12T11:59:03.757036",
+  "last_updated": "2026-11-12T12:22:55.785797",
   "generated_apis": {
     "Elitest": {
       "model_name": "Elitest",
@@ -87,8 +87,8 @@
     },
     "ContributionTask": {
       "model_name": "ContributionTask",
-      "app_name": "projects",
-      "zone": "chantier",
+      "app_name": "devstreet_hub",
+      "zone": "devstreet_hub",
       "file": "contribution_task.json",
       "generated_at": "2026-11-12T11:17:43.804076",
       "status": "active",
@@ -102,8 +102,8 @@
     },
     "Project": {
       "model_name": "Project",
-      "app_name": "projects",
-      "zone": "chantier",
+      "app_name": "devstreet_hub",
+      "zone": "devstreet_hub",
       "file": "project.json",
       "generated_at": "2026-11-12T11:17:43.864790",
       "status": "active",
@@ -117,8 +117,8 @@
     },
     "Technology": {
       "model_name": "Technology",
-      "app_name": "projects",
-      "zone": "chantier",
+      "app_name": "devstreet_hub",
+      "zone": "devstreet_hub",
       "file": "technology.json",
       "generated_at": "2026-11-12T11:17:43.921287",
       "status": "active",
@@ -205,71 +205,71 @@
   "file_checksums": {
     "models.py": {
       "checksum": "abc69ba454c63b4e0cd08c024e4bfe49",
-      "last_updated": "2026-11-12T11:59:03.734149"
+      "last_updated": "2026-11-12T12:22:55.765944"
     },
     "serializers.py": {
       "checksum": "722583aa1003d533809c8aa28e954199",
-      "last_updated": "2026-11-12T11:59:03.735312"
+      "last_updated": "2026-11-12T12:22:55.766940"
     },
     "urls.py": {
       "checksum": "0b0c0fc8f8948f8bb6e61008e89e1f2a",
-      "last_updated": "2026-11-12T11:59:03.735312"
+      "last_updated": "2026-11-12T12:22:55.766940"
     },
     "views/elitest_viewset.py": {
       "checksum": "ba61d872eb57c86188455dd490a49882",
-      "last_updated": "2026-11-12T11:59:03.738631"
+      "last_updated": "2026-11-12T12:22:55.768438"
     },
     "views/elitesty_viewset.py": {
       "checksum": "89a2d8629b759110b03210e9d0e1c206",
-      "last_updated": "2026-11-12T11:59:03.737617"
+      "last_updated": "2026-11-12T12:22:55.768438"
     },
     "views/dragon_viewset.py": {
       "checksum": "c6e23e3edae819c1591a0d16df566c19",
-      "last_updated": "2026-11-12T11:59:03.737107"
+      "last_updated": "2026-11-12T12:22:55.766940"
     },
     "views/fusion_viewset.py": {
       "checksum": "837a9469acad2786178274abae93dd7a",
-      "last_updated": "2026-11-12T11:59:03.739346"
+      "last_updated": "2026-11-12T12:22:55.769954"
     },
     "garoapp::models.py": {
       "checksum": "84b693b1c3cdaec63a48f40856e8b406",
-      "last_updated": "2026-11-12T11:59:03.739859"
+      "last_updated": "2026-11-12T12:22:55.769954"
     },
     "garoapp::serializers.py": {
       "checksum": "9d86d26c5d4db15d075c7bda0e793be3",
-      "last_updated": "2026-11-12T11:59:03.739859"
+      "last_updated": "2026-11-12T12:22:55.769954"
     },
     "garoapp::urls.py": {
       "checksum": "228b250a8036ca3293986ddc8746527a",
-      "last_updated": "2026-11-12T11:59:03.739859"
+      "last_updated": "2026-11-12T12:22:55.771490"
     },
     "garoapp::views/gado_viewset.py": {
       "checksum": "e0a7de404cb429e86a5637673d781550",
-      "last_updated": "2026-11-12T11:59:03.739859"
+      "last_updated": "2026-11-12T12:22:55.772548"
     },
-    "projects::models.py": {
+    "devstreet_hub::models.py": {
       "checksum": "832165af5043942370d6c8b95661de26",
-      "last_updated": "2026-11-12T11:59:03.739859"
+      "last_updated": "2026-11-12T12:22:55.772548"
     },
-    "projects::serializers.py": {
-      "checksum": "43055f280b784d7dbbcd5f71bec017ef",
-      "last_updated": "2026-11-12T11:59:03.743225"
+    "devstreet_hub::serializers.py": {
+      "checksum": "021b2e355c0c5926efb88e1b64df3d1c",
+      "last_updated": "2026-11-12T12:22:55.773542"
     },
-    "projects::urls.py": {
-      "checksum": "1052282ad2f562206af7be3c0c57ff65",
-      "last_updated": "2026-11-12T11:59:03.743225"
+    "devstreet_hub::urls.py": {
+      "checksum": "43ae165a7ed9488d137b6feb75aa9cdd",
+      "last_updated": "2026-11-12T12:22:55.773542"
     },
-    "projects::views/contributiontask_viewset.py": {
-      "checksum": "2e4c1b349f3ac7ac1dd524a6af98e05a",
-      "last_updated": "2026-11-12T11:59:03.743225"
+    "devstreet_hub::views/contributiontask_viewset.py": {
+      "checksum": "e135a6bd5c09f0a3975c2fd4da491a55",
+      "last_updated": "2026-11-12T12:22:55.775636"
     },
-    "projects::views/project_viewset.py": {
-      "checksum": "b63d657494791d9ff414c68c31f84e4b",
-      "last_updated": "2026-11-12T11:59:03.743225"
+    "devstreet_hub::views/project_viewset.py": {
+      "checksum": "3592e6a88be90d6da0341fd2daed4bec",
+      "last_updated": "2026-11-12T12:22:55.776648"
     },
-    "projects::views/technology_viewset.py": {
-      "checksum": "de9fdb306fedd41b0ebc96e263da0d5a",
-      "last_updated": "2026-11-12T11:59:03.746153"
+    "devstreet_hub::views/technology_viewset.py": {
+      "checksum": "66456941b303360e7aa69d82a3f7e299",
+      "last_updated": "2026-11-12T12:22:55.776648"
     }
   },
   "relations": [

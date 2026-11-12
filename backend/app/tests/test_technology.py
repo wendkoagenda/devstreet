@@ -1,8 +1,8 @@
-from app.projects.models import Technology
-from app.tests.projects_base import ProjectsAPITestCase
+from app.devstreet_hub.models import Technology
+from app.tests.devstreet_hub_base import DevStreetHubAPITestCase
 
 
-class TechnologyRoutesTests(ProjectsAPITestCase):
+class TechnologyRoutesTests(DevStreetHubAPITestCase):
     def test_catalogue_public_and_creation_protected_by_iam(self):
         created = self.client.post(
             "/api/v1/technologies", {"label": "Django", "slug": "django"}, format="json"
