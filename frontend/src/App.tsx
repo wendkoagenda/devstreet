@@ -28,6 +28,22 @@ import TaskContributionPage from "./models/devstreet-hub/pages/task-contribution
 import ContributionReviewPage from "./models/devstreet-hub/pages/contribution-review-page";
 import AiWorkshopPage from "./models/devstreet-hub/pages/ai-workshop-page";
 import ProjectProfilePage from "./models/devstreet-hub/pages/project-profile-page";
+import OffersPage from "./models/marketplace-offers/pages/offers-page";
+import OfferDetailPage from "./models/marketplace-offers/pages/offer-detail-page";
+import OfferApplyPage from "./models/marketplace-offers/pages/offer-apply-page";
+import MyApplicationsPage from "./models/marketplace-offers/pages/my-applications-page";
+import MyOffersPage from "./models/marketplace-offers/pages/my-offers-page";
+import OfferFormPage from "./models/marketplace-offers/pages/offer-form-page";
+import OfferManagePage from "./models/marketplace-offers/pages/offer-manage-page";
+import TalentsPage from "./models/marketplace-network/pages/talents-page";
+import PoolPage from "./models/marketplace-network/pages/pool-page";
+import NetworkPage from "./models/marketplace-network/pages/network-page";
+import ProfileViewPage from "./models/marketplace-network/pages/profile-view-page";
+import AvailabilityPage from "./models/marketplace-profile/pages/availability-page";
+import MyCvPage from "./models/marketplace-profile/pages/my-cv-page";
+import DashboardPage from "./models/marketplace-dashboard/pages/dashboard-page";
+import MyProfilePage from "./models/marketplace-space/pages/my-profile-page";
+import MarketplaceAdminPage from "./models/marketplace-space/pages/marketplace-admin-page";
 import { useAuthSlice } from "./models/auth/slice";
 import { useEffect } from "react";
 
@@ -63,31 +79,53 @@ function App() {
             <Route element={<HomePage />} path="/" />
             <Route element={<UsersList />} path="/users" />
             <Route element={<RolePermissionManagement />} path="/roles" />
-                      <Route element={<CompanyList />} path="/companies" />
+                      <Route element={<CompanyList />} path="/admin/marketplace/companies" />
 
-          <Route element={<SkillList />} path="/skills" />
+          <Route element={<SkillList />} path="/admin/marketplace/skills" />
 
-          <Route element={<ProfilList />} path="/profils" />
+          <Route element={<ProfilList />} path="/admin/marketplace/profils" />
 
-          <Route element={<OfferList />} path="/offers" />
+          <Route element={<OfferList />} path="/admin/marketplace/offers" />
 
-          <Route element={<CandidatureList />} path="/candidatures" />
+          <Route element={<CandidatureList />} path="/admin/marketplace/candidatures" />
 
-          <Route element={<ProfilSkillList />} path="/profil-skills" />
+          <Route element={<ProfilSkillList />} path="/admin/marketplace/profil-skills" />
 
-          <Route element={<ExperienceList />} path="/experiences" />
+          <Route element={<ExperienceList />} path="/admin/marketplace/experiences" />
 
-          <Route element={<PrestationList />} path="/prestations" />
+          <Route element={<PrestationList />} path="/admin/marketplace/prestations" />
 
-          <Route element={<ProfilHistoryList />} path="/profil-histories" />
+          <Route element={<ProfilHistoryList />} path="/admin/marketplace/profil-histories" />
 
-          <Route element={<AvailabilityList />} path="/availabilities" />
+          <Route element={<AvailabilityList />} path="/admin/marketplace/availabilities" />
 
-          <Route element={<ReviewList />} path="/reviews" />
+          <Route element={<ReviewList />} path="/admin/marketplace/reviews" />
 
-          <Route element={<SwipeList />} path="/swipes" />
+          <Route element={<SwipeList />} path="/admin/marketplace/swipes" />
 
-          <Route element={<ConnectionList />} path="/connections" />
+          <Route element={<ConnectionList />} path="/admin/marketplace/connections" />
+
+<Route element={<DashboardPage />} path="/marketplace" />
+          <Route element={<MyProfilePage />} path="/marketplace/profile" />
+          <Route element={<OffersPage />} path="/marketplace/offers" />
+          <Route element={<OfferDetailPage />} path="/marketplace/offers/:id" />
+          <Route element={<OfferApplyPage />} path="/marketplace/offers/:id/apply" />
+          <Route element={<MyApplicationsPage />} path="/marketplace/applications" />
+          <Route element={<MyOffersPage />} path="/marketplace/my-offers" />
+          <Route element={<OfferFormPage />} path="/marketplace/my-offers/new" />
+          <Route element={<OfferManagePage />} path="/marketplace/my-offers/:id" />
+          <Route element={<OfferFormPage />} path="/marketplace/my-offers/:id/edit" />
+          <Route element={<TalentsPage />} path="/marketplace/talents" />
+          <Route element={<PoolPage />} path="/marketplace/talents/pool" />
+          <Route element={<NetworkPage />} path="/marketplace/network" />
+          <Route element={<ProfileViewPage />} path="/marketplace/profiles/:id" />
+          <Route element={<AvailabilityPage />} path="/marketplace/availability" />
+          <Route element={<MyCvPage />} path="/marketplace/cv" />
+
+          <Route
+            element={<MarketplaceAdminPage />}
+            path="/admin/marketplace"
+          />
 
 <Route element={<MyAccount />} path="/my-account" />
           </Route>

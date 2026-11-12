@@ -14,6 +14,8 @@ from app.marketplace.views.availability_viewset import AvailabilityViewSet
 from app.marketplace.views.review_viewset import ReviewViewSet
 from app.marketplace.views.swipe_viewset import SwipeViewSet
 from app.marketplace.views.connection_viewset import ConnectionViewSet
+from app.marketplace.views import market_views, network_views, profile_views
+from app.marketplace.views.me_views import MeCompanyView, MeProfilView, MeView
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'companies', CompanyViewSet, basename='companies')
@@ -31,6 +33,33 @@ router.register(r'swipes', SwipeViewSet, basename='swipes')
 router.register(r'connections', ConnectionViewSet, basename='connections')
 
 urlpatterns = [
+    path('v1/marketplace/me', MeView.as_view(), name='marketplace-me'),
+    path('v1/marketplace/me/profil', MeProfilView.as_view(), name='marketplace-me-profil'),
+    path('v1/marketplace/me/company', MeCompanyView.as_view(), name='marketplace-me-company'),
+    path('v1/marketplace/me/dashboard', market_views.dashboard, name='marketplace-me-dashboard'),
+    path('v1/marketplace/skills', market_views.skills_list, name='marketplace-skills'),
+    path('v1/marketplace/me/skills', market_views.my_skills, name='marketplace-me-skills'),
+    path('v1/marketplace/offers', market_views.offers_list, name='marketplace-offers'),
+    path('v1/marketplace/offers/<int:offer_id>', market_views.offer_detail, name='marketplace-offer'),
+    path('v1/marketplace/offers/<int:offer_id>/apply', market_views.offer_apply, name='marketplace-offer-apply'),
+    path('v1/marketplace/me/candidatures', market_views.my_candidatures, name='marketplace-me-candidatures'),
+    path('v1/marketplace/me/offers', market_views.my_offers, name='marketplace-me-offers'),
+    path('v1/marketplace/me/offers/<int:offer_id>', market_views.my_offer_detail, name='marketplace-me-offer'),
+    path('v1/marketplace/me/offers/<int:offer_id>/candidatures', market_views.offer_candidatures, name='marketplace-me-offer-candidatures'),
+    path('v1/marketplace/me/offers/<int:offer_id>/recommended-profils', market_views.offer_recommended_profils, name='marketplace-me-offer-profils'),
+    path('v1/marketplace/candidatures/<int:candidature_id>/decision', market_views.candidature_decision, name='marketplace-candidature-decision'),
+    path('v1/marketplace/me/deck', network_views.deck, name='marketplace-me-deck'),
+    path('v1/marketplace/me/swipes', network_views.swipe, name='marketplace-me-swipes'),
+    path('v1/marketplace/me/swipes/last', network_views.undo_swipe, name='marketplace-me-swipes-last'),
+    path('v1/marketplace/me/pool', network_views.pool, name='marketplace-me-pool'),
+    path('v1/marketplace/me/connections', network_views.connections, name='marketplace-me-connections'),
+    path('v1/marketplace/profils/<int:profil_id>', network_views.public_profile, name='marketplace-profil'),
+    path('v1/marketplace/me/availabilities', profile_views.my_availabilities, name='marketplace-me-availabilities'),
+    path('v1/marketplace/me/availabilities/<int:availability_id>', profile_views.my_availability, name='marketplace-me-availability'),
+    path('v1/marketplace/me/experiences', profile_views.my_experiences, name='marketplace-me-experiences'),
+    path('v1/marketplace/me/experiences/<int:experience_id>', profile_views.my_experience, name='marketplace-me-experience'),
+    path('v1/marketplace/me/cv', profile_views.my_cv, name='marketplace-me-cv'),
+    path('v1/marketplace/profils/<int:profil_id>/cv', profile_views.profil_cv, name='marketplace-profil-cv'),
     path('v1/', include(router.urls)),
 ]
 

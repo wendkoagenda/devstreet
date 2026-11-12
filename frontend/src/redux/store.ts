@@ -1,3 +1,4 @@
+import { marketplaceSpaceApi } from "@/models/marketplace-space/api";
 import { connectionApi } from "@/models/connection/api";
 import { swipeApi } from "@/models/swipe/api";
 import { reviewApi } from "@/models/review/api";
@@ -36,6 +37,7 @@ export const store = configureStore({
     [reviewApi.reducerPath]: reviewApi.reducer,
     [swipeApi.reducerPath]: swipeApi.reducer,
     [connectionApi.reducerPath]: connectionApi.reducer,
+    [marketplaceSpaceApi.reducerPath]: marketplaceSpaceApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -56,6 +58,7 @@ export const store = configureStore({
       reviewApi.middleware,
       swipeApi.middleware,
       connectionApi.middleware,
+      marketplaceSpaceApi.middleware,
     ),
 });
 
