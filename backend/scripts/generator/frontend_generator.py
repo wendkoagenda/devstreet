@@ -442,7 +442,10 @@ class FrontendCodeGenerator:
         if not reducer_match:
             raise self._missing_marker("store.ts", "reducer: {")
         if reducer_line not in reducer_match.group(2):
-            reducer_block = reducer_match.group(2).rstrip() + "\n" + reducer_line + "\n  "
+            existing = reducer_match.group(2).rstrip()
+            if existing and not existing.endswith(","):
+                existing += ","  # dernière entrée sans virgule finale (fichier reformaté)
+            reducer_block = existing + "\n" + reducer_line + "\n  "
             content = content[: reducer_match.start(2)] + reducer_block + content[reducer_match.end(2) :]
 
         middleware_line = f"      {camel}Api.middleware,"
@@ -450,7 +453,10 @@ class FrontendCodeGenerator:
         if not middleware_match:
             raise self._missing_marker("store.ts", "getDefaultMiddleware().concat(")
         if middleware_line not in middleware_match.group(2):
-            middleware_block = middleware_match.group(2).rstrip() + "\n" + middleware_line + "\n    "
+            existing = middleware_match.group(2).rstrip()
+            if existing and not existing.endswith(","):
+                existing += ","  # dernière entrée sans virgule finale (fichier reformaté)
+            middleware_block = existing + "\n" + middleware_line + "\n    "
             content = content[: middleware_match.start(2)] + middleware_block + content[middleware_match.end(2) :]
 
         self._save_and_report(store_file, content, "frontend/src/redux/store.ts")
@@ -540,9 +546,18 @@ class FrontendCodeGenerator:
 
         if auth_lines[0] not in content:
             marker = '      canDeleteRoles: hasPermission(permissions, getPermission("ROLE", "DELETE")),'
-            if marker not in content:
+            # Le fichier peut avoir été reformaté (prettier) : l'appel tient alors sur plusieurs lignes
+            multiline = re.search(
+                r'      canDeleteRoles: hasPermission\(\s*permissions,\s*getPermission\("ROLE", "DELETE"\),?\s*\),',
+                content,
+            )
+            if marker in content:
+                content = content.replace(marker, marker + "\n\n" + "\n".join(auth_lines), 1)
+            elif multiline:
+                found = multiline.group(0)
+                content = content.replace(found, found + "\n\n" + "\n".join(auth_lines), 1)
+            else:
                 raise self._missing_marker("use-permissions.tsx", marker)
-            content = content.replace(marker, marker + "\n\n" + "\n".join(auth_lines), 1)
 
         self._save_and_report(hook_file, content, "frontend/src/hooks/use-permissions.tsx")
 

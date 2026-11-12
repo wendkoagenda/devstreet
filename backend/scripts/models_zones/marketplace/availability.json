@@ -1,13 +1,78 @@
 {
-  "model": "Availability",
-  "app": "marketplace",
-  "description": "Période du calendrier de disponibilité d'un profil, au jour près.",
-  "fields": {
-    "start_date": { "type": "DateField", "required": true, "description": "Début de la période" },
-    "end_date": { "type": "DateField", "required": true, "description": "Fin de la période (incluse)" },
-    "status": { "type": "CharField", "max_length": 10, "choices": ["available", "partial", "busy", "leave"], "required": true, "description": "Disponible, partiel, occupé ou congé" },
-    "hours_per_week": { "type": "PositiveSmallIntegerField", "required": false, "description": "Capacité sur la période (utile pour le statut partial)" },
-    "source": { "type": "CharField", "max_length": 10, "choices": ["manual", "mission"], "default": "manual", "description": "Saisie manuelle ou créée par une candidature acceptée" },
-    "note": { "type": "CharField", "max_length": 255, "required": false, "description": "Commentaire libre" }
+  "model_name": "Availability",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "start_date",
+      "type": "DateField",
+      "help_text": "Début de la période"
+    },
+    {
+      "name": "end_date",
+      "type": "DateField",
+      "help_text": "Fin de la période (incluse)"
+    },
+    {
+      "name": "status",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Disponible, partiel, occupé ou congé",
+      "choices": [
+        [
+          "available",
+          "Disponible"
+        ],
+        [
+          "partial",
+          "Partiel"
+        ],
+        [
+          "busy",
+          "Occupé"
+        ],
+        [
+          "leave",
+          "Congé"
+        ]
+      ]
+    },
+    {
+      "name": "hours_per_week",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Capacité sur la période (utile pour le statut partial)",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "source",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Saisie manuelle ou créée par une candidature acceptée",
+      "choices": [
+        [
+          "manual",
+          "Saisie manuelle"
+        ],
+        [
+          "mission",
+          "Mission"
+        ]
+      ],
+      "default": "manual"
+    },
+    {
+      "name": "note",
+      "type": "CharField",
+      "max_length": 255,
+      "help_text": "Commentaire libre",
+      "blank": true,
+      "default": ""
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_availability",
+    "resource_plural": "availabilities",
+    "verbose_name": "Disponibilité",
+    "verbose_name_plural": "Disponibilités"
   }
 }

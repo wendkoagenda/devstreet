@@ -1,28 +1,179 @@
 {
-  "model": "Profil",
-  "app": "marketplace",
-  "description": "Profil marketplace d'un utilisateur, dev ou recruteur. Classe centrale du modèle.",
-  "fields": {
-    "is_company_owner": { "type": "BooleanField", "default": false, "description": "Propriétaire de l'entreprise rattachée" },
-    "slug": { "type": "SlugField", "max_length": 160, "unique": true, "required": true, "description": "URL publique du profil" },
-    "photo": { "type": "ImageField", "required": false, "description": "Photo, affichée sur le CV" },
-    "headline": { "type": "CharField", "max_length": 160, "required": false, "description": "Accroche (ex. « Dev React, 5 ans »)" },
-    "bio": { "type": "TextField", "required": false, "description": "Résumé, utilisé en tête du CV" },
-    "phone": { "type": "CharField", "max_length": 20, "required": false, "description": "Téléphone" },
-    "country": { "type": "CharField", "max_length": 2, "required": true, "description": "Code pays ISO 3166-1" },
-    "city": { "type": "CharField", "max_length": 100, "required": false, "description": "Ville" },
-    "remote": { "type": "BooleanField", "default": true, "description": "Accepte le télétravail" },
-    "timezone": { "type": "CharField", "max_length": 50, "default": "UTC", "description": "Fuseau horaire IANA (ex. Africa/Ouagadougou)" },
-    "default_hours_per_week": { "type": "PositiveSmallIntegerField", "default": 40, "description": "Capacité hebdomadaire par défaut, hors périodes du calendrier" },
-    "is_open_to_work": { "type": "BooleanField", "default": true, "description": "Visible dans l'annuaire et les recommandations" },
-    "daily_rate": { "type": "DecimalField", "max_digits": 12, "decimal_places": 2, "required": false, "description": "Tarif journalier indicatif" },
-    "currency": { "type": "CharField", "max_length": 3, "default": "XOF", "description": "Devise ISO 4217" },
-    "years_of_experience": { "type": "PositiveSmallIntegerField", "default": 0, "description": "Années d'expérience" },
-    "languages": { "type": "JSONField", "default": [], "description": "Langues parlées, ex. [{\"language\": \"fr\", \"level\": \"native\"}]" },
-    "github_url": { "type": "URLField", "required": false, "description": "Profil GitHub" },
-    "linkedin_url": { "type": "URLField", "required": false, "description": "Profil LinkedIn" },
-    "portfolio_url": { "type": "URLField", "required": false, "description": "Portfolio" },
-    "cv_visibility": { "type": "CharField", "max_length": 10, "choices": ["public", "companies", "private"], "default": "companies", "description": "Qui peut télécharger le CV" },
-    "embedding": { "type": "VectorField", "dimensions": 1536, "required": false, "description": "Vecteur pour le matching IA (pgvector), dimension selon le modèle d'embeddings retenu" }
+  "model_name": "Profil",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "is_company_owner",
+      "type": "BooleanField",
+      "help_text": "Propriétaire de l'entreprise rattachée",
+      "default": false
+    },
+    {
+      "name": "slug",
+      "type": "SlugField",
+      "max_length": 160,
+      "help_text": "URL publique du profil",
+      "unique": true
+    },
+    {
+      "name": "photo",
+      "type": "FileField",
+      "help_text": "Photo, affichée sur le CV",
+      "blank": true,
+      "default": "",
+      "allowed_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+      ],
+      "max_size_mb": 5
+    },
+    {
+      "name": "headline",
+      "type": "CharField",
+      "max_length": 160,
+      "help_text": "Accroche (ex. « Dev React, 5 ans »)",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "bio",
+      "type": "TextField",
+      "help_text": "Résumé, utilisé en tête du CV",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "phone",
+      "type": "CharField",
+      "max_length": 20,
+      "help_text": "Téléphone",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "country",
+      "type": "CharField",
+      "max_length": 2,
+      "help_text": "Code pays ISO 3166-1"
+    },
+    {
+      "name": "city",
+      "type": "CharField",
+      "max_length": 100,
+      "help_text": "Ville",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "remote",
+      "type": "BooleanField",
+      "help_text": "Accepte le télétravail",
+      "default": true
+    },
+    {
+      "name": "timezone",
+      "type": "CharField",
+      "max_length": 50,
+      "help_text": "Fuseau horaire IANA (ex. Africa/Ouagadougou)",
+      "default": "UTC"
+    },
+    {
+      "name": "default_hours_per_week",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Capacité hebdomadaire par défaut, hors périodes du calendrier",
+      "default": 40
+    },
+    {
+      "name": "is_open_to_work",
+      "type": "BooleanField",
+      "help_text": "Visible dans l'annuaire et les recommandations",
+      "default": true
+    },
+    {
+      "name": "daily_rate",
+      "type": "DecimalField",
+      "max_digits": 12,
+      "decimal_places": 2,
+      "help_text": "Tarif journalier indicatif",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "currency",
+      "type": "CharField",
+      "max_length": 3,
+      "help_text": "Devise ISO 4217",
+      "default": "XOF"
+    },
+    {
+      "name": "years_of_experience",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Années d'expérience",
+      "default": 0
+    },
+    {
+      "name": "languages",
+      "type": "JSONField",
+      "help_text": "Langues parlées, ex. [{\"language\": \"fr\", \"level\": \"native\"}]",
+      "default": [],
+      "blank": true
+    },
+    {
+      "name": "github_url",
+      "type": "URLField",
+      "help_text": "Profil GitHub",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "linkedin_url",
+      "type": "URLField",
+      "help_text": "Profil LinkedIn",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "portfolio_url",
+      "type": "URLField",
+      "help_text": "Portfolio",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "cv_visibility",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Qui peut télécharger le CV",
+      "choices": [
+        [
+          "public",
+          "Public"
+        ],
+        [
+          "companies",
+          "Entreprises"
+        ],
+        [
+          "private",
+          "Privé"
+        ]
+      ],
+      "default": "companies"
+    },
+    {
+      "name": "embedding",
+      "type": "JSONField",
+      "help_text": "Vecteur pour le matching IA (pgvector), dimension selon le modèle d'embeddings retenu (JSON provisoire, futur VectorField pgvector)",
+      "null": true,
+      "blank": true
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_profil",
+    "resource_plural": "profils",
+    "verbose_name": "Profil",
+    "verbose_name_plural": "Profils"
   }
 }

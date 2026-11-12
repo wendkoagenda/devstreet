@@ -39,3 +39,14 @@ Chaque fichier JSON décrit les attributs propres d'un modèle. Les clés étran
 - Le vivier d'une entreprise se lit depuis les Swipe `like` en contexte `recruit` de ses recruteurs.
 - Chaque modification d'un Profil (ou de ses Experience et ProfilSkill) crée une ligne ProfilHistory et déclenche le recalcul de `Profil.embedding`.
 - Le CV automatique est construit à la demande depuis Profil, ProfilSkill, Experience, Prestation et les Review publiques.
+
+## Écarts avec le générateur CRUD
+
+Les JSON de cette zone sont au format du générateur (`model_name`, `app_name`, liste `fields`, `meta.resource_plural`). Écarts assumés par rapport au tableau ci-dessus :
+
+- `id` est l'entier auto-incrémenté du générateur, pas un UUID ; `created_by`/`updated_by` (entiers) sont des champs système du générateur.
+- `embedding` est un `JSONField` provisoire (le générateur ne gère pas pgvector) ; migration vers `VectorField` à prévoir.
+- `Offer.recruiter` remplace `Offer.created_by` (nom pris par le champ système).
+- `Skill.forum_tag` n'est pas créé (l'app forum n'existe pas encore).
+- `Profil.user`, `ProfilHistory.changed_by`, les M2M `through` (`Profil.skills`, `Offer.candidates`) et les contraintes d'unicité sont écrits à la main dans `app/marketplace/models.py`.
+- Images (`ImageField`) générées en `FileField` (extensions image) ; `required: false` devient `blank=True` (+ `null=True` hors texte).

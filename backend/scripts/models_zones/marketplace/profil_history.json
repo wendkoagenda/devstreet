@@ -1,11 +1,53 @@
 {
-  "model": "ProfilHistory",
-  "app": "marketplace",
-  "description": "Journal des modifications d'un profil. Déclenche le recalcul de l'embedding.",
-  "fields": {
-    "field": { "type": "CharField", "max_length": 100, "required": true, "description": "Nom du champ modifié" },
-    "old_value": { "type": "TextField", "required": false, "description": "Valeur avant modification" },
-    "new_value": { "type": "TextField", "required": false, "description": "Valeur après modification" },
-    "source": { "type": "CharField", "max_length": 10, "choices": ["manual", "ai", "system"], "default": "manual", "description": "Origine de la modification" }
+  "model_name": "ProfilHistory",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "field",
+      "type": "CharField",
+      "max_length": 100,
+      "help_text": "Nom du champ modifié"
+    },
+    {
+      "name": "old_value",
+      "type": "TextField",
+      "help_text": "Valeur avant modification",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "new_value",
+      "type": "TextField",
+      "help_text": "Valeur après modification",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "source",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Origine de la modification",
+      "choices": [
+        [
+          "manual",
+          "Saisie manuelle"
+        ],
+        [
+          "ai",
+          "IA"
+        ],
+        [
+          "system",
+          "Système"
+        ]
+      ],
+      "default": "manual"
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_profil_history",
+    "resource_plural": "profil-histories",
+    "verbose_name": "Historique de profil",
+    "verbose_name_plural": "Historiques de profil"
   }
 }

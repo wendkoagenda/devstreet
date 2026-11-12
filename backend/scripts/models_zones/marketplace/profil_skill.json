@@ -1,9 +1,23 @@
 {
-  "model": "ProfilSkill",
-  "app": "marketplace",
-  "description": "Table pivot de la relation n-n entre Profil et Skill : niveau d'un profil sur une compétence.",
-  "fields": {
-    "level": { "type": "PositiveSmallIntegerField", "min": 1, "max": 5, "required": true, "description": "Niveau déclaré, de 1 à 5" },
-    "years": { "type": "PositiveSmallIntegerField", "default": 0, "description": "Années de pratique" }
+  "model_name": "ProfilSkill",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "level",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Niveau déclaré, de 1 à 5"
+    },
+    {
+      "name": "years",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Années de pratique",
+      "default": 0
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_profil_skill",
+    "resource_plural": "profil-skills",
+    "verbose_name": "Compétence du profil",
+    "verbose_name_plural": "Compétences du profil"
   }
 }

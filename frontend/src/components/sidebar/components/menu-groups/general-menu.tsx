@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { usePermissions } from "@/hooks/use-permissions";
 import { Icons } from "@/lib/constants/icons";
 import { t } from "i18next";
 import { ChevronDown } from "lucide-react";
@@ -22,10 +23,103 @@ export default function GeneralMenu() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
+  const { canViewCompanies, canViewSkills, canViewProfils, canViewOffers, canViewCandidatures, canViewProfilSkills, canViewExperiences, canViewPrestations, canViewProfilHistories, canViewAvailabilities, canViewReviews, canViewSwipes, canViewConnections } = usePermissions();
 
   const generalMenu = [
     {
-      items: [] as {
+      items: [
+        {
+          title: "Companies",
+          url: "companies",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewCompanies,
+        },
+        {
+          title: "Skills",
+          url: "skills",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewSkills,
+        },
+        {
+          title: "Profils",
+          url: "profils",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewProfils,
+        },
+        {
+          title: "Offers",
+          url: "offers",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewOffers,
+        },
+        {
+          title: "Candidatures",
+          url: "candidatures",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewCandidatures,
+        },
+        {
+          title: "Profil-skills",
+          url: "profil-skills",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewProfilSkills,
+        },
+        {
+          title: "Experiences",
+          url: "experiences",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewExperiences,
+        },
+        {
+          title: "Prestations",
+          url: "prestations",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewPrestations,
+        },
+        {
+          title: "Profil-histories",
+          url: "profil-histories",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewProfilHistories,
+        },
+        {
+          title: "Availabilities",
+          url: "availabilities",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewAvailabilities,
+        },
+        {
+          title: "Reviews",
+          url: "reviews",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewReviews,
+        },
+        {
+          title: "Swipes",
+          url: "swipes",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewSwipes,
+        },
+        {
+          title: "Connections",
+          url: "connections",
+          isActive: false,
+          icon: Icons.FileText,
+          permission: canViewConnections,
+        },
+      ] as {
         title: string;
         url: string;
         isActive: boolean;

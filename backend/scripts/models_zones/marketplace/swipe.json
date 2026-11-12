@@ -1,9 +1,44 @@
 {
-  "model": "Swipe",
-  "app": "marketplace",
-  "description": "Action de swipe d'un profil sur un autre : vivier entreprise ou réseau entre devs.",
-  "fields": {
-    "direction": { "type": "CharField", "max_length": 4, "choices": ["like", "pass"], "required": true, "description": "Swipe à droite (like) ou à gauche (pass)" },
-    "context": { "type": "CharField", "max_length": 10, "choices": ["recruit", "network"], "required": true, "description": "Recrutement (entreprise vers dev) ou réseau (dev vers dev)" }
+  "model_name": "Swipe",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "direction",
+      "type": "CharField",
+      "max_length": 4,
+      "help_text": "Swipe à droite (like) ou à gauche (pass)",
+      "choices": [
+        [
+          "like",
+          "Like"
+        ],
+        [
+          "pass",
+          "Passer"
+        ]
+      ]
+    },
+    {
+      "name": "context",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Recrutement (entreprise vers dev) ou réseau (dev vers dev)",
+      "choices": [
+        [
+          "recruit",
+          "Recrutement"
+        ],
+        [
+          "network",
+          "Réseau"
+        ]
+      ]
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_swipe",
+    "resource_plural": "swipes",
+    "verbose_name": "Swipe",
+    "verbose_name_plural": "Swipes"
   }
 }

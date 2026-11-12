@@ -1,9 +1,34 @@
 {
-  "model": "Connection",
-  "app": "marketplace",
-  "description": "Connexion entre deux profils, créée par un like mutuel en contexte network.",
-  "fields": {
-    "status": { "type": "CharField", "max_length": 10, "choices": ["matched", "blocked"], "default": "matched", "description": "Connexion active ou bloquée" },
-    "matched_at": { "type": "DateTimeField", "required": true, "description": "Date du like mutuel" }
+  "model_name": "Connection",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "status",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Connexion active ou bloquée",
+      "choices": [
+        [
+          "matched",
+          "Connectés"
+        ],
+        [
+          "blocked",
+          "Bloquée"
+        ]
+      ],
+      "default": "matched"
+    },
+    {
+      "name": "matched_at",
+      "type": "DateTimeField",
+      "help_text": "Date du like mutuel"
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_connection",
+    "resource_plural": "connections",
+    "verbose_name": "Connexion",
+    "verbose_name_plural": "Connexions"
   }
 }

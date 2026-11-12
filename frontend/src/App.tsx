@@ -1,3 +1,16 @@
+import ConnectionList from "./models/connection/pages/connection-list";
+import SwipeList from "./models/swipe/pages/swipe-list";
+import ReviewList from "./models/review/pages/review-list";
+import AvailabilityList from "./models/availability/pages/availability-list";
+import ProfilHistoryList from "./models/profil-history/pages/profil-history-list";
+import PrestationList from "./models/prestation/pages/prestation-list";
+import ExperienceList from "./models/experience/pages/experience-list";
+import ProfilSkillList from "./models/profil-skill/pages/profil-skill-list";
+import CandidatureList from "./models/candidature/pages/candidature-list";
+import OfferList from "./models/offer/pages/offer-list";
+import ProfilList from "./models/profil/pages/profil-list";
+import SkillList from "./models/skill/pages/skill-list";
+import CompanyList from "./models/company/pages/company-list";
 import { Route, Routes } from "react-router-dom";
 import PrivateRoute from "./components/layouts/private-route";
 import PublicRoute from "./components/layouts/public-route";
@@ -50,7 +63,33 @@ function App() {
             <Route element={<HomePage />} path="/" />
             <Route element={<UsersList />} path="/users" />
             <Route element={<RolePermissionManagement />} path="/roles" />
-            <Route element={<MyAccount />} path="/my-account" />
+                      <Route element={<CompanyList />} path="/companies" />
+
+          <Route element={<SkillList />} path="/skills" />
+
+          <Route element={<ProfilList />} path="/profils" />
+
+          <Route element={<OfferList />} path="/offers" />
+
+          <Route element={<CandidatureList />} path="/candidatures" />
+
+          <Route element={<ProfilSkillList />} path="/profil-skills" />
+
+          <Route element={<ExperienceList />} path="/experiences" />
+
+          <Route element={<PrestationList />} path="/prestations" />
+
+          <Route element={<ProfilHistoryList />} path="/profil-histories" />
+
+          <Route element={<AvailabilityList />} path="/availabilities" />
+
+          <Route element={<ReviewList />} path="/reviews" />
+
+          <Route element={<SwipeList />} path="/swipes" />
+
+          <Route element={<ConnectionList />} path="/connections" />
+
+<Route element={<MyAccount />} path="/my-account" />
           </Route>
         </Route>
 

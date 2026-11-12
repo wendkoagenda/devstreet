@@ -1,17 +1,107 @@
 {
-  "model": "Prestation",
-  "app": "marketplace",
-  "description": "Service packagé vendu par un dev (ex. « Landing page en 5 jours »).",
-  "fields": {
-    "title": { "type": "CharField", "max_length": 150, "required": true, "description": "Titre de la prestation" },
-    "slug": { "type": "SlugField", "max_length": 160, "unique": true, "required": true, "description": "URL publique" },
-    "description": { "type": "TextField", "required": true, "description": "Contenu de la prestation" },
-    "category": { "type": "CharField", "max_length": 20, "choices": ["web", "mobile", "design", "devops", "data", "other"], "required": true, "description": "Catégorie" },
-    "price": { "type": "DecimalField", "max_digits": 12, "decimal_places": 2, "required": true, "description": "Prix fixe" },
-    "currency": { "type": "CharField", "max_length": 3, "default": "XOF", "description": "Devise ISO 4217" },
-    "delivery_days": { "type": "PositiveSmallIntegerField", "required": true, "description": "Délai de livraison en jours" },
-    "revisions": { "type": "PositiveSmallIntegerField", "default": 1, "description": "Nombre de retouches incluses" },
-    "cover_image": { "type": "ImageField", "required": false, "description": "Visuel de présentation" },
-    "is_active": { "type": "BooleanField", "default": true, "description": "Visible sur la marketplace" }
+  "model_name": "Prestation",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "title",
+      "type": "CharField",
+      "max_length": 150,
+      "help_text": "Titre de la prestation"
+    },
+    {
+      "name": "slug",
+      "type": "SlugField",
+      "max_length": 160,
+      "help_text": "URL publique",
+      "unique": true
+    },
+    {
+      "name": "description",
+      "type": "TextField",
+      "help_text": "Contenu de la prestation"
+    },
+    {
+      "name": "category",
+      "type": "CharField",
+      "max_length": 20,
+      "help_text": "Catégorie",
+      "choices": [
+        [
+          "web",
+          "Web"
+        ],
+        [
+          "mobile",
+          "Mobile"
+        ],
+        [
+          "design",
+          "Design"
+        ],
+        [
+          "devops",
+          "DevOps"
+        ],
+        [
+          "data",
+          "Data"
+        ],
+        [
+          "other",
+          "Autre"
+        ]
+      ]
+    },
+    {
+      "name": "price",
+      "type": "DecimalField",
+      "max_digits": 12,
+      "decimal_places": 2,
+      "help_text": "Prix fixe"
+    },
+    {
+      "name": "currency",
+      "type": "CharField",
+      "max_length": 3,
+      "help_text": "Devise ISO 4217",
+      "default": "XOF"
+    },
+    {
+      "name": "delivery_days",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Délai de livraison en jours"
+    },
+    {
+      "name": "revisions",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Nombre de retouches incluses",
+      "default": 1
+    },
+    {
+      "name": "cover_image",
+      "type": "FileField",
+      "help_text": "Visuel de présentation",
+      "blank": true,
+      "default": "",
+      "allowed_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+      ],
+      "max_size_mb": 5
+    },
+    {
+      "name": "is_active",
+      "type": "BooleanField",
+      "help_text": "Visible sur la marketplace",
+      "default": true
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_prestation",
+    "resource_plural": "prestations",
+    "verbose_name": "Prestation",
+    "verbose_name_plural": "Prestations"
   }
 }
