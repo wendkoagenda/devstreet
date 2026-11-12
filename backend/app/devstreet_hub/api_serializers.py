@@ -153,6 +153,14 @@ class CodeQuerySerializer(serializers.Serializer):
     path = serializers.CharField(required=False, allow_blank=True, max_length=500)
 
 
+class CodeArchiveQuerySerializer(serializers.Serializer):
+    ref = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    # Éviter `format` : réservé par DRF pour la négociation de contenu.
+    archive_format = serializers.ChoiceField(
+        choices=("zip", "tar.gz"), required=False, default="zip"
+    )
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     repository = RepositorySerializer(read_only=True)
     star_count = serializers.SerializerMethodField()

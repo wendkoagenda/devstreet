@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Code2,
   Copy,
+  Download,
   FileCode2,
   Folder,
   GitBranch,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { API_V1_URL } from "@/helpers/api/csrf";
+import { toQueryString } from "@/helpers/api/pagination";
 import { languageColor } from "../functions/language-colors";
 import { SafeMarkdown } from "../functions/safe-markdown";
 import { useProjectCode } from "../hooks/use-project-code";
@@ -84,6 +88,7 @@ export function CodeBrowser({
   const { t } = useTranslation();
   const code = useProjectCode(projectId, { enabled: true, isOwner });
   const [copiedClone, setCopiedClone] = useState(false);
+  const [downloading, setDownloading] = useState<"zip" | "tar.gz" | null>(null);
 
   const repoLabel = useMemo(() => {
     const ns = namespaceHint || "…";
@@ -99,6 +104,39 @@ export function CodeBrowser({
     if (ok) {
       setCopiedClone(true);
       window.setTimeout(() => setCopiedClone(false), 1600);
+    }
+  };
+
+  const handleDownloadArchive = async (format: "zip" | "tar.gz") => {
+    setDownloading(format);
+    try {
+      const query = toQueryString({
+        ref: code.ref,
+        archive_format: format,
+      } as Record<string, string>);
+      const response = await fetch(
+        `${API_V1_URL}/projects/${projectId}/code/archive${query}`,
+        { credentials: "include" }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="?([^"]+)"?/i);
+      const filename =
+        match?.[1] ||
+        `${repoNameHint || "project"}-${code.ref.replace(/[^\w.-]+/g, "-")}.${format}`;
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t("hub.detail.code.download_error"));
+    } finally {
+      setDownloading(null);
     }
   };
 
@@ -280,40 +318,73 @@ export function CodeBrowser({
             </nav>
           </div>
 
-          {cloneUrl ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="h-8 gap-1.5 rounded-md bg-info px-3 text-xs font-semibold text-info-foreground hover:bg-info/90">
-                  <Code2 aria-hidden className="size-3.5" />
-                  {t("hub.detail.code.clone_menu")}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[22rem] p-3">
-                <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                  <Terminal aria-hidden className="size-3.5" />
-                  {t("hub.detail.code.clone_https")}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="h-8 gap-1.5 rounded-md bg-info px-3 text-xs font-semibold text-info-foreground hover:bg-info/90">
+                <Code2 aria-hidden className="size-3.5" />
+                {t("hub.detail.code.clone_menu")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[22rem] space-y-3 p-3">
+              {cloneUrl ? (
+                <div>
+                  <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <Terminal aria-hidden className="size-3.5" />
+                    {t("hub.detail.code.clone_https")}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="min-w-0 flex-1 truncate rounded-md border border-border bg-muted/50 px-2 py-1.5 text-[11px]">
+                      {cloneUrl}
+                    </code>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 shrink-0 gap-1 text-xs"
+                      onClick={() => void handleCopyClone()}
+                    >
+                      {copiedClone ? (
+                        <Check aria-hidden className="size-3.5" />
+                      ) : (
+                        <Copy aria-hidden className="size-3.5" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <code className="min-w-0 flex-1 truncate rounded-md border border-border bg-muted/50 px-2 py-1.5 text-[11px]">
-                    {cloneUrl}
-                  </code>
+              ) : null}
+              <div className="border-t border-border pt-3">
+                <p className="mb-2 text-[11px] font-semibold text-muted-foreground">
+                  {t("hub.detail.code.download_section")}
+                </p>
+                <div className="flex flex-col gap-1.5">
                   <Button
                     type="button"
-                    size="sm"
-                    variant="secondary"
-                    className="h-8 shrink-0 gap-1 text-xs"
-                    onClick={() => void handleCopyClone()}
+                    variant="outline"
+                    className="h-8 justify-start gap-2 text-xs"
+                    disabled={downloading !== null}
+                    onClick={() => void handleDownloadArchive("zip")}
                   >
-                    {copiedClone ? (
-                      <Check aria-hidden className="size-3.5" />
-                    ) : (
-                      <Copy aria-hidden className="size-3.5" />
-                    )}
+                    <Download aria-hidden className="size-3.5" />
+                    {downloading === "zip"
+                      ? t("hub.detail.code.downloading")
+                      : t("hub.detail.code.download_zip")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 justify-start gap-2 text-xs"
+                    disabled={downloading !== null}
+                    onClick={() => void handleDownloadArchive("tar.gz")}
+                  >
+                    <Download aria-hidden className="size-3.5" />
+                    {downloading === "tar.gz"
+                      ? t("hub.detail.code.downloading")
+                      : t("hub.detail.code.download_targz")}
                   </Button>
                 </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="overflow-hidden border border-border bg-card">
@@ -431,18 +502,18 @@ export function CodeBrowser({
             </div>
           </section>
         ) : null}
-      </div>
 
-      <aside className="w-full shrink-0 space-y-5 lg:w-60">
-        <div>
+        <section className="border border-border bg-card p-4">
           <h3 className="mb-1.5 text-xs font-semibold text-foreground">
             {t("hub.detail.code.sidebar_description")}
           </h3>
           <p className="text-xs leading-relaxed text-muted-foreground">
             {code.summary?.description || t("hub.detail.code.no_description")}
           </p>
-        </div>
+        </section>
+      </div>
 
+      <aside className="w-full shrink-0 space-y-5 lg:w-60">
         {code.summary?.size_kib != null ? (
           <ul className="space-y-1.5 text-xs text-muted-foreground">
             <li className="inline-flex items-center gap-1.5">

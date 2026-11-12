@@ -1,5 +1,6 @@
 """Routes de workflows. Les règles sont dans WorkflowService, l'auth reste celle du core."""
 
+from django.http import HttpResponse
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -14,6 +15,7 @@ from app.devstreet_hub.api_serializers import (
     ProjectCreateResponseSerializer,
     InitializeRepositorySerializer,
     InitializeRepositoryResponseSerializer,
+    CodeArchiveQuerySerializer,
     CodeQuerySerializer,
     RepositorySerializer,
     TaskSerializer,
@@ -234,6 +236,29 @@ class ProjectViewSet(
                 path=query.get("path") or None,
             )
         )
+
+    @swagger_auto_schema(
+        query_serializer=CodeArchiveQuerySerializer,
+        tags=["V1 - Project Code"],
+        methods=["get"],
+    )
+    @action(detail=True, methods=["get"], url_path="code/archive")
+    def code_archive(self, request, pk=None):
+        query = validated(CodeArchiveQuerySerializer, request.query_params)
+        result = WorkflowService().code_archive(
+            request.user,
+            self.get_object(),
+            ref=query.get("ref") or None,
+            fmt=query.get("archive_format") or "zip",
+        )
+        response = HttpResponse(
+            result["content"], content_type=result["content_type"]
+        )
+        response["Content-Disposition"] = (
+            f'attachment; filename="{result["filename"]}"'
+        )
+        response["Content-Length"] = str(len(result["content"]))
+        return response
 
     @swagger_auto_schema(tags=["V1 - Project"], methods=["put", "delete"])
     @action(detail=True, methods=["put", "delete"])

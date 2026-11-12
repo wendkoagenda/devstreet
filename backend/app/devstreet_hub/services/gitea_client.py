@@ -409,6 +409,7 @@ class GiteaClient:
     MAX_README_BYTES = 200 * 1024
     MAX_TREE_ENTRIES = 500
     MAX_BRANCHES = 100
+    MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
 
     def get_repository_meta(self, repository) -> dict:
         """Métadonnées Gitea du dépôt lié (taille, description, empty…)."""
@@ -521,6 +522,33 @@ class GiteaClient:
             response.raise_for_status()
             # Limite stricte : on ne lit pas au-delà.
             return response.content[: self.MAX_BLOB_BYTES + 1]
+        except (httpx.HTTPError, ValueError) as error:
+            raise ExternalUnavailable(
+                "La forge ne répond pas correctement ; réessayez."
+            ) from error
+
+    def download_archive(self, repository, *, ref: str, fmt: str) -> bytes | None:
+        """Archive ZIP/TAR.GZ bornée ; None si référence absente."""
+        if fmt not in ("zip", "tar.gz"):
+            raise ValueError("format archive invalide")
+        archive = f"{quote(ref, safe='')}.{fmt}"
+        try:
+            with httpx.Client(
+                timeout=60, follow_redirects=True, trust_env=False
+            ) as client:
+                response = client.request(
+                    "GET",
+                    self.url
+                    + "/api/v1"
+                    + self.repo_path(repository)
+                    + "/archive/"
+                    + archive,
+                    headers={"Authorization": "token " + self.token},
+                )
+            if response.status_code == 404:
+                return None
+            response.raise_for_status()
+            return response.content[: self.MAX_ARCHIVE_BYTES + 1]
         except (httpx.HTTPError, ValueError) as error:
             raise ExternalUnavailable(
                 "La forge ne répond pas correctement ; réessayez."

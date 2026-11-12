@@ -99,6 +99,18 @@ class ProjectCodeBrowseTests(DevStreetHubAPITestCase):
         self.assertEqual(slugs, ["html"])
         self.assertTrue(Technology.objects.filter(slug="html", label="HTML").exists())
 
+    def test_archive_zip_proxied_through_django(self):
+        self.forge.download_archive.return_value = b"PK\x03\x04fake-zip"
+        response = self.client.get(
+            f"/api/v1/projects/{self.proj.pk}/code/archive",
+            {"ref": "main", "archive_format": "zip"},
+        )
+        self.assertEqual(response.status_code, 200, getattr(response, "data", response.content))
+        self.assertEqual(response["Content-Type"], "application/zip")
+        self.assertIn("attachment", response["Content-Disposition"])
+        self.assertEqual(response.content, b"PK\x03\x04fake-zip")
+        self.forge.download_archive.assert_called_once()
+
     def test_blob_returns_html_as_text_not_executed(self):
         self.forge.get_contents.return_value = {
             "name": "index.html",

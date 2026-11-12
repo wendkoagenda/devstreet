@@ -342,6 +342,32 @@ class WorkflowService:
             ),
         }
 
+    def code_archive(self, actor, project, *, ref=None, fmt="zip"):
+        """Téléchargement d'archive via Django → Gitea (jeton admin jamais exposé)."""
+        project, repository = self._ready_repository(actor, project)
+        ref = self._normalize_ref(ref, repository)
+        fmt = (fmt or "zip").strip().lower()
+        if fmt not in ("zip", "tar.gz"):
+            raise ValidationError({"format": "Formats acceptés : zip, tar.gz."})
+        if self.forge.repo_is_empty(repository):
+            raise Conflict("Le dépôt est vide : aucune archive à télécharger.")
+        raw = self.forge.download_archive(repository, ref=ref, fmt=fmt)
+        if raw is None:
+            raise NotFound("Référence introuvable pour l'archive.")
+        if len(raw) > self.forge.MAX_ARCHIVE_BYTES:
+            raise ValidationError(
+                {"detail": "Archive trop volumineuse pour le téléchargement."}
+            )
+        safe_ref = re.sub(r"[^\w.\-]+", "-", ref).strip("-") or "code"
+        filename = f"{repository.name}-{safe_ref}.{fmt}"
+        return {
+            "content": raw,
+            "filename": filename,
+            "content_type": (
+                "application/zip" if fmt == "zip" else "application/x-gzip"
+            ),
+        }
+
     def _guess_language(self, path: str) -> str | None:
         ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
         mapping = {

@@ -1,4 +1,4 @@
-import { Code2, ExternalLink, MoreHorizontal, Sparkles } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -10,19 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Project } from "../schema";
 import type { ProjectStarView } from "../hooks/use-project-star";
-import { DetectedLanguageTags } from "./detected-language-tags";
 import { ProjectStatusBadge } from "./project-status-badge";
 import { StarButton } from "./star-button";
 
-interface DetectedLanguage {
-  name: string;
-  percent?: number;
-}
-
 interface ProjectDetailHeaderProps {
   project: Project;
-  detectedLanguages: DetectedLanguage[];
-  languagesPending: boolean;
   star: ProjectStarView;
   isOwner: boolean;
   canPublish: boolean;
@@ -30,19 +22,15 @@ interface ProjectDetailHeaderProps {
   canCreateTask: boolean;
   canAnalyze: boolean;
   canReview: boolean;
-  canOpenCode: boolean;
   isBusy: boolean;
   onToggleStar: () => void;
   onPublish: () => void;
   onArchive: () => void;
   onCreateTask: () => void;
-  onOpenCode: () => void;
 }
 
 export function ProjectDetailHeader({
   project,
-  detectedLanguages,
-  languagesPending,
   star,
   isOwner,
   canPublish,
@@ -50,13 +38,11 @@ export function ProjectDetailHeader({
   canCreateTask,
   canAnalyze,
   canReview,
-  canOpenCode,
   isBusy,
   onToggleStar,
   onPublish,
   onArchive,
   onCreateTask,
-  onOpenCode,
 }: ProjectDetailHeaderProps) {
   const { t } = useTranslation();
   const demoUrl = project.demo_url?.trim() || null;
@@ -65,7 +51,7 @@ export function ProjectDetailHeader({
     <header className="flex flex-col gap-5 border-b border-border pb-6">
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {project.title}
             </h1>
@@ -73,23 +59,6 @@ export function ProjectDetailHeader({
             <span className="rounded bg-brand-soft px-2 py-1 text-[10px] font-semibold leading-none text-brand-strong">
               {project.declared_license}
             </span>
-          </div>
-          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            {project.problem || t("hub.detail.no_problem")}
-          </p>
-          <div className="mt-3">
-            {languagesPending ? (
-              <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
-            ) : (
-              <DetectedLanguageTags
-                languages={detectedLanguages}
-                emptyHint={
-                  canOpenCode
-                    ? t("hub.detail.languages_empty")
-                    : t("hub.detail.languages_waiting_repo")
-                }
-              />
-            )}
           </div>
         </div>
 
@@ -105,17 +74,6 @@ export function ProjectDetailHeader({
                 <ExternalLink aria-hidden className="size-3.5" />
                 {t("hub.detail.actions.demo")}
               </a>
-            </Button>
-          ) : null}
-          {canOpenCode ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 gap-1.5 rounded-lg text-xs font-semibold"
-              onClick={onOpenCode}
-            >
-              <Code2 aria-hidden className="size-3.5" />
-              {t("hub.detail.actions.open_code")}
             </Button>
           ) : null}
           {canAnalyze ? (

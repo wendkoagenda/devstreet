@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useGetProjectCodeSummaryQuery } from "../api";
 import { ProjectDetailHeader } from "../components/project-detail-header";
 import {
   CodePanel,
@@ -22,10 +21,6 @@ export default function ProjectDetailPage() {
   const detail = useProjectDetail(projectId);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const repositoryReady = detail.repository?.status === "ready";
-  const codeSummaryQuery = useGetProjectCodeSummaryQuery(projectId, {
-    skip: !repositoryReady || !Number.isFinite(projectId) || projectId <= 0,
-  });
-  const detectedLanguages = codeSummaryQuery.data?.languages ?? [];
 
   if (!Number.isFinite(projectId) || projectId <= 0) {
     return (
@@ -82,8 +77,6 @@ export default function ProjectDetailPage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <ProjectDetailHeader
         project={project}
-        detectedLanguages={detectedLanguages}
-        languagesPending={Boolean(repositoryReady && codeSummaryQuery.isLoading)}
         star={detail.star}
         isOwner={detail.isOwner}
         canPublish={detail.isOwner && detail.access.canPublishProject}
@@ -91,7 +84,6 @@ export default function ProjectDetailPage() {
         canCreateTask={detail.access.canCreateTask}
         canAnalyze={detail.isOwner && detail.access.canAnalyze}
         canReview={detail.isOwner && detail.access.canReviewContributions}
-        canOpenCode={Boolean(repositoryReady)}
         isBusy={detail.isBusy}
         onToggleStar={() => {
           void detail.toggleStar();
@@ -110,7 +102,6 @@ export default function ProjectDetailPage() {
           detail.setTab("contribute");
           setShowTaskForm(true);
         }}
-        onOpenCode={() => detail.setTab("code")}
       />
 
       <ProjectDetailTabs active={detail.tab} onChange={detail.setTab} />

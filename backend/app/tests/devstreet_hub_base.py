@@ -132,6 +132,8 @@ class DevStreetHubAPITestCase(APITestCase):
         self.forge.MAX_README_BYTES = 200 * 1024
         self.forge.MAX_TREE_ENTRIES = 500
         self.forge.MAX_BRANCHES = 100
+        self.forge.MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
+        self.forge.download_archive.return_value = None
         self.addCleanup(cache.clear)
 
     def login(self, actor):
