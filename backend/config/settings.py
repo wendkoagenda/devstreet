@@ -56,6 +56,7 @@ LOCAL_APPS = [
     'app.devstreet_hub',
     'app.ai',
     'app.marketplace',
+    'app.communaute',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

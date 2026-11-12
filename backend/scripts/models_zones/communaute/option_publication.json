@@ -1,0 +1,34 @@
+{
+  "model_name": "OptionPublication",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "libelle",
+      "type": "CharField",
+      "max_length": 200
+    },
+    {
+      "name": "description",
+      "type": "TextField",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "image_url",
+      "type": "URLField",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "position",
+      "type": "PositiveIntegerField",
+      "default": 0
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_option_publication",
+    "resource_plural": "options-publication",
+    "verbose_name": "Option de publication",
+    "verbose_name_plural": "Options de publication"
+  }
+}

@@ -1,0 +1,200 @@
+"""
+Tests pour les image_publication.
+"""
+from django.test import TestCase
+from rest_framework.test import APITestCase
+from rest_framework import status
+from app.communaute.models import ImagePublication
+from app.communaute.services.imagepublication_service import ImagePublicationService
+
+
+class ImagePublicationModelTests(TestCase):
+    """
+    Tests pour le modèle ImagePublication.
+    """
+
+    def setUp(self):
+        """Configuration initiale pour les tests."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        try:
+            self.user = User.objects.get(email='admin@example.com')
+        except User.DoesNotExist:
+            self.user = User.objects.create_superuser(
+                username='admin',
+                email='admin@example.com',
+                password='admin123'
+            )
+
+        self.image_publication = ImagePublication.objects.create(
+            texte_alternatif="Test texte_alternatif",
+            position=100,
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+    def test_image_publication_creation(self):
+        """Test de création d'un image_publication."""
+        self.assertIsNotNone(self.image_publication.id)
+
+    def test_image_publication_str_representation(self):
+        """Test de la représentation string du image_publication."""
+        self.assertIsInstance(str(self.image_publication), str)
+
+
+class ImagePublicationServiceTests(TestCase):
+    """
+    Tests pour le service ImagePublication.
+    """
+
+    def setUp(self):
+        """Configuration initiale pour les tests."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        try:
+            self.user = User.objects.get(email='admin@example.com')
+        except User.DoesNotExist:
+            self.user = User.objects.create_superuser(
+                username='admin',
+                email='admin@example.com',
+                password='admin123'
+            )
+
+        self.imagepublication_service = ImagePublicationService()
+
+    def test_get_all_image_publication(self):
+        """Test de récupération de tous les image_publication."""
+        ImagePublication.objects.create(
+            texte_alternatif="Test texte_alternatif 1",
+            position=100,
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+        ImagePublication.objects.create(
+            texte_alternatif="Test texte_alternatif 2",
+            position=200,
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+        image_publication = self.imagepublication_service.get_all()
+        self.assertEqual(image_publication.count(), 2)
+
+    def test_create_image_publication(self):
+        """Test de création d'un image_publication."""
+        data = {
+            "texte_alternatif": "Nouveau texte_alternatif",
+            "position": 300,
+            "created_by": self.user.id,
+            "updated_by": self.user.id,
+        }
+
+        image_publication = self.imagepublication_service.create(data)
+        self.assertEqual(getattr(image_publication, 'texte_alternatif'), "Nouveau texte_alternatif")
+
+
+    def test_update_image_publication(self):
+        """Test de mise à jour d'un image_publication."""
+        image_publication = ImagePublication.objects.create(
+            texte_alternatif="Original texte_alternatif",
+            position=400,
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+        updated_data = {
+        }
+        updated_image_publication = self.imagepublication_service.update(image_publication.id, updated_data)
+        self.assertEqual(getattr(updated_image_publication, 'texte_alternatif'), "Mis à jour texte_alternatif")
+
+
+    def test_delete_image_publication(self):
+        """Test de suppression d'un image_publication."""
+        image_publication = ImagePublication.objects.create(
+            texte_alternatif="À supprimer texte_alternatif",
+            position=500,
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+        success = self.imagepublication_service.delete(image_publication.id)
+        self.assertTrue(success)
+        self.assertFalse(ImagePublication.objects.filter(id=image_publication.id).exists())
+
+
+class ImagePublicationAPITests(APITestCase):
+    """
+    Tests pour l'API ImagePublication.
+    """
+
+    def setUp(self):
+        """Configuration initiale pour les tests."""
+        from django.contrib.auth import get_user_model
+        from rest_framework_simplejwt.tokens import RefreshToken
+        User = get_user_model()
+
+        try:
+            self.user = User.objects.get(email='admin@example.com')
+        except User.DoesNotExist:
+            self.user = User.objects.create_superuser(
+                username='admin',
+                email='admin@example.com',
+                password='admin123'
+            )
+
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+
+        self.image_publication = ImagePublication.objects.create(
+            texte_alternatif="Test API texte_alternatif",
+            position=600,
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+    def test_image_publication_list(self):
+        """Test de listage des image_publication."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        response = self.client.get(f'/api/v1/images-publication')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+        self.assertIsInstance(response.data['results'], list)
+
+    def test_image_publication_retrieve(self):
+        """Test de récupération d'un image_publication."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        response = self.client.get(f'/api/v1/images-publication/{self.image_publication.id}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_image_publication_create(self):
+        """Test de création d'un image_publication."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        data = {
+            "texte_alternatif": "Test texte_alternatif via API",
+            "position": 100,
+        }
+
+        response = self.client.post(f'/api/v1/images-publication', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_image_publication_partial_update(self):
+        """Test de mise à jour partielle d'un image_publication."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        data = {
+        }
+
+        response = self.client.patch(f'/api/v1/images-publication/{self.image_publication.id}', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_image_publication_delete(self):
+        """Test de suppression d'un image_publication."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        response = self.client.delete(f'/api/v1/images-publication/{self.image_publication.id}')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(ImagePublication.objects.filter(id=self.image_publication.id).exists())
+

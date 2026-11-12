@@ -293,6 +293,246 @@
         "Connection.profil_a -> Profil (fk)",
         "Connection.profil_b -> Profil (fk)"
       ]
+    },
+    "AvisChoix": {
+      "model_name": "AvisChoix",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "avis_choix.json",
+      "generated_at": "2026-11-12T18:54:28.658903",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "avis-choix",
+      "api_endpoints": [
+        "/api/v1/avis-choix/",
+        "/api/v1/avis-choix/{id}/"
+      ],
+      "relations": []
+    },
+    "Commentaire": {
+      "model_name": "Commentaire",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "commentaire.json",
+      "generated_at": "2026-11-12T18:54:28.967669",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "commentaires",
+      "api_endpoints": [
+        "/api/v1/commentaires/",
+        "/api/v1/commentaires/{id}/"
+      ],
+      "relations": []
+    },
+    "ConfirmationAide": {
+      "model_name": "ConfirmationAide",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "confirmation_aide.json",
+      "generated_at": "2026-11-12T18:54:29.341531",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "confirmations-aide",
+      "api_endpoints": [
+        "/api/v1/confirmations-aide/",
+        "/api/v1/confirmations-aide/{id}/"
+      ],
+      "relations": []
+    },
+    "Conversation": {
+      "model_name": "Conversation",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "conversation.json",
+      "generated_at": "2026-11-12T18:54:29.679273",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "conversations",
+      "api_endpoints": [
+        "/api/v1/conversations/",
+        "/api/v1/conversations/{id}/"
+      ],
+      "relations": []
+    },
+    "Espace": {
+      "model_name": "Espace",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "espace.json",
+      "generated_at": "2026-11-12T18:54:30.017870",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "espaces",
+      "api_endpoints": [
+        "/api/v1/espaces/",
+        "/api/v1/espaces/{id}/"
+      ],
+      "relations": []
+    },
+    "ImagePublication": {
+      "model_name": "ImagePublication",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "image_publication.json",
+      "generated_at": "2026-11-12T18:54:30.368766",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "images-publication",
+      "api_endpoints": [
+        "/api/v1/images-publication/",
+        "/api/v1/images-publication/{id}/"
+      ],
+      "relations": []
+    },
+    "LienInvitation": {
+      "model_name": "LienInvitation",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "lien_invitation.json",
+      "generated_at": "2026-11-12T18:54:30.691496",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "liens-invitation",
+      "api_endpoints": [
+        "/api/v1/liens-invitation/",
+        "/api/v1/liens-invitation/{id}/"
+      ],
+      "relations": []
+    },
+    "LikeCommentaire": {
+      "model_name": "LikeCommentaire",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "like_commentaire.json",
+      "generated_at": "2026-11-12T18:54:31.041962",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "likes-commentaire",
+      "api_endpoints": [
+        "/api/v1/likes-commentaire/",
+        "/api/v1/likes-commentaire/{id}/"
+      ],
+      "relations": []
+    },
+    "LikePublication": {
+      "model_name": "LikePublication",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "like_publication.json",
+      "generated_at": "2026-11-12T18:54:31.370240",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "likes-publication",
+      "api_endpoints": [
+        "/api/v1/likes-publication/",
+        "/api/v1/likes-publication/{id}/"
+      ],
+      "relations": []
+    },
+    "Message": {
+      "model_name": "Message",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "message.json",
+      "generated_at": "2026-11-12T18:54:31.729003",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "messages",
+      "api_endpoints": [
+        "/api/v1/messages/",
+        "/api/v1/messages/{id}/"
+      ],
+      "relations": []
+    },
+    "NotificationResume": {
+      "model_name": "NotificationResume",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "notification_resume.json",
+      "generated_at": "2026-11-12T18:54:32.063969",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "notifications-resume",
+      "api_endpoints": [
+        "/api/v1/notifications-resume/",
+        "/api/v1/notifications-resume/{id}/"
+      ],
+      "relations": []
+    },
+    "OptionPublication": {
+      "model_name": "OptionPublication",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "option_publication.json",
+      "generated_at": "2026-11-12T18:54:32.409026",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "options-publication",
+      "api_endpoints": [
+        "/api/v1/options-publication/",
+        "/api/v1/options-publication/{id}/"
+      ],
+      "relations": []
+    },
+    "ParticipationEspace": {
+      "model_name": "ParticipationEspace",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "participation_espace.json",
+      "generated_at": "2026-11-12T18:54:32.745441",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "participations-espace",
+      "api_endpoints": [
+        "/api/v1/participations-espace/",
+        "/api/v1/participations-espace/{id}/"
+      ],
+      "relations": []
+    },
+    "Publication": {
+      "model_name": "Publication",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "publication.json",
+      "generated_at": "2026-11-12T18:54:33.103561",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "publications",
+      "api_endpoints": [
+        "/api/v1/publications/",
+        "/api/v1/publications/{id}/"
+      ],
+      "relations": []
+    },
+    "SuiviUtilisateur": {
+      "model_name": "SuiviUtilisateur",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "suivi_utilisateur.json",
+      "generated_at": "2026-11-12T18:54:33.468071",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "suivis-utilisateur",
+      "api_endpoints": [
+        "/api/v1/suivis-utilisateur/",
+        "/api/v1/suivis-utilisateur/{id}/"
+      ],
+      "relations": []
+    },
+    "VoteSondage": {
+      "model_name": "VoteSondage",
+      "app_name": "communaute",
+      "zone": "communaute",
+      "file": "vote_sondage.json",
+      "generated_at": "2026-11-12T18:54:33.825714",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "votes-sondage",
+      "api_endpoints": [
+        "/api/v1/votes-sondage/",
+        "/api/v1/votes-sondage/{id}/"
+      ],
+      "relations": []
     }
   },
   "generated_frontends": {
@@ -482,6 +722,72 @@
         "file": "swipe.json",
         "uploaded_at": "2026-11-12T19:52:08.929377"
       }
+    },
+    "communaute": {
+      "AvisChoix": {
+        "file": "avis_choix.json",
+        "uploaded_at": "2026-11-12T18:53:15.827788"
+      },
+      "Commentaire": {
+        "file": "commentaire.json",
+        "uploaded_at": "2026-11-12T18:53:15.828718"
+      },
+      "ConfirmationAide": {
+        "file": "confirmation_aide.json",
+        "uploaded_at": "2026-11-12T18:53:15.829579"
+      },
+      "Conversation": {
+        "file": "conversation.json",
+        "uploaded_at": "2026-11-12T18:53:15.830431"
+      },
+      "Espace": {
+        "file": "espace.json",
+        "uploaded_at": "2026-11-12T18:53:15.831311"
+      },
+      "ImagePublication": {
+        "file": "image_publication.json",
+        "uploaded_at": "2026-11-12T18:53:15.832218"
+      },
+      "LienInvitation": {
+        "file": "lien_invitation.json",
+        "uploaded_at": "2026-11-12T18:53:15.833167"
+      },
+      "LikeCommentaire": {
+        "file": "like_commentaire.json",
+        "uploaded_at": "2026-11-12T18:53:15.833945"
+      },
+      "LikePublication": {
+        "file": "like_publication.json",
+        "uploaded_at": "2026-11-12T18:53:15.834955"
+      },
+      "Message": {
+        "file": "message.json",
+        "uploaded_at": "2026-11-12T18:53:15.835777"
+      },
+      "NotificationResume": {
+        "file": "notification_resume.json",
+        "uploaded_at": "2026-11-12T18:53:15.836565"
+      },
+      "OptionPublication": {
+        "file": "option_publication.json",
+        "uploaded_at": "2026-11-12T18:53:15.837316"
+      },
+      "ParticipationEspace": {
+        "file": "participation_espace.json",
+        "uploaded_at": "2026-11-12T18:53:15.838041"
+      },
+      "Publication": {
+        "file": "publication.json",
+        "uploaded_at": "2026-11-12T18:53:15.838792"
+      },
+      "SuiviUtilisateur": {
+        "file": "suivi_utilisateur.json",
+        "uploaded_at": "2026-11-12T18:53:15.839572"
+      },
+      "VoteSondage": {
+        "file": "vote_sondage.json",
+        "uploaded_at": "2026-11-12T18:53:15.840349"
+      }
     }
   },
   "file_checksums": {
@@ -584,6 +890,82 @@
     "marketplace::views/connection_viewset.py": {
       "checksum": "7be01223ce48515be661f3119cf52fd2",
       "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "communaute::models.py": {
+      "checksum": "d81d0346fbbf8e5e1d0e8f10db0b58dc",
+      "last_updated": "2026-11-12T18:54:33.831167"
+    },
+    "communaute::serializers.py": {
+      "checksum": "6dfe3631219dd566fb7240bd7d4c750c",
+      "last_updated": "2026-11-12T18:54:33.831329"
+    },
+    "communaute::urls.py": {
+      "checksum": "e844f5868d2080789384488d44f79731",
+      "last_updated": "2026-11-12T18:54:33.831459"
+    },
+    "communaute::views/avischoix_viewset.py": {
+      "checksum": "94df5f91659702a4eb9130f0cc465965",
+      "last_updated": "2026-11-12T18:54:33.831731"
+    },
+    "communaute::views/commentaire_viewset.py": {
+      "checksum": "85300eedba3b6be0ad1cb828ad0b5962",
+      "last_updated": "2026-11-12T18:54:33.831886"
+    },
+    "communaute::views/confirmationaide_viewset.py": {
+      "checksum": "f2f7a7406600cf513299734d1c072e91",
+      "last_updated": "2026-11-12T18:54:33.832024"
+    },
+    "communaute::views/conversation_viewset.py": {
+      "checksum": "6682bc51cbe95b1bc09855a11e880e8d",
+      "last_updated": "2026-11-12T18:54:33.832151"
+    },
+    "communaute::views/espace_viewset.py": {
+      "checksum": "e2a8058179123da6a5106a9d84318349",
+      "last_updated": "2026-11-12T18:54:33.832267"
+    },
+    "communaute::views/imagepublication_viewset.py": {
+      "checksum": "947c943093358e1c39e2bfed2547779d",
+      "last_updated": "2026-11-12T18:54:33.832386"
+    },
+    "communaute::views/lieninvitation_viewset.py": {
+      "checksum": "e368b50f7bd03718d6a3d80de1b9c10c",
+      "last_updated": "2026-11-12T18:54:33.832497"
+    },
+    "communaute::views/likecommentaire_viewset.py": {
+      "checksum": "dd122308cac186e5f3e33e08c82054d4",
+      "last_updated": "2026-11-12T18:54:33.832625"
+    },
+    "communaute::views/likepublication_viewset.py": {
+      "checksum": "9462fc4c19f48becda078f922d60b6c0",
+      "last_updated": "2026-11-12T18:54:33.832758"
+    },
+    "communaute::views/message_viewset.py": {
+      "checksum": "aa32ef04339b365e97910c57aa629bbf",
+      "last_updated": "2026-11-12T18:54:33.832981"
+    },
+    "communaute::views/notificationresume_viewset.py": {
+      "checksum": "e7a50734a5945738f17b9d700e4a9b73",
+      "last_updated": "2026-11-12T18:54:33.833236"
+    },
+    "communaute::views/optionpublication_viewset.py": {
+      "checksum": "77e780d29269328df241280b8800379e",
+      "last_updated": "2026-11-12T18:54:33.833470"
+    },
+    "communaute::views/participationespace_viewset.py": {
+      "checksum": "13910c81b95fbeac2619a18657cdbc65",
+      "last_updated": "2026-11-12T18:54:33.833680"
+    },
+    "communaute::views/publication_viewset.py": {
+      "checksum": "ddf4865192cef2fe244083baa8e22d01",
+      "last_updated": "2026-11-12T18:54:33.833942"
+    },
+    "communaute::views/suiviutilisateur_viewset.py": {
+      "checksum": "39c6b6c1ca493e503e9afa220f21f907",
+      "last_updated": "2026-11-12T18:54:33.834211"
+    },
+    "communaute::views/votesondage_viewset.py": {
+      "checksum": "77dc1bf861c6fbd1cd1c3fb3be733408",
+      "last_updated": "2026-11-12T18:54:33.834428"
     }
   },
   "relations": [
@@ -830,6 +1212,10 @@
     "marketplace": {
       "created_at": "2026-11-12T19:52:03.243870",
       "dotted_path": "app.marketplace"
+    },
+    "communaute": {
+      "created_at": "2026-11-12T18:37:48.323445",
+      "dotted_path": "app.communaute"
     }
   }
 }

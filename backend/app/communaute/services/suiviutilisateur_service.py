@@ -1,0 +1,113 @@
+"""
+SuiviUtilisateur service layer pour les opérations de logique métier.
+"""
+from typing import List, Optional, Dict, Any
+from django.db.models import QuerySet
+from django.core.exceptions import ValidationError
+from app.communaute.models import SuiviUtilisateur
+from app.communaute.repositories.suiviutilisateur_repository import SuiviUtilisateurRepository
+
+
+class SuiviUtilisateurService:
+    """
+    Classe de service pour la logique métier liée aux suivi_utilisateurs.
+    """
+
+    def __init__(self):
+        self.suiviutilisateur_repository = SuiviUtilisateurRepository()
+
+    def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
+        """
+        Obtenir les suivi_utilisateurs, avec recherche textuelle et tri facultatifs.
+
+        Returns:
+            QuerySet: Les suivi_utilisateurs filtrés et triés
+
+        Raises:
+            ValueError: Si le champ de tri n'est pas autorisé
+        """
+        return self.suiviutilisateur_repository.get_all(search=search, ordering=ordering)
+
+    def get_by_id(self, suivi_utilisateur_id: int) -> Optional[SuiviUtilisateur]:
+        """
+        Obtenir un suivi_utilisateur par ID.
+        
+        Args:
+            suivi_utilisateur_id (int): L'ID du suivi_utilisateur
+            
+        Returns:
+            Optional[SuiviUtilisateur]: Le suivi_utilisateur si trouvé, None sinon
+        """
+        return self.suiviutilisateur_repository.get_by_id(suivi_utilisateur_id)
+
+    def create(self, suivi_utilisateur_data: Dict[str, Any]) -> SuiviUtilisateur:
+        """
+        Créer un nouveau suivi_utilisateur avec validation.
+        
+        Args:
+            suivi_utilisateur_data (Dict[str, Any]): Données du suivi_utilisateur
+            
+        Returns:
+            SuiviUtilisateur: Le suivi_utilisateur créé
+            
+        Raises:
+            ValidationError: Si la validation échoue
+        """
+        # Validation des données
+        self.validate_data(suivi_utilisateur_data)
+        
+        return self.suiviutilisateur_repository.create(**suivi_utilisateur_data)
+
+    def update(self, suivi_utilisateur_id: int, suivi_utilisateur_data: Dict[str, Any], partial: bool = False) -> Optional[SuiviUtilisateur]:
+        """
+        Mettre à jour un suivi_utilisateur existant.
+        
+        Args:
+            suivi_utilisateur_id (int): L'ID du suivi_utilisateur
+            suivi_utilisateur_data (Dict[str, Any]): Données mises à jour
+            partial (bool): Si c'est une mise à jour partielle
+            
+        Returns:
+            Optional[SuiviUtilisateur]: Le suivi_utilisateur mis à jour si trouvé, None sinon
+            
+        Raises:
+            ValidationError: Si la validation échoue
+        """
+        suivi_utilisateur = self.suiviutilisateur_repository.get_by_id(suivi_utilisateur_id)
+        if not suivi_utilisateur:
+            return None
+
+        # Validation des données
+        if not partial:
+            self.validate_data(suivi_utilisateur_data)
+
+        return self.suiviutilisateur_repository.update(suivi_utilisateur, **suivi_utilisateur_data)
+
+    def delete(self, suivi_utilisateur_id: int) -> bool:
+        """
+        Supprimer un suivi_utilisateur.
+        
+        Args:
+            suivi_utilisateur_id (int): L'ID du suivi_utilisateur
+            
+        Returns:
+            bool: True si supprimé avec succès, False si suivi_utilisateur non trouvé
+        """
+        suivi_utilisateur = self.suiviutilisateur_repository.get_by_id(suivi_utilisateur_id)
+        if not suivi_utilisateur:
+            return False
+
+        return self.suiviutilisateur_repository.delete(suivi_utilisateur)
+
+    def validate_data(self, suivi_utilisateur_data: Dict[str, Any]):
+        """
+        Valider les données du suivi_utilisateur.
+        
+        Args:
+            suivi_utilisateur_data (Dict[str, Any]): Données du suivi_utilisateur à valider
+            
+        Raises:
+            ValidationError: Si la validation échoue
+        """
+        # Validation des champs CharField obligatoires
+        # Ajoutez d'autres validations selon vos besoins

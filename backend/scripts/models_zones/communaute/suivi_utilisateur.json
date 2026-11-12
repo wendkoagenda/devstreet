@@ -1,0 +1,11 @@
+{
+  "model_name": "SuiviUtilisateur",
+  "app_name": "communaute",
+  "fields": [],
+  "meta": {
+    "db_table": "communaute_suivi_utilisateur",
+    "resource_plural": "suivis-utilisateur",
+    "verbose_name": "Suivi d'utilisateur",
+    "verbose_name_plural": "Suivis d'utilisateurs"
+  }
+}

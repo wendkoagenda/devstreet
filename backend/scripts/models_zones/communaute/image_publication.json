@@ -1,0 +1,28 @@
+{
+  "model_name": "ImagePublication",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "url",
+      "type": "URLField"
+    },
+    {
+      "name": "texte_alternatif",
+      "type": "CharField",
+      "max_length": 200,
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "position",
+      "type": "PositiveIntegerField",
+      "default": 0
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_image_publication",
+    "resource_plural": "images-publication",
+    "verbose_name": "Image de publication",
+    "verbose_name_plural": "Images de publication"
+  }
+}
