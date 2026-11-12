@@ -68,6 +68,9 @@ class Command(BaseCommand):
                 # Créer les rôles de base
                 self._create_roles()
 
+                # Permissions de la marketplace (créées par la migration marketplace.0002) pour les rôles de base
+                self._assign_marketplace_permissions()
+
                 # Créer l'admin avant les seeds (les seeds peuvent créer l'admin sans rôle)
                 if not options['skip_admin']:
                     self._create_admin_user(
@@ -248,6 +251,15 @@ class Command(BaseCommand):
                 self.stdout.write(f'  - Rôle existe déjà: {role_data["name"]}')
 
         self.stdout.write(f'👥 {created_count} rôles créés.')
+
+    def _assign_marketplace_permissions(self):
+        """Attribue les permissions de la marketplace aux rôles Admin et Super Admin (rôles créés après la migration)."""
+        from app.marketplace.permission_codes import MARKETPLACE_PERMISSION_CODES
+
+        permissions = Permission.objects.filter(code__in=MARKETPLACE_PERMISSION_CODES)
+        for role in Role.objects.filter(name__in=['Admin', 'Super Admin']):
+            role.permissions.add(*permissions)
+        self.stdout.write(f'  ✓ {permissions.count()} permissions marketplace attribuées à Admin / Super Admin')
 
     def _create_admin_user(self, admin_email, admin_password):
         """
