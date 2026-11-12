@@ -1,0 +1,21 @@
+{
+  "model": "Company",
+  "app": "marketplace",
+  "description": "Entreprise qui publie des offres et recrute.",
+  "fields": {
+    "name": { "type": "CharField", "max_length": 150, "required": true, "description": "Nom de l'entreprise" },
+    "slug": { "type": "SlugField", "max_length": 160, "unique": true, "required": true, "description": "URL publique" },
+    "logo": { "type": "ImageField", "required": false, "description": "Logo, stocké en stockage objet" },
+    "description": { "type": "TextField", "required": false, "description": "Présentation de l'entreprise" },
+    "sector": { "type": "CharField", "max_length": 30, "choices": ["fintech", "ecommerce", "agritech", "edtech", "health", "ngo", "public", "other"], "required": true, "description": "Secteur d'activité" },
+    "size": { "type": "CharField", "max_length": 10, "choices": ["1-10", "11-50", "51-200", "200+"], "required": false, "description": "Taille de l'entreprise" },
+    "website": { "type": "URLField", "required": false, "description": "Site web" },
+    "contact_email": { "type": "EmailField", "required": false, "description": "E-mail de contact" },
+    "phone": { "type": "CharField", "max_length": 20, "required": false, "description": "Téléphone" },
+    "country": { "type": "CharField", "max_length": 2, "required": true, "description": "Code pays ISO 3166-1 (ex. BF, SN)" },
+    "city": { "type": "CharField", "max_length": 100, "required": false, "description": "Ville" },
+    "address": { "type": "CharField", "max_length": 255, "required": false, "description": "Adresse" },
+    "is_verified": { "type": "BooleanField", "default": false, "description": "Vérifiée par l'admin" },
+    "verified_at": { "type": "DateTimeField", "required": false, "description": "Date de vérification" }
+  }
+}

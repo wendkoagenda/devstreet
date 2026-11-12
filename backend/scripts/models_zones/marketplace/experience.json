@@ -1,0 +1,16 @@
+{
+  "model": "Experience",
+  "app": "marketplace",
+  "description": "Expérience professionnelle d'un profil, utilisée dans le CV et le matching.",
+  "fields": {
+    "title": { "type": "CharField", "max_length": 150, "required": true, "description": "Poste occupé" },
+    "company_name": { "type": "CharField", "max_length": 150, "required": true, "description": "Employeur ou client" },
+    "location": { "type": "CharField", "max_length": 150, "required": false, "description": "Ville, pays ou remote" },
+    "contract_type": { "type": "CharField", "max_length": 15, "choices": ["cdi", "cdd", "freelance", "stage"], "required": false, "description": "Type de contrat" },
+    "start_date": { "type": "DateField", "required": true, "description": "Date de début" },
+    "end_date": { "type": "DateField", "required": false, "description": "Date de fin, vide si poste actuel" },
+    "is_current": { "type": "BooleanField", "default": false, "description": "Poste actuel" },
+    "description": { "type": "TextField", "required": false, "description": "Missions et réalisations" },
+    "technologies": { "type": "CharField", "max_length": 255, "required": false, "description": "Stack utilisée" }
+  }
+}

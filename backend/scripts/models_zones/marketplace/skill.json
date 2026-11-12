@@ -1,0 +1,11 @@
+{
+  "model": "Skill",
+  "app": "marketplace",
+  "description": "Compétence technique (hard) ou comportementale (soft), partagée avec les tags du forum.",
+  "fields": {
+    "name": { "type": "CharField", "max_length": 80, "unique": true, "required": true, "description": "Nom (ex. « Django »)" },
+    "slug": { "type": "SlugField", "max_length": 90, "unique": true, "required": true, "description": "Identifiant URL" },
+    "type": { "type": "CharField", "max_length": 4, "choices": ["hard", "soft"], "required": true, "description": "Compétence technique ou comportementale" },
+    "category": { "type": "CharField", "max_length": 20, "choices": ["frontend", "backend", "mobile", "devops", "data", "design", "management", "soft"], "required": false, "description": "Famille de compétences" }
+  }
+}

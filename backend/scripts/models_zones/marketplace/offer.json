@@ -1,0 +1,26 @@
+{
+  "model": "Offer",
+  "app": "marketplace",
+  "description": "Offre publiée par une entreprise : mission, CDD, CDI ou stage.",
+  "fields": {
+    "title": { "type": "CharField", "max_length": 200, "required": true, "description": "Titre de l'offre" },
+    "slug": { "type": "SlugField", "max_length": 220, "unique": true, "required": true, "description": "URL publique" },
+    "description": { "type": "TextField", "required": true, "description": "Description, peut être générée par l'IA" },
+    "type": { "type": "CharField", "max_length": 10, "choices": ["mission", "cdd", "cdi", "stage"], "required": true, "description": "Type de contrat" },
+    "contract_duration": { "type": "PositiveSmallIntegerField", "required": false, "description": "Durée en mois (mission, CDD, stage)" },
+    "experience_level": { "type": "CharField", "max_length": 10, "choices": ["junior", "mid", "senior"], "required": true, "description": "Niveau attendu" },
+    "budget_min": { "type": "DecimalField", "max_digits": 12, "decimal_places": 2, "required": false, "description": "Budget ou salaire minimum" },
+    "budget_max": { "type": "DecimalField", "max_digits": 12, "decimal_places": 2, "required": false, "description": "Budget ou salaire maximum" },
+    "currency": { "type": "CharField", "max_length": 3, "default": "XOF", "description": "Devise ISO 4217" },
+    "budget_period": { "type": "CharField", "max_length": 10, "choices": ["day", "month", "fixed"], "default": "month", "description": "Période du budget" },
+    "country": { "type": "CharField", "max_length": 2, "required": true, "description": "Code pays ISO 3166-1" },
+    "city": { "type": "CharField", "max_length": 100, "required": false, "description": "Ville" },
+    "work_mode": { "type": "CharField", "max_length": 10, "choices": ["on_site", "hybrid", "remote"], "default": "on_site", "description": "Mode de travail" },
+    "start_date": { "type": "DateField", "required": false, "description": "Date de démarrage souhaitée" },
+    "deadline": { "type": "DateField", "required": false, "description": "Date limite de candidature" },
+    "status": { "type": "CharField", "max_length": 10, "choices": ["draft", "open", "closed"], "default": "draft", "description": "Statut de l'offre" },
+    "published_at": { "type": "DateTimeField", "required": false, "description": "Date de publication" },
+    "views_count": { "type": "PositiveIntegerField", "default": 0, "description": "Nombre de vues" },
+    "embedding": { "type": "VectorField", "dimensions": 1536, "required": false, "description": "Vecteur pour le matching IA (pgvector)" }
+  }
+}

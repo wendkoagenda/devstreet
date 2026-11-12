@@ -1,0 +1,13 @@
+{
+  "model": "Availability",
+  "app": "marketplace",
+  "description": "Période du calendrier de disponibilité d'un profil, au jour près.",
+  "fields": {
+    "start_date": { "type": "DateField", "required": true, "description": "Début de la période" },
+    "end_date": { "type": "DateField", "required": true, "description": "Fin de la période (incluse)" },
+    "status": { "type": "CharField", "max_length": 10, "choices": ["available", "partial", "busy", "leave"], "required": true, "description": "Disponible, partiel, occupé ou congé" },
+    "hours_per_week": { "type": "PositiveSmallIntegerField", "required": false, "description": "Capacité sur la période (utile pour le statut partial)" },
+    "source": { "type": "CharField", "max_length": 10, "choices": ["manual", "mission"], "default": "manual", "description": "Saisie manuelle ou créée par une candidature acceptée" },
+    "note": { "type": "CharField", "max_length": 255, "required": false, "description": "Commentaire libre" }
+  }
+}
