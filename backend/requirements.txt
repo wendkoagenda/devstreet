@@ -16,3 +16,4 @@ httpx==0.28.1
 openai==3.49.0
 pydantic==2.14.3
 pip-audit==2.9.0
+reportlab==5.1.0

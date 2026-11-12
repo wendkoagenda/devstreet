@@ -1,0 +1,91 @@
+{
+  "model_name": "Experience",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "title",
+      "type": "CharField",
+      "max_length": 150,
+      "help_text": "Poste occupé"
+    },
+    {
+      "name": "company_name",
+      "type": "CharField",
+      "max_length": 150,
+      "help_text": "Employeur ou client"
+    },
+    {
+      "name": "location",
+      "type": "CharField",
+      "max_length": 150,
+      "help_text": "Ville, pays ou remote",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "contract_type",
+      "type": "CharField",
+      "max_length": 15,
+      "help_text": "Type de contrat",
+      "choices": [
+        [
+          "cdi",
+          "CDI"
+        ],
+        [
+          "cdd",
+          "CDD"
+        ],
+        [
+          "freelance",
+          "Freelance"
+        ],
+        [
+          "stage",
+          "Stage"
+        ]
+      ],
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "start_date",
+      "type": "DateField",
+      "help_text": "Date de début"
+    },
+    {
+      "name": "end_date",
+      "type": "DateField",
+      "help_text": "Date de fin, vide si poste actuel",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "is_current",
+      "type": "BooleanField",
+      "help_text": "Poste actuel",
+      "default": false
+    },
+    {
+      "name": "description",
+      "type": "TextField",
+      "help_text": "Missions et réalisations",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "technologies",
+      "type": "CharField",
+      "max_length": 255,
+      "help_text": "Stack utilisée",
+      "blank": true,
+      "default": ""
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_experience",
+    "resource_plural": "experiences",
+    "verbose_name": "Expérience",
+    "verbose_name_plural": "Expériences"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "created_at": "2025-08-13T11:13:13.513780",
-  "last_updated": "2026-11-12T14:09:44.674030",
+  "last_updated": "2026-11-12T20:02:31.195123",
   "generated_apis": {
     "ContributionTask": {
       "model_name": "ContributionTask",
@@ -47,9 +47,373 @@
         "/api/v1/technologies/{id}/"
       ],
       "relations": []
+    },
+    "Company": {
+      "model_name": "Company",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "company.json",
+      "generated_at": "2026-11-12T19:52:09.214257",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "companies",
+      "api_endpoints": [
+        "/api/v1/companies/",
+        "/api/v1/companies/{id}/"
+      ],
+      "relations": [
+        "Profil.company -> Company (fk)",
+        "Offer.company -> Company (fk)"
+      ]
+    },
+    "Skill": {
+      "model_name": "Skill",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "skill.json",
+      "generated_at": "2026-11-12T19:52:09.435667",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "skills",
+      "api_endpoints": [
+        "/api/v1/skills/",
+        "/api/v1/skills/{id}/"
+      ],
+      "relations": [
+        "Offer.required_skills -> Skill (m2m)",
+        "ProfilSkill.skill -> Skill (fk)"
+      ]
+    },
+    "Profil": {
+      "model_name": "Profil",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "profil.json",
+      "generated_at": "2026-11-12T19:52:09.671230",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "profils",
+      "api_endpoints": [
+        "/api/v1/profils/",
+        "/api/v1/profils/{id}/"
+      ],
+      "relations": [
+        "Profil.company -> Company (fk)",
+        "Offer.recruiter -> Profil (fk)",
+        "Candidature.profil -> Profil (fk)",
+        "ProfilSkill.profil -> Profil (fk)",
+        "Experience.profil -> Profil (fk)",
+        "Prestation.profil -> Profil (fk)",
+        "ProfilHistory.profil -> Profil (fk)",
+        "Availability.profil -> Profil (fk)",
+        "Review.target -> Profil (fk)",
+        "Review.author -> Profil (fk)",
+        "Swipe.author -> Profil (fk)",
+        "Swipe.target -> Profil (fk)",
+        "Connection.profil_a -> Profil (fk)",
+        "Connection.profil_b -> Profil (fk)"
+      ]
+    },
+    "Offer": {
+      "model_name": "Offer",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "offer.json",
+      "generated_at": "2026-11-12T19:52:09.917891",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "offers",
+      "api_endpoints": [
+        "/api/v1/offers/",
+        "/api/v1/offers/{id}/"
+      ],
+      "relations": [
+        "Offer.company -> Company (fk)",
+        "Offer.recruiter -> Profil (fk)",
+        "Offer.required_skills -> Skill (m2m)",
+        "Candidature.offer -> Offer (fk)"
+      ]
+    },
+    "Candidature": {
+      "model_name": "Candidature",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "candidature.json",
+      "generated_at": "2026-11-12T19:52:10.162462",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "candidatures",
+      "api_endpoints": [
+        "/api/v1/candidatures/",
+        "/api/v1/candidatures/{id}/"
+      ],
+      "relations": [
+        "Candidature.offer -> Offer (fk)",
+        "Candidature.profil -> Profil (fk)",
+        "Review.candidature -> Candidature (fk)"
+      ]
+    },
+    "ProfilSkill": {
+      "model_name": "ProfilSkill",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "profil_skill.json",
+      "generated_at": "2026-11-12T19:52:10.402068",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "profil-skills",
+      "api_endpoints": [
+        "/api/v1/profil-skills/",
+        "/api/v1/profil-skills/{id}/"
+      ],
+      "relations": [
+        "ProfilSkill.profil -> Profil (fk)",
+        "ProfilSkill.skill -> Skill (fk)"
+      ]
+    },
+    "Experience": {
+      "model_name": "Experience",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "experience.json",
+      "generated_at": "2026-11-12T19:52:10.650443",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "experiences",
+      "api_endpoints": [
+        "/api/v1/experiences/",
+        "/api/v1/experiences/{id}/"
+      ],
+      "relations": [
+        "Experience.profil -> Profil (fk)"
+      ]
+    },
+    "Prestation": {
+      "model_name": "Prestation",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "prestation.json",
+      "generated_at": "2026-11-12T19:52:10.892865",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "prestations",
+      "api_endpoints": [
+        "/api/v1/prestations/",
+        "/api/v1/prestations/{id}/"
+      ],
+      "relations": [
+        "Prestation.profil -> Profil (fk)"
+      ]
+    },
+    "ProfilHistory": {
+      "model_name": "ProfilHistory",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "profil_history.json",
+      "generated_at": "2026-11-12T19:52:11.137740",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "profil-histories",
+      "api_endpoints": [
+        "/api/v1/profil-histories/",
+        "/api/v1/profil-histories/{id}/"
+      ],
+      "relations": [
+        "ProfilHistory.profil -> Profil (fk)"
+      ]
+    },
+    "Availability": {
+      "model_name": "Availability",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "availability.json",
+      "generated_at": "2026-11-12T19:52:11.394413",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "availabilities",
+      "api_endpoints": [
+        "/api/v1/availabilities/",
+        "/api/v1/availabilities/{id}/"
+      ],
+      "relations": [
+        "Availability.profil -> Profil (fk)"
+      ]
+    },
+    "Review": {
+      "model_name": "Review",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "review.json",
+      "generated_at": "2026-11-12T19:52:11.657559",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "reviews",
+      "api_endpoints": [
+        "/api/v1/reviews/",
+        "/api/v1/reviews/{id}/"
+      ],
+      "relations": [
+        "Review.target -> Profil (fk)",
+        "Review.author -> Profil (fk)",
+        "Review.candidature -> Candidature (fk)"
+      ]
+    },
+    "Swipe": {
+      "model_name": "Swipe",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "swipe.json",
+      "generated_at": "2026-11-12T19:52:11.928584",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "swipes",
+      "api_endpoints": [
+        "/api/v1/swipes/",
+        "/api/v1/swipes/{id}/"
+      ],
+      "relations": [
+        "Swipe.author -> Profil (fk)",
+        "Swipe.target -> Profil (fk)"
+      ]
+    },
+    "Connection": {
+      "model_name": "Connection",
+      "app_name": "marketplace",
+      "zone": "marketplace",
+      "file": "connection.json",
+      "generated_at": "2026-11-12T19:52:12.162025",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "connections",
+      "api_endpoints": [
+        "/api/v1/connections/",
+        "/api/v1/connections/{id}/"
+      ],
+      "relations": [
+        "Connection.profil_a -> Profil (fk)",
+        "Connection.profil_b -> Profil (fk)"
+      ]
     }
   },
-  "generated_frontends": {},
+  "generated_frontends": {
+    "Company": {
+      "model_name": "Company",
+      "zone": "marketplace",
+      "file": "company.json",
+      "generated_at": "2026-11-12T19:54:12.955771",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/company/"
+    },
+    "Skill": {
+      "model_name": "Skill",
+      "zone": "marketplace",
+      "file": "skill.json",
+      "generated_at": "2026-11-12T19:54:13.094162",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/skill/"
+    },
+    "Profil": {
+      "model_name": "Profil",
+      "zone": "marketplace",
+      "file": "profil.json",
+      "generated_at": "2026-11-12T19:54:13.231008",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/profil/"
+    },
+    "Offer": {
+      "model_name": "Offer",
+      "zone": "marketplace",
+      "file": "offer.json",
+      "generated_at": "2026-11-12T19:54:13.328680",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/offer/"
+    },
+    "Candidature": {
+      "model_name": "Candidature",
+      "zone": "marketplace",
+      "file": "candidature.json",
+      "generated_at": "2026-11-12T19:54:13.461242",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/candidature/"
+    },
+    "ProfilSkill": {
+      "model_name": "ProfilSkill",
+      "zone": "marketplace",
+      "file": "profil_skill.json",
+      "generated_at": "2026-11-12T19:54:13.576489",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/profil-skill/"
+    },
+    "Experience": {
+      "model_name": "Experience",
+      "zone": "marketplace",
+      "file": "experience.json",
+      "generated_at": "2026-11-12T19:54:13.710147",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/experience/"
+    },
+    "Prestation": {
+      "model_name": "Prestation",
+      "zone": "marketplace",
+      "file": "prestation.json",
+      "generated_at": "2026-11-12T19:54:13.805576",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/prestation/"
+    },
+    "ProfilHistory": {
+      "model_name": "ProfilHistory",
+      "zone": "marketplace",
+      "file": "profil_history.json",
+      "generated_at": "2026-11-12T19:54:13.911322",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/profil-history/"
+    },
+    "Availability": {
+      "model_name": "Availability",
+      "zone": "marketplace",
+      "file": "availability.json",
+      "generated_at": "2026-11-12T19:54:14.094110",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/availability/"
+    },
+    "Review": {
+      "model_name": "Review",
+      "zone": "marketplace",
+      "file": "review.json",
+      "generated_at": "2026-11-12T19:54:14.237116",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/review/"
+    },
+    "Swipe": {
+      "model_name": "Swipe",
+      "zone": "marketplace",
+      "file": "swipe.json",
+      "generated_at": "2026-11-12T19:54:14.362866",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/swipe/"
+    },
+    "Connection": {
+      "model_name": "Connection",
+      "zone": "marketplace",
+      "file": "connection.json",
+      "generated_at": "2026-11-12T19:54:14.502279",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/connection/"
+    }
+  },
   "available_models": {
     "devstreet_hub": {
       "ContributionTask": {
@@ -64,55 +428,408 @@
         "file": "technology.json",
         "uploaded_at": "2026-11-12T14:09:43.409675"
       }
+    },
+    "marketplace": {
+      "Availability": {
+        "file": "availability.json",
+        "uploaded_at": "2026-11-12T19:52:08.860727"
+      },
+      "Candidature": {
+        "file": "candidature.json",
+        "uploaded_at": "2026-11-12T19:52:08.860727"
+      },
+      "Company": {
+        "file": "company.json",
+        "uploaded_at": "2026-11-12T19:52:08.867835"
+      },
+      "Connection": {
+        "file": "connection.json",
+        "uploaded_at": "2026-11-12T19:52:08.873847"
+      },
+      "Experience": {
+        "file": "experience.json",
+        "uploaded_at": "2026-11-12T19:52:08.879847"
+      },
+      "Offer": {
+        "file": "offer.json",
+        "uploaded_at": "2026-11-12T19:52:08.886847"
+      },
+      "Prestation": {
+        "file": "prestation.json",
+        "uploaded_at": "2026-11-12T19:52:08.894832"
+      },
+      "Profil": {
+        "file": "profil.json",
+        "uploaded_at": "2026-11-12T19:52:08.895832"
+      },
+      "ProfilHistory": {
+        "file": "profil_history.json",
+        "uploaded_at": "2026-11-12T19:52:08.900849"
+      },
+      "ProfilSkill": {
+        "file": "profil_skill.json",
+        "uploaded_at": "2026-11-12T19:52:08.906867"
+      },
+      "Review": {
+        "file": "review.json",
+        "uploaded_at": "2026-11-12T19:52:08.913864"
+      },
+      "Skill": {
+        "file": "skill.json",
+        "uploaded_at": "2026-11-12T19:52:08.920378"
+      },
+      "Swipe": {
+        "file": "swipe.json",
+        "uploaded_at": "2026-11-12T19:52:08.929377"
+      }
     }
   },
   "file_checksums": {
     "devstreet_hub::models.py": {
-      "checksum": "832165af5043942370d6c8b95661de26",
-      "last_updated": "2026-11-12T14:09:44.662318"
+      "checksum": "0a7495e63630888e970aa7f71059d8df",
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "devstreet_hub::serializers.py": {
       "checksum": "021b2e355c0c5926efb88e1b64df3d1c",
-      "last_updated": "2026-11-12T14:09:44.663836"
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "devstreet_hub::urls.py": {
       "checksum": "43ae165a7ed9488d137b6feb75aa9cdd",
-      "last_updated": "2026-11-12T14:09:44.663836"
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "devstreet_hub::views/contributiontask_viewset.py": {
       "checksum": "e135a6bd5c09f0a3975c2fd4da491a55",
-      "last_updated": "2026-11-12T14:09:44.665352"
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "devstreet_hub::views/project_viewset.py": {
       "checksum": "3592e6a88be90d6da0341fd2daed4bec",
-      "last_updated": "2026-11-12T14:09:44.666880"
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "devstreet_hub::views/technology_viewset.py": {
       "checksum": "66456941b303360e7aa69d82a3f7e299",
-      "last_updated": "2026-11-12T14:09:44.667391"
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "models.py": {
       "checksum": "4e9d82c63a1428b5e08015e6415af5ba",
-      "last_updated": "2026-11-12T14:09:44.659791"
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "serializers.py": {
       "checksum": "fbcfbd95256f625f3ca5f3b261103505",
-      "last_updated": "2026-11-12T14:09:44.659791"
+      "last_updated": "2026-11-12T20:02:31.178124"
     },
     "urls.py": {
       "checksum": "80aaf133dd45575a91ec2c4bdb6cb245",
-      "last_updated": "2026-11-12T14:09:44.661303"
+      "last_updated": "2026-11-12T20:02:31.178124"
+    },
+    "marketplace::models.py": {
+      "checksum": "c0d7eceed49f150d75827e6f7c0d82f1",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::serializers.py": {
+      "checksum": "4cece7508190c61a31f9b965d4b7ad9d",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::urls.py": {
+      "checksum": "9b58d95b70c178fdd8c2a494fe0a5a71",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::views/company_viewset.py": {
+      "checksum": "42f8785e113a9bf5a5b4b8bbd8fe2087",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::views/skill_viewset.py": {
+      "checksum": "fb73054ea33d51be106e0ad01c069489",
+      "last_updated": "2026-11-12T20:02:31.180126"
+    },
+    "marketplace::views/profil_viewset.py": {
+      "checksum": "47b49fe7983e8b10024f3ac3125fd1cd",
+      "last_updated": "2026-11-12T20:02:31.180126"
+    },
+    "marketplace::views/offer_viewset.py": {
+      "checksum": "27135a0a7c3fe540c873153af15b81f3",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::views/candidature_viewset.py": {
+      "checksum": "4392e8b73c28211921afc4b636649f8e",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::views/profilskill_viewset.py": {
+      "checksum": "db9215fc1eaafec185c824e1346c3e61",
+      "last_updated": "2026-11-12T20:02:31.180126"
+    },
+    "marketplace::views/experience_viewset.py": {
+      "checksum": "5f6f5795f564f0c605e409438fb353f3",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::views/prestation_viewset.py": {
+      "checksum": "d3720a11a49986ad1ced3b56e113954a",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::views/profilhistory_viewset.py": {
+      "checksum": "2ce5199ef4ffb9038819a495ede1531c",
+      "last_updated": "2026-11-12T20:02:31.180126"
+    },
+    "marketplace::views/availability_viewset.py": {
+      "checksum": "d3a43b12c0dd433d9b3f68cd8bef6db4",
+      "last_updated": "2026-11-12T20:02:31.179143"
+    },
+    "marketplace::views/review_viewset.py": {
+      "checksum": "947b7318cb72fec1d2370d6b5dd1f454",
+      "last_updated": "2026-11-12T20:02:31.180126"
+    },
+    "marketplace::views/swipe_viewset.py": {
+      "checksum": "4db4ac334e4b234d0c71986ec7354a70",
+      "last_updated": "2026-11-12T20:02:31.180126"
+    },
+    "marketplace::views/connection_viewset.py": {
+      "checksum": "7be01223ce48515be661f3119cf52fd2",
+      "last_updated": "2026-11-12T20:02:31.179143"
     }
   },
-  "relations": [],
+  "relations": [
+    {
+      "source": "Profil",
+      "target": "Company",
+      "type": "fk",
+      "field": "company",
+      "related_name": "profils",
+      "on_delete": "models.SET_NULL",
+      "nullable": true,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:29.541689"
+    },
+    {
+      "source": "Offer",
+      "target": "Company",
+      "type": "fk",
+      "field": "company",
+      "related_name": "offers",
+      "on_delete": "models.RESTRICT",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:29.753828"
+    },
+    {
+      "source": "Offer",
+      "target": "Profil",
+      "type": "fk",
+      "field": "recruiter",
+      "related_name": "created_offers",
+      "on_delete": "models.RESTRICT",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:29.958411"
+    },
+    {
+      "source": "Offer",
+      "target": "Skill",
+      "type": "m2m",
+      "field": "required_skills",
+      "related_name": "offers",
+      "on_delete": "models.RESTRICT",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:30.176040"
+    },
+    {
+      "source": "Candidature",
+      "target": "Offer",
+      "type": "fk",
+      "field": "offer",
+      "related_name": "candidatures",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:30.380865"
+    },
+    {
+      "source": "Candidature",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil",
+      "related_name": "candidatures",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:30.638466"
+    },
+    {
+      "source": "ProfilSkill",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil",
+      "related_name": "profil_skills",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:30.870296"
+    },
+    {
+      "source": "ProfilSkill",
+      "target": "Skill",
+      "type": "fk",
+      "field": "skill",
+      "related_name": "profil_skills",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:31.093207"
+    },
+    {
+      "source": "Experience",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil",
+      "related_name": "experiences",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:31.324976"
+    },
+    {
+      "source": "Prestation",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil",
+      "related_name": "prestations",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:31.579995"
+    },
+    {
+      "source": "ProfilHistory",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil",
+      "related_name": "history",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:31.829531"
+    },
+    {
+      "source": "Availability",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil",
+      "related_name": "availabilities",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:32.083689"
+    },
+    {
+      "source": "Review",
+      "target": "Profil",
+      "type": "fk",
+      "field": "target",
+      "related_name": "reviews_received",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:32.311012"
+    },
+    {
+      "source": "Review",
+      "target": "Profil",
+      "type": "fk",
+      "field": "author",
+      "related_name": "reviews_given",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:32.575384"
+    },
+    {
+      "source": "Review",
+      "target": "Candidature",
+      "type": "fk",
+      "field": "candidature",
+      "related_name": "reviews",
+      "on_delete": "models.SET_NULL",
+      "nullable": true,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:32.840766"
+    },
+    {
+      "source": "Swipe",
+      "target": "Profil",
+      "type": "fk",
+      "field": "author",
+      "related_name": "swipes_given",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:33.161016"
+    },
+    {
+      "source": "Swipe",
+      "target": "Profil",
+      "type": "fk",
+      "field": "target",
+      "related_name": "swipes_received",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:33.388872"
+    },
+    {
+      "source": "Connection",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil_a",
+      "related_name": "connections_as_a",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:33.624322"
+    },
+    {
+      "source": "Connection",
+      "target": "Profil",
+      "type": "fk",
+      "field": "profil_b",
+      "related_name": "connections_as_b",
+      "on_delete": "models.CASCADE",
+      "nullable": false,
+      "app_label": "marketplace",
+      "target_app_label": "marketplace",
+      "created_at": "2026-11-12T19:52:33.952200"
+    }
+  ],
   "statistics": {
-    "total_models": 3,
-    "total_apis": 3,
-    "total_frontends": 0,
-    "total_relations": 0,
+    "total_models": 16,
+    "total_apis": 16,
+    "total_frontends": 13,
+    "total_relations": 19,
     "zones_used": [
-      "devstreet_hub"
+      "devstreet_hub",
+      "marketplace"
     ]
   },
-  "apps": {}
+  "apps": {
+    "marketplace": {
+      "created_at": "2026-11-12T19:52:03.243870",
+      "dotted_path": "app.marketplace"
+    }
+  }
 }

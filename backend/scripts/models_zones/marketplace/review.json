@@ -1,0 +1,30 @@
+{
+  "model_name": "Review",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "rating",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Note de 1 à 5"
+    },
+    {
+      "name": "comment",
+      "type": "TextField",
+      "help_text": "Commentaire",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "is_public",
+      "type": "BooleanField",
+      "help_text": "Affiché sur le profil et le CV",
+      "default": true
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_review",
+    "resource_plural": "reviews",
+    "verbose_name": "Avis",
+    "verbose_name_plural": "Avis"
+  }
+}

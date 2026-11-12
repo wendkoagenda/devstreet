@@ -24,6 +24,7 @@ schema_view = get_schema_view(
     patterns=[
         path('api/', include('app.core.urls')),
         path('api/', include('app.metier.urls')),
+        path('api/', include('app.marketplace.urls')),
         path('api/', include('app.devstreet_hub.urls')),
         path('api/', include('app.ai.urls')),
     ],
@@ -35,6 +36,7 @@ urlpatterns = [
     
     # API Metier (application pour les modèles métier)
     path('api/', include('app.metier.urls')),
+    path('api/', include('app.marketplace.urls')),
     path('api/', include('app.devstreet_hub.urls')),
     path('api/', include('app.ai.urls')),
 ]

@@ -1,0 +1,217 @@
+{
+  "model_name": "Offer",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "title",
+      "type": "CharField",
+      "max_length": 200,
+      "help_text": "Titre de l'offre"
+    },
+    {
+      "name": "slug",
+      "type": "SlugField",
+      "max_length": 220,
+      "help_text": "URL publique",
+      "unique": true
+    },
+    {
+      "name": "description",
+      "type": "TextField",
+      "help_text": "Description, peut être générée par l'IA"
+    },
+    {
+      "name": "type",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Type de contrat",
+      "choices": [
+        [
+          "mission",
+          "Mission"
+        ],
+        [
+          "cdd",
+          "CDD"
+        ],
+        [
+          "cdi",
+          "CDI"
+        ],
+        [
+          "stage",
+          "Stage"
+        ]
+      ]
+    },
+    {
+      "name": "contract_duration",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Durée en mois (mission, CDD, stage)",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "experience_level",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Niveau attendu",
+      "choices": [
+        [
+          "junior",
+          "Junior"
+        ],
+        [
+          "mid",
+          "Confirmé"
+        ],
+        [
+          "senior",
+          "Sénior"
+        ]
+      ]
+    },
+    {
+      "name": "budget_min",
+      "type": "DecimalField",
+      "max_digits": 12,
+      "decimal_places": 2,
+      "help_text": "Budget ou salaire minimum",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "budget_max",
+      "type": "DecimalField",
+      "max_digits": 12,
+      "decimal_places": 2,
+      "help_text": "Budget ou salaire maximum",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "currency",
+      "type": "CharField",
+      "max_length": 3,
+      "help_text": "Devise ISO 4217",
+      "default": "XOF"
+    },
+    {
+      "name": "budget_period",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Période du budget",
+      "choices": [
+        [
+          "day",
+          "Par jour"
+        ],
+        [
+          "month",
+          "Par mois"
+        ],
+        [
+          "fixed",
+          "Forfait"
+        ]
+      ],
+      "default": "month"
+    },
+    {
+      "name": "country",
+      "type": "CharField",
+      "max_length": 2,
+      "help_text": "Code pays ISO 3166-1"
+    },
+    {
+      "name": "city",
+      "type": "CharField",
+      "max_length": 100,
+      "help_text": "Ville",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "work_mode",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Mode de travail",
+      "choices": [
+        [
+          "on_site",
+          "Sur site"
+        ],
+        [
+          "hybrid",
+          "Hybride"
+        ],
+        [
+          "remote",
+          "À distance"
+        ]
+      ],
+      "default": "on_site"
+    },
+    {
+      "name": "start_date",
+      "type": "DateField",
+      "help_text": "Date de démarrage souhaitée",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "deadline",
+      "type": "DateField",
+      "help_text": "Date limite de candidature",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "status",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Statut de l'offre",
+      "choices": [
+        [
+          "draft",
+          "Brouillon"
+        ],
+        [
+          "open",
+          "Ouverte"
+        ],
+        [
+          "closed",
+          "Clôturée"
+        ]
+      ],
+      "default": "draft"
+    },
+    {
+      "name": "published_at",
+      "type": "DateTimeField",
+      "help_text": "Date de publication",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "views_count",
+      "type": "PositiveIntegerField",
+      "help_text": "Nombre de vues",
+      "default": 0
+    },
+    {
+      "name": "embedding",
+      "type": "JSONField",
+      "help_text": "Vecteur pour le matching IA (pgvector) (JSON provisoire, futur VectorField pgvector)",
+      "null": true,
+      "blank": true
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_offer",
+    "resource_plural": "offers",
+    "verbose_name": "Offre",
+    "verbose_name_plural": "Offres"
+  }
+}
