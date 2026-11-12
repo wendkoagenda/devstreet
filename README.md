@@ -11,7 +11,7 @@ devstreet : projet full-stack **Django REST Framework** + **React 19 / TypeScrip
 
 Flux backend : `Client → ViewSet → Service → Repository → DB`
 
-- Backend découpé en apps `core/` (auth, users, rôles, permissions) et `metier/` (domaine métier)
+- Backend : `core/` (auth et IAM), `devstreet_hub/` (projets) et `metier/` (utilitaires partagés et extension du générateur)
 - Frontend organisé en feature slices sous `frontend/src/models/<feature>/`
 - Auth JWT (cookies HttpOnly en same-origin) ; permissions embarquées dans les tokens
 - En local, le frontend Vite relaie `/api` vers Django (`VITE_API_URL=/api`)
@@ -33,6 +33,8 @@ python manage.py runserver    # :8000
 ```
 
 Détail : [`backend/README.md`](backend/README.md)
+
+Module projets DevStreet Hub (backend uniquement) : [`docs/devstreet_hub/README.md`](docs/devstreet_hub/README.md), collection Postman et fiches d'interfaces numérotées incluses.
 
 ### Frontend
 

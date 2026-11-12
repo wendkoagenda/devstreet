@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { transferableAbortController } from "node:util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SESSION_EXPIRED_EVENT, baseQuery, authBaseQuery } from "./base-query";
 
@@ -29,6 +30,10 @@ describe("requêtes API par cookies", () => {
   beforeEach(() => {
     fetchMock.mockReset();
     expired.mockReset();
+    // RTK Query cree aussi des controleurs : utiliser ceux de Node avec son fetch.
+    const controller = transferableAbortController();
+    vi.stubGlobal("AbortController", controller.constructor);
+    vi.stubGlobal("AbortSignal", controller.signal.constructor);
     vi.stubGlobal("fetch", fetchMock);
     window.addEventListener(SESSION_EXPIRED_EVENT, expired);
     document.cookie = "csrftoken=jeton-csrf";

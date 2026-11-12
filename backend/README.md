@@ -134,3 +134,21 @@ python manage.py init_data
 - Générateur CRUD : [`scripts/README.md`](scripts/README.md)
 - README racine : [`../README.md`](../README.md)
 - Docs projet : [`../00readme/`](../00readme/)
+
+## Base locale et suppression des démonstrations
+
+Le cluster dédié déjà initialisé dans `backend/.local/postgres` se pilote depuis `backend/`, venv activé :
+
+```powershell
+python scripts/local_postgres.py start
+python manage.py migrate
+python manage.py runserver
+# Pour arrêter la base après avoir fermé Django :
+python scripts/local_postgres.py stop
+```
+
+Ce script ne crée pas de base et ne pilote pas le service PostgreSQL global. Sur une autre machine, configurer une base PostgreSQL et `.env` normalement.
+
+Les CRUD Elitest, Elitesty, Dragon, Fusion et Gado ainsi que l'app Yango ont été retirés. Les migrations de nettoyage suppriment leurs tables et leurs permissions CRUD ; sauvegarder les données avant de les appliquer. L'historique `garoapp` est conservé sous `metier/legacy_garoapp`, uniquement pour permettre les migrations sur une base existante. Il n'expose aucun modèle actif ni aucune route. `metier` conserve les utilitaires de fichiers nécessaires au générateur.
+
+`app/tests` contient les tests utiles du socle et de DevStreet Hub ; seuls les tests des anciens CRUD ont été retirés.

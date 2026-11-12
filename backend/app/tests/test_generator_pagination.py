@@ -3,6 +3,7 @@ Le code que produit le générateur respecte les règles du scanner : liste pagi
 permissions sans erreur 500 pour un visiteur anonyme, aucune erreur interne renvoyée au client.
 """
 import ast
+from pathlib import Path
 
 from django.test import SimpleTestCase
 
@@ -100,14 +101,12 @@ class GeneratedFrontendTemplatesTests(SimpleTestCase):
     """Les templates frontend du générateur produisent exactement le tableau paginé de référence."""
 
     def setUp(self):
-        import pathlib
         self.generator = ImprovedCodeGenerator()
-        self.frontend = pathlib.Path(__file__).resolve().parents[3] / 'frontend' / 'src'
 
     def test_data_table_template_matches_the_reference_table(self):
         rendered = self.generator.env.get_template('frontend/data-table.tsx.j2').render(
             model_name_plural_pascal='Elitests', model_name_pascal='Elitest', model_name_lower='elitest')
-        reference = (self.frontend / 'models/elitest/components/elitest-data/elitest-data-table.tsx').read_text(encoding='utf-8')
+        reference = (Path(__file__).parent / 'fixtures/generated-data-table.tsx').read_text(encoding='utf-8')
         self.assertEqual(rendered.replace('\r\n', '\n').strip(), reference.replace('\r\n', '\n').strip())
 
     def test_data_table_template_is_server_driven(self):

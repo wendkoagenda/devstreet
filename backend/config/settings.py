@@ -52,7 +52,8 @@ LOCAL_APPS = [
     'app',
     'app.core',
     'app.metier',
-    'app.garoapp',
+    'app.metier.legacy_garoapp.apps.GaroappHistoryConfig',
+    'app.devstreet_hub',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

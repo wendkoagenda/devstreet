@@ -98,6 +98,6 @@ class GeneratorUploadRulesTests(SimpleTestCase):
         import json
         from pathlib import Path
         zones = Path(__file__).resolve().parents[2] / 'scripts' / 'models_zones'
-        for path in zones.glob('zone_*/*.json'):
+        for path in zones.glob('*/*.json'):
             with self.subTest(model=path.name):
                 SchemaValidator.validate_model(json.loads(path.read_text(encoding='utf-8')))
