@@ -43,6 +43,7 @@ export function useHubAccess() {
     canAnalyze: isSuperAdmin || hasPermission("projects.analyze"),
     canReviewContributions:
       isSuperAdmin || hasPermission("contributions.review"),
+    canChat: isSuperAdmin || hasPermission("ai.chat"),
     requestLogin,
   };
 }

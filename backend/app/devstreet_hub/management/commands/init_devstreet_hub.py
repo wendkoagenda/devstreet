@@ -17,6 +17,7 @@ DEVELOPER_CODES = (
     "contribution-tasks.update",
     "contributions.create",
     "contributions.review",
+    "ai.chat",
 )
 ADMIN_CODES = DEVELOPER_CODES + (
     "technologies.view",

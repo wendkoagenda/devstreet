@@ -10,11 +10,11 @@ interface MetricProps {
 
 function Metric({ label, value }: MetricProps) {
   return (
-    <div className="flex flex-col">
-      <span className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
+    <div className="flex flex-col items-end">
+      <span className="text-[11px] text-muted-foreground">{label}</span>
+      <span className="text-sm font-semibold tabular-nums text-foreground">
+        {value ?? "—"}
       </span>
-      <span className="text-lg font-bold text-foreground">{value ?? "—"}</span>
     </div>
   );
 }
@@ -32,13 +32,9 @@ export default function ExploreProjectsPage() {
         getProjectHref={getProjectHref}
         onCreateProject={handleCreateProject}
         renderIntro={({ projectCount, technologyCount }) => (
-          <header className="mb-6 flex flex-col justify-between gap-5 md:mb-8 md:flex-row md:items-end">
+          <header className="mb-6 flex flex-col justify-between gap-4 border-b border-border pb-5 md:mb-7 md:flex-row md:items-end">
             <div className="max-w-2xl">
-              <span className="mb-3 hidden items-center gap-2 rounded-md border border-brand-soft-border bg-brand-soft px-3 py-1.5 text-[11px] font-medium leading-none tracking-wide text-brand-strong md:inline-flex">
-                <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
-                {t("hub.explorer.eyebrow")}
-              </span>
-              <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h1 className="mb-1.5 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                 <span className="md:hidden">{t("hub.explorer.mobile_title")}</span>
                 <span className="hidden md:inline">{t("hub.explorer.title")}</span>
               </h1>
@@ -46,10 +42,13 @@ export default function ExploreProjectsPage() {
                 {t("hub.explorer.description")}
               </p>
             </div>
-            <div className="hidden shrink-0 items-center gap-4 rounded-xl border border-border bg-card p-3 shadow-sm md:flex">
+            <div className="hidden shrink-0 items-center gap-4 md:flex">
               <Metric label={t("hub.explorer.metric_projects")} value={projectCount} />
-              <div aria-hidden className="h-8 w-px bg-border" />
-              <Metric label={t("hub.explorer.metric_technologies")} value={technologyCount} />
+              <div aria-hidden className="h-7 w-px bg-border" />
+              <Metric
+                label={t("hub.explorer.metric_technologies")}
+                value={technologyCount}
+              />
             </div>
           </header>
         )}

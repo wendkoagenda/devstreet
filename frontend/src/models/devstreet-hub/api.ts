@@ -17,6 +17,8 @@ import type {
   CodeSummary,
   CodeTree,
   ForgeAccess,
+  GitConnectedComputer,
+  GitDeviceAuthRequest,
   InitializeRepositoryPayload,
   InitializeRepositoryResult,
   Project,
@@ -27,6 +29,7 @@ import type {
   ProjectMembersParams,
   ProjectProfile,
   ProjectTasksParams,
+  ProjectTasksPage,
   ProjectWritePayload,
   Repository,
   StarResult,
@@ -49,6 +52,8 @@ export const devstreetHubApi = createApi({
     "Contributions",
     "Analysis",
     "ProjectProfile",
+    "GitComputers",
+    "GitDeviceAuth",
   ],
   endpoints: (builder) => ({
     getProjects: builder.query<Paginated<Project>, ProjectListParams | void>({
@@ -86,7 +91,7 @@ export const devstreetHubApi = createApi({
     }),
 
     getProjectTasks: builder.query<
-      Paginated<ContributionTask>,
+      ProjectTasksPage,
       { projectId: number } & ProjectTasksParams
     >({
       query: ({ projectId, ...params }) =>
@@ -229,6 +234,49 @@ export const devstreetHubApi = createApi({
         method: "POST",
         body: {},
       }),
+    }),
+
+    getGitDeviceAuthRequest: builder.query<GitDeviceAuthRequest, string>({
+      query: (requestId) => `/git-auth/${requestId}`,
+      providesTags: (_result, _error, requestId) => [
+        { type: "GitDeviceAuth", id: requestId },
+      ],
+    }),
+
+    authorizeGitDevice: builder.mutation<{ status: string }, string>({
+      query: (requestId) => ({
+        url: `/git-auth/${requestId}/authorize`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: (_result, _error, requestId) => [
+        { type: "GitDeviceAuth", id: requestId },
+        { type: "GitComputers", id: "LIST" },
+      ],
+    }),
+
+    denyGitDevice: builder.mutation<{ status: string }, string>({
+      query: (requestId) => ({
+        url: `/git-auth/${requestId}/deny`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: (_result, _error, requestId) => [
+        { type: "GitDeviceAuth", id: requestId },
+      ],
+    }),
+
+    getGitConnectedComputers: builder.query<GitConnectedComputer[], void>({
+      query: () => "/git-computers",
+      providesTags: [{ type: "GitComputers", id: "LIST" }],
+    }),
+
+    revokeGitConnectedComputer: builder.mutation<void, number>({
+      query: (computerId) => ({
+        url: `/git-computers/${computerId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: "GitComputers", id: "LIST" }],
     }),
 
     provisionRepository: builder.mutation<Repository, number>({
@@ -461,6 +509,11 @@ export const {
   useUpdateProjectMutation,
   useProvisionForgeAccessMutation,
   useResetForgePasswordMutation,
+  useGetGitDeviceAuthRequestQuery,
+  useAuthorizeGitDeviceMutation,
+  useDenyGitDeviceMutation,
+  useGetGitConnectedComputersQuery,
+  useRevokeGitConnectedComputerMutation,
   useProvisionRepositoryMutation,
   useResumeProjectSetupMutation,
   useInitializeRepositoryMutation,

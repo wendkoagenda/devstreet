@@ -54,6 +54,7 @@ LOCAL_APPS = [
     'app.metier',
     'app.metier.legacy_garoapp.apps.GaroappHistoryConfig',
     'app.devstreet_hub',
+    'app.ai',
     'app.marketplace',
 ]
 

@@ -29,6 +29,12 @@ export const PERMISSIONS = {
       STAR: "projects.star",
     },
   },
+  AI: {
+    category: "ai",
+    actions: {
+      CHAT: "ai.chat",
+    },
+  },
   COMPANY: {
     category: "companies",
     actions: {
@@ -179,6 +185,7 @@ export const ROLE_UPDATE = PERMISSIONS.ROLE.actions.UPDATE;
 
 export const PROJECT_CREATE = PERMISSIONS.DEVSTREET_HUB_PROJECT.actions.CREATE;
 export const PROJECT_STAR = PERMISSIONS.DEVSTREET_HUB_PROJECT.actions.STAR;
+export const AI_CHAT = PERMISSIONS.AI.actions.CHAT;
 
 export const COMPANY_VIEW = PERMISSIONS.COMPANY.actions.VIEW;
 export const COMPANY_CREATE = PERMISSIONS.COMPANY.actions.CREATE;

@@ -1,5 +1,6 @@
-import { Check, Copy, FileText, KeyRound, Shield, Terminal, Upload } from "lucide-react";
-import { useState } from "react";
+import { Check, Copy, FileText, KeyRound, Laptop, Shield, Terminal, Upload } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,12 +59,18 @@ export function CreateProjectRepoSection({
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCli, setCopiedCli] = useState(false);
   const [copiedPassword, setCopiedPassword] = useState(false);
+  const [copiedConnect, setCopiedConnect] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [showManualAuth, setShowManualAuth] = useState(false);
   const focused = progressStep === "identity" || progressStep === "repository" || progressStep === "init";
   const initialPassword = forgeAccess?.initial_password ?? null;
   const showSecretPanel = Boolean(hasInitialPassword && initialPassword);
   const showInitChoices = repoReady && repoEmpty && !initMode;
   const showPushCommands = Boolean(initMode === "push_existing" || (repoReady && !repoEmpty && initMode !== "readme"));
+  const connectCommand = useMemo(() => {
+    const hub = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+    return `python -m devstreet auth login --hub ${hub}`;
+  }, []);
 
   const handleCopyUrl = async () => {
     if (!cloneUrl) return;
@@ -89,6 +96,14 @@ export function CreateProjectRepoSection({
     if (ok) {
       setCopiedPassword(true);
       window.setTimeout(() => setCopiedPassword(false), 1800);
+    }
+  };
+
+  const handleCopyConnect = async () => {
+    const ok = await copyText(connectCommand);
+    if (ok) {
+      setCopiedConnect(true);
+      window.setTimeout(() => setCopiedConnect(false), 1800);
     }
   };
 
@@ -259,67 +274,129 @@ export function CreateProjectRepoSection({
         </div>
       </div>
 
+      <div className="flex items-start gap-3.5 rounded-xl border border-brand/30 bg-brand-soft/40 p-4">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-primary-foreground">
+          <Laptop aria-hidden className="size-4" />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
+          <span className="font-semibold text-foreground">
+            {t("hub.create.repo.connect_title")}
+          </span>
+          <p className="leading-relaxed text-muted-foreground">
+            {t("hub.create.repo.connect_text")}
+          </p>
+          <ol className="list-decimal space-y-1 pl-4 text-muted-foreground">
+            <li>{t("hub.create.repo.connect_step_install")}</li>
+            <li>{t("hub.create.repo.connect_step_login")}</li>
+            <li>{t("hub.create.repo.connect_step_once")}</li>
+          </ol>
+          <div className="mt-1 flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+            <code className="break-all font-sans text-[11px] text-foreground">
+              {connectCommand}
+            </code>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-8 gap-1.5 text-xs"
+                onClick={handleCopyConnect}
+              >
+                {copiedConnect ? (
+                  <Check aria-hidden className="size-3.5" />
+                ) : (
+                  <Copy aria-hidden className="size-3.5" />
+                )}
+                {copiedConnect
+                  ? t("hub.create.repo.copied")
+                  : t("hub.create.repo.copy_connect")}
+              </Button>
+              <Button asChild variant="outline" className="h-8 text-xs">
+                <Link to="/my-account">{t("hub.create.repo.manage_computers")}</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-start gap-3.5 rounded-xl border border-border bg-secondary p-4">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <KeyRound aria-hidden className="size-4" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
           <span className="font-semibold text-foreground">
-            {t("hub.create.repo.auth_title")}
+            {t("hub.create.repo.auth_fallback_title")}
           </span>
           <p className="leading-relaxed text-muted-foreground">
-            {showSecretPanel
-              ? t("hub.create.repo.auth_text_with_secret", {
-                  login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
-                })
-              : t("hub.create.repo.auth_text_no_secret", {
-                  login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
-                })}
+            {t("hub.create.repo.auth_fallback_text", {
+              login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
+            })}
           </p>
-          {!showSecretPanel && forgeLogin ? (
-            confirmReset ? (
-              <div className="mt-1 flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning-soft/80 p-3">
-                <p className="leading-relaxed text-foreground">
-                  {t("hub.create.repo.reset_confirm_text")}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    className="h-8 text-xs"
-                    disabled={isBusy || isResettingPassword}
-                    onClick={() => {
-                      setConfirmReset(false);
-                      onResetPassword();
-                    }}
-                  >
-                    {isResettingPassword
-                      ? t("hub.create.repo.resetting")
-                      : t("hub.create.repo.reset_confirm")}
-                  </Button>
+          {!showManualAuth ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="mt-1 h-8 w-fit px-2 text-xs text-muted-foreground"
+              onClick={() => setShowManualAuth(true)}
+            >
+              {t("hub.create.repo.show_manual_auth")}
+            </Button>
+          ) : (
+            <>
+              <p className="leading-relaxed text-muted-foreground">
+                {showSecretPanel
+                  ? t("hub.create.repo.auth_text_with_secret", {
+                      login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
+                    })
+                  : t("hub.create.repo.auth_text_no_secret", {
+                      login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
+                    })}
+              </p>
+              {!showSecretPanel && forgeLogin ? (
+                confirmReset ? (
+                  <div className="mt-1 flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning-soft/80 p-3">
+                    <p className="leading-relaxed text-foreground">
+                      {t("hub.create.repo.reset_confirm_text")}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        className="h-8 text-xs"
+                        disabled={isBusy || isResettingPassword}
+                        onClick={() => {
+                          setConfirmReset(false);
+                          onResetPassword();
+                        }}
+                      >
+                        {isResettingPassword
+                          ? t("hub.create.repo.resetting")
+                          : t("hub.create.repo.reset_confirm")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-8 text-xs"
+                        disabled={isResettingPassword}
+                        onClick={() => setConfirmReset(false)}
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-8 text-xs"
-                    disabled={isResettingPassword}
-                    onClick={() => setConfirmReset(false)}
+                    className="mt-1 h-8 w-fit gap-1.5 text-xs"
+                    disabled={isBusy || isResettingPassword}
+                    onClick={() => setConfirmReset(true)}
                   >
-                    {t("common.cancel")}
+                    <KeyRound aria-hidden className="size-3.5" />
+                    {t("hub.create.repo.reset_password")}
                   </Button>
-                </div>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-1 h-8 w-fit gap-1.5 text-xs"
-                disabled={isBusy || isResettingPassword}
-                onClick={() => setConfirmReset(true)}
-              >
-                <KeyRound aria-hidden className="size-3.5" />
-                {t("hub.create.repo.reset_password")}
-              </Button>
-            )
-          ) : null}
+                )
+              ) : null}
+            </>
+          )}
         </div>
       </div>
 

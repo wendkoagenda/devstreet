@@ -17,6 +17,7 @@ import { userApi } from "@/models/user/api";
 import { authApi } from "@/models/auth/api";
 import { rolePermissionApi } from "@/models/roles-permissions/Api";
 import { devstreetHubApi } from "@/models/devstreet-hub/api";
+import { aiApi } from "@/models/ai/api";
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     [rolePermissionApi.reducerPath]: rolePermissionApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
     [devstreetHubApi.reducerPath]: devstreetHubApi.reducer,
+    [aiApi.reducerPath]: aiApi.reducer,
     [companyApi.reducerPath]: companyApi.reducer,
     [skillApi.reducerPath]: skillApi.reducer,
     [profilApi.reducerPath]: profilApi.reducer,
@@ -45,6 +47,7 @@ export const store = configureStore({
       rolePermissionApi.middleware,
       authApi.middleware,
       devstreetHubApi.middleware,
+      aiApi.middleware,
       companyApi.middleware,
       skillApi.middleware,
       profilApi.middleware,
@@ -58,7 +61,7 @@ export const store = configureStore({
       reviewApi.middleware,
       swipeApi.middleware,
       connectionApi.middleware,
-      marketplaceSpaceApi.middleware,
+      marketplaceSpaceApi.middleware
     ),
 });
 

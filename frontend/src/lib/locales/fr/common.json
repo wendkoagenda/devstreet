@@ -207,6 +207,40 @@
     "marketplace_availability": "Disponibilités",
     "marketplace_cv": "Mon CV"
   },
+  "ai": {
+    "hub": {
+      "open": "Assistant",
+      "title": "Assistant DevStreet",
+      "empty": "Pose une question sur ce projet, une tâche ou le dépôt.",
+      "placeholder": "Demande n'importe quoi…",
+      "send": "Envoyer",
+      "reset": "Nouvelle conversation",
+      "thinking": "Réflexion…",
+      "analyzing": "Analyse du contexte…",
+      "writing": "Le robot écrit…",
+      "thinking_aria": "L'assistant réfléchit",
+      "you": "Toi",
+      "assistant": "Assistant",
+      "failover": "secours",
+      "hint": "Le contexte projet/tâche/repo est envoyé au serveur uniquement.",
+      "disclaimer": "L'IA peut se tromper. Vérifie les suggestions avant d'agir.",
+      "context": {
+        "task": "Tâche",
+        "repo": "Dépôt"
+      },
+      "suggestions": {
+        "summarize": "Résumer le besoin",
+        "criteria": "Proposer des critères",
+        "explain": "Expliquer par où commencer"
+      },
+      "errors": {
+        "forbidden": "Tu n'as pas la permission d'utiliser l'assistant.",
+        "unavailable": "Assistant indisponible. Vérifie la configuration IA serveur.",
+        "quota": "Quota quotidien IA atteint.",
+        "generic": "Impossible d'obtenir une réponse."
+      }
+    }
+  },
   "hub": {
     "common": {
       "rate_limited": "Trop de requêtes. Attendez un instant avant de réessayer.",
@@ -220,7 +254,7 @@
     },
     "explorer": {
       "catalog_loading": "Chargement du catalogue...",
-      "description": "Découvre des projets portés par la communauté, comprends leurs enjeux et propose tes contributions.",
+      "description": "Parcours les projets publiés, consulte leurs besoins et propose une contribution.",
       "catalog_retry": "Réessayer",
       "all_short": "Tous",
       "metric_projects": "Projets visibles",
@@ -232,7 +266,7 @@
       "active_filters": "Filtres actifs",
       "eyebrow": "DevStreet Repository Registry",
       "search_placeholder": "Rechercher par mot-clé, nom de projet, problème résolu...",
-      "title": "Sur quoi veux-tu construire avec d'autres ?",
+      "title": "Explorer les projets",
       "clear_search": "Effacer la recherche",
       "technology_label": "Technologie",
       "create_login": "Se connecter pour créer",
@@ -280,6 +314,8 @@
     },
     "star": {
       "not_found": "Projet introuvable.",
+      "label": "Étoile",
+      "label_on": "Étoilé",
       "add": "Étoiler {{title}}",
       "remove": "Retirer l'étoile de {{title}}",
       "login_required": "Connectez-vous pour étoiler un projet.",
@@ -345,12 +381,47 @@
         "list": "Impossible de charger la liste."
       }
     },
+    "git_auth": {
+      "title": "Autoriser cet ordinateur",
+      "subtitle": "Confirme explicitement l'accès Git pour l'outil DevStreet local. Aucune interface Gitea n'est ouverte.",
+      "missing_request": "Lien d'autorisation incomplet. Relance la commande depuis le CLI.",
+      "login_required": "Connecte-toi à DevStreet pour examiner et confirmer cette demande.",
+      "login_cta": "Se connecter",
+      "not_found": "Demande introuvable ou déjà expirée.",
+      "load_error": "Impossible de charger la demande d'autorisation.",
+      "computer": "Ordinateur / outil",
+      "instance": "Instance DevStreet",
+      "forge_host": "Hôte Git (HTTPS)",
+      "expires": "Expiration de la demande",
+      "scopes": "Accès demandés",
+      "confirm_hint": "Une session déjà ouverte n'autorise pas automatiquement. Vérifie le nom de l'ordinateur avant de confirmer.",
+      "authorize": "Autoriser cet ordinateur",
+      "authorizing": "Autorisation…",
+      "deny": "Refuser",
+      "denying": "Refus…",
+      "done_authorized": "Ordinateur autorisé. Tu peux revenir au terminal.",
+      "done_denied": "Demande refusée.",
+      "done_expired": "Cette demande n'est plus valide.",
+      "action_error": "L'action a échoué. Réessaie ou refuse puis relance le CLI.",
+      "manage_computers": "Gérer les ordinateurs connectés"
+    },
+    "git_computers": {
+      "title": "Ordinateurs connectés",
+      "hint": "Chaque entrée correspond à un jeton Git personnel (PAT) sur la forge. Révoquer invalide l'accès de cet ordinateur sans toucher aux dépôts ni aux autres machines.",
+      "empty": "Aucun ordinateur connecté pour le moment.",
+      "load_error": "Impossible de charger la liste des ordinateurs.",
+      "meta": "{{login}} · créé le {{created}} · {{status}}{{suffix}}",
+      "status_active": "actif",
+      "status_revoked": "révoqué",
+      "revoke": "Révoquer",
+      "revoke_confirm": "Confirmer la révocation"
+    },
     "ai": {
       "title": "Atelier IA",
-      "description": "Décris l'objectif, génère une analyse sourcée, puis adopte une suggestion en brouillon. Rien n'est publié automatiquement.",
+      "description": "Décris un objectif : l'IA analyse le dépôt et propose des suggestions de tâches sourcées. Pour créer une demande sans IA, utilise l'onglet Contribuer du projet. Rien n'est publié automatiquement.",
       "back_project": "Retour à la fiche projet",
       "consent": {
-        "title": "Autorisation d'envoi",
+        "title": "Autorisation d'envoi (IA)",
         "text": "Des extraits de code et le contexte du dépôt peuvent être envoyés à un fournisseur externe pour produire l'analyse. Seul le propriétaire peut activer ou retirer ce consentement.",
         "enabled": "Consentement actif",
         "disabled": "Consentement inactif",
@@ -362,16 +433,16 @@
         "title": "Objectif à analyser",
         "objective": "Objectif",
         "objective_example": "Ajouter un export CSV",
-        "example_hint": "Exemple d'aide à la saisie : « Ajouter un export CSV ». Aucune donnée n'est préremplie comme si elle avait été détectée.",
+        "example_hint": "L'IA lit des extraits du dépôt puis propose 1 à 3 tâches sourcées.",
         "language": "Langue du résultat",
         "lang_fr": "Français",
         "lang_en": "English",
-        "generate": "Générer l'analyse",
-        "manual": "Créer une tâche manuellement"
+        "generate": "Suggérer avec l'IA",
+        "manual": "Créer une demande"
       },
       "manual": {
-        "title": "Tâche manuelle (brouillon)",
-        "hint": "Toujours disponible si le service IA est indisponible, en quota, ou si tu préfères rédiger sans analyse.",
+        "title": "Créer une demande (recommandé)",
+        "hint": "Chemin simple : titre + description → brouillon immédiat. Sans OpenAI, sans file d'attente, sans quota.",
         "submit": "Créer le brouillon"
       },
       "progress": {
@@ -393,7 +464,11 @@
         "unknowns": "Inconnues / limites",
         "suggestions": "Suggestions de tâches",
         "no_suggestions": "Aucune suggestion exploitable.",
-        "adopt": "En faire une tâche à relire"
+        "steps": "Étapes",
+        "criteria": "Critères d'acceptation",
+        "adopt": "En faire une tâche à relire",
+        "adopted_badge": "Créée",
+        "adopted_keep": "Les autres suggestions restent disponibles."
       },
       "meta": {
         "title": "Contexte d'analyse",
@@ -403,12 +478,20 @@
         "prompt": "Prompt",
         "disclaimer": "Cette analyse ne remplace pas une revue humaine, un audit de sécurité, ni des tests exécutés."
       },
+      "nav": {
+        "compose": "Rédiger",
+        "results": "Suggestions",
+        "view_results": "Voir les suggestions",
+        "new_analysis": "Nouvelle analyse",
+        "project_tasks": "Tâches du projet"
+      },
       "toasts": {
         "consent_on": "Consentement enregistré.",
         "consent_off": "Consentement retiré.",
         "ready": "Analyse disponible.",
-        "task_draft": "Brouillon créé à partir de la suggestion.",
-        "manual_task": "Tâche brouillon créée."
+        "task_draft": "Brouillon créé. Les autres suggestions restent ici.",
+        "manual_task": "Tâche brouillon créée. Tu peux en créer d'autres.",
+        "open_task": "Ouvrir"
       },
       "errors": {
         "not_found": "Projet ou analyse introuvable.",
@@ -481,13 +564,33 @@
       "project_label": "Projet · {{title}}",
       "no_description": "Aucune consigne détaillée.",
       "goto_correct": "Ouvrir la bonne URL",
+      "opened_meta": "{{author}} a ouvert cette tâche le {{date}} · {{project}}",
+      "opened_ago": "ouvert le {{date}}",
+      "badges": {
+        "maintainer": "Mainteneur"
+      },
+      "sidebar": {
+        "development": "Développement",
+        "no_repo": "Aucun dépôt prêt pour le moment.",
+        "actions": "Actions"
+      },
       "first_step": {
         "title": "Ta première étape"
       },
       "criteria": {
         "title": "Critères de réussite",
         "empty": "Aucun critère défini pour le moment.",
-        "hint": "Cette checklist sert de guide : elle n'est pas cochée automatiquement."
+        "hint": "Cette checklist sert de guide : elle n'est pas cochée automatiquement.",
+        "label": "Critères (un par ligne)",
+        "placeholder": "Un critère par ligne…",
+        "required_to_open": "Ajoute au moins un critère de réussite pour ouvrir la tâche."
+      },
+      "edit": {
+        "title_label": "Titre",
+        "description_label": "Description",
+        "description_placeholder": "Consignes pour les contributeurs…",
+        "save": "Enregistrer",
+        "hint": "Complète les critères puis ouvre la tâche pour la rendre visible aux contributeurs."
       },
       "sources": {
         "title": "Sources du contexte (proposition IA)",
@@ -497,8 +600,10 @@
         "ask_help": "Demander de l'aide",
         "propose": "Proposer mon travail",
         "open_task": "Ouvrir la tâche",
-        "close_task": "Fermer la tâche"
+        "close_task": "Fermer la tâche",
+        "review": "Examiner les propositions"
       },
+      "maintainer_hint": "Tu gères cette tâche : la proposition de travail est réservée aux contributeurs. Utilise la revue pour décider.",
       "confirm": {
         "close": "Fermer cette tâche bloquera les nouvelles soumissions. Continuer ?"
       },
@@ -515,6 +620,10 @@
         "title": "Proposer mon travail",
         "hint": "Une revue mainteneur reste nécessaire. Un numéro de PR sera vérifié dans le dépôt lié. Sans PR, c'est une déclaration soumise à revue. Tu ne peux pas t'auto-accepter.",
         "summary": "Résumé de ta réalisation",
+        "summary_placeholder": "Décris ce que tu as réalisé…",
+        "write": "Écrire",
+        "preview": "Aperçu",
+        "preview_empty": "Rien à prévisualiser pour le moment.",
         "pr": "Numéro de PR (optionnel)",
         "pr_optional": "ex. 12",
         "sha": "SHA de commit (optionnel)",
@@ -632,9 +741,17 @@
       },
       "contribute": {
         "title": "Tâches de contribution",
-        "empty": "Aucune tâche pour le moment. Un mainteneur peut en créer une manuellement.",
+        "search_placeholder": "Rechercher une tâche…",
+        "new_task": "Nouvelle tâche",
+        "filter_open": "{{count}} Ouverte(s)",
+        "filter_closed": "{{count}} Fermée(s)",
+        "filter_draft": "{{count}} Brouillon(s)",
+        "empty_title": "Aucune tâche",
+        "empty": "Aucune tâche ouverte pour le moment. Un mainteneur peut en créer une.",
+        "empty_search": "Essayez d'ajuster vos filtres de recherche.",
         "no_description": "Pas de description.",
-        "open_task": "Consulter la tâche"
+        "open_task": "Consulter la tâche",
+        "row_meta": "{{status}} · mis à jour {{when}}"
       },
       "task_status": {
         "draft": "Brouillon",
@@ -643,21 +760,81 @@
       },
       "task_form": {
         "title": "Nouvelle tâche (brouillon)",
+        "page_title": "Nouvelle tâche",
         "name": "Titre",
+        "name_placeholder": "Titre",
         "description": "Description",
-        "submit": "Créer la tâche"
+        "body_placeholder": "Décris la mission, le contexte et le résultat attendu…",
+        "tab_write": "Écrire",
+        "tab_preview": "Aperçu",
+        "preview_empty": "Rien à prévisualiser pour le moment.",
+        "tool_bold": "Gras",
+        "tool_italic": "Italique",
+        "tool_strike": "Barré",
+        "tool_quote": "Citation",
+        "tool_code": "Code",
+        "tool_link": "Lien",
+        "tool_list": "Liste",
+        "tool_ordered": "Liste numérotée",
+        "tool_checklist": "Checklist",
+        "sidebar_status": "Statut",
+        "sidebar_status_value": "Brouillon — à ouvrir ensuite pour recevoir des propositions.",
+        "sidebar_criteria": "Critères d'acceptation",
+        "criteria_placeholder": "Un critère par ligne…",
+        "criteria_hint": "Ces critères guident la revue. Max. 10.",
+        "sidebar_note_title": "À propos",
+        "sidebar_note_text": "Une tâche DevStreet est une mission de contribution, pas un ticket forge. Labels et jalons Gitea ne s'appliquent pas ici.",
+        "submit": "Créer la tâche",
+        "submitting": "Création…"
       },
       "team": {
-        "title": "Équipe",
+        "title": "Collaborateurs et accès",
+        "subtitle": "Gère qui peut contribuer et maintenir ce projet.",
         "hint": "Sans annuaire public, l'invitation se fait par ID utilisateur communiqué par le membre. Le rôle métier n'accorde pas le push Git.",
         "owner": "Propriétaire · utilisateur #{{id}}",
+        "owner_subtitle": "Propriétaire du projet",
         "user": "Utilisateur #{{id}}",
         "user_id": "ID utilisateur",
         "role": "Rôle",
+        "role_label": "Rôle : {{role}}",
         "invite": "Ajouter",
+        "add_people": "Ajouter une personne",
         "remove": "Retirer le membre",
-        "empty": "Aucun membre ajouté pour le moment.",
+        "empty": "Aucun collaborateur ajouté pour le moment.",
+        "search_placeholder": "Rechercher une personne…",
+        "search_empty": "Aucun résultat pour cette recherche.",
+        "manage_title": "Gérer l'accès",
+        "direct_access_tab": "Accès direct",
+        "visibility": {
+          "public": {
+            "title": "Projet public",
+            "hint": "Visible dans le Hub. Seuls les collaborateurs listés ci-dessous ont un rôle d'équipe."
+          },
+          "draft": {
+            "title": "Projet brouillon",
+            "hint": "Visible uniquement pour le propriétaire et l'équipe. Publie le projet pour l'ouvrir au Hub."
+          },
+          "archived": {
+            "title": "Projet archivé",
+            "hint": "L'accès en lecture peut rester, mais les actions d'équipe sont limitées."
+          }
+        },
+        "summary": {
+          "base_role": "Rôle de base",
+          "base_role_hint": "Le propriétaire conserve le contrôle total du projet.",
+          "direct": "Accès direct",
+          "direct_count": "{{count}} entités ont accès à ce projet.",
+          "direct_members": "{{count}} collaborateurs · 1 propriétaire",
+          "org": "Accès organisation",
+          "org_count": "0 utilisateurs via une organisation",
+          "org_hint": "DevStreet Hub n'utilise pas encore les équipes d'organisation."
+        },
+        "invite_dialog": {
+          "title": "Ajouter une personne",
+          "description": "Saisis l'ID utilisateur fourni par la personne à inviter, puis choisis son rôle."
+        },
         "roles": {
+          "owner": "Propriétaire",
           "maintainer": "Mainteneur",
           "contributor": "Contributeur"
         }
@@ -667,6 +844,7 @@
         "archived": "Projet archivé.",
         "task_created": "Tâche brouillon créée.",
         "member_added": "Membre ajouté.",
+        "member_updated": "Rôle du membre mis à jour.",
         "member_removed": "Membre retiré.",
         "presentation_saved": "Présentation mise à jour."
       },
@@ -680,6 +858,7 @@
         "archive": "Impossible d'archiver le projet.",
         "task_create": "Impossible de créer la tâche.",
         "member_add": "Impossible d'ajouter ce membre.",
+        "member_update": "Impossible de mettre à jour le rôle.",
         "member_remove": "Impossible de retirer ce membre.",
         "presentation_save": "Impossible d'enregistrer la présentation."
       }
@@ -760,6 +939,16 @@
         "cli_waiting": "Les commandes apparaissent dès que l'URL réelle du dépôt est prête.",
         "security_title": "Ne committe jamais de secrets",
         "security_text": "Pas de .env, jetons ou clés d'API. Vérifie ton .gitignore avant le push.",
+        "connect_title": "Connecter mon ordinateur",
+        "connect_text": "Autorise une fois cet ordinateur via le navigateur DevStreet. Les prochains git push / git fetch réutilisent cet accès (PAT HTTPS Gitea), sans recopier un mot de passe.",
+        "connect_step_install": "Installe le CLI DevStreet (dossier tools/, voir la doc).",
+        "connect_step_login": "Exécute la commande ci-dessous, puis confirme « Autoriser cet ordinateur ».",
+        "connect_step_once": "Une connexion suffit par ordinateur tant que l'accès reste valide.",
+        "copy_connect": "Copier la commande",
+        "manage_computers": "Ordinateurs connectés",
+        "auth_fallback_title": "Accès manuel (secours)",
+        "auth_fallback_text": "Identifiant forge {{login}}. Conservé temporairement si le CLI n'est pas encore installé.",
+        "show_manual_auth": "Afficher l'accès par mot de passe",
         "auth_title": "Authentification Git",
         "auth_text_with_secret": "Identifiant {{login}}. Le mot de passe forge est affiché une seule fois ci-dessous (jamais stocké dans le navigateur).",
         "auth_text_no_secret": "Identifiant {{login}}. Aucun mot de passe n'est affiché : il n'est jamais conservé après sa création. Réinitialise-le ici pour reprendre un git push, sans ouvrir Gitea.",

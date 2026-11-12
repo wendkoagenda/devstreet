@@ -8,10 +8,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import type { Project } from "../schema";
 import type { ProjectStarView } from "../hooks/use-project-star";
 import { ProjectStatusBadge } from "./project-status-badge";
 import { StarButton } from "./star-button";
+
+const headerActionClass =
+  "h-7 gap-1.5 rounded-md px-2.5 text-xs font-medium shadow-none";
 
 interface ProjectDetailHeaderProps {
   project: Project;
@@ -48,28 +52,33 @@ export function ProjectDetailHeader({
   const demoUrl = project.demo_url?.trim() || null;
 
   return (
-    <header className="flex flex-col gap-5 border-b border-border pb-6">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+    <header className="flex flex-col gap-4 border-b border-border pb-5">
+      <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {project.title}
             </h1>
             <ProjectStatusBadge status={project.status} />
-            <span className="rounded bg-brand-soft px-2 py-1 text-[10px] font-semibold leading-none text-brand-strong">
+            <span className="rounded-md border border-border bg-secondary px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
               {project.declared_license}
             </span>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <StarButton
             projectTitle={project.title}
             view={star}
             onToggle={onToggleStar}
+            showLabel
           />
           {demoUrl ? (
-            <Button asChild variant="outline" className="h-9 gap-1.5 rounded-lg text-xs font-semibold">
+            <Button
+              asChild
+              variant="outline"
+              className={cn(headerActionClass)}
+            >
               <a href={demoUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink aria-hidden className="size-3.5" />
                 {t("hub.detail.actions.demo")}
@@ -77,30 +86,22 @@ export function ProjectDetailHeader({
             </Button>
           ) : null}
           {canAnalyze ? (
-            <Button asChild className="h-9 gap-1.5 rounded-lg text-xs font-semibold">
+            <Button asChild variant="outline" className={cn(headerActionClass)}>
               <Link to={`/hub/projects/${project.id}/ai`}>
-                <Sparkles aria-hidden className="size-3.5 text-brand-foreground" />
+                <Sparkles aria-hidden className="size-3.5" />
                 {t("hub.detail.actions.ai")}
               </Link>
             </Button>
           ) : null}
           {canReview ? (
-            <Button
-              asChild
-              variant="secondary"
-              className="h-9 rounded-lg text-xs font-semibold"
-            >
+            <Button asChild variant="outline" className={cn(headerActionClass)}>
               <Link to={`/hub/projects/${project.id}/reviews`}>
                 {t("hub.detail.actions.reviews")}
               </Link>
             </Button>
           ) : null}
           {isOwner && project.status === "draft" ? (
-            <Button
-              asChild
-              variant="default"
-              className="h-9 rounded-lg text-xs font-semibold"
-            >
+            <Button asChild variant="outline" className={cn(headerActionClass)}>
               <Link to={`/hub/projects/new?draft=${project.id}`}>
                 {t("hub.detail.actions.continue_setup")}
               </Link>
@@ -112,7 +113,7 @@ export function ProjectDetailHeader({
               variant="outline"
               disabled={isBusy}
               onClick={onCreateTask}
-              className="h-9 rounded-lg text-xs font-semibold"
+              className={cn(headerActionClass)}
             >
               {t("hub.detail.actions.create_task")}
             </Button>
@@ -122,12 +123,12 @@ export function ProjectDetailHeader({
               <DropdownMenuTrigger asChild>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  className="h-9 w-9 rounded-lg"
+                  className="h-7 w-7 rounded-md shadow-none"
                   aria-label={t("hub.detail.actions.manage")}
                 >
-                  <MoreHorizontal aria-hidden className="size-4" />
+                  <MoreHorizontal aria-hidden className="size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[12rem]">

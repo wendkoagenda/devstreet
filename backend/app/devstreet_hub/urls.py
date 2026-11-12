@@ -8,6 +8,10 @@ from app.devstreet_hub.views.workflow_viewsets import (
     AnalysisViewSet,
     ForgeAccessViewSet,
 )
+from app.devstreet_hub.views.git_auth_viewsets import (
+    GitAuthViewSet,
+    GitConnectedComputerViewSet,
+)
 from app.devstreet_hub.views.integration_views import (
     webhook,
     profile_projects,
@@ -22,6 +26,10 @@ router.register(r"technologies", TechnologyViewSet, basename="technologies")
 router.register(r"contributions", ContributionViewSet, basename="contributions")
 router.register(r"analyses", AnalysisViewSet, basename="analyses")
 router.register(r"forge-access", ForgeAccessViewSet, basename="forge-access")
+router.register(r"git-auth", GitAuthViewSet, basename="git-auth")
+router.register(
+    r"git-computers", GitConnectedComputerViewSet, basename="git-computers"
+)
 
 urlpatterns = [
     path("v1/integrations/gitea/webhook", webhook, name="gitea-webhook"),

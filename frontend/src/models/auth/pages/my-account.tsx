@@ -12,6 +12,7 @@ import { MyAccountLoader } from "../../../helpers/loaders/my-account-loader";
 import type { User } from "../schema";
 import { useAuthSlice } from "../slice";
 import { MyAccountHubProfile } from "@/models/devstreet-hub/components/my-account-hub-profile";
+import { ConnectedComputersSection } from "@/models/devstreet-hub/components/connected-computers-section";
 
 export default function MyAccount() {
   const { t } = useTranslation();
@@ -176,6 +177,8 @@ export default function MyAccount() {
           </CardContent>
         </Card>
       </div>
+
+      <ConnectedComputersSection />
 
       {user.id ? <MyAccountHubProfile userId={user.id} /> : null}
 
