@@ -8,15 +8,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Project, Technology } from "../schema";
+import type { Project } from "../schema";
 import type { ProjectStarView } from "../hooks/use-project-star";
 import { ProjectStatusBadge } from "./project-status-badge";
 import { StarButton } from "./star-button";
-import { TechnologyTag } from "./technology-tag";
 
 interface ProjectDetailHeaderProps {
   project: Project;
-  technologies: Technology[];
   star: ProjectStarView;
   isOwner: boolean;
   canPublish: boolean;
@@ -24,7 +22,6 @@ interface ProjectDetailHeaderProps {
   canCreateTask: boolean;
   canAnalyze: boolean;
   canReview: boolean;
-  browseUrl: string | null;
   isBusy: boolean;
   onToggleStar: () => void;
   onPublish: () => void;
@@ -34,7 +31,6 @@ interface ProjectDetailHeaderProps {
 
 export function ProjectDetailHeader({
   project,
-  technologies,
   star,
   isOwner,
   canPublish,
@@ -42,7 +38,6 @@ export function ProjectDetailHeader({
   canCreateTask,
   canAnalyze,
   canReview,
-  browseUrl,
   isBusy,
   onToggleStar,
   onPublish,
@@ -56,7 +51,7 @@ export function ProjectDetailHeader({
     <header className="flex flex-col gap-5 border-b border-border pb-6">
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {project.title}
             </h1>
@@ -65,16 +60,6 @@ export function ProjectDetailHeader({
               {project.declared_license}
             </span>
           </div>
-          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            {project.problem || t("hub.detail.no_problem")}
-          </p>
-          {technologies.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {technologies.map((tech) => (
-                <TechnologyTag key={tech.id} id={tech.id} label={tech.label} />
-              ))}
-            </div>
-          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -88,14 +73,6 @@ export function ProjectDetailHeader({
               <a href={demoUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink aria-hidden className="size-3.5" />
                 {t("hub.detail.actions.demo")}
-              </a>
-            </Button>
-          ) : null}
-          {browseUrl ? (
-            <Button asChild variant="outline" className="h-9 gap-1.5 rounded-lg text-xs font-semibold">
-              <a href={browseUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink aria-hidden className="size-3.5" />
-                {t("hub.detail.actions.open_code")}
               </a>
             </Button>
           ) : null}

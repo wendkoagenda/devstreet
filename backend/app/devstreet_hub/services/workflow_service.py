@@ -2,12 +2,16 @@
 
 import hashlib
 import json
+import re
+from urllib.parse import quote
 from django.db import transaction
 from django.utils import timezone
 from django.utils.module_loading import import_string
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from django.utils.text import slugify
+from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
 from app.core.services.audit_service import record
 from app.devstreet_hub.conf import config
+from app.devstreet_hub.models import Technology
 from app.devstreet_hub.permissions.policy import (
     require_permission,
     require_maintainer,
@@ -21,6 +25,9 @@ from app.devstreet_hub.services.errors import (
 )
 from app.devstreet_hub.services.gitea_client import GiteaClient
 
+_REF_RE = re.compile(r"^[A-Za-z0-9._/\-]+$")
+_PATH_RE = re.compile(r"^(?:[A-Za-z0-9._\-]+(?:/[A-Za-z0-9._\-]+)*)?$")
+
 
 class WorkflowService:
     def __init__(self, repository=None, forge=None):
@@ -33,6 +40,360 @@ class WorkflowService:
 
     def project(self, actor, pk):
         return self.repo.visible_project(actor, pk)
+
+    def _ready_repository(self, actor, project):
+        """Dépôt prêt et visible ; la liaison locale est la seule source d'identité forge."""
+        project = self.repo.visible_project(actor, project.pk)
+        repository = project.repository
+        if repository.status != "ready" or not repository.namespace or not repository.name:
+            raise Conflict("Le dépôt n’est pas encore prêt.")
+        return project, repository
+
+    def _normalize_ref(self, ref: str | None, repository) -> str:
+        value = (ref or repository.default_branch or "main").strip()
+        if not value or not _REF_RE.fullmatch(value) or ".." in value:
+            raise ValidationError({"ref": "Référence de branche invalide."})
+        return value
+
+    def _normalize_path(self, path: str | None) -> str:
+        value = (path or "").strip().strip("/")
+        if not value:
+            return ""
+        if not _PATH_RE.fullmatch(value) or ".." in value.split("/"):
+            raise ValidationError({"path": "Chemin invalide."})
+        return value
+
+    def _clone_url(self, repository) -> str | None:
+        url = config("GITEA_PUBLIC_URL", config("GITEA_URL")).rstrip("/")
+        if not url or repository.status != "ready":
+            return None
+        return f"{url}/{quote(repository.namespace)}/{quote(repository.name)}.git"
+
+    def _format_commit(self, commit: dict | None) -> dict | None:
+        if not commit:
+            return None
+        sha = commit.get("sha") or ""
+        commit_info = commit.get("commit") or {}
+        author = commit_info.get("author") or {}
+        # Nom forge uniquement : ne prouve pas une identité DevStreet.
+        return {
+            "sha": sha,
+            "short_sha": sha[:10] if isinstance(sha, str) else "",
+            "message": (commit_info.get("message") or "").split("\n", 1)[0][:240],
+            "author_name": (author.get("name") or "")[:120] or None,
+            "authored_at": author.get("date"),
+        }
+
+    def _language_breakdown(self, languages: dict) -> list[dict]:
+        total = sum(int(v) for v in languages.values() if isinstance(v, (int, float)))
+        if total <= 0:
+            return []
+        items = []
+        for name, bytes_count in sorted(
+            languages.items(), key=lambda item: (-int(item[1] or 0), item[0])
+        ):
+            count = int(bytes_count or 0)
+            if count <= 0:
+                continue
+            items.append(
+                {
+                    "name": str(name)[:40],
+                    "bytes": count,
+                    "percent": round(100.0 * count / total, 1),
+                }
+            )
+        return items[:12]
+
+    def _sync_technologies_from_languages(self, project, languages, actor):
+        """Remplace les technologies manuelles par les langues détectées du dépôt."""
+        techs = []
+        for item in languages:
+            name = (item.get("name") or "").strip()
+            if not name:
+                continue
+            slug = slugify(name)[:80] or f"lang-{len(techs) + 1}"
+            tech, created = Technology.objects.get_or_create(
+                slug=slug,
+                defaults={
+                    "label": name[:80],
+                    "created_by": actor.pk,
+                    "updated_by": actor.pk,
+                },
+            )
+            if not created and tech.label != name[:80]:
+                tech.label = name[:80]
+                tech.updated_by = actor.pk
+                tech.save(update_fields=["label", "updated_by", "updated_at"])
+            techs.append(tech)
+        self.repo.set_technologies(project, techs)
+
+    def code_summary(self, actor, project):
+        """Statistiques et métadonnées d'exploration ; pas de compteur d'étoiles Gitea."""
+        project, repository = self._ready_repository(actor, project)
+        meta = self.forge.get_repository_meta(repository)
+        is_empty = bool(meta.get("empty")) or self.forge.repo_is_empty(repository)
+        default_branch = (
+            meta.get("default_branch")
+            or repository.default_branch
+            or "main"
+        )
+        branches = [] if is_empty else self.forge.list_branches(repository)
+        tags = [] if is_empty else self.forge.list_tags(repository)
+        languages = [] if is_empty else self._language_breakdown(
+            self.forge.get_languages(repository)
+        )
+        if not is_empty:
+            self._sync_technologies_from_languages(project, languages, actor)
+        commit_count = None
+        if not is_empty:
+            commit_count = self.forge.count_commits(repository, ref=default_branch)
+        description = meta.get("description")
+        if isinstance(description, str):
+            description = description.strip() or None
+        else:
+            description = None
+        size = meta.get("size")
+        return {
+            "default_branch": default_branch,
+            "is_empty": is_empty,
+            "clone_url": self._clone_url(repository),
+            "description": description,
+            "size_kib": int(size) if isinstance(size, (int, float)) else None,
+            "stats": {
+                "commits": commit_count,
+                "branches": len(branches) if branches is not None else None,
+                "tags": len(tags) if tags is not None else None,
+            },
+            "languages": languages,
+            "repository": repository,
+        }
+
+    def code_branches(self, actor, project):
+        project, repository = self._ready_repository(actor, project)
+        if self.forge.repo_is_empty(repository):
+            return []
+        result = []
+        for item in self.forge.list_branches(repository):
+            name = item.get("name")
+            if not isinstance(name, str) or not name:
+                continue
+            commit = item.get("commit") or {}
+            result.append(
+                {
+                    "name": name,
+                    "commit": self._format_commit(
+                        {
+                            "sha": commit.get("id") or commit.get("sha") or "",
+                            "commit": {
+                                "message": commit.get("message")
+                                or (commit.get("commit") or {}).get("message")
+                                or "",
+                                "author": {
+                                    "name": (
+                                        (commit.get("author") or {}).get("name")
+                                        or (
+                                            (commit.get("commit") or {}).get("author")
+                                            or {}
+                                        ).get("name")
+                                    ),
+                                    "date": (
+                                        (commit.get("author") or {}).get("date")
+                                        or (
+                                            (commit.get("commit") or {}).get("author")
+                                            or {}
+                                        ).get("date")
+                                    ),
+                                },
+                            },
+                        }
+                    ),
+                }
+            )
+        return result
+
+    def code_tree(self, actor, project, *, ref=None, path=None):
+        project, repository = self._ready_repository(actor, project)
+        ref = self._normalize_ref(ref, repository)
+        path = self._normalize_path(path)
+        if self.forge.repo_is_empty(repository):
+            return {
+                "ref": ref,
+                "path": path,
+                "is_empty": True,
+                "entries": [],
+                "latest_commit": None,
+                "readme": None,
+            }
+        contents = self.forge.get_contents(repository, path=path, ref=ref)
+        if contents is None:
+            raise NotFound("Dossier ou référence introuvable.")
+        # Un fichier unique : le client doit utiliser /code/blob.
+        if isinstance(contents, dict) and contents.get("type") == "file":
+            raise NotFound("Ce chemin désigne un fichier, pas un dossier.")
+        entries_raw = contents if isinstance(contents, list) else []
+        entries = []
+        for entry in entries_raw[: self.forge.MAX_TREE_ENTRIES]:
+            if not isinstance(entry, dict):
+                continue
+            name = entry.get("name") or ""
+            entry_path = entry.get("path") or name
+            entry_type = "dir" if entry.get("type") == "dir" else "file"
+            entries.append(
+                {
+                    "name": name,
+                    "path": entry_path,
+                    "type": entry_type,
+                    "size": entry.get("size") if entry_type == "file" else None,
+                    "sha": entry.get("sha"),
+                }
+            )
+        entries.sort(key=lambda item: (0 if item["type"] == "dir" else 1, item["name"].lower()))
+        latest = self._format_commit(
+            self.forge.latest_commit(repository, ref=ref, path=path)
+        )
+        readme = None
+        if not path:
+            readme = self._load_readme(repository, ref=ref, entries=entries)
+        return {
+            "ref": ref,
+            "path": path,
+            "is_empty": False,
+            "entries": entries,
+            "latest_commit": latest,
+            "readme": readme,
+        }
+
+    def _load_readme(self, repository, *, ref: str, entries: list) -> dict | None:
+        candidates = [
+            e["path"]
+            for e in entries
+            if e["type"] == "file" and e["name"].lower() in (
+                "readme.md",
+                "readme.markdown",
+                "readme.mdown",
+                "readme",
+            )
+        ]
+        if not candidates:
+            return None
+        path = sorted(candidates, key=lambda p: (0 if p.lower().endswith(".md") else 1, p))[0]
+        raw = self.forge.get_raw_blob(repository, path=path, ref=ref)
+        if raw is None:
+            return None
+        truncated = len(raw) > self.forge.MAX_README_BYTES
+        raw = raw[: self.forge.MAX_README_BYTES]
+        if b"\x00" in raw:
+            return None
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+        return {
+            "name": path.split("/")[-1],
+            "path": path,
+            "content": text,
+            "truncated": truncated,
+        }
+
+    def code_blob(self, actor, project, *, ref=None, path=None):
+        project, repository = self._ready_repository(actor, project)
+        ref = self._normalize_ref(ref, repository)
+        path = self._normalize_path(path)
+        if not path:
+            raise ValidationError({"path": "Chemin de fichier requis."})
+        meta = self.forge.get_contents(repository, path=path, ref=ref)
+        if meta is None:
+            raise NotFound("Fichier ou référence introuvable.")
+        if isinstance(meta, list):
+            raise NotFound("Ce chemin désigne un dossier, pas un fichier.")
+        if not isinstance(meta, dict) or meta.get("type") != "file":
+            raise NotFound("Fichier introuvable.")
+        size = int(meta.get("size") or 0)
+        raw = self.forge.get_raw_blob(repository, path=path, ref=ref)
+        if raw is None:
+            raise NotFound("Fichier introuvable.")
+        too_large = len(raw) > self.forge.MAX_BLOB_BYTES or size > self.forge.MAX_BLOB_BYTES
+        sample = raw[: self.forge.MAX_BLOB_BYTES]
+        is_binary = b"\x00" in sample
+        content = None
+        encoding = "none"
+        if not too_large and not is_binary:
+            try:
+                content = sample.decode("utf-8")
+                encoding = "utf-8"
+            except UnicodeDecodeError:
+                is_binary = True
+                content = None
+                encoding = "none"
+        # HTML et tout texte : jamais exécutés ; renvoyés comme code source.
+        return {
+            "ref": ref,
+            "path": path,
+            "name": path.split("/")[-1],
+            "size": size or len(sample),
+            "sha": meta.get("sha"),
+            "encoding": encoding,
+            "content": content,
+            "is_binary": is_binary,
+            "is_too_large": too_large,
+            "language": self._guess_language(path),
+            "latest_commit": self._format_commit(
+                self.forge.latest_commit(repository, ref=ref, path=path)
+            ),
+        }
+
+    def code_archive(self, actor, project, *, ref=None, fmt="zip"):
+        """Téléchargement d'archive via Django → Gitea (jeton admin jamais exposé)."""
+        project, repository = self._ready_repository(actor, project)
+        ref = self._normalize_ref(ref, repository)
+        fmt = (fmt or "zip").strip().lower()
+        if fmt not in ("zip", "tar.gz"):
+            raise ValidationError({"format": "Formats acceptés : zip, tar.gz."})
+        if self.forge.repo_is_empty(repository):
+            raise Conflict("Le dépôt est vide : aucune archive à télécharger.")
+        raw = self.forge.download_archive(repository, ref=ref, fmt=fmt)
+        if raw is None:
+            raise NotFound("Référence introuvable pour l'archive.")
+        if len(raw) > self.forge.MAX_ARCHIVE_BYTES:
+            raise ValidationError(
+                {"detail": "Archive trop volumineuse pour le téléchargement."}
+            )
+        safe_ref = re.sub(r"[^\w.\-]+", "-", ref).strip("-") or "code"
+        filename = f"{repository.name}-{safe_ref}.{fmt}"
+        return {
+            "content": raw,
+            "filename": filename,
+            "content_type": (
+                "application/zip" if fmt == "zip" else "application/x-gzip"
+            ),
+        }
+
+    def _guess_language(self, path: str) -> str | None:
+        ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
+        mapping = {
+            "py": "python",
+            "js": "javascript",
+            "jsx": "javascript",
+            "ts": "typescript",
+            "tsx": "typescript",
+            "html": "html",
+            "htm": "html",
+            "css": "css",
+            "scss": "scss",
+            "json": "json",
+            "md": "markdown",
+            "yml": "yaml",
+            "yaml": "yaml",
+            "toml": "toml",
+            "rs": "rust",
+            "go": "go",
+            "java": "java",
+            "sh": "bash",
+            "sql": "sql",
+            "xml": "xml",
+            "svg": "xml",
+        }
+        return mapping.get(ext)
 
     def create_project(self, actor, data):
         require_permission(actor, "projects.create")
@@ -233,6 +594,69 @@ class WorkflowService:
             return self._reuse_linked_identity(actor)
 
         return self._complete_pending_identity(actor, identity)
+
+    def reset_forge_password(self, actor):
+        """Réémet le secret Git de l'identité liée à l'acteur (jamais un login client).
+
+        Invalide l'ancien mot de passe forge. Ne touche ni au mot de passe Django,
+        ni aux dépôts. Le secret n'est ni journalisé ni persisté.
+        """
+        require_permission(actor, "projects.create")
+        from app.devstreet_hub.models import ForgeIdentity
+
+        identity = self.repo.identity(actor)
+        if identity is None:
+            raise Conflict(
+                "Aucun accès Git n’est encore lié à ce compte. Créez d’abord un projet."
+            )
+        if identity.status == ForgeIdentity.STATUS_CONFLICT:
+            raise Conflict(
+                identity.conflict_reason
+                or "Identité Git en conflit : réparation administrative requise."
+            )
+        if (
+            identity.status != ForgeIdentity.STATUS_LINKED
+            or not identity.gitea_user_id
+        ):
+            raise Conflict(
+                "L’accès Git n’est pas encore confirmé. Reprenez la préparation du dépôt."
+            )
+
+        # Vérifie que l'ID distant correspond toujours à la liaison locale.
+        remote = self.forge.get_user_by_id(identity.gitea_user_id)
+        if remote is None or remote.get("id") != identity.gitea_user_id:
+            reason = (
+                "Compte Git distant introuvable pour cette liaison ; "
+                "réparation administrative requise."
+            )
+            with transaction.atomic():
+                current = self.repo.locked_identity(actor)
+                if current:
+                    self.repo.mark_identity_conflict(current, reason)
+            raise Conflict(reason)
+
+        login = identity.login
+        if remote.get("login") and remote["login"] != login:
+            with transaction.atomic():
+                current = self.repo.locked_identity(actor)
+                if current and current.gitea_user_id == identity.gitea_user_id:
+                    self.repo.save(current, login=remote["login"])
+                    login = remote["login"]
+
+        # False : le secret doit servir immédiatement au git push sans UI Gitea.
+        password = self.forge.reissue_password(
+            login=login,
+            email=actor.email,
+            must_change_password=False,
+        )
+        record("project.forge_password_reset", actor=actor, target=identity)
+        return {
+            "login": login,
+            "created": False,
+            "reset": True,
+            "initial_password": password,
+            "change_password_required": False,
+        }
 
     def _reuse_linked_identity(self, actor):
         """Réutilise une liaison existante ; vérifie l'ID distant, jamais un login tiers."""

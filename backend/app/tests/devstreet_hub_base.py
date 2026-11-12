@@ -78,7 +78,7 @@ class DevStreetHubAPITestCase(APITestCase):
             self._forge_users_by_id[user["id"]] = user
             return user, password
 
-        def reissue_password(*, login, email):
+        def reissue_password(*, login, email, must_change_password=True):
             return "reissued-secret"
 
         def provision_identity(actor, *, login=None, provisioning_key=None):
@@ -114,8 +114,26 @@ class DevStreetHubAPITestCase(APITestCase):
             "sha": "b" * 40,
             "branch": "main",
         }
+        self.forge.get_repository_meta.return_value = {
+            "empty": True,
+            "default_branch": "main",
+            "size": 0,
+        }
+        self.forge.list_branches.return_value = []
+        self.forge.list_tags.return_value = []
+        self.forge.get_languages.return_value = {}
+        self.forge.count_commits.return_value = 0
+        self.forge.latest_commit.return_value = None
+        self.forge.get_contents.return_value = None
+        self.forge.get_raw_blob.return_value = None
         self.forge.head.return_value = "a" * 40
         self.forge.pull_request.return_value = {"number": 1}
+        self.forge.MAX_BLOB_BYTES = 512 * 1024
+        self.forge.MAX_README_BYTES = 200 * 1024
+        self.forge.MAX_TREE_ENTRIES = 500
+        self.forge.MAX_BRANCHES = 100
+        self.forge.MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
+        self.forge.download_archive.return_value = None
         self.addCleanup(cache.clear)
 
     def login(self, actor):

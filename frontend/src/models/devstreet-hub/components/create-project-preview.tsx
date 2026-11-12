@@ -1,12 +1,9 @@
 import { CheckCircle2, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { Technology } from "../schema";
 import type { CreateProjectFormState } from "../hooks/use-create-project";
-import { TechnologyTag } from "./technology-tag";
 
 interface CreateProjectPreviewProps {
   form: CreateProjectFormState;
-  selectedTechnologies: Technology[];
   ownerLabel: string;
   ownerInitials: string;
   repoReady: boolean;
@@ -15,7 +12,6 @@ interface CreateProjectPreviewProps {
 
 export function CreateProjectPreview({
   form,
-  selectedTechnologies,
   ownerLabel,
   ownerInitials,
   repoReady,
@@ -62,13 +58,9 @@ export function CreateProjectPreview({
           {form.problem.trim() || t("hub.create.preview.problem_placeholder")}
         </p>
 
-        {selectedTechnologies.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {selectedTechnologies.map((tech) => (
-              <TechnologyTag key={tech.id} id={tech.id} label={tech.label} />
-            ))}
-          </div>
-        ) : null}
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          {t("hub.create.preview.languages_auto")}
+        </p>
 
         <div className="flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
           <span>{form.declared_license}</span>

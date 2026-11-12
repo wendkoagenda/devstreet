@@ -1,5 +1,6 @@
 """Routes de workflows. Les règles sont dans WorkflowService, l'auth reste celle du core."""
 
+from django.http import HttpResponse
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -14,6 +15,8 @@ from app.devstreet_hub.api_serializers import (
     ProjectCreateResponseSerializer,
     InitializeRepositorySerializer,
     InitializeRepositoryResponseSerializer,
+    CodeArchiveQuerySerializer,
+    CodeQuerySerializer,
     RepositorySerializer,
     TaskSerializer,
     TaskWriteSerializer,
@@ -184,6 +187,78 @@ class ProjectViewSet(
     @action(detail=True, methods=["get"])
     def repository(self, request, pk=None):
         return Response(RepositorySerializer(self.get_object().repository).data)
+
+    @swagger_auto_schema(tags=["V1 - Project Code"], methods=["get"])
+    @action(detail=True, methods=["get"], url_path="code/summary")
+    def code_summary(self, request, pk=None):
+        result = WorkflowService().code_summary(request.user, self.get_object())
+        repository = result.pop("repository")
+        result["repository"] = RepositorySerializer(repository).data
+        return Response(result)
+
+    @swagger_auto_schema(tags=["V1 - Project Code"], methods=["get"])
+    @action(detail=True, methods=["get"], url_path="code/branches")
+    def code_branches(self, request, pk=None):
+        return Response(
+            WorkflowService().code_branches(request.user, self.get_object())
+        )
+
+    @swagger_auto_schema(
+        query_serializer=CodeQuerySerializer,
+        tags=["V1 - Project Code"],
+        methods=["get"],
+    )
+    @action(detail=True, methods=["get"], url_path="code/tree")
+    def code_tree(self, request, pk=None):
+        query = validated(CodeQuerySerializer, request.query_params)
+        return Response(
+            WorkflowService().code_tree(
+                request.user,
+                self.get_object(),
+                ref=query.get("ref") or None,
+                path=query.get("path") or None,
+            )
+        )
+
+    @swagger_auto_schema(
+        query_serializer=CodeQuerySerializer,
+        tags=["V1 - Project Code"],
+        methods=["get"],
+    )
+    @action(detail=True, methods=["get"], url_path="code/blob")
+    def code_blob(self, request, pk=None):
+        query = validated(CodeQuerySerializer, request.query_params)
+        return Response(
+            WorkflowService().code_blob(
+                request.user,
+                self.get_object(),
+                ref=query.get("ref") or None,
+                path=query.get("path") or None,
+            )
+        )
+
+    @swagger_auto_schema(
+        query_serializer=CodeArchiveQuerySerializer,
+        tags=["V1 - Project Code"],
+        methods=["get"],
+    )
+    @action(detail=True, methods=["get"], url_path="code/archive")
+    def code_archive(self, request, pk=None):
+        query = validated(CodeArchiveQuerySerializer, request.query_params)
+        result = WorkflowService().code_archive(
+            request.user,
+            self.get_object(),
+            ref=query.get("ref") or None,
+            fmt=query.get("archive_format") or "zip",
+        )
+        response = HttpResponse(
+            result["content"], content_type=result["content_type"]
+        )
+        response["Content-Disposition"] = (
+            f'attachment; filename="{result["filename"]}"'
+        )
+        response["Content-Length"] = str(len(result["content"]))
+        return response
 
     @swagger_auto_schema(tags=["V1 - Project"], methods=["put", "delete"])
     @action(detail=True, methods=["put", "delete"])
@@ -415,3 +490,19 @@ class ForgeAccessViewSet(viewsets.ViewSet):
     )
     def create(self, request):
         return Response(WorkflowService().provision_identity(request.user))
+
+    @swagger_auto_schema(
+        method="post",
+        request_body=openapi.Schema(type=openapi.TYPE_OBJECT, properties={}),
+        responses={
+            200: openapi.Response(
+                "Nouveau secret Git (une seule fois) ; login issu de la ForgeIdentity locale"
+            )
+        },
+        tags=["V1 - ForgeAccess"],
+    )
+    @action(detail=False, methods=["post"], url_path="reset-password")
+    def reset_password(self, request):
+        """Réinitialise le mot de passe forge de l'utilisateur connecté uniquement."""
+        # Tout login éventuel dans le body est ignoré volontairement.
+        return Response(WorkflowService().reset_forge_password(request.user))

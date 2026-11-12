@@ -9,6 +9,7 @@ import {
   useGetTechnologiesQuery,
   useInitializeRepositoryMutation,
   usePublishProjectMutation,
+  useResetForgePasswordMutation,
   useResumeProjectSetupMutation,
 } from "../api";
 import { apiDetailOf, httpStatusOf } from "../functions/api-error";
@@ -59,7 +60,8 @@ function toPayload(form: CreateProjectFormState): ProjectWritePayload {
   const payload: ProjectWritePayload = {
     title: form.title.trim(),
     declared_license: form.declared_license,
-    technologies: form.technologies,
+    // Langues détectées automatiquement après le premier push (via Gitea).
+    technologies: [],
     problem: form.problem.trim(),
     description: form.description.trim(),
     demo_url: demo ? demo : null,
@@ -153,12 +155,14 @@ export function useCreateProject() {
   const [resumeSetup, resumeState] = useResumeProjectSetupMutation();
   const [initializeRepository, initState] = useInitializeRepositoryMutation();
   const [publishProject, publishState] = usePublishProjectMutation();
+  const [resetForgePassword, resetPasswordState] = useResetForgePasswordMutation();
 
   const isBusy =
     createState.isLoading ||
     resumeState.isLoading ||
     initState.isLoading ||
     publishState.isLoading ||
+    resetPasswordState.isLoading ||
     createLock.current;
 
   const isHydratingDraft =
@@ -455,17 +459,39 @@ export function useCreateProject() {
   const dismissError = useCallback(() => setActionError(null), []);
 
   const dismissInitialPassword = useCallback(() => {
+    // Purge mémoire uniquement — jamais de persistance navigateur du secret.
     setForgeAccess((prev) =>
       prev
         ? {
             ...prev,
             initial_password: undefined,
             created: false,
+            reset: false,
             change_password_required: false,
+            password_recovery_required: false,
           }
         : prev
     );
   }, []);
+
+  const resetGitPassword = useCallback(async () => {
+    if (!canCreateProject) {
+      requestLogin();
+      return;
+    }
+    try {
+      const access = await resetForgePassword().unwrap();
+      setForgeAccess(access);
+      setActionError(null);
+      toast.message(t("hub.create.toasts.password_reset"), {
+        description: t("hub.create.toasts.password_reset_hint"),
+      });
+    } catch (error) {
+      const message = mapError(error, "hub.create.errors.password_reset");
+      setActionError(message);
+      toast.error(message);
+    }
+  }, [canCreateProject, mapError, requestLogin, resetForgePassword, t]);
 
   const gitCommands = useMemo(() => {
     if (!cloneUrl) return null;
@@ -530,6 +556,8 @@ export function useCreateProject() {
     publish,
     dismissError,
     dismissInitialPassword,
+    resetGitPassword,
+    isResettingPassword: resetPasswordState.isLoading,
     requestLogin,
   };
 }

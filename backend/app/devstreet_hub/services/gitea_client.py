@@ -169,8 +169,10 @@ class GiteaClient:
             user = refreshed
         return user, password
 
-    def reissue_password(self, *, login: str, email: str) -> str:
-        """Réémet un secret initial après reprise contrôlée (preuve déjà vérifiée)."""
+    def reissue_password(
+        self, *, login: str, email: str, must_change_password: bool = True
+    ) -> str:
+        """Réémet un secret forge (login déjà prouvé / lié localement)."""
         password = secrets.token_urlsafe(32)
         self.request(
             "PATCH",
@@ -180,7 +182,7 @@ class GiteaClient:
                 "login_name": login,
                 "email": email,
                 "password": password,
-                "must_change_password": True,
+                "must_change_password": must_change_password,
             },
         )
         return password
@@ -400,3 +402,154 @@ class GiteaClient:
                 "Aucun extrait texte admissible : créez une tâche manuellement."
             )
         return sources
+
+    # --- Exploration de dépôt (lecture seule, sans copier dans Django) ---
+
+    MAX_BLOB_BYTES = 512 * 1024
+    MAX_README_BYTES = 200 * 1024
+    MAX_TREE_ENTRIES = 500
+    MAX_BRANCHES = 100
+    MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
+
+    def get_repository_meta(self, repository) -> dict:
+        """Métadonnées Gitea du dépôt lié (taille, description, empty…)."""
+        return self.request("GET", self.repo_path(repository)) or {}
+
+    def list_branches(self, repository) -> list[dict]:
+        items = self.request(
+            "GET",
+            self.repo_path(repository) + f"/branches?limit={self.MAX_BRANCHES}&page=1",
+            missing_ok=True,
+        )
+        if not isinstance(items, list):
+            return []
+        return items[: self.MAX_BRANCHES]
+
+    def list_tags(self, repository) -> list[dict]:
+        items = self.request(
+            "GET",
+            self.repo_path(repository) + "/tags?limit=50&page=1",
+            missing_ok=True,
+        )
+        if not isinstance(items, list):
+            return []
+        return items[:50]
+
+    def get_languages(self, repository) -> dict:
+        payload = self.request(
+            "GET", self.repo_path(repository) + "/languages", missing_ok=True
+        )
+        return payload if isinstance(payload, dict) else {}
+
+    def count_commits(self, repository, *, ref: str) -> int | None:
+        """Compte approximatif via en-tête ; None si la forge ne le fournit pas."""
+        try:
+            with httpx.Client(
+                timeout=15, follow_redirects=False, trust_env=False
+            ) as client:
+                response = client.request(
+                    "GET",
+                    self.url
+                    + "/api/v1"
+                    + self.repo_path(repository)
+                    + "/commits?limit=1&stat=false&sha="
+                    + quote(ref, safe=""),
+                    headers={"Authorization": "token " + self.token},
+                )
+            if response.status_code == 404:
+                return 0
+            response.raise_for_status()
+            for header in ("X-Total-Count", "x-total-count"):
+                raw = response.headers.get(header)
+                if raw and raw.isdigit():
+                    return int(raw)
+            data = response.json() if response.content else []
+            if isinstance(data, list):
+                return len(data) if len(data) < 1 else None
+            return None
+        except (httpx.HTTPError, ValueError) as error:
+            raise ExternalUnavailable(
+                "La forge ne répond pas correctement ; réessayez."
+            ) from error
+
+    def latest_commit(self, repository, *, ref: str, path: str = "") -> dict | None:
+        query = f"/commits?limit=1&stat=false&sha={quote(ref, safe='')}"
+        if path:
+            query += f"&path={quote(path, safe='/')}"
+        items = self.request(
+            "GET", self.repo_path(repository) + query, missing_ok=True
+        )
+        if not isinstance(items, list) or not items:
+            return None
+        return items[0] if isinstance(items[0], dict) else None
+
+    def get_contents(self, repository, *, path: str, ref: str):
+        """Liste (dossier) ou entrée (fichier) via l'API contents Gitea."""
+        suffix = ""
+        if path:
+            suffix = "/" + quote(path, safe="/")
+        return self.request(
+            "GET",
+            self.repo_path(repository)
+            + "/contents"
+            + suffix
+            + "?ref="
+            + quote(ref, safe=""),
+            missing_ok=True,
+        )
+
+    def get_raw_blob(self, repository, *, path: str, ref: str) -> bytes | None:
+        """Contenu brut borné ; None si absent."""
+        if not path:
+            return None
+        try:
+            with httpx.Client(
+                timeout=15, follow_redirects=False, trust_env=False
+            ) as client:
+                response = client.request(
+                    "GET",
+                    self.url
+                    + "/api/v1"
+                    + self.repo_path(repository)
+                    + "/raw/"
+                    + quote(path, safe="/")
+                    + "?ref="
+                    + quote(ref, safe=""),
+                    headers={"Authorization": "token " + self.token},
+                )
+            if response.status_code == 404:
+                return None
+            response.raise_for_status()
+            # Limite stricte : on ne lit pas au-delà.
+            return response.content[: self.MAX_BLOB_BYTES + 1]
+        except (httpx.HTTPError, ValueError) as error:
+            raise ExternalUnavailable(
+                "La forge ne répond pas correctement ; réessayez."
+            ) from error
+
+    def download_archive(self, repository, *, ref: str, fmt: str) -> bytes | None:
+        """Archive ZIP/TAR.GZ bornée ; None si référence absente."""
+        if fmt not in ("zip", "tar.gz"):
+            raise ValueError("format archive invalide")
+        archive = f"{quote(ref, safe='')}.{fmt}"
+        try:
+            with httpx.Client(
+                timeout=60, follow_redirects=True, trust_env=False
+            ) as client:
+                response = client.request(
+                    "GET",
+                    self.url
+                    + "/api/v1"
+                    + self.repo_path(repository)
+                    + "/archive/"
+                    + archive,
+                    headers={"Authorization": "token " + self.token},
+                )
+            if response.status_code == 404:
+                return None
+            response.raise_for_status()
+            return response.content[: self.MAX_ARCHIVE_BYTES + 1]
+        except (httpx.HTTPError, ValueError) as error:
+            raise ExternalUnavailable(
+                "La forge ne répond pas correctement ; réessayez."
+            ) from error

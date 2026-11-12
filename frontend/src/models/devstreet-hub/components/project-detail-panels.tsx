@@ -1,7 +1,8 @@
-import { ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,80 +15,199 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { pageCountOf, PAGE_SIZE } from "@/helpers/api/pagination";
+import { useUpdateProjectMutation } from "../api";
+import { apiDetailOf, httpStatusOf } from "../functions/api-error";
 import type {
   ContributionTask,
   Project,
   ProjectMember,
   ProjectMemberWrite,
-  Repository,
   TaskWrite,
 } from "../schema";
 import type { Paginated } from "@/helpers/api/pagination";
+import { CodeBrowser } from "./code-browser";
 
 interface PresentationPanelProps {
   project: Project;
+  canEdit: boolean;
 }
 
-export function PresentationPanel({ project }: PresentationPanelProps) {
+export function PresentationPanel({ project, canEdit }: PresentationPanelProps) {
   const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [problem, setProblem] = useState(project.problem);
+  const [description, setDescription] = useState(project.description);
+  const [updateProject, updateState] = useUpdateProjectMutation();
+
+  useEffect(() => {
+    if (!editing) {
+      setProblem(project.problem);
+      setDescription(project.description);
+    }
+  }, [editing, project.description, project.problem]);
+
+  const handleSave = async () => {
+    try {
+      await updateProject({
+        projectId: project.id,
+        body: {
+          problem: problem.trim(),
+          description: description.trim(),
+        },
+      }).unwrap();
+      toast.success(t("hub.detail.toasts.presentation_saved"));
+      setEditing(false);
+    } catch (error) {
+      const detail = apiDetailOf(error);
+      const status = httpStatusOf(error);
+      toast.error(
+        detail ||
+          (status === 403
+            ? t("hub.detail.errors.forbidden")
+            : t("hub.detail.errors.presentation_save"))
+      );
+    }
+  };
+
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="mb-3 text-sm font-bold text-foreground">
-        {t("hub.detail.presentation.title")}
-      </h2>
-      <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-        {project.description.trim() || t("hub.detail.presentation.empty")}
-      </p>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <h2 className="text-sm font-bold text-foreground">
+          {t("hub.detail.presentation.title")}
+        </h2>
+        {canEdit && !editing ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label={t("hub.detail.presentation.edit")}
+            onClick={() => setEditing(true)}
+          >
+            <Pencil aria-hidden className="size-3.5" />
+          </Button>
+        ) : null}
+      </div>
+
+      {editing ? (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="presentation-problem">
+              {t("hub.detail.presentation.problem_label")}
+            </Label>
+            <Textarea
+              id="presentation-problem"
+              value={problem}
+              onChange={(event) => setProblem(event.target.value)}
+              rows={3}
+              maxLength={2000}
+              className="min-h-[5rem] resize-y text-sm"
+              placeholder={t("hub.detail.presentation.problem_placeholder")}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="presentation-description">
+              {t("hub.detail.presentation.description_label")}
+            </Label>
+            <Textarea
+              id="presentation-description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={8}
+              maxLength={10000}
+              className="min-h-[10rem] resize-y text-sm"
+              placeholder={t("hub.detail.presentation.description_placeholder")}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              className="h-9 text-xs font-semibold"
+              disabled={updateState.isLoading}
+              onClick={() => void handleSave()}
+            >
+              {updateState.isLoading
+                ? t("hub.detail.presentation.saving")
+                : t("hub.detail.presentation.save")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9 text-xs"
+              disabled={updateState.isLoading}
+              onClick={() => {
+                setProblem(project.problem);
+                setDescription(project.description);
+                setEditing(false);
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div>
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              {t("hub.detail.presentation.problem_label")}
+            </p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+              {project.problem.trim() || t("hub.detail.presentation.problem_empty")}
+            </p>
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              {t("hub.detail.presentation.description_label")}
+            </p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+              {project.description.trim() || t("hub.detail.presentation.empty")}
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
 interface CodePanelProps {
-  repository: Repository | null;
+  projectId: number;
+  projectTitle: string;
+  isOwner: boolean;
+  repositoryReady: boolean;
+  namespace?: string | null;
+  repoName?: string | null;
 }
 
-export function CodePanel({ repository }: CodePanelProps) {
+export function CodePanel({
+  projectId,
+  projectTitle,
+  isOwner,
+  repositoryReady,
+  namespace,
+  repoName,
+}: CodePanelProps) {
   const { t } = useTranslation();
-  const ready = repository?.status === "ready";
-  const browseUrl = repository?.browse_url ?? null;
-  const cloneUrl = repository?.clone_url ?? null;
 
-  return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="text-sm font-bold text-foreground">{t("hub.detail.code.title")}</h2>
-      <p className="text-sm text-muted-foreground">{t("hub.detail.code.hint")}</p>
-      {!ready ? (
+  if (!repositoryReady) {
+    return (
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+        <h2 className="text-sm font-bold text-foreground">{t("hub.detail.code.title")}</h2>
         <p className="rounded-lg border border-dashed border-border bg-secondary/60 px-3 py-3 text-xs text-muted-foreground">
           {t("hub.detail.code.not_ready")}
         </p>
-      ) : (
-        <dl className="grid gap-3 text-xs sm:grid-cols-2">
-          <div className="rounded-lg border border-border bg-secondary/50 p-3">
-            <dt className="mb-1 text-muted-foreground">{t("hub.detail.code.branch")}</dt>
-            <dd className="font-semibold text-foreground">
-              {repository?.default_branch || "main"}
-            </dd>
-          </div>
-          <div className="rounded-lg border border-border bg-secondary/50 p-3">
-            <dt className="mb-1 text-muted-foreground">{t("hub.detail.code.status")}</dt>
-            <dd className="font-semibold text-success">{t("hub.detail.code.ready")}</dd>
-          </div>
-          {cloneUrl ? (
-            <div className="sm:col-span-2 rounded-lg border border-border bg-secondary/50 p-3">
-              <dt className="mb-1 text-muted-foreground">{t("hub.detail.code.clone")}</dt>
-              <dd className="break-all font-medium text-foreground">{cloneUrl}</dd>
-            </div>
-          ) : null}
-        </dl>
-      )}
-      {browseUrl ? (
-        <Button asChild className="h-9 w-fit gap-1.5 rounded-lg text-xs font-semibold">
-          <a href={browseUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink aria-hidden className="size-3.5" />
-            {t("hub.detail.actions.open_code")}
-          </a>
-        </Button>
-      ) : null}
+      </section>
+    );
+  }
+
+  return (
+    <section className="flex flex-col gap-3">
+      <CodeBrowser
+        projectId={projectId}
+        projectTitle={projectTitle}
+        isOwner={isOwner}
+        namespaceHint={namespace}
+        repoNameHint={repoName}
+      />
     </section>
   );
 }

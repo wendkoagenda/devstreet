@@ -520,6 +520,8 @@
     },
     "detail": {
       "no_problem": "Aucun résumé de besoin renseigné pour le moment.",
+      "languages_empty": "Aucune langue détectée pour l’instant.",
+      "languages_waiting_repo": "Les langages apparaîtront après le premier push de code.",
       "tabs_label": "Sections de la fiche projet",
       "tabs": {
         "presentation": "Présentation",
@@ -546,16 +548,55 @@
       },
       "presentation": {
         "title": "Contexte et description",
-        "empty": "Aucune description détaillée pour le moment."
+        "edit": "Modifier la présentation",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "problem_label": "Résumé du besoin",
+        "description_label": "Description détaillée",
+        "problem_placeholder": "En une ou deux phrases, le besoin auquel répond le projet…",
+        "description_placeholder": "Contexte, objectifs, public concerné…",
+        "problem_empty": "Tu pourras ajouter ici un court résumé du besoin.",
+        "empty": "La description détaillée pourra être complétée quand tu le souhaites."
       },
       "code": {
         "title": "Dépôt de code",
-        "hint": "État du dépôt et URL de clone dans DevStreet. L'explorateur de fichiers arrive à l'étape suivante.",
-        "not_ready": "Le dépôt n'est pas encore prêt. Aucune URL n'est affichée.",
-        "branch": "Branche principale",
-        "status": "État",
-        "ready": "Prêt",
-        "clone": "URL de clone"
+        "not_ready": "Le dépôt n'est pas encore prêt.",
+        "forge_unavailable": "Le service Git est temporairement indisponible.",
+        "load_error": "Impossible de charger le dépôt.",
+        "empty_title": "Dépôt vide",
+        "empty_text": "Ce dépôt n'a pas encore de commit. Clonez-le pour initialiser, ou créez un README depuis DevStreet.",
+        "init_readme": "Créer un README initial",
+        "initializing": "Initialisation…",
+        "stat_commits": "{{count}} révision(s)",
+        "stat_commits_unknown": "Révisions",
+        "stat_branches": "{{count}} branche(s)",
+        "stat_tags": "{{count}} étiquette(s)",
+        "stat_na": "—",
+        "breadcrumb": "Chemin dans le dépôt",
+        "clone_menu": "Code",
+        "clone_https": "Cloner avec HTTPS",
+        "download_section": "Télécharger",
+        "download_zip": "Télécharger le ZIP",
+        "download_targz": "Télécharger le TAR.GZ",
+        "downloading": "Téléchargement…",
+        "download_error": "Impossible de télécharger l'archive.",
+        "unknown_author": "Auteur inconnu",
+        "just_now": "à l'instant",
+        "path_not_found": "Ce chemin est introuvable sur cette branche.",
+        "folder_empty": "Ce dossier est vide.",
+        "file_not_found": "Fichier introuvable.",
+        "back_tree": "Retour aux fichiers",
+        "readme_truncated": "README tronqué pour l'affichage.",
+        "sidebar_description": "Description",
+        "no_description": "Aucune description fournie.",
+        "size": "{{size}} KiB",
+        "languages": "Langues",
+        "copy": "Copier",
+        "copied": "Copié",
+        "download": "Télécharger",
+        "too_large": "Fichier trop volumineux pour être affiché ici.",
+        "binary": "Fichier binaire — contenu non affiché.",
+        "language_label": "Langage : {{language}}"
       },
       "contribute": {
         "title": "Tâches de contribution",
@@ -594,7 +635,8 @@
         "archived": "Projet archivé.",
         "task_created": "Tâche brouillon créée.",
         "member_added": "Membre ajouté.",
-        "member_removed": "Membre retiré."
+        "member_removed": "Membre retiré.",
+        "presentation_saved": "Présentation mise à jour."
       },
       "errors": {
         "not_found": "Projet introuvable ou inaccessible.",
@@ -606,14 +648,15 @@
         "archive": "Impossible d'archiver le projet.",
         "task_create": "Impossible de créer la tâche.",
         "member_add": "Impossible d'ajouter ce membre.",
-        "member_remove": "Impossible de retirer ce membre."
+        "member_remove": "Impossible de retirer ce membre.",
+        "presentation_save": "Impossible d'enregistrer la présentation."
       }
     },
     "create": {
       "title": "Créer mon projet",
       "title_resume": "Reprendre la création",
       "badge": "privé",
-      "description": "Choisis un nom, une licence et tes technologies. DevStreet prépare automatiquement ton dépôt — sans ouvrir l'interface forge.",
+      "description": "Choisis un nom et une licence. Les langages sont détectés automatiquement après le premier push — sans ouvrir l'interface forge.",
       "description_resume": "Reprends la progression : identité Git, dépôt, puis initialisation. Le brouillon est conservé.",
       "progress": {
         "draft": "Brouillon",
@@ -650,6 +693,7 @@
         "description": "Description détaillée (optionnelle)",
         "technologies": "Technologies",
         "technologies_count": "{{count}} sélectionnée(s)",
+        "technologies_auto": "Les langages (HTML, Python, etc.) sont détectés automatiquement une fois le code poussé dans le dépôt. Pas de sélection manuelle.",
         "remove_tech": "Retirer {{label}}",
         "license": "Licence",
         "demo_url": "Lien de démonstration (optionnel)"
@@ -685,12 +729,19 @@
         "security_title": "Ne committe jamais de secrets",
         "security_text": "Pas de .env, jetons ou clés d'API. Vérifie ton .gitignore avant le push.",
         "auth_title": "Authentification Git",
-        "auth_text": "Identifiant {{login}} et mot de passe forge affiché une seule fois ci-dessous (jamais stocké dans le navigateur).",
+        "auth_text_with_secret": "Identifiant {{login}}. Le mot de passe forge est affiché une seule fois ci-dessous (jamais stocké dans le navigateur).",
+        "auth_text_no_secret": "Identifiant {{login}}. Aucun mot de passe n'est affiché : il n'est jamais conservé après sa création. Réinitialise-le ici pour reprendre un git push, sans ouvrir Gitea.",
+        "reset_password": "Réinitialiser mon mot de passe Git",
+        "reset_confirm": "Confirmer la réinitialisation",
+        "resetting": "Réinitialisation…",
+        "reset_confirm_text": "Un nouveau mot de passe forge sera émis. L'ancien ne fonctionnera plus pour git push. Ton mot de passe DevStreet et tes dépôts restent inchangés.",
         "password_panel_title": "Mot de passe forge initial",
+        "password_reset_panel_title": "Nouveau mot de passe forge",
         "password_panel_text": "Copie ce secret maintenant. Il n'est affiché qu'une fois et n'est jamais enregistré localement.",
+        "password_reset_panel_text": "Nouveau secret émis pour ton accès Git. Copie-le, utilise-le pour git push, puis confirme que tu l'as enregistré. Il n'est jamais stocké dans le navigateur.",
         "password_recovery_text": "Reprise après interruption : un nouveau secret a été émis une seule fois. Aucun mot de passe tiers n'a été réutilisé.",
         "copy_password": "Copier le mot de passe",
-        "password_dismiss": "J'ai noté / fermer"
+        "password_dismiss": "Je l'ai enregistré"
       },
       "publish": {
         "visibility_title": "Reste privé jusqu'à publication",
@@ -714,6 +765,7 @@
         "by": "par {{owner}}",
         "you": "toi",
         "problem_placeholder": "Le résumé du besoin apparaîtra ici.",
+        "languages_auto": "Langages détectés automatiquement après le premier push.",
         "stars": "{{count}} étoiles",
         "forge_sync": "Dépôt prêt",
         "params": "Paramètres",
@@ -735,13 +787,16 @@
         "forge_password_once": "Identifiants Git créés",
         "forge_password_hint": "Le mot de passe initial n'est affiché qu'une seule fois sur cet écran.",
         "forge_password_recovered": "Accès Git repris",
-        "forge_password_recovered_hint": "Un nouveau secret a été émis après reprise."
+        "forge_password_recovered_hint": "Un nouveau secret a été émis après reprise.",
+        "password_reset": "Mot de passe Git réinitialisé",
+        "password_reset_hint": "Copie le nouveau secret ci-dessous. L'ancien ne fonctionne plus."
       },
       "errors": {
         "title": "Action impossible",
         "form_incomplete": "Indique au minimum le nom du projet.",
         "create": "Impossible de créer le projet.",
         "initialize": "Impossible d'initialiser le dépôt.",
+        "password_reset": "Impossible de réinitialiser le mot de passe Git.",
         "identity_conflict": "Conflit d'identité Git : une réparation administrative est requise.",
         "forge_unavailable": "La forge est indisponible. Ton brouillon est conservé : reprends plus tard.",
         "draft_not_found": "Ce projet est introuvable ou inaccessible.",

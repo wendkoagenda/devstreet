@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
@@ -13,7 +13,6 @@ import {
 } from "../components/project-detail-panels";
 import { ProjectDetailTabs } from "../components/project-detail-tabs";
 import { useProjectDetail } from "../hooks/use-project-detail";
-import type { Technology } from "../schema";
 
 export default function ProjectDetailPage() {
   const { t } = useTranslation();
@@ -21,13 +20,7 @@ export default function ProjectDetailPage() {
   const projectId = Number(params.id);
   const detail = useProjectDetail(projectId);
   const [showTaskForm, setShowTaskForm] = useState(false);
-
-  const technologies = useMemo(() => {
-    if (!detail.project) return [] as Technology[];
-    return detail.project.technologies
-      .map((id) => detail.technologiesById.get(id))
-      .filter((item): item is Technology => Boolean(item));
-  }, [detail.project, detail.technologiesById]);
+  const repositoryReady = detail.repository?.status === "ready";
 
   if (!Number.isFinite(projectId) || projectId <= 0) {
     return (
@@ -78,13 +71,12 @@ export default function ProjectDetailPage() {
   }
 
   const project = detail.project;
-  const browseUrl = detail.repository?.browse_url ?? null;
+  const repository = detail.repository;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <ProjectDetailHeader
         project={project}
-        technologies={technologies}
         star={detail.star}
         isOwner={detail.isOwner}
         canPublish={detail.isOwner && detail.access.canPublishProject}
@@ -92,7 +84,6 @@ export default function ProjectDetailPage() {
         canCreateTask={detail.access.canCreateTask}
         canAnalyze={detail.isOwner && detail.access.canAnalyze}
         canReview={detail.isOwner && detail.access.canReviewContributions}
-        browseUrl={browseUrl}
         isBusy={detail.isBusy}
         onToggleStar={() => {
           void detail.toggleStar();
@@ -116,10 +107,22 @@ export default function ProjectDetailPage() {
       <ProjectDetailTabs active={detail.tab} onChange={detail.setTab} />
 
       {detail.tab === "presentation" ? (
-        <PresentationPanel project={project} />
+        <PresentationPanel
+          project={project}
+          canEdit={detail.isOwner && detail.access.canUpdateProject}
+        />
       ) : null}
 
-      {detail.tab === "code" ? <CodePanel repository={detail.repository} /> : null}
+      {detail.tab === "code" ? (
+        <CodePanel
+          projectId={project.id}
+          projectTitle={project.title}
+          isOwner={detail.isOwner}
+          repositoryReady={Boolean(repositoryReady)}
+          namespace={repository?.namespace}
+          repoName={repository?.name}
+        />
+      ) : null}
 
       {detail.tab === "contribute" ? (
         <div className="flex flex-col gap-4">
