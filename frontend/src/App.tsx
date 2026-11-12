@@ -35,6 +35,10 @@ import MyApplicationsPage from "./models/marketplace-offers/pages/my-application
 import MyOffersPage from "./models/marketplace-offers/pages/my-offers-page";
 import OfferFormPage from "./models/marketplace-offers/pages/offer-form-page";
 import OfferManagePage from "./models/marketplace-offers/pages/offer-manage-page";
+import TalentsPage from "./models/marketplace-network/pages/talents-page";
+import PoolPage from "./models/marketplace-network/pages/pool-page";
+import NetworkPage from "./models/marketplace-network/pages/network-page";
+import ProfileViewPage from "./models/marketplace-network/pages/profile-view-page";
 import MyProfilePage from "./models/marketplace-space/pages/my-profile-page";
 import MarketplaceAdminPage from "./models/marketplace-space/pages/marketplace-admin-page";
 import { useAuthSlice } from "./models/auth/slice";
@@ -107,6 +111,10 @@ function App() {
           <Route element={<OfferFormPage />} path="/marketplace/my-offers/new" />
           <Route element={<OfferManagePage />} path="/marketplace/my-offers/:id" />
           <Route element={<OfferFormPage />} path="/marketplace/my-offers/:id/edit" />
+          <Route element={<TalentsPage />} path="/marketplace/talents" />
+          <Route element={<PoolPage />} path="/marketplace/talents/pool" />
+          <Route element={<NetworkPage />} path="/marketplace/network" />
+          <Route element={<ProfileViewPage />} path="/marketplace/profiles/:id" />
 
           <Route
             element={<MarketplaceAdminPage />}

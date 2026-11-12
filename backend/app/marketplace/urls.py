@@ -14,7 +14,7 @@ from app.marketplace.views.availability_viewset import AvailabilityViewSet
 from app.marketplace.views.review_viewset import ReviewViewSet
 from app.marketplace.views.swipe_viewset import SwipeViewSet
 from app.marketplace.views.connection_viewset import ConnectionViewSet
-from app.marketplace.views import market_views
+from app.marketplace.views import market_views, network_views
 from app.marketplace.views.me_views import MeCompanyView, MeProfilView, MeView
 
 router = DefaultRouter(trailing_slash=False)
@@ -47,6 +47,12 @@ urlpatterns = [
     path('v1/marketplace/me/offers/<int:offer_id>/candidatures', market_views.offer_candidatures, name='marketplace-me-offer-candidatures'),
     path('v1/marketplace/me/offers/<int:offer_id>/recommended-profils', market_views.offer_recommended_profils, name='marketplace-me-offer-profils'),
     path('v1/marketplace/candidatures/<int:candidature_id>/decision', market_views.candidature_decision, name='marketplace-candidature-decision'),
+    path('v1/marketplace/me/deck', network_views.deck, name='marketplace-me-deck'),
+    path('v1/marketplace/me/swipes', network_views.swipe, name='marketplace-me-swipes'),
+    path('v1/marketplace/me/swipes/last', network_views.undo_swipe, name='marketplace-me-swipes-last'),
+    path('v1/marketplace/me/pool', network_views.pool, name='marketplace-me-pool'),
+    path('v1/marketplace/me/connections', network_views.connections, name='marketplace-me-connections'),
+    path('v1/marketplace/profils/<int:profil_id>', network_views.public_profile, name='marketplace-profil'),
     path('v1/', include(router.urls)),
 ]
 

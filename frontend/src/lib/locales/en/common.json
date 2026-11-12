@@ -145,7 +145,12 @@
     "marketplace_my_offers": "My offers",
     "marketplace_offer_new": "Post an offer",
     "marketplace_offer_manage": "Manage offer",
-    "marketplace_offer_edit": "Edit"
+    "marketplace_offer_edit": "Edit",
+    "marketplace_talents": "Talents",
+    "marketplace_pool": "Talent pool",
+    "marketplace_network": "Network",
+    "marketplace_profiles": "Profiles",
+    "marketplace_profile_view": "Profile"
   },
   "hub": {
     "common": {

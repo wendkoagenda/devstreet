@@ -43,6 +43,9 @@ export default function PlatformMenu() {
       visible: hasProfil,
     },
     { title: "Mes offres", url: "/marketplace/my-offers", visible: isRecruiter },
+    { title: "Talents", url: "/marketplace/talents", visible: isRecruiter },
+    { title: "Vivier", url: "/marketplace/talents/pool", visible: isRecruiter },
+    { title: "Réseau", url: "/marketplace/network", visible: hasProfil },
   ].filter((item) => item.visible);
   // L'administration (listes CRUD) n'apparaît que pour les rôles qui ont au moins une permission de lecture
   const canAdministerMarketplace = MARKETPLACE_ADMIN_PAGES.some(
@@ -51,6 +54,19 @@ export default function PlatformMenu() {
   const marketplaceActive =
     location.pathname.startsWith("/marketplace") ||
     location.pathname.startsWith("/admin/marketplace");
+
+  // Entrée active : page exacte ou sous-page, sauf si une autre entrée plus précise correspond (ex. /talents/pool)
+  const isItemActive = (url: string) => {
+    const path = location.pathname;
+    if (path === url) return true;
+    if (!path.startsWith(`${url}/`)) return false;
+    return !marketplaceItems.some(
+      (other) =>
+        other.url !== url &&
+        other.url.startsWith(`${url}/`) &&
+        (path === other.url || path.startsWith(`${other.url}/`))
+    );
+  };
 
   const go = (url: string) => {
     navigate(url);
@@ -77,7 +93,7 @@ export default function PlatformMenu() {
                 {marketplaceItems.map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
-                      isActive={location.pathname.startsWith(item.url)}
+                      isActive={isItemActive(item.url)}
                       onClick={() => go(item.url)}
                     >
                       <span
