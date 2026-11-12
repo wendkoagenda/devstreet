@@ -118,7 +118,7 @@ function ExperienceForm({ experience, onDone }: { experience: Experience | null;
 }
 
 /** Expériences du profil : liste, ajout, modification et suppression (elles alimentent le CV). */
-export function ExperiencesCard() {
+export function ExperiencesCard({ className }: { className?: string }) {
   const { data, isLoading } = useGetMyExperiencesQuery();
   const [remove] = useDeleteExperienceMutation();
   const [editing, setEditing] = useState<Experience | "new" | null>(null);
@@ -133,7 +133,7 @@ export function ExperiencesCard() {
   };
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Briefcase className="size-4" />

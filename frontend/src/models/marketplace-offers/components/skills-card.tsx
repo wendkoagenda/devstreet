@@ -135,11 +135,11 @@ function SkillsEditor({ initial }: { initial: MySkill[] }) {
 }
 
 /** Compétences du profil : choix dans le référentiel, niveau et années de pratique. */
-export function SkillsCard() {
+export function SkillsCard({ className }: { className?: string }) {
   const { data, isLoading } = useGetMySkillsQuery();
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="size-4" />
