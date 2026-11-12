@@ -4,15 +4,21 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/components/ui/theme-provider";
 import { useTranslation } from "react-i18next";
 
+type ThemeChoice = "light" | "dark" | "system";
+
+const isThemeChoice = (value: string): value is ThemeChoice =>
+  value === "light" || value === "dark" || value === "system";
+
 export function ModeToggle() {
   const { t } = useTranslation();
-  const { setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
     <DropdownMenu>
@@ -24,15 +30,22 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          {t("theme.light")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          {t("theme.dark")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          {t("theme.system")}
-        </DropdownMenuItem>
+        <DropdownMenuRadioGroup
+          value={theme}
+          onValueChange={(value) => {
+            if (isThemeChoice(value)) setTheme(value);
+          }}
+        >
+          <DropdownMenuRadioItem value="light">
+            {t("theme.light")}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">
+            {t("theme.dark")}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="system">
+            {t("theme.system")}
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

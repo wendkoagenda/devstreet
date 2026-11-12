@@ -38,10 +38,137 @@ class WorkflowService:
         require_permission(actor, "projects.create")
         data = dict(data)
         technologies = data.pop("technologies", [])
+        data = self._normalize_project_write(data, exclude_pk=None, creating=True)
         with transaction.atomic():
             project = self.repo.create_project(actor, data, technologies)
             record("project.created", actor=actor, target=project)
         return project
+
+    def _normalize_project_write(self, data, *, exclude_pk, creating=False):
+        from app.devstreet_hub.services.project_slug import (
+            allocate_unique_slug,
+            is_valid_slug,
+            normalize_slug,
+        )
+
+        data = dict(data)
+        if "demo_url" in data and data["demo_url"] in (None, ""):
+            data["demo_url"] = ""
+        if creating:
+            data.setdefault("problem", "")
+            data.setdefault("description", "")
+
+        if "slug" in data or creating:
+            raw_slug = (data.get("slug") or "").strip()
+            if raw_slug:
+                slug = normalize_slug(raw_slug)
+                if not is_valid_slug(slug):
+                    raise ValidationError({"slug": "Slug invalide."})
+                if self.repo.slug_exists(slug, exclude_pk=exclude_pk):
+                    raise ValidationError({"slug": "Ce slug est déjà pris."})
+                data["slug"] = slug
+            elif creating:
+                data["slug"] = allocate_unique_slug(
+                    data.get("title") or "projet",
+                    exists=lambda candidate: self.repo.slug_exists(candidate),
+                )
+            else:
+                data.pop("slug", None)
+        return data
+
+    def create_and_setup(self, actor, data):
+        """Crée le brouillon puis orchestre identité forge + dépôt (reprise sans doublon)."""
+        project = self.create_project(actor, data)
+        return self._run_setup(actor, project)
+
+    def resume_setup(self, actor, project):
+        """Reprend identité + dépôt après échec partiel ; idempotent si déjà prêts."""
+        require_permission(actor, "projects.create")
+        require_owner(actor, project)
+        return self._run_setup(actor, project)
+
+    def _run_setup(self, actor, project):
+        setup = {"draft": "ok", "identity": "pending", "repository": "pending"}
+        forge_access = None
+        try:
+            forge_access = self.provision_identity(actor)
+            setup["identity"] = "ok"
+        except Conflict:
+            setup["identity"] = "conflict"
+            project = self.repo.visible_project(actor, project.pk)
+            return {"project": project, "forge_access": None, "setup": setup}
+        except ExternalUnavailable:
+            setup["identity"] = "failed"
+            project = self.repo.visible_project(actor, project.pk)
+            return {"project": project, "forge_access": forge_access, "setup": setup}
+
+        try:
+            repository = self.provision_repository(actor, project)
+            setup["repository"] = "ok" if repository.status == "ready" else "failed"
+        except ExternalUnavailable:
+            setup["repository"] = "failed"
+        except Conflict:
+            setup["repository"] = "failed"
+
+        project = self.repo.visible_project(actor, project.pk)
+        return {
+            "project": project,
+            "forge_access": forge_access,
+            "setup": setup,
+        }
+
+    def initialize_repository(self, actor, project, *, mode: str):
+        """Initialise le dépôt dans DevStreet : scaffold Gitea ou consignes de push."""
+        require_permission(actor, "projects.create")
+        require_owner(actor, project)
+        repository = project.repository
+        if repository.status != "ready":
+            raise Conflict("Le dépôt doit être prêt avant l’initialisation.")
+
+        if mode == "push_existing":
+            return {
+                "mode": mode,
+                "initialized": False,
+                "is_empty": not bool(repository.current_sha),
+                "repository": repository,
+            }
+
+        if mode != "readme":
+            raise ValidationError({"mode": "Mode d’initialisation inconnu."})
+
+        if repository.current_sha:
+            raise Conflict("Le dépôt contient déjà des commits.")
+
+        from app.devstreet_hub.services.repo_scaffold import scaffold_files
+
+        try:
+            if not self.forge.repo_is_empty(repository):
+                sha = self.forge.head(repository)
+                self.repo.save(repository, current_sha=sha)
+                raise Conflict("Le dépôt contient déjà des commits.")
+            result = self.forge.initialize_scaffold(
+                repository,
+                scaffold_files(
+                    title=project.title,
+                    problem=project.problem,
+                    declared_license=project.declared_license,
+                ),
+            )
+        except ExternalUnavailable:
+            raise
+
+        repository = self.repo.save(
+            repository,
+            current_sha=result["sha"],
+            default_branch=result.get("branch") or repository.default_branch,
+        )
+        record("project.repository_initialized", actor=actor, target=project)
+        return {
+            "mode": mode,
+            "initialized": True,
+            "is_empty": False,
+            "repository": repository,
+        }
 
     def update_project(self, actor, project, data):
         require_permission(actor, "projects.update")
@@ -52,28 +179,208 @@ class WorkflowService:
             if project.status == "archived":
                 raise Conflict("Un projet archivé ne se modifie plus.")
             technologies = data.pop("technologies", None)
+            data = self._normalize_project_write(
+                data, exclude_pk=project.pk, creating=False
+            )
             if technologies is not None:
                 self.repo.set_technologies(project, technologies)
             self.repo.save(project, updated_by=actor.pk, **data)
         return project
 
     def provision_identity(self, actor):
+        """Provisionne ou reprend une identité Gitea liée explicitement.
+
+        1. Persiste login opaque + provisioning_key avant tout appel externe.
+        2. Crée/vérifie le compte distant avec preuve dans `description`.
+        3. N'adopte jamais un compte tiers (login/e-mail seuls insuffisants).
+        """
         require_permission(actor, "projects.create")
+        from app.devstreet_hub.models import ForgeIdentity
+        from app.devstreet_hub.services.forge_identity_tokens import (
+            login_for_key,
+            new_provisioning_key,
+        )
+
         with transaction.atomic():
             self.repo.lock_actor(actor)
-            identity = self.repo.identity(actor)
-            if identity:
+            identity = self.repo.locked_identity(actor)
+
+            if identity and identity.status == ForgeIdentity.STATUS_CONFLICT:
+                raise Conflict(
+                    identity.conflict_reason
+                    or "Identité Git en conflit : réparation administrative requise."
+                )
+
+            if (
+                identity
+                and identity.status == ForgeIdentity.STATUS_LINKED
+                and identity.gitea_user_id
+            ):
+                linked_id = identity.pk
+            elif identity is None:
+                key = new_provisioning_key()
+                identity = self.repo.create_pending_identity(
+                    actor,
+                    login=login_for_key(key),
+                    provisioning_key=key,
+                )
+                linked_id = None
+            else:
+                linked_id = None
+
+        # Hors transaction : appels Gitea + persistance des conflits (pas de rollback).
+        if linked_id is not None:
+            return self._reuse_linked_identity(actor)
+
+        return self._complete_pending_identity(actor, identity)
+
+    def _reuse_linked_identity(self, actor):
+        """Réutilise une liaison existante ; vérifie l'ID distant, jamais un login tiers."""
+        identity = self.repo.identity(actor)
+        if identity is None or not identity.gitea_user_id:
+            raise Conflict("Identité Git liée introuvable.")
+
+        remote = self.forge.get_user_by_id(identity.gitea_user_id)
+        if remote is None or remote.get("id") != identity.gitea_user_id:
+            reason = (
+                "Compte Git distant introuvable pour cette liaison ; "
+                "réparation administrative requise."
+                if remote is None
+                else "L'identifiant Git distant ne correspond plus à la liaison locale."
+            )
+            with transaction.atomic():
+                self.repo.lock_actor(actor)
+                current = self.repo.locked_identity(actor)
+                if current:
+                    self.repo.mark_identity_conflict(current, reason)
+            raise Conflict(reason)
+
+        # Un rename côté forge met à jour le login local ; on n'adopte pas un autre id.
+        if remote.get("login") and remote["login"] != identity.login:
+            with transaction.atomic():
+                self.repo.lock_actor(actor)
+                current = self.repo.locked_identity(actor)
+                if current and current.gitea_user_id == identity.gitea_user_id:
+                    self.repo.save(current, login=remote["login"])
+                    identity = current
+        return {"login": identity.login, "created": False}
+
+    def _complete_pending_identity(self, actor, identity):
+        """Termine une identité pending : création distante ou reprise contrôlée."""
+        from app.devstreet_hub.models import ForgeIdentity
+        from app.devstreet_hub.services.forge_identity_tokens import has_correlation
+
+        with transaction.atomic():
+            self.repo.lock_actor(actor)
+            identity = self.repo.locked_identity(actor)
+            if identity is None:
+                raise Conflict("Identité Git introuvable après réservation.")
+            if (
+                identity.status == ForgeIdentity.STATUS_LINKED
+                and identity.gitea_user_id
+            ):
                 return {"login": identity.login, "created": False}
-            user, password = self.forge.provision_identity(actor)
-            identity = self.repo.create_identity(actor, user)
+            if identity.status == ForgeIdentity.STATUS_CONFLICT:
+                raise Conflict(
+                    identity.conflict_reason
+                    or "Identité Git en conflit : réparation administrative requise."
+                )
+
+        key = identity.provisioning_key
+        login = identity.login
+        remote = self.forge.get_user_by_login(login)
+
+        if remote is not None:
+            if not has_correlation(remote, key):
+                with transaction.atomic():
+                    identity = self.repo.locked_identity(actor)
+                    self.repo.mark_identity_conflict(
+                        identity,
+                        "Compte Git déjà présent sans preuve de propriété DevStreet Hub.",
+                    )
+                raise Conflict(
+                    "Compte Git déjà présent sans preuve de propriété DevStreet Hub : "
+                    "rapprochement administratif requis."
+                )
+            # Reprise après échec Django / timeout : secret initial perdu.
+            with transaction.atomic():
+                self.repo.lock_actor(actor)
+                identity = self.repo.locked_identity(actor)
+                self.repo.mark_identity_linked(
+                    identity, gitea_user_id=remote["id"], login=remote.get("login") or login
+                )
+                record(
+                    "project.forge_identity_recovered",
+                    actor=actor,
+                    target=identity,
+                )
+            # Réémission explicite (pas silencieuse) d'un secret à usage unique.
+            password = self.forge.reissue_password(login=login, email=actor.email)
+            return {
+                "login": login,
+                "created": False,
+                "recovered": True,
+                "initial_password": password,
+                "change_password_required": True,
+                "password_recovery_required": True,
+            }
+
+        try:
+            user, password = self.forge.create_user(
+                login=login,
+                email=actor.email,
+                provisioning_key=key,
+            )
+        except ExternalUnavailable:
+            # Timeout ambigu : pas de doublon au prochain essai (même login/clé).
+            raise
+        except Conflict as error:
+            with transaction.atomic():
+                identity = self.repo.locked_identity(actor)
+                if identity and identity.status == ForgeIdentity.STATUS_PENDING:
+                    self.repo.mark_identity_conflict(identity, str(error.detail))
+            raise
+
+        with transaction.atomic():
+            self.repo.lock_actor(actor)
+            identity = self.repo.locked_identity(actor)
+            if identity is None:
+                raise Conflict("Identité Git réservée introuvable après création distante.")
+            if (
+                identity.status == ForgeIdentity.STATUS_LINKED
+                and identity.gitea_user_id
+                and identity.gitea_user_id != user["id"]
+            ):
+                raise Conflict(
+                    "Une autre liaison Git a été confirmée pendant le provisionnement."
+                )
+            self.repo.mark_identity_linked(
+                identity,
+                gitea_user_id=user["id"],
+                login=user.get("login") or login,
+            )
             record("project.forge_identity_created", actor=actor, target=identity)
+
         # Le secret n'est jamais sauvegardé ni journalisé ; affichage une seule fois.
-        return {
+        payload = {
             "login": identity.login,
             "created": True,
-            "initial_password": password,
             "change_password_required": True,
         }
+        if password:
+            payload["initial_password"] = password
+        else:
+            # Compte distant déjà corrélé sans secret (reprise via create_user).
+            password = self.forge.reissue_password(login=login, email=actor.email)
+            payload.update(
+                {
+                    "created": False,
+                    "recovered": True,
+                    "initial_password": password,
+                    "password_recovery_required": True,
+                }
+            )
+        return payload
 
     def provision_repository(self, actor, project):
         require_permission(actor, "projects.create")
@@ -84,8 +391,14 @@ class WorkflowService:
                 repository = project.repository
                 if repository.status == "ready":
                     return repository
+                from app.devstreet_hub.models import ForgeIdentity
+
                 identity = self.repo.identity(actor)
-                if not identity:
+                if (
+                    not identity
+                    or identity.status != ForgeIdentity.STATUS_LINKED
+                    or not identity.gitea_user_id
+                ):
                     raise Conflict(
                         "Initialisez d’abord votre accès Git avec /forge-access."
                     )

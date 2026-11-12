@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;background-color:#f7f9fb;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode: "class", theme: {extend: {colors: {"surface-tint": "#565e74", "secondary-fixed": "#ffdbce", "primary-container": "#131b2e", "on-primary-fixed": "#131b2e", "on-error-container": "#93000a", "inverse-primary": "#bec6e0", surface: "#fcf8fa", "on-surface": "#1b1b1d", "error-container": "#ffdad6", "on-background": "#1b1b1d", primary: "#000000", "surface-dim": "#dcd9db", "surface-container-lowest": "#ffffff", outline: "#76777d", "outline-variant": "#c6c6cd", "tertiary-fixed-dim": "#dec29a", "on-surface-variant": "#45464d", "surface-container-highest": "#e4e2e4", "surface-bright": "#fcf8fa", "on-secondary-fixed": "#370e00", "on-tertiary-fixed": "#271901", "on-secondary": "#ffffff", background: "#fcf8fa", "on-tertiary-container": "#98805d", "on-primary": "#ffffff", "secondary-fixed-dim": "#ffb599", "surface-container-high": "#eae7e9", "on-error": "#ffffff", "on-secondary-fixed-variant": "#7f2b00", "on-primary-container": "#7c839b", "surface-container-low": "#f6f3f5", "tertiary-fixed": "#fcdeb5", "tertiary-container": "#271901", "surface-variant": "#e4e2e4", error: "#ba1a1a", "secondary-container": "#fd651e", "on-tertiary": "#ffffff", "on-secondary-container": "#571a00", secondary: "#a73a00", "inverse-surface": "#303032", "primary-fixed": "#dae2fd", "on-tertiary-fixed-variant": "#574425", "inverse-on-surface": "#f3f0f2", "surface-container": "#f0edef", tertiary: "#000000", "primary-fixed-dim": "#bec6e0", "on-primary-fixed-variant": "#3f465c"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"space-lg": "1.5rem", "space-sm": "0.5rem", margin: "2rem", "space-xl": "2rem", "space-md": "1rem", "space-2xl": "3rem", "margin-sm": "1rem", "space-xs": "0.25rem", gutter: "1.5rem", "gutter-sm": "1rem"}, fontFamily: {"headline-xl-mobile": ["Hanken Grotesk"], "headline-md": ["Hanken Grotesk"], "label-md": ["JetBrains Mono"], "code-inline": ["JetBrains Mono"], "label-lg": ["JetBrains Mono"], "headline-sm": ["Hanken Grotesk"], "body-md": ["Hanken Grotesk"], "headline-xl": ["Hanken Grotesk"], "body-lg": ["Hanken Grotesk"], "headline-lg-mobile": ["Hanken Grotesk"], "headline-lg": ["Hanken Grotesk"], "body-sm": ["Hanken Grotesk"], "label-sm": ["JetBrains Mono"], headline: ["Poppins"], display: ["Poppins"], body: ["Poppins"], label: ["JetBrains Mono"]}, fontSize: {"headline-xl-mobile": ["30px", {lineHeight: "38px", letterSpacing: "-0.015em", fontWeight: "700"}], "headline-md": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}], "label-md": ["12px", {lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500"}], "code-inline": ["13px", {lineHeight: "18px", fontWeight: "400"}], "label-lg": ["14px", {lineHeight: "20px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-sm": ["18px", {lineHeight: "26px", fontWeight: "600"}], "body-md": ["14px", {lineHeight: "22px", fontWeight: "400"}], "headline-xl": ["40px", {lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700"}], "body-lg": ["16px", {lineHeight: "26px", fontWeight: "400"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.015em", fontWeight: "600"}], "body-sm": ["12px", {lineHeight: "18px", fontWeight: "400"}], "label-sm": ["11px", {lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "500"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased selection:bg-secondary-container selection:text-on-secondary-container"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-14 px-margin-sm flex items-center justify-between"><div class="flex items-center gap-space-xs"><button aria-label="Retour" class="w-11 h-11 -ml-space-xs flex items-center justify-center text-on-surface hover:text-secondary active:scale-95 transition-transform" onclick="history.back()"><span class="material-symbols-outlined text-[20px]">arrow_back_ios_new</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Projet Detail</h1></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex-1 flex flex-col relative w-full px-margin-sm pt-14 pb-margin-sm bg-surface"><div class="flex flex-col w-full pb-margin-sm space-y-space-md">
+<!-- Mode Permission Switcher & Context Bar -->
+<div class="flex items-center justify-between bg-surface-container-high p-space-xs rounded-xl shadow-sm">
+<div class="flex items-center gap-space-xs px-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]">verified_user</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Simulation rôle</span>
+</div>
+<div class="flex items-center bg-surface-container-lowest p-1 rounded-lg shadow-sm">
+<button class="px-space-sm py-1 rounded font-label-sm text-label-sm font-semibold transition-all bg-primary-container text-on-primary" id="btn-mode-owner" onclick="toggleRole('owner')">
+        Propriétaire
+      </button>
+<button class="px-space-sm py-1 rounded font-label-sm text-label-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface" id="btn-mode-guest" onclick="toggleRole('visitor')">
+        Visiteur
+      </button>
+</div>
+</div>
+<!-- Project Summary Card (Bento Header) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary-container/10 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex flex-col gap-space-sm">
+<!-- Title & Badges -->
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Stock</h2>
+<span class="px-2 py-0.5 bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm">Public</span>
+<span class="px-2 py-0.5 bg-secondary-container/15 text-secondary rounded font-label-sm text-label-sm font-semibold">v1.4</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant mt-0.5">devstreet.forge/aicha/stock</p>
+</div>
+<button class="flex items-center gap-1 bg-surface-container-low hover:bg-surface-container active:scale-95 transition-all px-2.5 py-1.5 rounded-lg" id="star-btn" onclick="toggleStar()">
+<span class="material-symbols-outlined text-[18px] text-secondary-container" id="star-icon" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md font-semibold text-on-surface" id="star-count">48</span>
+</button>
+</div>
+<!-- Problem Statement -->
+<p class="font-body-md text-body-md text-on-surface-variant leading-snug">
+        Gestion d'inventaire résiliente en zones rurales conçue pour fonctionner avec zéro latence et synchronisation hors-ligne différée.
+      </p>
+<!-- Owner Info -->
+<div class="flex items-center gap-space-sm py-1">
+<div class="relative w-8 h-8 rounded-full overflow-hidden shadow-sm flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait photography of Aicha Diallo, an African woman software engineer wearing a modern minimal orange and navy hoodie in a tech studio with warm ambient backlighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCceMtug5QowrcQRaOOtb9Zk8Vy-z1EphQHCMvWqmTvYlJ1gMoG22EGHFhpKTCvwnquEx0yKrVfhh-KRnvKVmz-43jV2SdQu0O51HyFzWCCGxp8Lg8hyfwTnMkluWVOOYgJuYOTWDw0vgo4qHH48755XeAcwYjAOCGQoupX3k65P0Xg5PaVCfPYVzpAxm0SOs9g7hrOHAiU2NpQtpTaWTFj61Db6kuVJIZJiOsYzrS7"/>
+</div>
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">Aïcha Diallo</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">@aicha</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 bg-primary-container text-on-primary rounded-full font-label-sm text-label-sm font-medium ml-1">
+<span class="material-symbols-outlined text-[13px] text-secondary-container">shield_person</span>
+            Mainteneuse
+          </span>
+</div>
+</div>
+<!-- Tech Stack Badges -->
+<div class="flex flex-wrap gap-1.5 pt-1">
+<span class="px-2 py-0.5 bg-surface-container rounded font-label-md text-label-md text-on-surface-variant">Python</span>
+<span class="px-2 py-0.5 bg-surface-container rounded font-label-md text-label-md text-on-surface-variant">Django</span>
+<span class="px-2 py-0.5 bg-surface-container rounded font-label-md text-label-md text-on-surface-variant">PostgreSQL</span>
+<span class="px-2 py-0.5 bg-surface-container rounded font-label-md text-label-md text-on-surface-variant">IndexedDB</span>
+</div>
+<!-- Primary Action Buttons -->
+<div class="grid grid-cols-2 gap-space-xs pt-2">
+<a class="flex items-center justify-center gap-1.5 py-2.5 px-space-sm bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-lg font-headline-sm text-headline-sm font-medium transition-colors" href="#demo">
+<span>Démo live</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-space-sm bg-secondary-container text-on-secondary-container rounded-lg font-headline-sm text-headline-sm font-semibold shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">volunteer_activism</span>
+<span>Contribuer</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Owner Quick Toolbar (Dynamic: Controlled by permission switcher) -->
+<div class="flex flex-col gap-space-xs bg-primary-container text-on-primary p-space-md rounded-xl shadow-sm transition-all duration-300" id="owner-actions-panel">
+<div class="flex items-center justify-between pb-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-container text-[18px]">settings_suggest</span>
+<span class="font-label-md text-label-md font-semibold text-on-primary uppercase tracking-wider">Pilotage Aïcha</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-primary-container">Accès direct</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs">
+<button class="flex flex-col items-center justify-center py-2 px-1 bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 rounded-lg text-center transition-colors">
+<span class="material-symbols-outlined text-secondary-container text-[20px] mb-0.5">smart_toy</span>
+<span class="font-label-sm text-label-sm font-medium leading-tight">Atelier IA</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 px-1 bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 rounded-lg text-center relative transition-colors">
+<span class="material-symbols-outlined text-on-primary text-[20px] mb-0.5">rate_review</span>
+<span class="font-label-sm text-label-sm font-medium leading-tight">Revues</span>
+<span class="absolute top-1.5 right-2 w-4 h-4 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[10px] flex items-center justify-center font-bold">1</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2 px-1 bg-secondary-container text-on-secondary-container rounded-lg text-center font-semibold shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px] mb-0.5">add_task</span>
+<span class="font-label-sm text-label-sm leading-tight">+ Tâche</span>
+</button>
+</div>
+</div>
+<!-- Horizontal Scrollable Tabs -->
+<div class="flex items-center gap-space-xs overflow-x-auto no-scrollbar py-0.5">
+<button class="px-space-md py-2 rounded-lg font-headline-sm text-headline-sm font-medium whitespace-nowrap bg-secondary-container text-on-secondary-container shadow-sm">
+      Présentation
+    </button>
+<button class="px-space-md py-2 rounded-lg font-headline-sm text-headline-sm font-medium whitespace-nowrap bg-surface-container-lowest text-on-surface-variant hover:text-on-surface">
+      Code (Gitea)
+    </button>
+<button class="flex items-center gap-1.5 px-space-md py-2 rounded-lg font-headline-sm text-headline-sm font-medium whitespace-nowrap bg-surface-container-lowest text-on-surface-variant hover:text-on-surface">
+<span>Contribuer</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm font-semibold">3</span>
+</button>
+<button class="flex items-center gap-1.5 px-space-md py-2 rounded-lg font-headline-sm text-headline-sm font-medium whitespace-nowrap bg-surface-container-lowest text-on-surface-variant hover:text-on-surface">
+<span>Équipe</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm font-semibold">2</span>
+</button>
+</div>
+<!-- Tab Content: Single Fluid Column -->
+<div class="flex flex-col space-y-space-md">
+<!-- Architecture & Resilience Overview -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Résilience terrain</h3>
+<span class="material-symbols-outlined text-secondary-container text-[20px]">offline_bolt</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+        Développé pour les coopératives agricoles du Sahel. Stock priorise le cache local PWA, synchronise les entrées/sorties via des files d'attente optimisées par paquets dès le rétablissement de la 3G/2G, et résout automatiquement les conflits multi-utilisateurs.
+      </p>
+<!-- Visual Illustration of Offline Queue -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between text-on-surface">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px] text-secondary">sync_saved_locally</span>
+</div>
+<div>
+<div class="font-body-md text-body-md font-semibold">Sync Queue v2</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Compression lz-string • Fallback SMS</div>
+</div>
+</div>
+<span class="font-label-md text-label-md text-secondary font-semibold">Actif</span>
+</div>
+</div>
+<!-- Priority Open Task Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary-fixed text-on-secondary-fixed rounded-md font-label-sm text-label-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+          Tâche prioritaire ouverte
+        </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">#42</span>
+</div>
+<div class="flex flex-col gap-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface font-semibold leading-snug">
+          Ajouter l'export CSV des mouvements de stock
+        </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Générer des rapports instantanés compatibles Excel pour les audits comptables périodiques même en mode non-connecté.
+        </p>
+</div>
+<div class="flex items-center gap-space-xs pt-1">
+<span class="px-2 py-0.5 bg-surface-container rounded font-label-sm text-label-sm text-on-surface-variant">Good first issue</span>
+<span class="px-2 py-0.5 bg-surface-container rounded font-label-sm text-label-sm text-on-surface-variant">+300 XP DevStreet</span>
+</div>
+<a class="mt-space-xs w-full flex items-center justify-between p-space-sm bg-surface-container-low hover:bg-surface-container-high rounded-lg text-on-surface font-headline-sm text-headline-sm font-semibold transition-colors group" href="#task-04">
+<span>Voir la tâche &amp; proposer son aide</span>
+<span class="material-symbols-outlined text-[20px] text-secondary group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+</div>
+<!-- Code Access & Gitea Forge -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[20px]">terminal</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Forge Gitea intégrée</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Dépôt souverain auto-hébergé</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant">deployed_code</span>
+</div>
+<div class="p-space-sm bg-primary-container text-on-primary rounded-lg font-code-inline text-code-inline flex items-center justify-between overflow-x-auto">
+<code class="text-secondary-fixed-dim">git clone https://forge.devstreet.org/aicha/stock.git</code>
+<button class="text-on-primary-container hover:text-on-primary ml-2" onclick="navigator.clipboard.writeText('git clone https://forge.devstreet.org/aicha/stock.git')">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+<a class="w-full py-3 px-space-md bg-primary text-on-primary hover:bg-on-surface active:scale-[0.99] rounded-lg font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all" href="#gitea">
+<span>Ouvrir le code sur Gitea</span>
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</a>
+</div>
+<!-- Team Section -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Équipe active</h4>
+<span class="px-2 py-0.2 bg-surface-container-high rounded text-on-surface font-label-sm text-label-sm font-semibold">2</span>
+</div>
+<button class="font-label-md text-label-md text-secondary hover:underline font-semibold">+ Inviter</button>
+</div>
+<div class="grid grid-cols-1 gap-space-sm">
+<!-- Aicha Diallo -->
+<div class="flex items-center justify-between p-space-xs rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-10 h-10 rounded-full overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Close up face profile of Aicha Diallo smiling software architect with dark braided hair and modern glasses in warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3mJxF6ut6_ZJmfEGTafQNeq55QPXTvbRL9ba92SJbcEOYr6XTbKWGHMkFGSWTjiGVQia7oPXfk66OGHbh1CunQuXyoyWHNNQSTb2TjvIRC3vG7eqvr_jD8BpZHBxwvlwBpQypEVDvSQyamipYfugbxwpa2DOGYmjRMEaKFMRIdp6SQ9nDovalYV1CXJPZKznPaIZcQX0FdKlVDWagaB6ZSOHHpxdalrlMlowQdmXd"/>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Aïcha Diallo</span>
+<span class="px-1.5 py-0.2 bg-secondary-fixed text-on-secondary-fixed rounded font-label-sm text-[10px] font-bold">LEAD</span>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">@aicha • 86 commits</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px]">more_vert</span>
+</div>
+<!-- Moussa Traore -->
+<div class="flex items-center justify-between p-space-xs rounded-lg hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-space-sm">
+<div class="relative w-10 h-10 rounded-full overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Portrait photography of Moussa Traore, young male African frontend developer with focused expression wearing dark polo shirt in a creative maker space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3tBkMpHZhzUUcfaK-a88GdqpoOPD_u7qm_hM1pAm5JMRwEpXEENPhv1OcoKTMRPWJmcpkZ5MpKu4dr4F5HHd_jP0VLhzSOE76KeBkwj-RN48J63DBFTBbjfwNaOWs3LgwtMc03BmbpSw1pu6sxs8aOsibtFpeE1lMccOkpgl_lKfP3XFb3bmKUFhzRICyIdXJR1eDrGiTCKYy0WVLAR-xXsG5ZiBSeOo2i4RGoz5O"/>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-body-md text-body-md font-semibold text-on-surface">Moussa Traoré</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high text-on-surface-variant rounded font-label-sm text-[10px] font-medium">CONTRIB</span>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">@moussa • 14 commits</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px]">more_vert</span>
+</div>
+</div>
+</div>
+<!-- Community Help Banner -->
+<a class="p-space-md rounded-xl bg-gradient-to-r from-surface-container-high to-surface-container-low flex items-center justify-between hover:shadow-sm transition-shadow group" href="#community">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-full bg-secondary-container/15 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[22px]">forum</span>
+</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Besoin d'aide ou envie d'échanger ?</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Rejoindre le canal #stock sur DevStreet Forum</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+</div>
+</div>
+<script>
+  function toggleRole(role) {
+    const ownerPanel = document.getElementById('owner-actions-panel');
+    const btnOwner = document.getElementById('btn-mode-owner');
+    const btnGuest = document.getElementById('btn-mode-guest');
+
+    if (role === 'owner') {
+      ownerPanel.classList.remove('hidden');
+      btnOwner.className = 'px-space-sm py-1 rounded font-label-sm text-label-sm font-semibold transition-all bg-primary-container text-on-primary';
+      btnGuest.className = 'px-space-sm py-1 rounded font-label-sm text-label-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface';
+    } else {
+      ownerPanel.classList.add('hidden');
+      btnGuest.className = 'px-space-sm py-1 rounded font-label-sm text-label-sm font-semibold transition-all bg-primary-container text-on-primary';
+      btnOwner.className = 'px-space-sm py-1 rounded font-label-sm text-label-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface';
+    }
+  }
+
+  let starred = true;
+  function toggleStar() {
+    const countElem = document.getElementById('star-count');
+    const iconElem = document.getElementById('star-icon');
+    let count = parseInt(countElem.innerText, 10);
+
+    if (starred) {
+      count -= 1;
+      iconElem.style.fontVariationSettings = "'FILL' 0";
+      iconElem.classList.remove('text-secondary-container');
+      iconElem.classList.add('text-on-surface-variant');
+      starred = false;
+    } else {
+      count += 1;
+      iconElem.style.fontVariationSettings = "'FILL' 1";
+      iconElem.classList.remove('text-on-surface-variant');
+      iconElem.classList.add('text-secondary-container');
+      starred = true;
+    }
+    countElem.innerText = count;
+  }
+</script></main></body></html>

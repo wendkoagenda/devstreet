@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<title>DevStreet Hub - Explorer les projets</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts: Poppins & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base { 
+      html, body { margin: 0; padding: 0; } 
+      body { overscroll-behavior: none; } 
+      main > :first-child { margin-top: 0 !important; } 
+      main > :last-child { margin-bottom: 0 !important; } 
+    } 
+    ::-webkit-scrollbar { display: none; }
+    .fill-icon { font-variation-settings: 'FILL' 1; }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {darkMode: "class", theme: {extend: {colors: {navy: {"900": "#090D16", "800": "#0F172A", "700": "#1E293B", "600": "#334155"}, accent: {DEFAULT: "#EA580C", hover: "#C2410C", light: "#FFEDD5", glow: "rgba(234, 88, 12, 0.15)"}, slate: {"50": "#F8FAFC", "100": "#F1F5F9", "200": "#E2E8F0", "300": "#CBD5E1", "400": "#94A3B8", "500": "#64748B", "600": "#475569", "700": "#334155", "800": "#1E293B", "900": "#0F172A"}, "on-tertiary": "#ffffff", background: "#fcf8fa", "surface-container-lowest": "#ffffff", surface: "#fcf8fa", "secondary-fixed-dim": "#ffb599", "secondary-container": "#fd651e", "on-secondary": "#ffffff", "outline-variant": "#c6c6cd", tertiary: "#000000", secondary: "#a73a00", "surface-container-low": "#f6f3f5", "on-surface": "#1b1b1d", "on-secondary-fixed-variant": "#7f2b00", "primary-container": "#131b2e", "inverse-primary": "#bec6e0", "surface-container": "#f0edef", "on-tertiary-container": "#98805d", "tertiary-container": "#271901", "on-secondary-fixed": "#370e00", error: "#ba1a1a", "inverse-surface": "#303032", "surface-tint": "#565e74", "surface-variant": "#e4e2e4", "on-secondary-container": "#571a00", "on-background": "#1b1b1d", primary: "#000000", "on-error-container": "#93000a", "tertiary-fixed-dim": "#dec29a", "on-primary-fixed-variant": "#3f465c", outline: "#76777d", "tertiary-fixed": "#fcdeb5", "surface-dim": "#dcd9db", "on-tertiary-fixed-variant": "#574425", "inverse-on-surface": "#f3f0f2", "on-primary-container": "#7c839b", "on-primary-fixed": "#131b2e", "surface-container-highest": "#e4e2e4", "on-surface-variant": "#45464d", "on-tertiary-fixed": "#271901", "primary-fixed": "#dae2fd", "on-primary": "#ffffff", "surface-bright": "#fcf8fa", "on-error": "#ffffff", "primary-fixed-dim": "#bec6e0", "surface-container-high": "#eae7e9", "error-container": "#ffdad6", "secondary-fixed": "#ffdbce"}, fontFamily: {sans: ["Poppins", "sans-serif"], mono: ["\"JetBrains Mono\"", "monospace"], headline: ["Poppins"], display: ["Poppins"], body: ["Poppins"], label: ["JetBrains Mono"]}, boxShadow: {card: "0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05)", "card-hover": "0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)", subtle: "0 1px 2px 0 rgba(15, 23, 42, 0.04)"}, fontSize: {}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};
+  </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased selection:bg-accent-light selection:text-accent">
+<!-- SIDEBAR GAUCHE -->
+<aside class="fixed left-0 top-0 h-screen w-[264px] bg-white border-r border-slate-200 z-40 flex flex-col justify-between p-4 shadow-sm">
+<div class="flex flex-col gap-6">
+<!-- LOGO DEVSTREET -->
+<div class="flex items-center justify-between px-2 pt-1">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-navy-800 flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-white text-[19px]">terminal</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-[18px] tracking-tight text-navy-800">DevStreet</span>
+<span class="font-mono text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 bg-accent-light text-accent rounded">Hub</span>
+</div>
+</div>
+</div>
+<!-- NAVIGATION PRINCIPALE -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium" data-path="marketplace" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">store</span>
+<span>Marketplace</span>
+</a>
+<!-- Catégorie active : DevStreet Hub -->
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium" data-path="explorer-les-projets" href="#">
+<span class="material-symbols-outlined text-[20px] text-accent">layers</span>
+<span>DevStreet Hub</span>
+</a>
+<!-- Sous-navigation imbriquée -->
+<div class="flex flex-col gap-1 pl-4 mt-1 border-l-2 border-slate-200 ml-5">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium" data-path="explorer-les-projets" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+<span>Explorer les projets</span>
+</a>
+<a class="flex items-center gap-2 px-3 py-1.5 rounded-md text-slate-500 hover:text-navy-800 hover:bg-slate-50 transition-colors text-xs" data-path="mes-projets" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+<span>Mes projets</span>
+</a>
+</div>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium mt-1" data-path="forum" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">forum</span>
+<span>Forum</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium" data-path="mon-profil" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">person</span>
+<span>Mon profil</span>
+</a>
+</nav>
+</div>
+<!-- PROFIL UTILISATEUR BAS DE SIDEBAR -->
+<div class="p-2.5 rounded-xl bg-slate-100/90 border border-slate-200/80 flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-8 h-8 rounded-full bg-navy-800 text-white flex items-center justify-center shrink-0 text-xs font-bold font-mono shadow-xs">
+          AD
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Aïcha Diallo</span>
+<span class="font-mono text-[11px] text-slate-500 truncate">@aicha</span>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<a class="p-1 text-slate-400 hover:text-navy-800 rounded hover:bg-slate-200 transition-colors" data-path="parametres" href="#" title="Paramètres">
+<span class="material-symbols-outlined text-[17px]">settings</span>
+</a>
+<a class="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-slate-200 transition-colors" data-path="deconnexion" href="#" title="Déconnexion">
+<span class="material-symbols-outlined text-[17px]">logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- CONTENU PRINCIPAL AVEC HEADER -->
+<div class="pl-[264px]">
+<!-- TOPBAR -->
+<header class="fixed top-0 left-[264px] right-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200">
+<div class="h-16 px-8 flex items-center justify-between gap-4">
+<!-- Fil d'Ariane -->
+<div class="flex items-center gap-2 text-xs font-medium text-slate-500">
+<span class="hover:text-navy-800 cursor-pointer">DevStreet Hub</span>
+<span class="text-slate-300">/</span>
+<span class="text-navy-800 font-semibold">Explorer les projets</span>
+</div>
+<!-- Recherche rapide & Notifications & Avatar -->
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+<input class="w-full h-9 pl-9 pr-9 bg-slate-50 text-slate-800 placeholder:text-slate-400 text-xs rounded-lg border border-slate-200 outline-none focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent transition-all font-sans" placeholder="Rechercher des projets, stacks..." type="search"/>
+<span class="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-[10px] text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs">⌘K</span>
+</div>
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-navy-800 hover:bg-slate-100 rounded-lg transition-colors relative" type="button">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full ring-2 ring-white"></span>
+</button>
+<div class="w-8 h-8 rounded-full bg-navy-800 flex items-center justify-center shrink-0 text-white font-mono text-xs font-bold shadow-xs">
+            AD
+          </div>
+</div>
+</div>
+</header>
+<!-- MAIN BODY -->
+<main class="w-full pt-16 bg-slate-50 min-h-screen"><div class="flex flex-col w-full">
+<!-- BANDEAU RECETTE UX & SIMULATION D'ÉTATS (QA / DEVSTREET TOOLING) -->
+<aside aria-label="Simulateur de recette UX" class="w-full bg-navy-900 text-slate-200 px-8 py-2.5 flex items-center justify-between border-b border-navy-700 shadow-md">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center justify-center w-5 h-5 rounded bg-accent/20 text-accent font-mono text-[11px] font-bold">QA</span>
+<span class="text-xs font-mono font-medium text-slate-300">Scénarios de recette fonctionnelle [02 — Créer son projet] :</span>
+</div>
+<div class="flex items-center gap-1.5" id="qa-states-bar">
+<button class="px-2.5 py-1 rounded text-[11px] font-mono transition-all text-slate-400 hover:text-white hover:bg-navy-800" id="btn-qa-draft" onclick="setScreenScenario('draft')" type="button">
+        1. Saisie en cours
+      </button>
+<span class="text-slate-600 text-xs">/</span>
+<button class="px-2.5 py-1 rounded text-[11px] font-mono transition-all text-slate-400 hover:text-white hover:bg-navy-800" id="btn-qa-prov" onclick="setScreenScenario('provisioning')" type="button">
+        2. Dépôt en préparation
+      </button>
+<span class="text-slate-600 text-xs">/</span>
+<button class="px-2.5 py-1 rounded text-[11px] font-mono transition-all bg-accent text-white font-semibold shadow-xs" id="btn-qa-ready" onclick="setScreenScenario('ready')" type="button">
+        3. Dépôt prêt &amp; commandes
+      </button>
+<span class="text-slate-600 text-xs">/</span>
+<button class="px-2.5 py-1 rounded text-[11px] font-mono transition-all text-slate-400 hover:text-red-400 hover:bg-navy-800" id="btn-qa-error" onclick="setScreenScenario('error')" type="button">
+        4. Erreur récupérable
+      </button>
+<span class="text-slate-600 text-xs">/</span>
+<button class="px-2.5 py-1 rounded text-[11px] font-mono transition-all text-slate-400 hover:text-emerald-400 hover:bg-navy-800" id="btn-qa-pub" onclick="setScreenScenario('published')" type="button">
+        5. Publication validée
+      </button>
+</div>
+</aside>
+<!-- CONTENEUR PRINCIPAL CENTRÉ & STRUCTURÉ -->
+<div class="w-full max-w-[1360px] mx-auto px-8 py-8 flex flex-col gap-8">
+<!-- EN-TÊTE DE PAGE AVEC STATUT AUTO-SAVE & HERO UTILITY -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200">
+<div class="flex flex-col gap-2">
+<nav aria-label="Fil d'Ariane local" class="flex items-center gap-2 text-xs font-mono text-slate-500">
+<span class="hover:text-navy-800 transition-colors cursor-pointer">DevStreet Hub</span>
+<span class="text-slate-300">/</span>
+<span class="hover:text-navy-800 transition-colors cursor-pointer">Projets</span>
+<span class="text-slate-300">/</span>
+<span class="text-accent font-semibold">Nouveau projet</span>
+</nav>
+<h1 class="text-2xl lg:text-3xl font-bold tracking-tight text-navy-800 font-sans flex items-center gap-3">
+          Créer et publier un projet
+          <span class="text-xs font-mono font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">v2.4-forge</span>
+</h1>
+<p class="text-sm text-slate-600 max-w-2xl font-sans">
+          Renseigne les informations de ton projet, configure son dépôt de code puis publie-le pour ouvrir la collaboration à la communauté de développeurs.
+        </p>
+</div>
+<!-- Statut de synchronisation brouillon -->
+<div class="flex items-center gap-3 self-start md:self-auto bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-card">
+<div class="flex items-center gap-2">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+</span>
+<span class="text-xs font-medium text-navy-800">Brouillon sauvegardé automatiquement</span>
+</div>
+<span class="text-slate-300">|</span>
+<span class="text-[11px] font-mono text-slate-400">14:38:12</span>
+</div>
+</header>
+<!-- STEPPER PROGRESSION 3 ÉTAPES -->
+<div class="w-full bg-white rounded-2xl border border-slate-200 shadow-card p-4 sm:p-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+<!-- Étape 1 : Présenter (Complétée / Remplie) -->
+<div class="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
+<div class="w-9 h-9 rounded-lg bg-navy-800 text-white flex items-center justify-center font-mono font-bold text-xs shrink-0 shadow-xs">
+<span class="material-symbols-outlined text-[18px] text-emerald-400">check</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Étape 1</span>
+<span class="text-xs font-mono text-slate-400">Terminé</span>
+</div>
+<span class="text-sm font-semibold text-navy-800 truncate">Présenter le projet</span>
+</div>
+</div>
+<!-- Étape 2 : Préparer le dépôt (Focus Actuel) -->
+<div class="flex items-center gap-3.5 p-3 rounded-xl bg-accent-light/40 border border-accent/30 ring-2 ring-accent/15">
+<div class="w-9 h-9 rounded-lg bg-accent text-white flex items-center justify-center font-mono font-bold text-xs shrink-0 shadow-xs">
+            02
+          </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] uppercase font-bold tracking-wider text-accent bg-white/80 px-1.5 py-0.5 rounded">Étape 2</span>
+<span class="text-xs font-mono font-semibold text-accent">En cours</span>
+</div>
+<span class="text-sm font-semibold text-navy-800 truncate">Préparer le dépôt Git</span>
+</div>
+</div>
+<!-- Étape 3 : Publier (Suivante) -->
+<div class="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50/60 border border-slate-200/70 opacity-80">
+<div class="w-9 h-9 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center font-mono font-bold text-xs shrink-0">
+            03
+          </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-slate-200/50 px-1.5 py-0.5 rounded">Étape 3</span>
+<span class="text-xs font-mono text-slate-400">À valider</span>
+</div>
+<span class="text-sm font-semibold text-slate-700 truncate">Publier &amp; ouvrir</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ZONE D'ALERTE ERREUR RÉCUPÉRABLE (Dynamique en QA 4) -->
+<div class="hidden rounded-xl bg-red-50 border border-red-200 p-4 transition-all" id="section-error-alert">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-red-600 text-[22px] shrink-0 mt-0.5">error</span>
+<div class="flex flex-col gap-1 min-w-0 flex-1">
+<span class="text-sm font-semibold text-red-900">Le nom de projet « Stock » est déjà réservé par une autre initiative</span>
+<p class="text-xs text-red-700 leading-relaxed font-sans">
+            Pour garantir l'unicité de ton espace d'adressage Gitea <code class="font-mono bg-red-100 px-1.5 py-0.5 rounded text-red-800 font-semibold">devstreet.org/aicha/stock</code>, 
+            choisis un suffixe distinct tel que <code class="font-mono text-red-800 font-semibold">stock-mobile</code> ou <code class="font-mono text-red-800 font-semibold">stock-suite</code>.
+          </p>
+</div>
+<button class="text-red-500 hover:text-red-800 p-1" onclick="document.getElementById('section-error-alert').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<!-- CORPS PRINCIPAL DU WIZARD : GRILLE 12 COLONNES (8 + 4) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- COLONNE GAUCHE (8 COLONNES) : FORMULAIRE & BLOCS TECHNIQUES GITEA -->
+<div class="lg:col-span-8 flex flex-col gap-8">
+<!-- BLOC ÉTAPE 1 : PRÉSENTER LE PROJET (COMPLÉTÉ) -->
+<section aria-labelledby="step-1-title" class="bg-white rounded-2xl border border-slate-200 shadow-card p-6 sm:p-7 flex flex-col gap-6">
+<div class="flex items-center justify-between pb-4 border-b border-slate-100">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-md bg-slate-100 text-navy-800 flex items-center justify-center font-mono font-bold text-xs">
+                1
+              </div>
+<h2 class="text-base font-bold text-navy-800" id="step-1-title">Présentation générale du projet</h2>
+</div>
+<span class="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+<span class="material-symbols-outlined text-[14px]">done</span> Validé
+            </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+<!-- Nom du projet -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-slate-700" for="project-name">Nom du projet <span class="text-accent">*</span></label>
+<input class="h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-navy-800 focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent outline-none font-sans" id="project-name" type="text" value="Stock"/>
+</div>
+<!-- Slug généré / URL preview -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-slate-700">Identifiant canonique (Slug)</label>
+<div class="h-10 px-3 bg-slate-100/80 border border-slate-200 rounded-lg flex items-center justify-between font-mono text-xs text-slate-700">
+<span class="truncate">devstreet.org/<span class="text-navy-900 font-bold">aicha</span>/<span class="text-accent font-bold">stock</span></span>
+<button class="text-slate-400 hover:text-navy-800 p-1 rounded hover:bg-slate-200 transition-colors" onclick="navigator.clipboard.writeText('https://devstreet.org/aicha/stock')" title="Copier l'identifiant" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Résumé / Problème résolu -->
+<div class="sm:col-span-2 flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-slate-700" for="project-summary">Problème résolu &amp; promesse (résumé court) <span class="text-accent">*</span></label>
+<input class="h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm text-slate-800 focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent outline-none font-sans" id="project-summary" type="text" value="Outil de gestion de stock et de traçabilité pour petits commerces et grossistes de quartier, adapté aux connexions intermittentes."/>
+<span class="text-[11px] font-mono text-slate-400 text-right">106 / 140 caractères</span>
+</div>
+<!-- Description détaillée -->
+<div class="sm:col-span-2 flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-slate-700" for="project-desc">Description détaillée &amp; contexte opérationnel</label>
+<textarea class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs leading-relaxed text-slate-800 focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent outline-none font-sans resize-none" id="project-desc" rows="3">Stock fournit un système d'inventaire résilient pensé pour le terrain. L'application intègre une architecture local-first : encaissement et saisie des entrées/sorties en mode déconnecté, puis synchronisation différentielle dès que la 3G/4G redevient disponible via une file d'attente PostgreSQL asynchrone.</textarea>
+</div>
+<!-- Technologies du catalogue -->
+<div class="sm:col-span-2 flex flex-col gap-2">
+<label class="text-xs font-semibold text-slate-700 flex items-center justify-between">
+<span>Technologies clés (Catalogue DevStreet)</span>
+<span class="text-[11px] font-mono text-slate-400 font-normal">3 technologies sélectionnées</span>
+</label>
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-md font-mono text-xs text-navy-800 font-medium">
+<span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                  Python
+                  <button class="hover:text-red-500 transition-colors ml-1" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-md font-mono text-xs text-navy-800 font-medium">
+<span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                  Django
+                  <button class="hover:text-red-500 transition-colors ml-1" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-md font-mono text-xs text-navy-800 font-medium">
+<span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  PostgreSQL
+                  <button class="hover:text-red-500 transition-colors ml-1" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</span>
+<!-- Ajouter une stack -->
+<button class="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-dashed border-slate-300 text-xs font-mono text-slate-500 hover:text-navy-800 hover:border-slate-400 hover:bg-slate-50 transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">add</span> Ajouter une stack
+                </button>
+</div>
+</div>
+<!-- Licence & Démo -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-slate-700" for="project-license">Licence open-source</label>
+<div class="relative">
+<select class="w-full h-10 pl-3.5 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-navy-800 focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent outline-none appearance-none" id="project-license">
+<option selected="">MIT License (Recommandée)</option>
+<option>Apache 2.0</option>
+<option>GNU GPL v3</option>
+<option>Mozilla Public License 2.0</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-slate-700" for="project-demo">Lien de démonstration live (Optionnel)</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">link</span>
+<input class="w-full h-10 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-navy-800 focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent outline-none" id="project-demo" type="url" value="https://stock-demo.devstreet.org"/>
+</div>
+</div>
+</div>
+</section>
+<!-- BLOC ÉTAPE 2 : PRÉPARER LE DÉPÔT GIT (FOCUS PRINCIPAL & FORGE GITEA) -->
+<section aria-labelledby="step-2-title" class="bg-white rounded-2xl border-2 border-accent/40 shadow-card-hover p-6 sm:p-7 flex flex-col gap-6 relative overflow-hidden">
+<!-- Subtilité lumineuse d'accentuation DevStreet Kinetic -->
+<div class="absolute -right-20 -top-20 w-48 h-48 bg-accent/10 rounded-full blur-3xl pointer-events-none"></div>
+<!-- Entête d'étape avec badge Gitea -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-md bg-accent text-white flex items-center justify-center font-mono font-bold text-xs shadow-xs">
+                2
+              </div>
+<div class="flex flex-col">
+<h2 class="text-base font-bold text-navy-800 flex items-center gap-2" id="step-2-title">
+                  Préparer le dépôt de code
+                  <span class="material-symbols-outlined text-accent text-[18px]">bolt</span>
+</h2>
+<span class="text-xs text-slate-500 font-sans">Forge souveraine intégrée et gérée par DevStreet (Gitea Engine)</span>
+</div>
+</div>
+<!-- Badge statut de la forge -->
+<div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-mono text-xs font-medium self-start sm:self-auto" id="forge-status-badge">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Dépôt Gitea prêt &amp; provisionné
+            </div>
+</div>
+<!-- URL Git du dépôt -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-semibold text-slate-700 flex items-center justify-between">
+<span>URL Git distante (Remote origin)</span>
+<span class="text-[11px] font-mono text-slate-500">Protocole HTTPS sécurisé</span>
+</label>
+<div class="flex items-center gap-2">
+<div class="flex-1 h-11 px-3.5 bg-navy-900 border border-navy-700 rounded-lg flex items-center justify-between text-white font-mono text-xs sm:text-sm shadow-inner overflow-hidden">
+<span class="text-slate-400 select-all truncate">
+                  https://git.devstreet.org/<span class="text-emerald-400 font-bold">aicha</span>/<span class="text-accent font-bold">stock.git</span>
+</span>
+<span class="hidden sm:inline-block text-[11px] text-slate-500 uppercase tracking-widest pl-2">Gitea</span>
+</div>
+<button class="h-11 px-4 bg-slate-100 hover:bg-slate-200 text-navy-800 font-mono text-xs font-semibold rounded-lg border border-slate-200 transition-colors flex items-center gap-2 shrink-0" onclick="copyRepoUrl(this)" type="button">
+<span class="material-symbols-outlined text-[17px]">content_copy</span>
+<span class="copy-label">Copier l'URL</span>
+</button>
+</div>
+</div>
+<!-- Console Terminal de commandes Git d'initialisation -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-slate-500 text-[16px]">terminal</span>
+                Initialiser et pousser ton premier commit
+              </span>
+<button class="text-xs font-mono text-accent hover:text-accent-hover font-medium flex items-center gap-1" onclick="copyCliCommands(this)" type="button">
+<span class="material-symbols-outlined text-[15px]">code</span>
+<span class="copy-cli-text">Copier les commandes</span>
+</button>
+</div>
+<!-- Fenêtre de code Dark Mode (#0F172A) avec syntaxe JetBrains Mono -->
+<div class="w-full rounded-xl bg-navy-900 border border-navy-700 p-4 font-mono text-xs text-slate-200 shadow-md flex flex-col gap-2">
+<div class="flex items-center justify-between pb-2 border-b border-navy-700/80 text-[11px] text-slate-400">
+<span class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+<span class="ml-2 text-slate-400 font-medium">bash — terminal local</span>
+</span>
+<span class="text-slate-500">git v2.4+</span>
+</div>
+<div class="overflow-x-auto py-1 leading-relaxed" id="git-commands-block">
+<div class="text-slate-400"># 1. Se placer à la racine de ton projet</div>
+<div><span class="text-accent font-bold">$</span> <span class="text-white">git init</span></div>
+<div><span class="text-accent font-bold">$</span> <span class="text-white">git remote add origin https://git.devstreet.org/aicha/stock.git</span></div>
+<div class="text-slate-400 mt-1"># 2. Indexer et commiter les fichiers sources</div>
+<div><span class="text-accent font-bold">$</span> <span class="text-white">git add .</span></div>
+<div><span class="text-accent font-bold">$</span> <span class="text-white">git commit -m <span class="text-emerald-300">"feat: initial commit - structure de base Stock"</span></span></div>
+<div class="text-slate-400 mt-1"># 3. Publier la branche principale sur la forge</div>
+<div><span class="text-accent font-bold">$</span> <span class="text-white">git branch -M main</span></div>
+<div><span class="text-accent font-bold">$</span> <span class="text-white">git push -u origin main</span></div>
+</div>
+</div>
+</div>
+<!-- AVERTISSEMENT DE SÉCURITÉ ESSENTIEL -->
+<div class="rounded-xl bg-amber-50/80 border border-amber-200 p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-amber-600 text-[20px] shrink-0 mt-0.5">shield</span>
+<div class="flex flex-col gap-0.5 text-xs text-amber-900 leading-relaxed font-sans">
+<strong class="font-semibold text-amber-950">Règle de sécurité stricte : Aucune information sensible</strong>
+<span>
+                Ne commite jamais de secrets de production, fichiers <code class="font-mono bg-amber-100 px-1 py-0.5 rounded text-amber-950 font-semibold">.env</code>, jetons d'accès ou clés d'API tierces. 
+                Pense à vérifier ton fichier <code class="font-mono bg-amber-100 px-1 py-0.5 rounded text-amber-950 font-semibold">.gitignore</code> avant d'exécuter le push.
+              </span>
+</div>
+</div>
+<!-- PANNEAU DIDACTIQUE : PREMIÈRE CONNEXION GIT / IDENTIFIANTS -->
+<div class="rounded-xl bg-slate-50 border border-slate-200 p-4 flex items-start gap-3.5">
+<div class="w-8 h-8 rounded-lg bg-navy-800 text-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">key</span>
+</div>
+<div class="flex flex-col gap-1 text-xs">
+<span class="font-semibold text-navy-800">Comment t'authentifier lors du <code class="font-mono text-accent font-bold">git push</code> ?</span>
+<p class="text-slate-600 font-sans leading-relaxed">
+                Utilise ton nom d'utilisateur DevStreet <span class="font-mono font-bold text-navy-900 bg-white px-1.5 py-0.5 rounded border border-slate-200">@aicha</span> et ton mot de passe de forge DevStreet. 
+                Pour éviter de le ressaisir à chaque transmission, nous conseillons d'ajouter ta clé SSH publique dans ton profil ou d'activer le credential-helper.
+              </p>
+</div>
+</div>
+</section>
+<!-- BLOC ÉTAPE 3 : PUBLICATION & CONSENTEMENT -->
+<section aria-labelledby="step-3-title" class="bg-white rounded-2xl border border-slate-200 shadow-card p-6 sm:p-7 flex flex-col gap-6">
+<div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+<div class="w-7 h-7 rounded-md bg-slate-100 text-navy-800 flex items-center justify-center font-mono font-bold text-xs">
+              3
+            </div>
+<div>
+<h2 class="text-base font-bold text-navy-800" id="step-3-title">Finaliser et publier le projet</h2>
+<p class="text-xs text-slate-500">Dernière étape avant la mise en avant dans le DevStreet Hub public</p>
+</div>
+</div>
+<!-- Notification d'impact communautaire -->
+<div class="rounded-xl bg-blue-50/70 border border-blue-200 p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-blue-600 text-[20px] shrink-0 mt-0.5">public</span>
+<div class="flex flex-col gap-0.5 text-xs text-blue-950 font-sans leading-relaxed">
+<span class="font-semibold text-blue-900">Visibilité publique panafricaine</span>
+<span>
+                En publiant ton projet, il deviendra immédiatement indexable dans la recherche globale, référencé avec son dépôt Git, et ouvert aux demandes de contributions, signalements d'issues et revues de code par les pairs.
+              </span>
+</div>
+</div>
+<!-- Case de confirmation de non-divulgation de secrets -->
+<label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-50 cursor-pointer transition-colors">
+<input checked="" class="mt-0.5 w-4 h-4 rounded text-accent focus:ring-accent border-slate-300 transition" id="check-safety" type="checkbox"/>
+<span class="text-xs text-slate-700 leading-relaxed font-sans">
+<strong class="font-semibold text-navy-800">Confirmation d'intégrité :</strong> 
+              J'ai vérifié que le code source déposé sur <code class="font-mono font-semibold text-navy-900">git.devstreet.org/aicha/stock</code> est exempt de secrets d'authentification, tokens privés et données personnelles confidentielles.
+            </span>
+</label>
+<!-- BOUTONS D'ACTION BAS DE PAGE -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
+<button class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:text-navy-800 hover:bg-slate-50 font-sans text-xs font-semibold transition-all flex items-center justify-center gap-2" onclick="saveDraftNotification()" type="button">
+<span class="material-symbols-outlined text-[17px] text-slate-400">save</span>
+              Enregistrer comme brouillon
+            </button>
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<button class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-navy-800 hover:bg-navy-700 text-white font-sans text-xs font-semibold shadow-card hover:shadow-card-hover transition-all flex items-center justify-center gap-2 group" type="button">
+<span>Publier le projet</span>
+<span class="material-symbols-outlined text-[16px] text-accent group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<!-- COLONNE DROITE (4 COLONNES) : RÉCAPITULATIF, PROPRIÉTAIRE & APERÇU LIVE -->
+<aside aria-label="Récapitulatif du projet" class="lg:col-span-4 flex flex-col gap-6 sticky top-24">
+<!-- CARTE APERÇU FICHE PROJET (CE QUE VOIENT LES AUTRES DEVS) -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-card p-5 flex flex-col gap-4">
+<div class="flex items-center justify-between pb-3 border-b border-slate-100">
+<span class="font-mono text-[11px] uppercase tracking-wider font-bold text-slate-500">Aperçu fiche DevStreet</span>
+<span class="inline-flex items-center gap-1 text-[11px] font-mono text-accent bg-accent-light px-2 py-0.5 rounded font-semibold">Live Preview</span>
+</div>
+<!-- Titre & Auteur -->
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-xl bg-navy-800 text-white flex items-center justify-center font-mono font-bold text-sm shrink-0">
+              ST
+            </div>
+<div class="flex flex-col min-w-0">
+<h3 class="text-sm font-bold text-navy-800 truncate">Stock</h3>
+<span class="text-xs text-slate-500 font-mono">par <strong class="text-navy-900 font-semibold">@aicha</strong></span>
+</div>
+</div>
+<p class="text-xs text-slate-600 line-clamp-3 font-sans leading-relaxed">
+            Outil de gestion de stock et de traçabilité pour petits commerces et grossistes de quartier, adapté aux connexions intermittentes.
+          </p>
+<!-- Badges de stacks -->
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-mono">Python</span>
+<span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-mono">Django</span>
+<span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-mono">PostgreSQL</span>
+</div>
+<!-- Métriques & Licence -->
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-mono text-slate-500">
+<span class="flex items-center gap-1 text-slate-600">
+<span class="material-symbols-outlined text-[15px] text-slate-400">policy</span>
+              MIT
+            </span>
+<span class="flex items-center gap-1 text-slate-600">
+<span class="material-symbols-outlined text-[15px] text-slate-400">star</span>
+              0 étoiles
+            </span>
+<span class="flex items-center gap-1 text-emerald-600 font-semibold">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+              Forge sync
+            </span>
+</div>
+</div>
+<!-- FICHE RÉCAPITULATIVE DE CONFIGURATION -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-card p-5 flex flex-col gap-4">
+<h4 class="text-xs font-bold font-mono uppercase tracking-wider text-slate-500">Paramètres de publication</h4>
+<dl class="flex flex-col gap-3 text-xs">
+<div class="flex items-center justify-between py-1.5 border-b border-slate-100">
+<dt class="text-slate-500">Propriétaire</dt>
+<dd class="font-medium text-navy-800 flex items-center gap-1.5">
+<span class="w-5 h-5 rounded-full bg-navy-800 text-white font-mono text-[10px] flex items-center justify-center font-bold">AD</span>
+                Aïcha Diallo (@aicha)
+              </dd>
+</div>
+<div class="flex items-center justify-between py-1.5 border-b border-slate-100">
+<dt class="text-slate-500">Visibilité initiale</dt>
+<dd class="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-mono text-[11px]">
+                Public (Open Source)
+              </dd>
+</div>
+<div class="flex items-center justify-between py-1.5 border-b border-slate-100">
+<dt class="text-slate-500">Forge de code</dt>
+<dd class="font-mono text-slate-800 text-[11px] font-medium flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                Gitea DevStreet
+              </dd>
+</div>
+<div class="flex items-center justify-between py-1.5">
+<dt class="text-slate-500">Branche principale</dt>
+<dd class="font-mono text-slate-800 text-[11px] font-semibold">main</dd>
+</div>
+</dl>
+</div>
+<!-- ASSISTANCE & BONNES PRATIQUES -->
+<div class="bg-slate-100/80 rounded-2xl border border-slate-200 p-5 flex flex-col gap-3">
+<div class="flex items-center gap-2 text-navy-800 font-semibold text-xs">
+<span class="material-symbols-outlined text-accent text-[18px]">help</span>
+            Besoin d'un coup de main ?
+          </div>
+<p class="text-xs text-slate-600 leading-relaxed font-sans">
+            Consulte le <a class="text-accent underline font-medium hover:text-accent-hover" href="#">Guide de publication DevStreet</a> pour configurer ton CI/CD, structurer un README d'impact ou inviter des co-mainteneurs régionaux.
+          </p>
+</div>
+</aside>
+</div>
+</div>
+<!-- SCRIPT LOGIQUE DES ACTIONS ET SCÉNARIOS DE RECETTE QA -->
+<script>
+    // Copie de l'URL du dépôt Git
+    function copyRepoUrl(button) {
+      const url = 'https://git.devstreet.org/aicha/stock.git';
+      navigator.clipboard.writeText(url).then(() => {
+        const label = button.querySelector('.copy-label');
+        const icon = button.querySelector('.material-symbols-outlined');
+        const originalText = label.textContent;
+        
+        label.textContent = 'URL copiée !';
+        icon.textContent = 'done';
+        button.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+
+        setTimeout(() => {
+          label.textContent = originalText;
+          icon.textContent = 'content_copy';
+          button.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
+        }, 2200);
+      });
+    }
+
+    // Copie du bloc de commandes Git
+    function copyCliCommands(button) {
+      const cliBlock = `git init
+git remote add origin https://git.devstreet.org/aicha/stock.git
+git add .
+git commit -m "feat: initial commit - structure de base Stock"
+git branch -M main
+git push -u origin main`;
+
+      navigator.clipboard.writeText(cliBlock).then(() => {
+        const textSpan = button.querySelector('.copy-cli-text');
+        textSpan.textContent = 'Commandes copiées !';
+        button.classList.add('text-emerald-600');
+        
+        setTimeout(() => {
+          textSpan.textContent = 'Copier les commandes';
+          button.classList.remove('text-emerald-600');
+        }, 2200);
+      });
+    }
+
+    // Toast discret d'enregistrement de brouillon
+    function saveDraftNotification() {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'fixed bottom-6 right-6 z-50 bg-navy-900 text-white px-4 py-3 rounded-xl border border-navy-700 shadow-xl flex items-center gap-3 font-sans text-xs animate-bounce';
+      alertDiv.innerHTML = `
+        <span class="material-symbols-outlined text-emerald-400 text-[18px]">check_circle</span>
+        <span>Brouillon enregistré avec succès sur DevStreet Hub</span>
+      `;
+      document.body.appendChild(alertDiv);
+      setTimeout(() => alertDiv.remove(), 2600);
+    }
+
+    // Commutateur de simulation d'états de recette (Scénarios 1 à 5)
+    function setScreenScenario(scenario) {
+      const errorBox = document.getElementById('section-error-alert');
+      const badgeForge = document.getElementById('forge-status-badge');
+      const commandsBlock = document.getElementById('git-commands-block');
+      
+      const btnDraft = document.getElementById('btn-qa-draft');
+      const btnProv = document.getElementById('btn-qa-prov');
+      const btnReady = document.getElementById('btn-qa-ready');
+      const btnError = document.getElementById('btn-qa-error');
+      const btnPub = document.getElementById('btn-qa-pub');
+
+      const allBtns = [btnDraft, btnProv, btnReady, btnError, btnPub];
+      allBtns.forEach(btn => {
+        btn.className = "px-2.5 py-1 rounded text-[11px] font-mono transition-all text-slate-400 hover:text-white hover:bg-navy-800";
+      });
+
+      errorBox.classList.add('hidden');
+
+      if (scenario === 'draft') {
+        btnDraft.className = "px-2.5 py-1 rounded text-[11px] font-mono transition-all bg-accent text-white font-semibold shadow-xs";
+        badgeForge.className = "inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-full font-mono text-xs font-medium";
+        badgeForge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span> En attente de finalisation';
+      } else if (scenario === 'provisioning') {
+        btnProv.className = "px-2.5 py-1 rounded text-[11px] font-mono transition-all bg-amber-500 text-white font-semibold shadow-xs";
+        badgeForge.className = "inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full font-mono text-xs font-medium";
+        badgeForge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 animate-spin"></span> Provisionnement Gitea en cours...';
+      } else if (scenario === 'ready') {
+        btnReady.className = "px-2.5 py-1 rounded text-[11px] font-mono transition-all bg-accent text-white font-semibold shadow-xs";
+        badgeForge.className = "inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-mono text-xs font-medium self-start sm:self-auto";
+        badgeForge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Dépôt Gitea prêt & provisionné';
+      } else if (scenario === 'error') {
+        btnError.className = "px-2.5 py-1 rounded text-[11px] font-mono transition-all bg-red-600 text-white font-semibold shadow-xs";
+        errorBox.classList.remove('hidden');
+        badgeForge.className = "inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-800 border border-red-200 rounded-full font-mono text-xs font-medium";
+        badgeForge.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> Conflit d\'identifiant détecté';
+      } else if (scenario === 'published') {
+        btnPub.className = "px-2.5 py-1 rounded text-[11px] font-mono transition-all bg-emerald-600 text-white font-semibold shadow-xs";
+        saveDraftNotification();
+      }
+    }
+  </script>
+</div></main>
+</div>
+<!-- Script d'interaction locale : Étoiles et simulation d'états -->
+<script>
+    function toggleStar(btn) {
+      const countEl = btn.querySelector('.star-count');
+      const icon = btn.querySelector('.material-symbols-outlined');
+      let current = parseInt(btn.getAttribute('data-count'), 10);
+      const isStarred = btn.classList.contains('starred');
+
+      if (isStarred) {
+        current -= 1;
+        btn.classList.remove('starred');
+        icon.classList.remove('fill-icon', 'text-accent');
+        icon.classList.add('text-slate-400');
+      } else {
+        current += 1;
+        btn.classList.add('starred');
+        icon.classList.add('fill-icon', 'text-accent');
+        icon.classList.remove('text-slate-400');
+      }
+
+      btn.setAttribute('data-count', current);
+      countEl.textContent = current;
+    }
+
+    function switchState(state) {
+      const grid = document.getElementById('projects-grid');
+      const empty = document.getElementById('simulated-empty');
+      const error = document.getElementById('simulated-error');
+
+      const btnGrid = document.getElementById('btn-state-grid');
+      const btnEmpty = document.getElementById('btn-state-empty');
+      const btnError = document.getElementById('btn-state-error');
+
+      // Reset tabs style
+      [btnGrid, btnEmpty, btnError].forEach(b => {
+        b.className = "h-7 px-3 rounded-md font-mono text-xs bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors";
+      });
+
+      if (state === 'grid') {
+        grid.classList.remove('hidden');
+        empty.classList.add('hidden');
+        error.classList.add('hidden');
+        btnGrid.className = "h-7 px-3 rounded-md font-mono text-xs bg-navy-800 text-white font-semibold shadow-xs transition-colors";
+      } else if (state === 'empty') {
+        grid.classList.add('hidden');
+        empty.classList.remove('hidden');
+        error.classList.add('hidden');
+        btnEmpty.className = "h-7 px-3 rounded-md font-mono text-xs bg-navy-800 text-white font-semibold shadow-xs transition-colors";
+      } else if (state === 'error') {
+        grid.classList.add('hidden');
+        empty.classList.add('hidden');
+        error.classList.remove('hidden');
+        btnError.className = "h-7 px-3 rounded-md font-mono text-xs bg-red-600 text-white font-semibold shadow-xs transition-colors";
+      }
+    }
+  </script>
+</body></html>

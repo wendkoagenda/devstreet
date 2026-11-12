@@ -49,3 +49,17 @@ Pour un client HTTP, `GET /api/v1/project-evidence/{id}` réalise la vérificati
 ## Droits Git distincts des rôles métier
 
 `ForgeIdentity` est un pointeur technique vers le compte de forge. Les droits de push sont ceux de Gitea. Ajouter un mainteneur dans Django permet la gestion de contenu et la revue, sans lui accorder silencieusement un accès Git. L’ouverture d’une PR et l’attribution de droits Git avancés passent par la forge pour ce MVP.
+
+## Provisionnement d’identité Gitea
+
+Gitea ne fournit ni clé d’idempotence ni champ personnalisé à la création d’utilisateur (`POST /admin/users`). Le login dérivé de l’ID Django (`devstreet-user-{pk}`) est abandonné : il collisionne dès qu’une forge est partagée ou qu’un compte historique réutilise le même motif.
+
+Mécanisme retenu :
+
+1. Réserver localement une `ForgeIdentity` en statut `pending` avec un `provisioning_key` (UUID) et un login opaque `ds-{instance}-{12 hex}` (`DEVSTREET_HUB_INSTANCE_ID` ou empreinte de `SECRET_KEY`).
+2. Créer le compte distant, puis écrire la preuve `devstreet-hub:pk=<uuid>` dans `description` via `PATCH /admin/users/{username}` (seul champ admin durable sans authentification externe).
+3. Confirmer la liaison (`gitea_user_id`, statut `linked`) uniquement si la preuve correspond. Login ou e-mail seuls ne suffisent jamais à adopter un compte préexistant.
+4. Réutilisation : résolution par `gitea_user_id` (`GET /users/search?uid=`). Compte manquant ou identité divergente → statut `conflict`, réparation administrative.
+5. Reprise après timeout / échec Django : même login et même clé ; si le compte distant porte déjà la preuve, liaison sans doublon et réémission explicite d’un secret (`password_recovery_required`), jamais de reset silencieux d’un compte tiers.
+
+Le secret initial n’est jamais journalisé ni stocké en base. `POST /api/v1/forge-access` le renvoie au plus une fois par création ou reprise contrôlée.

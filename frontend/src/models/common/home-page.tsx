@@ -105,7 +105,7 @@ export default function HomePage() {
                     <p
                       className={`text-sm ${
                         stat.change.startsWith("+")
-                          ? "text-green-600 dark:text-green-400"
+                          ? "text-success"
                           : "text-destructive"
                       }`}
                     >
@@ -181,7 +181,7 @@ export default function HomePage() {
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h4 className="font-medium text-sm">Statut</h4>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-success rounded-full"></div>
                     <span className="text-sm font-medium">En ligne</span>
                   </div>
                 </div>

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_dashboard" name="shell-type"/>
+<title>DevStreet Hub - Explorer les projets</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts: Poppins & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base { 
+      html, body { margin: 0; padding: 0; } 
+      body { overscroll-behavior: none; } 
+      main > :first-child { margin-top: 0 !important; } 
+      main > :last-child { margin-bottom: 0 !important; } 
+    } 
+    ::-webkit-scrollbar { display: none; }
+    .fill-icon { font-variation-settings: 'FILL' 1; }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {darkMode: "class", theme: {extend: {colors: {navy: {"900": "#090D16", "800": "#0F172A", "700": "#1E293B", "600": "#334155"}, accent: {DEFAULT: "#EA580C", hover: "#C2410C", light: "#FFEDD5", glow: "rgba(234, 88, 12, 0.15)"}, slate: {"50": "#F8FAFC", "100": "#F1F5F9", "200": "#E2E8F0", "300": "#CBD5E1", "400": "#94A3B8", "500": "#64748B", "600": "#475569", "700": "#334155", "800": "#1E293B", "900": "#0F172A"}, "on-tertiary": "#ffffff", background: "#fcf8fa", "surface-container-lowest": "#ffffff", surface: "#fcf8fa", "secondary-fixed-dim": "#ffb599", "secondary-container": "#fd651e", "on-secondary": "#ffffff", "outline-variant": "#c6c6cd", tertiary: "#000000", secondary: "#a73a00", "surface-container-low": "#f6f3f5", "on-surface": "#1b1b1d", "on-secondary-fixed-variant": "#7f2b00", "primary-container": "#131b2e", "inverse-primary": "#bec6e0", "surface-container": "#f0edef", "on-tertiary-container": "#98805d", "tertiary-container": "#271901", "on-secondary-fixed": "#370e00", error: "#ba1a1a", "inverse-surface": "#303032", "surface-tint": "#565e74", "surface-variant": "#e4e2e4", "on-secondary-container": "#571a00", "on-background": "#1b1b1d", primary: "#000000", "on-error-container": "#93000a", "tertiary-fixed-dim": "#dec29a", "on-primary-fixed-variant": "#3f465c", outline: "#76777d", "tertiary-fixed": "#fcdeb5", "surface-dim": "#dcd9db", "on-tertiary-fixed-variant": "#574425", "inverse-on-surface": "#f3f0f2", "on-primary-container": "#7c839b", "on-primary-fixed": "#131b2e", "surface-container-highest": "#e4e2e4", "on-surface-variant": "#45464d", "on-tertiary-fixed": "#271901", "primary-fixed": "#dae2fd", "on-primary": "#ffffff", "surface-bright": "#fcf8fa", "on-error": "#ffffff", "primary-fixed-dim": "#bec6e0", "surface-container-high": "#eae7e9", "error-container": "#ffdad6", "secondary-fixed": "#ffdbce"}, fontFamily: {sans: ["Poppins", "sans-serif"], mono: ["\"JetBrains Mono\"", "monospace"], headline: ["Poppins"], display: ["Poppins"], body: ["Poppins"], label: ["JetBrains Mono"]}, boxShadow: {card: "0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05)", "card-hover": "0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)", subtle: "0 1px 2px 0 rgba(15, 23, 42, 0.04)"}, fontSize: {}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};
+  </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased selection:bg-accent-light selection:text-accent">
+<!-- SIDEBAR GAUCHE -->
+<aside class="fixed left-0 top-0 h-screen w-[264px] bg-white border-r border-slate-200 z-40 flex flex-col justify-between p-4 shadow-sm">
+<div class="flex flex-col gap-6">
+<!-- LOGO DEVSTREET -->
+<div class="flex items-center justify-between px-2 pt-1">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-navy-800 flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-white text-[19px]">terminal</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-[18px] tracking-tight text-navy-800">DevStreet</span>
+<span class="font-mono text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 bg-accent-light text-accent rounded">Hub</span>
+</div>
+</div>
+</div>
+<!-- NAVIGATION PRINCIPALE -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium" data-path="marketplace" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">store</span>
+<span>Marketplace</span>
+</a>
+<!-- Catégorie active : DevStreet Hub -->
+<div class="flex flex-col gap-1">
+<a aria-current="page" class="flex items-center gap-3 px-3 py-2 bg-navy-800 text-white font-medium rounded-lg shadow-sm" data-path="explorer-les-projets" href="#">
+<span class="material-symbols-outlined text-[20px] text-accent">layers</span>
+<span>DevStreet Hub</span>
+</a>
+<!-- Sous-navigation imbriquée -->
+<div class="flex flex-col gap-1 pl-4 mt-1 border-l-2 border-slate-200 ml-5">
+<a aria-current="page" class="flex items-center gap-2 px-3 py-1.5 rounded-md text-navy-800 font-semibold bg-slate-100 text-xs" data-path="explorer-les-projets" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+<span>Explorer les projets</span>
+</a>
+<a class="flex items-center gap-2 px-3 py-1.5 rounded-md text-slate-500 hover:text-navy-800 hover:bg-slate-50 transition-colors text-xs" data-path="mes-projets" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+<span>Mes projets</span>
+</a>
+</div>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium mt-1" data-path="forum" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">forum</span>
+<span>Forum</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors text-sm font-medium" data-path="mon-profil" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400">person</span>
+<span>Mon profil</span>
+</a>
+</nav>
+</div>
+<!-- PROFIL UTILISATEUR BAS DE SIDEBAR -->
+<div class="p-2.5 rounded-xl bg-slate-100/90 border border-slate-200/80 flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-8 h-8 rounded-full bg-navy-800 text-white flex items-center justify-center shrink-0 text-xs font-bold font-mono shadow-xs">
+          AD
+        </div>
+<div class="flex flex-col min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Aïcha Diallo</span>
+<span class="font-mono text-[11px] text-slate-500 truncate">@aicha</span>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<a class="p-1 text-slate-400 hover:text-navy-800 rounded hover:bg-slate-200 transition-colors" data-path="parametres" href="#" title="Paramètres">
+<span class="material-symbols-outlined text-[17px]">settings</span>
+</a>
+<a class="p-1 text-slate-400 hover:text-red-600 rounded hover:bg-slate-200 transition-colors" data-path="deconnexion" href="#" title="Déconnexion">
+<span class="material-symbols-outlined text-[17px]">logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- CONTENU PRINCIPAL AVEC HEADER -->
+<div class="pl-[264px]">
+<!-- TOPBAR -->
+<header class="fixed top-0 left-[264px] right-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200">
+<div class="h-16 px-8 flex items-center justify-between gap-4">
+<!-- Fil d'Ariane -->
+<div class="flex items-center gap-2 text-xs font-medium text-slate-500">
+<span class="hover:text-navy-800 cursor-pointer">DevStreet Hub</span>
+<span class="text-slate-300">/</span>
+<span class="text-navy-800 font-semibold">Explorer les projets</span>
+</div>
+<!-- Recherche rapide & Notifications & Avatar -->
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+<input class="w-full h-9 pl-9 pr-9 bg-slate-50 text-slate-800 placeholder:text-slate-400 text-xs rounded-lg border border-slate-200 outline-none focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent transition-all font-sans" placeholder="Rechercher des projets, stacks..." type="search"/>
+<span class="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono text-[10px] text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs">⌘K</span>
+</div>
+<button aria-label="Notifications" class="p-2 text-slate-500 hover:text-navy-800 hover:bg-slate-100 rounded-lg transition-colors relative" type="button">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full ring-2 ring-white"></span>
+</button>
+<div class="w-8 h-8 rounded-full bg-navy-800 flex items-center justify-center shrink-0 text-white font-mono text-xs font-bold shadow-xs">
+            AD
+          </div>
+</div>
+</div>
+</header>
+<!-- MAIN BODY -->
+<main class="w-full pt-16 bg-slate-50 min-h-screen">
+<div class="max-w-7xl mx-auto p-8">
+<div class="flex flex-col w-full">
+<!-- EN-TÊTE DE SECTION & PITCH DE MISSION -->
+<section class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="max-w-3xl">
+<div class="flex items-center gap-2 mb-2">
+<span class="font-mono text-[11px] font-semibold tracking-wider text-accent uppercase bg-accent-light/80 px-2 py-0.5 rounded border border-orange-200">
+                  DevStreet Repository Registry
+                </span>
+<span class="font-mono text-xs text-slate-400">• Pan-African Open Source</span>
+</div>
+<h1 class="text-2xl sm:text-3xl font-bold text-navy-800 tracking-tight font-sans">
+                Sur quoi veux-tu construire avec d’autres ?
+              </h1>
+<p class="text-sm text-slate-500 mt-1.5 leading-relaxed font-sans">
+                Découvre des projets open-source portés par des développeurs de la communauté, comprends leurs enjeux et propose tes contributions.
+              </p>
+</div>
+<!-- Métriques rapides d'activité globale -->
+<div class="flex items-center gap-4 bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-subtle shrink-0">
+<div class="flex flex-col pr-4 border-r border-slate-200">
+<span class="font-mono text-[11px] text-slate-400 font-medium">Dépôts actifs</span>
+<span class="text-xl font-bold text-navy-800 font-mono">142</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono text-[11px] text-slate-400 font-medium">Prêts pour PR</span>
+<span class="text-xl font-bold text-accent font-mono">58 <span class="text-xs font-sans font-medium text-slate-500">issues</span></span>
+</div>
+</div>
+</section>
+<!-- 1. BARRE D'ACTION SUPÉRIEURE UNIFIÉE -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-subtle mb-4">
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+<!-- Input de recherche élargi -->
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full h-10 pl-11 pr-4 bg-slate-50 text-slate-800 placeholder:text-slate-400 text-sm rounded-lg border border-slate-200 outline-none focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent transition-all font-sans" id="search-input" placeholder="Rechercher par mot-clé, nom de projet, problème résolu..." type="search"/>
+</div>
+<!-- Filtres et CTA de création -->
+<div class="flex items-center flex-wrap sm:flex-nowrap gap-2.5">
+<!-- Select Technologie -->
+<div class="relative min-w-[200px]">
+<select class="w-full h-10 pl-3 pr-9 appearance-none bg-slate-50 text-slate-700 text-xs font-medium rounded-lg border border-slate-200 outline-none focus:border-accent focus:ring-1 focus:ring-accent cursor-pointer transition-colors font-sans" id="tech-select">
+<option value="all">Toutes les technologies</option>
+<option value="python">Python</option>
+<option value="django">Django</option>
+<option value="postgresql">PostgreSQL</option>
+<option value="react">React</option>
+<option value="typescript">TypeScript</option>
+<option value="go">Go</option>
+<option value="flutter">Flutter</option>
+<option value="docker">Docker</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">expand_more</span>
+</div>
+<!-- Bouton primaire : Nouveau projet (Dark Navy & Accent hover) -->
+<button class="h-10 px-4 bg-navy-800 hover:bg-navy-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 shadow-sm transition-all shrink-0 active:scale-[0.99] border border-navy-900 group" type="button">
+<span class="material-symbols-outlined text-[18px] text-accent group-hover:rotate-90 transition-transform duration-200">add</span>
+<span>Créer un projet</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 2. ZONE DES FILTRES ACTIFS & TOTAL DE RÉSULTATS -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4 px-1">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-mono text-xs text-slate-500 font-medium mr-1">Filtres actifs :</span>
+<!-- Tag Python -->
+<span class="inline-flex items-center gap-1.5 h-6 px-2.5 bg-white border border-slate-200 text-navy-800 font-mono text-[11px] rounded-md shadow-2xs">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+<span>Technologie : Python</span>
+<button class="text-slate-400 hover:text-red-500 transition-colors flex items-center ml-0.5" type="button">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</span>
+<!-- Tag Django -->
+<span class="inline-flex items-center gap-1.5 h-6 px-2.5 bg-white border border-slate-200 text-navy-800 font-mono text-[11px] rounded-md shadow-2xs">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+<span>Technologie : Django</span>
+<button class="text-slate-400 hover:text-red-500 transition-colors flex items-center ml-0.5" type="button">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</span>
+<!-- Bouton reset -->
+<button class="font-mono text-xs text-accent hover:text-accent-hover hover:underline ml-1 transition-colors" type="button">
+                Effacer tous les filtres
+              </button>
+</div>
+<!-- Compteur -->
+<div class="font-mono text-xs text-slate-500 font-medium self-end sm:self-auto">
+<span class="text-navy-800 font-bold">24</span> projets disponibles
+            </div>
+</div>
+<!-- 3. GRILLE DES CARTES PROJETS (2 colonnes denses) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" id="projects-grid">
+<!-- CARTE 1 : Projet Phare Narratif "Stock" -->
+<article class="bg-white rounded-xl p-5 border border-slate-200 shadow-card hover:shadow-card-hover hover:border-slate-300 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-3 mb-2.5">
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="text-base font-bold text-navy-800 group-hover:text-accent transition-colors">
+                      Stock
+                    </h2>
+<span class="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">
+                      Public
+                    </span>
+<span class="font-mono text-[10px] font-semibold text-accent bg-accent-light/50 px-1.5 py-0.5 rounded">
+                      OSS
+                    </span>
+</div>
+<!-- Bouton Star interactif avec accent orange -->
+<button class="flex items-center gap-1.5 h-7 px-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 text-slate-700 hover:text-accent rounded-lg font-mono text-xs transition-colors starred" data-count="48" onclick="toggleStar(this)" type="button">
+<span class="material-symbols-outlined text-[16px] text-accent fill-icon">star</span>
+<span class="star-count font-bold text-navy-800">48</span>
+</button>
+</div>
+<!-- Auteur & Statut de responsabilité -->
+<div class="flex items-center gap-2 mb-3">
+<img class="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-slate-200" data-alt="Photo de profil professionnelle d'Aïcha Diallo, jeune développeuse ouest-africaine souriante avec lunettes, fond de bureau technologique flou avec écran d'ordinateur allumé et éclairage chaleureux." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfMKNWGMmXH2hEvIf0Qm4ZEvoGZNL6mjbNRjjGlN41Tvvf8l7bNY16E2VQJZ2OTOx46YhXskGfgeMvTL7saSyi_9cvmfdvhYRsGTCVNxBpWnbUrhAS1ON44fNpOc4mxUm3oP8rszNVEwjkFn_7dXkSnYjwmehZUWT_Vt464-rHEfRx54w0PiLHKY0D3O44DEzw1yvLqa0Qr1JcvI9-MXD-8qa9FO56e7xDFKbUgfKx"/>
+<div class="flex items-center gap-1.5 flex-wrap min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Aïcha Diallo</span>
+<span class="font-mono text-[11px] text-slate-400 truncate">@aicha</span>
+<span class="w-1 h-1 rounded-full bg-slate-300"></span>
+<span class="font-mono text-[10px] text-navy-800 font-semibold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">Mainteneuse</span>
+</div>
+</div>
+<!-- Résumé fonctionnel du problème résolu -->
+<p class="text-xs sm:text-[13px] text-slate-600 mb-4 leading-relaxed">
+                  Outil de gestion de stock et de traçabilité pour petits commerces et grossistes de quartier, adapté aux connexions intermittentes.
+                </p>
+</div>
+<!-- Footer de carte : Stack et Métadonnées de contribution -->
+<div>
+<!-- Badges Stack en JetBrains Mono -->
+<div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span> Python
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span> Django
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span> PostgreSQL
+                  </span>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+<span class="material-symbols-outlined text-[15px] text-accent">pending_actions</span>
+<span class="truncate">3 tâches ouvertes dont export CSV</span>
+</div>
+<a class="inline-flex items-center gap-1 text-xs font-semibold text-navy-800 hover:text-accent shrink-0 group-hover:translate-x-0.5 transition-all" href="#">
+<span>Découvrir le projet</span>
+<span class="material-symbols-outlined text-[15px] text-accent">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- CARTE 2 : AfriPay SDK -->
+<article class="bg-white rounded-xl p-5 border border-slate-200 shadow-card hover:shadow-card-hover hover:border-slate-300 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-3 mb-2.5">
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="text-base font-bold text-navy-800 group-hover:text-accent transition-colors">
+                      AfriPay SDK
+                    </h2>
+<span class="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">
+                      Public
+                    </span>
+<span class="font-mono text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                      v1.4
+                    </span>
+</div>
+<button class="flex items-center gap-1.5 h-7 px-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 text-slate-700 hover:text-accent rounded-lg font-mono text-xs transition-colors" data-count="124" onclick="toggleStar(this)" type="button">
+<span class="material-symbols-outlined text-[16px] text-slate-400">star</span>
+<span class="star-count font-bold text-navy-800">124</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<img class="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-slate-200" data-alt="Portrait studio sobre de Kwame Mensah, ingénieur backend ghanéen portant un t-shirt sombre minimaliste devant un mur en béton brut contemporain." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSbSamEnA8J1mR-z--8IsPeXdw7rd0bjmmiBxxWCxATzyTjUOhaytnQOwOqHja6XSuuztVwxY9D4kWjH3QL9f_HYHTweZaAAVZgttufcKB-MehDeZPaeccZy_wjUDt7dmX73maVyvfhQ66TzVwNIoGaAPq-XgEF--aIfHwhkMzrxAPJJnmu8nP2WUULGt1Z0hvFZjHsc2GhkNDIsApeqQRp5pRVi19pZyVlIwuWcvM"/>
+<div class="flex items-center gap-1.5 flex-wrap min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Kwame Mensah</span>
+<span class="font-mono text-[11px] text-slate-400 truncate">@kwame</span>
+</div>
+</div>
+<p class="text-xs sm:text-[13px] text-slate-600 mb-4 leading-relaxed">
+                  Librairie unifiée pour agréger les passerelles Mobile Money (Wave, Orange Money, MTN MoMo) pour applications Python et Node.js.
+                </p>
+</div>
+<div>
+<div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span> Python
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#059669]"></span> FastAPI
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#dc2626]"></span> Redis
+                  </span>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+<span class="material-symbols-outlined text-[15px] text-slate-400">merge_type</span>
+<span class="truncate">5 contributions en attente</span>
+</div>
+<a class="inline-flex items-center gap-1 text-xs font-semibold text-navy-800 hover:text-accent shrink-0 group-hover:translate-x-0.5 transition-all" href="#">
+<span>Découvrir le projet</span>
+<span class="material-symbols-outlined text-[15px] text-accent">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- CARTE 3 : AgriTrack (Brouillon) -->
+<article class="bg-white rounded-xl p-5 border border-slate-200 shadow-card hover:shadow-card-hover hover:border-slate-300 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-3 mb-2.5">
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="text-base font-bold text-navy-800 group-hover:text-accent transition-colors">
+                      AgriTrack
+                    </h2>
+<span class="font-mono text-[10px] uppercase px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-amber-700">lock</span>
+                      Brouillon - Visible uniquement par vous
+                    </span>
+</div>
+<button class="flex items-center gap-1.5 h-7 px-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-200 text-slate-400 rounded-lg font-mono text-xs transition-colors" data-count="0" onclick="toggleStar(this)" type="button">
+<span class="material-symbols-outlined text-[16px]">star</span>
+<span class="star-count font-bold text-slate-600">0</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<img class="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-slate-200" data-alt="Portrait d'Aïcha Diallo avec lunettes rondes et chemise claire dans un espace de coworking moderne à Dakar, lumière naturelle zénithale." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbBAZSBeptE3xbHuveHF9GErKc2bkLiOkfjm9_5TpzUZwG3X1uTbwZJVHfEqOcpYdrbzbVzMWFMZFtH1RNdG5yGKyNyXRupEfngKYvBZxbhxN0qP1sJe4g1YZwIOIjiO8rSiG7toQS-2Vtw38FvSSk0MwEnjzl87Yntk5UCRkj0JzFuTyXUDOG54Dtk3cQf04udU_mpR_uWLFGRDljzPfJuAIE6cHY0bDhRZJy1Qez"/>
+<div class="flex items-center gap-1.5 flex-wrap min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Aïcha Diallo</span>
+<span class="font-mono text-[11px] text-slate-400 truncate">@aicha</span>
+</div>
+</div>
+<p class="text-xs sm:text-[13px] text-slate-600 mb-4 leading-relaxed">
+                  Tableau de bord de suivi météorologique et de cours des céréales locales en temps réel pour coopératives agricoles.
+                </p>
+</div>
+<div>
+<div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span> Django
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span> React
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1e40af]"></span> PostgreSQL
+                  </span>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 font-mono text-[11px] text-amber-700">
+<span class="material-symbols-outlined text-[15px]">hourglass_top</span>
+<span class="truncate">En cours de configuration Git</span>
+</div>
+<a class="inline-flex items-center gap-1 text-xs font-semibold text-navy-800 hover:text-accent shrink-0 group-hover:translate-x-0.5 transition-all" href="#">
+<span>Finaliser le projet</span>
+<span class="material-symbols-outlined text-[15px] text-accent">edit</span>
+</a>
+</div>
+</div>
+</article>
+<!-- CARTE 4 : SantéConnect -->
+<article class="bg-white rounded-xl p-5 border border-slate-200 shadow-card hover:shadow-card-hover hover:border-slate-300 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-3 mb-2.5">
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="text-base font-bold text-navy-800 group-hover:text-accent transition-colors">
+                      SantéConnect
+                    </h2>
+<span class="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">
+                      Public
+                    </span>
+</div>
+<button class="flex items-center gap-1.5 h-7 px-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 text-slate-700 hover:text-accent rounded-lg font-mono text-xs transition-colors" data-count="89" onclick="toggleStar(this)" type="button">
+<span class="material-symbols-outlined text-[16px] text-slate-400">star</span>
+<span class="star-count font-bold text-navy-800">89</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-mono text-[10px] font-bold shrink-0">
+                    FN
+                  </div>
+<div class="flex items-center gap-1.5 flex-wrap min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Fatou Ndiaye</span>
+<span class="font-mono text-[11px] text-slate-400 truncate">@fatou</span>
+</div>
+</div>
+<p class="text-xs sm:text-[13px] text-slate-600 mb-4 leading-relaxed">
+                  Carnet de vaccination numérique décentralisé et synchronisation hors-ligne pour centres de santé communautaires.
+                </p>
+</div>
+<div>
+<div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span> TypeScript
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span> React
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#475569]"></span> SQLite
+                  </span>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+<span class="material-symbols-outlined text-[15px] text-slate-400">radio_button_checked</span>
+<span class="truncate">8 issues ouvertes</span>
+</div>
+<a class="inline-flex items-center gap-1 text-xs font-semibold text-navy-800 hover:text-accent shrink-0 group-hover:translate-x-0.5 transition-all" href="#">
+<span>Découvrir le projet</span>
+<span class="material-symbols-outlined text-[15px] text-accent">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- CARTE 5 : DakarTransit -->
+<article class="bg-white rounded-xl p-5 border border-slate-200 shadow-card hover:shadow-card-hover hover:border-slate-300 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-3 mb-2.5">
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="text-base font-bold text-navy-800 group-hover:text-accent transition-colors">
+                      DakarTransit
+                    </h2>
+<span class="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">
+                      Public
+                    </span>
+</div>
+<button class="flex items-center gap-1.5 h-7 px-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 text-slate-700 hover:text-accent rounded-lg font-mono text-xs transition-colors" data-count="37" onclick="toggleStar(this)" type="button">
+<span class="material-symbols-outlined text-[16px] text-slate-400">star</span>
+<span class="star-count font-bold text-navy-800">37</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-mono text-[10px] font-bold shrink-0">
+                    MT
+                  </div>
+<div class="flex items-center gap-1.5 flex-wrap min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Moussa Traoré</span>
+<span class="font-mono text-[11px] text-slate-400 truncate">@moussa</span>
+</div>
+</div>
+<p class="text-xs sm:text-[13px] text-slate-600 mb-4 leading-relaxed">
+                  API de calcul d'itinéraires et d'horaires pour les réseaux de bus urbains et transports partagés.
+                </p>
+</div>
+<div>
+<div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#06b6d4]"></span> Go
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1e40af]"></span> PostgreSQL
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0284c7]"></span> Docker
+                  </span>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+<span class="material-symbols-outlined text-[15px] text-slate-400">schedule</span>
+<span class="truncate">Mise à jour il y a 2h</span>
+</div>
+<a class="inline-flex items-center gap-1 text-xs font-semibold text-navy-800 hover:text-accent shrink-0 group-hover:translate-x-0.5 transition-all" href="#">
+<span>Découvrir le projet</span>
+<span class="material-symbols-outlined text-[15px] text-accent">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- CARTE 6 : Kilimo IoT -->
+<article class="bg-white rounded-xl p-5 border border-slate-200 shadow-card hover:shadow-card-hover hover:border-slate-300 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-3 mb-2.5">
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="text-base font-bold text-navy-800 group-hover:text-accent transition-colors">
+                      Kilimo IoT
+                    </h2>
+<span class="font-mono text-[10px] uppercase font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">
+                      Public
+                    </span>
+</div>
+<button class="flex items-center gap-1.5 h-7 px-2.5 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 text-slate-700 hover:text-accent rounded-lg font-mono text-xs transition-colors" data-count="52" onclick="toggleStar(this)" type="button">
+<span class="material-symbols-outlined text-[16px] text-slate-400">star</span>
+<span class="star-count font-bold text-navy-800">52</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-mono text-[10px] font-bold shrink-0">
+                    SO
+                  </div>
+<div class="flex items-center gap-1.5 flex-wrap min-w-0">
+<span class="text-xs font-semibold text-navy-800 truncate">Samuel Osei</span>
+<span class="font-mono text-[11px] text-slate-400 truncate">@samuel</span>
+</div>
+</div>
+<p class="text-xs sm:text-[13px] text-slate-600 mb-4 leading-relaxed">
+                  Collecteur de données de capteurs d'humidité et d'irrigation pour micro-fermes maraîchères périurbaines.
+                </p>
+</div>
+<div>
+<div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span> Python
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#ea580c]"></span> MQTT
+                  </span>
+<span class="font-mono text-[11px] px-2 py-0.5 bg-slate-50 border border-slate-200 text-slate-700 rounded flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#1e40af]"></span> PostgreSQL
+                  </span>
+</div>
+<div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+<span class="material-symbols-outlined text-[15px] text-slate-400">sensors</span>
+<span class="truncate">Hardware ESP32 compatible</span>
+</div>
+<a class="inline-flex items-center gap-1 text-xs font-semibold text-navy-800 hover:text-accent shrink-0 group-hover:translate-x-0.5 transition-all" href="#">
+<span>Découvrir le projet</span>
+<span class="material-symbols-outlined text-[15px] text-accent">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+</div>
+<!-- 4. PAGINATION EXPLICITE & MÉTRIQUES DE POSITIONNEMENT -->
+<section class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+<div class="font-mono text-xs text-slate-500">
+              Affichage de <span class="text-navy-800 font-bold">1</span> à <span class="text-navy-800 font-bold">6</span> sur <span class="text-navy-800 font-bold">24</span> projets
+            </div>
+<!-- Segment de navigation paginée -->
+<nav aria-label="Pagination" class="inline-flex items-center gap-1.5">
+<!-- Précédent (Désactivé) -->
+<button class="h-8 px-3 rounded-lg text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 cursor-not-allowed flex items-center gap-1" disabled="" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+<span>Précédent</span>
+</button>
+<!-- Pages numérotées -->
+<button class="w-8 h-8 rounded-lg font-mono text-xs bg-navy-800 text-white font-bold shadow-xs border border-navy-900" type="button">
+                1
+              </button>
+<button class="w-8 h-8 rounded-lg font-mono text-xs text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors border border-transparent hover:border-slate-200" type="button">
+                2
+              </button>
+<button class="w-8 h-8 rounded-lg font-mono text-xs text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors border border-transparent hover:border-slate-200" type="button">
+                3
+              </button>
+<button class="w-8 h-8 rounded-lg font-mono text-xs text-slate-600 hover:bg-slate-100 hover:text-navy-800 transition-colors border border-transparent hover:border-slate-200" type="button">
+                4
+              </button>
+<!-- Suivant -->
+<button class="h-8 px-3 rounded-lg text-xs font-medium text-navy-800 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center gap-1 shadow-2xs" type="button">
+<span>Suivant</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</nav>
+</section>
+<!-- 5. ENCART D'AUDIT ET SIMULATION D'ÉTATS DOCUMENTÉS -->
+<aside class="bg-slate-100/80 border border-slate-200/80 p-4 rounded-xl">
+<div class="flex items-center justify-between gap-3 mb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-accent">developer_mode</span>
+<span class="font-mono text-xs text-navy-800 font-bold uppercase tracking-wider">Environnement de recette UX : Simulation d'états</span>
+</div>
+<span class="font-mono text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">DEV / QA</span>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<button class="h-7 px-3 rounded-md font-mono text-xs bg-navy-800 text-white font-semibold shadow-xs transition-colors" id="btn-state-grid" onclick="switchState('grid')" type="button">
+                Résultats (Actif)
+              </button>
+<button class="h-7 px-3 rounded-md font-mono text-xs bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" id="btn-state-empty" onclick="switchState('empty')" type="button">
+                Recherche sans résultat
+              </button>
+<button class="h-7 px-3 rounded-md font-mono text-xs bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" id="btn-state-error" onclick="switchState('error')" type="button">
+                Erreur serveur avec reprise
+              </button>
+</div>
+<!-- État simulé : Recherche infructueuse -->
+<div class="hidden mt-4 p-8 bg-white border border-slate-200 rounded-xl text-center flex flex-col items-center justify-center shadow-subtle" id="simulated-empty">
+<div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">search_off</span>
+</div>
+<h3 class="text-base font-bold text-navy-800 mb-1">Aucun projet ne correspond à vos filtres</h3>
+<p class="text-xs sm:text-sm text-slate-500 max-w-md mb-4 leading-relaxed">
+                Essaie d'élargir ta recherche en réinitialisant les filtres de technologie ou en modifiant le mot-clé saisi.
+              </p>
+<button class="h-8 px-4 bg-navy-800 hover:bg-navy-700 text-white font-medium text-xs rounded-lg transition-colors shadow-sm" onclick="switchState('grid')" type="button">
+                Réinitialiser la recherche
+              </button>
+</div>
+<!-- État simulé : Erreur réseau avec retry -->
+<div class="hidden mt-4 p-5 bg-red-50 border border-red-200 text-red-900 rounded-xl flex items-start gap-4" id="simulated-error">
+<span class="material-symbols-outlined text-[26px] text-red-600 shrink-0">error</span>
+<div class="flex-1">
+<h3 class="text-sm font-bold text-red-900 mb-1">Impossible de joindre le registre des dépôts</h3>
+<p class="text-xs text-red-700 mb-3 leading-relaxed">
+                  Une anomalie de connectivité temporaire empêche le chargement de l'index des projets. Le protocole de reconnexion automatique tentera dans 15 secondes.
+                </p>
+<button class="h-8 px-4 bg-red-600 hover:bg-red-700 text-white font-medium text-xs rounded-lg shadow-xs transition-colors" onclick="switchState('grid')" type="button">
+                  Réessayer immédiatement
+                </button>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</main>
+</div>
+<!-- Script d'interaction locale : Étoiles et simulation d'états -->
+<script>
+    function toggleStar(btn) {
+      const countEl = btn.querySelector('.star-count');
+      const icon = btn.querySelector('.material-symbols-outlined');
+      let current = parseInt(btn.getAttribute('data-count'), 10);
+      const isStarred = btn.classList.contains('starred');
+
+      if (isStarred) {
+        current -= 1;
+        btn.classList.remove('starred');
+        icon.classList.remove('fill-icon', 'text-accent');
+        icon.classList.add('text-slate-400');
+      } else {
+        current += 1;
+        btn.classList.add('starred');
+        icon.classList.add('fill-icon', 'text-accent');
+        icon.classList.remove('text-slate-400');
+      }
+
+      btn.setAttribute('data-count', current);
+      countEl.textContent = current;
+    }
+
+    function switchState(state) {
+      const grid = document.getElementById('projects-grid');
+      const empty = document.getElementById('simulated-empty');
+      const error = document.getElementById('simulated-error');
+
+      const btnGrid = document.getElementById('btn-state-grid');
+      const btnEmpty = document.getElementById('btn-state-empty');
+      const btnError = document.getElementById('btn-state-error');
+
+      // Reset tabs style
+      [btnGrid, btnEmpty, btnError].forEach(b => {
+        b.className = "h-7 px-3 rounded-md font-mono text-xs bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors";
+      });
+
+      if (state === 'grid') {
+        grid.classList.remove('hidden');
+        empty.classList.add('hidden');
+        error.classList.add('hidden');
+        btnGrid.className = "h-7 px-3 rounded-md font-mono text-xs bg-navy-800 text-white font-semibold shadow-xs transition-colors";
+      } else if (state === 'empty') {
+        grid.classList.add('hidden');
+        empty.classList.remove('hidden');
+        error.classList.add('hidden');
+        btnEmpty.className = "h-7 px-3 rounded-md font-mono text-xs bg-navy-800 text-white font-semibold shadow-xs transition-colors";
+      } else if (state === 'error') {
+        grid.classList.add('hidden');
+        empty.classList.add('hidden');
+        error.classList.remove('hidden');
+        btnError.className = "h-7 px-3 rounded-md font-mono text-xs bg-red-600 text-white font-semibold shadow-xs transition-colors";
+      }
+    }
+  </script>
+</body></html>

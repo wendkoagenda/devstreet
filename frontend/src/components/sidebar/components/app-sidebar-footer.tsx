@@ -7,6 +7,7 @@ import {
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import {
   CreationErrorSonner,
   CreationSuccessSonner,
@@ -20,7 +21,8 @@ import { ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function AppSidebarFooter() {
-  const userFullName = useAuthSlice((state) => state.user?.full_name) ?? "Opps";
+  const userFullName = useAuthSlice((state) => state.user?.full_name) ?? "";
+  const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -47,26 +49,36 @@ export default function AppSidebarFooter() {
       </SidebarMenuItem>
 
       <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent">
-              <Icons.MyAccount className="h-4 w-4" />
-              <p className="text-xs">{truncateTitle(userFullName, 18)}</p>
-              <ChevronUp className="ml-auto" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            side="top"
-            className="w-[--radix-popper-anchor-width]"
+        {isAuthenticated ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                <Icons.MyAccount className="h-4 w-4" />
+                <p className="text-xs">{truncateTitle(userFullName, 18)}</p>
+                <ChevronUp className="ml-auto" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              className="w-[--radix-popper-anchor-width]"
+            >
+              <DropdownMenuItem onClick={handleGoToMyAccount}>
+                {t("sidebar.my_account")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                {t("sidebar.disconnect")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button
+            className="w-full"
+            size="sm"
+            onClick={() => navigate("/login")}
           >
-            <DropdownMenuItem onClick={handleGoToMyAccount}>
-              {t("sidebar.my_account")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout}>
-              {t("sidebar.disconnect")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            {t("login")}
+          </Button>
+        )}
       </SidebarMenuItem>
     </SidebarMenu>
   );

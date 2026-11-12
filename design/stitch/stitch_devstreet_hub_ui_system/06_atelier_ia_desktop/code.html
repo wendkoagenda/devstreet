@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-variant":"#e4e2e4","on-tertiary-fixed-variant":"#574425","background":"#fcf8fa","secondary-container":"#fd651e","secondary-fixed":"#ffdbce","primary-container":"#131b2e","outline-variant":"#c6c6cd","on-error-container":"#93000a","on-surface":"#1b1b1d","surface-container-high":"#eae7e9","on-primary":"#ffffff","on-tertiary-container":"#98805d","surface-container-lowest":"#ffffff","tertiary-container":"#271901","inverse-on-surface":"#f3f0f2","on-primary-container":"#7c839b","secondary":"#a73a00","surface-container-highest":"#e4e2e4","tertiary-fixed-dim":"#dec29a","on-secondary-fixed":"#370e00","on-secondary-container":"#571a00","primary-fixed":"#dae2fd","surface":"#fcf8fa","secondary-fixed-dim":"#ffb599","on-primary-fixed":"#131b2e","on-background":"#1b1b1d","tertiary":"#000000","surface-container-low":"#f6f3f5","error-container":"#ffdad6","primary-fixed-dim":"#bec6e0","error":"#ba1a1a","surface-bright":"#fcf8fa","inverse-surface":"#303032","on-secondary-fixed-variant":"#7f2b00","on-tertiary":"#ffffff","on-primary-fixed-variant":"#3f465c","on-tertiary-fixed":"#271901","surface-dim":"#dcd9db","surface-tint":"#565e74","outline":"#76777d","inverse-primary":"#bec6e0","on-error":"#ffffff","on-surface-variant":"#45464d","surface-container":"#f0edef","on-secondary":"#ffffff","primary":"#000000","tertiary-fixed":"#fcdeb5"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{},fontFamily:{headline:["Poppins"],display:["Poppins"],body:["Poppins"],label:["JetBrains Mono"]},fontSize:{}}}}</script></head><body class="bg-surface font-body text-on-surface min-h-screen"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-6 flex items-center justify-between"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-secondary-container text-xl">terminal</span></div><span class="font-headline font-bold text-lg tracking-tight text-on-surface">DevStreet</span></div><span class="font-label text-xs font-semibold px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">v2.4</span></div><div class="px-4 py-2"><p class="px-3 pb-2 text-[11px] font-label font-semibold text-outline tracking-wider uppercase">Platform</p><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary font-semibold"><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="marketplace" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Marketplace</span></a><a aria-current="page" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors bg-primary-container text-on-primary font-semibold" data-path="devstreet-hub" href="#"><span class="material-symbols-outlined text-[20px]">hub</span><span>DevStreet Hub</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="forum" href="#"><span class="material-symbols-outlined text-[20px]">forum</span><span>Forum</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="mon-profil" href="#"><span class="material-symbols-outlined text-[20px]">badge</span><span>Mon profil</span></a></nav></div></div><div class="p-4"><div class="p-3 rounded-lg bg-surface-container-low flex items-center justify-between"><div class="flex items-center gap-3 min-w-0"><div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="min-w-0"><p class="text-xs font-semibold text-on-surface truncate leading-tight">Aïcha Diallo</p><p class="text-[11px] font-label text-outline truncate leading-tight">@aicha</p></div></div><a class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors shrink-0" data-path="settings" href="#" title="Settings"><span class="material-symbols-outlined text-[18px]">settings</span></a></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-8 flex items-center justify-between gap-6"><div class="flex items-center gap-2 text-xs font-label text-on-surface-variant"><span class="hover:text-on-surface transition-colors">DevStreet</span><span class="text-outline">/</span><span class="hover:text-on-surface transition-colors">Ecosystem</span><span class="text-outline">/</span><span class="text-secondary font-semibold">Hub</span></div><div class="flex items-center gap-4"><div class="relative w-80"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input class="w-full h-9 pl-9 pr-12 text-xs font-body rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 focus:ring-secondary-container transition-all" placeholder="Search pipelines, repos, teams..." type="text"/><span class="absolute right-2.5 top-1/2 -translate-y-1/2 font-label text-[10px] px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant">⌘K</span></div><button class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-secondary-container"></span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface px-8"><div class="flex flex-col w-full space-y-10 pb-16">
+<!-- Fil d'Ariane & Action de Secours -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<nav class="flex items-center gap-2 text-xs font-label text-on-surface-variant">
+<span class="hover:text-on-surface transition-colors cursor-pointer">DevStreet Hub</span>
+<span class="text-outline-variant">/</span>
+<span class="hover:text-on-surface transition-colors cursor-pointer">Projets</span>
+<span class="text-outline-variant">/</span>
+<span class="hover:text-on-surface transition-colors cursor-pointer">Stock</span>
+<span class="text-outline-variant">/</span>
+<span class="text-secondary font-semibold bg-secondary-fixed/50 px-2 py-0.5 rounded-sm">Atelier IA</span>
+</nav>
+<div class="flex items-center gap-3">
+<button class="group flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold tracking-tight transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px] text-outline group-hover:text-on-surface transition-colors">edit_note</span>
+<span>Créer une tâche manuellement</span>
+</button>
+<div class="h-6 w-px bg-surface-container-highest"></div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low text-[11px] font-label text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span>Gitea v1.22 · Connecté</span>
+</div>
+</div>
+</div>
+<!-- En-tête de page & Contextualisation -->
+<header class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-8 shadow-sm">
+<div class="absolute -right-20 -top-24 w-80 h-80 rounded-full bg-gradient-to-br from-secondary-container/10 via-primary-container/5 to-transparent blur-3xl pointer-events-none"></div>
+<div class="relative z-10 max-w-4xl space-y-3">
+<div class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-primary-container text-on-primary text-[11px] font-label font-medium tracking-wide">
+<span class="material-symbols-outlined text-secondary-container text-[16px]">account_tree</span>
+<span>ANALYSE STATIQUE &amp; STRUCTURATION DÉTERMINISTE</span>
+</div>
+<h1 class="font-headline text-3xl font-bold tracking-tight text-on-surface sm:text-4xl">
+        Atelier IA — Structuration de tâches à partir du code
+      </h1>
+<p class="font-body text-base text-on-surface-variant leading-relaxed">
+        Génère des propositions de tâches concrètes et sourcées à partir de l’analyse statique de votre dépôt Gitea. Aucun code n'est exécuté sans relecture humaine explicite.
+      </p>
+</div>
+</header>
+<!-- Bandeau Simulateur de Recette UX (Section 4 du cahier des charges) -->
+<section class="rounded-xl bg-surface-container p-4 shadow-sm">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+<div class="flex items-center gap-2.5 shrink-0">
+<span class="material-symbols-outlined text-secondary text-[20px]">science</span>
+<div>
+<p class="font-label text-xs font-semibold text-on-surface uppercase tracking-wider">Simulateur de Recette UX</p>
+<p class="text-[11px] text-on-surface-variant">Testez les 5 états nominaux et de résilience de l'Atelier</p>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-1.5 font-label text-[11px]">
+<button class="scen-btn px-3 py-1.5 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="btn-scen-1" onclick="setScenario('consent_missing')" type="button">
+          1. Consentement absent
+        </button>
+<button class="scen-btn px-3 py-1.5 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="btn-scen-2" onclick="setScenario('loading')" type="button">
+          2. Analyse en cours
+        </button>
+<button class="scen-btn px-3 py-1.5 rounded bg-primary text-on-primary font-semibold shadow-sm transition-colors" id="btn-scen-3" onclick="setScenario('ready')" type="button">
+          3. Résultats sourcés
+        </button>
+<button class="scen-btn px-3 py-1.5 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="btn-scen-4" onclick="setScenario('quota_exceeded')" type="button">
+          4. Quota / Indisponible
+        </button>
+<button class="scen-btn px-3 py-1.5 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="btn-scen-5" onclick="setScenario('code_diverged')" type="button">
+          5. Commit modifié
+        </button>
+</div>
+</div>
+</section>
+<!-- Notification Contextuelle Dynamique pour les Scénarios 4 et 5 -->
+<div class="hidden" id="scenario-alert-panel"></div>
+<!-- Grille Principale Atelier -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Colonne Gauche (5 colonnes) : Section 1 - Paramétrage du besoin & Consentement -->
+<section class="lg:col-span-5 space-y-6">
+<div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm space-y-6">
+<div class="flex items-center justify-between pb-4 border-b border-surface-container">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface text-[20px]">tune</span>
+<h2 class="font-headline text-base font-semibold text-on-surface">Contexte &amp; Périmètre</h2>
+</div>
+<span class="font-label text-[11px] px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-medium">Django / Postgres</span>
+</div>
+<!-- Métadonnées du Dépôt Source -->
+<div class="p-3.5 rounded-lg bg-surface-container-low space-y-2 font-label text-xs">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">emoji_symbols</span>
+<span>Dépôt cible :</span>
+</span>
+<span class="font-semibold text-on-surface">stock-core</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">fork_right</span>
+<span>Branche analysée :</span>
+</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface font-semibold">main</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">commit</span>
+<span>Dernier commit :</span>
+</span>
+<span class="text-secondary font-semibold" id="current-commit-tag">7f8a92c</span>
+</div>
+</div>
+<!-- Saisie du Besoin Métier -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="text-xs font-semibold text-on-surface uppercase tracking-wider font-label" for="need-input">
+              Objectif Métier / Expression du besoin
+            </label>
+<span class="text-[11px] text-outline font-label">Requis</span>
+</div>
+<div class="relative">
+<textarea class="w-full p-3.5 rounded-lg bg-surface font-body text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-secondary-container transition-all resize-none shadow-inner" id="need-input" placeholder="Ex: Ajouter un export CSV des mouvements de stock" rows="4">Ajouter un export CSV des mouvements de stock</textarea>
+</div>
+<p class="text-[11px] text-on-surface-variant">
+            Conseil : Décrivez la fonctionnalité finale attendue. L’analyseur la rapprochera des modèles de données existants.
+          </p>
+</div>
+<!-- Sélecteur de Langue -->
+<div class="space-y-2">
+<label class="text-xs font-semibold text-on-surface uppercase tracking-wider font-label">Langue d'analyse des tâches</label>
+<div class="grid grid-cols-2 gap-2">
+<label class="flex items-center justify-between p-2.5 rounded-lg bg-surface hover:bg-surface-container cursor-pointer transition-colors has-[:checked]:bg-primary-container has-[:checked]:text-on-primary">
+<div class="flex items-center gap-2">
+<input checked="" class="accent-secondary-container" name="lang" type="radio" value="fr"/>
+<span class="text-xs font-medium">Français (FR)</span>
+</div>
+<span class="font-label text-[10px] opacity-75">Défaut</span>
+</label>
+<label class="flex items-center justify-between p-2.5 rounded-lg bg-surface hover:bg-surface-container cursor-pointer transition-colors has-[:checked]:bg-primary-container has-[:checked]:text-on-primary">
+<div class="flex items-center gap-2">
+<input class="accent-secondary-container" name="lang" type="radio" value="en"/>
+<span class="text-xs font-medium">English (EN)</span>
+</div>
+<span class="font-label text-[10px] opacity-75">Alt</span>
+</label>
+</div>
+</div>
+<!-- Encadré Obligatoire de Transparence & Consentement -->
+<div class="p-4 rounded-xl bg-surface-container-low space-y-3">
+<div class="flex items-start gap-2.5">
+<input checked="" class="mt-1 w-4 h-4 rounded text-secondary-container focus:ring-secondary-container accent-secondary-container cursor-pointer" id="consent-check" onchange="handleConsentChange(this.checked)" type="checkbox"/>
+<label class="text-xs font-medium text-on-surface leading-snug cursor-pointer select-none" for="consent-check">
+              J'autorise DevStreet à transmettre des extraits non sensibles du dépôt (schémas de modèles, vues, signatures de fonctions) au modèle d'analyse.
+            </label>
+</div>
+<div class="flex items-start gap-2 p-2.5 rounded-lg bg-surface text-[11px] text-on-surface-variant font-body leading-relaxed">
+<span class="material-symbols-outlined text-[16px] text-secondary shrink-0 mt-0.5">verified_user</span>
+<span>
+<strong>Garantie de souveraineté :</strong> Aucun fichier <code class="font-label text-secondary font-semibold">.env</code>, clé d'API, mot de passe ou donnée personnelle n'est transmis. Les jetons sont éphémères et exclus de tout réentraînement.
+            </span>
+</div>
+</div>
+<!-- Action Principale -->
+<div class="space-y-2">
+<button class="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-all shadow-md active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed" id="main-analyze-btn" onclick="triggerManualAnalysis()" type="button">
+<span class="material-symbols-outlined text-secondary-container text-[19px]">bolt</span>
+<span>Analyser le dépôt et structurer les tâches</span>
+</button>
+<div class="hidden text-center text-[11px] font-label text-error" id="consent-helper-msg">
+            Le consentement éclairé est requis pour initier l'analyse statique.
+          </div>
+</div>
+</div>
+<!-- Métriques de la session & Fichiers ciblés -->
+<div class="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-3 text-xs">
+<p class="font-label font-semibold text-outline text-[11px] uppercase tracking-wider">Arbre d'inspection statique</p>
+<div class="space-y-1.5 font-label text-[11px]">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<span class="text-on-surface truncate">apps/inventory/models.py</span>
+<span class="text-secondary font-medium">324 LLOC</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<span class="text-on-surface truncate">apps/inventory/views.py</span>
+<span class="text-on-surface-variant font-medium">189 LLOC</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<span class="text-on-surface truncate">config/urls.py</span>
+<span class="text-on-surface-variant font-medium">42 LLOC</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Colonne Droite (7 colonnes) : Section 2 & 3 (Progression honnête & Résultats sourcés) -->
+<main class="lg:col-span-7 space-y-6">
+<!-- Section 2 : État du traitement & Progression Honnête (Pas de faux pourcentages) -->
+<div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface text-[20px]">timeline</span>
+<h2 class="font-headline text-base font-semibold text-on-surface">Jalon d'analyse en continu</h2>
+</div>
+<span class="font-label text-xs font-semibold px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 flex items-center gap-1.5" id="pipeline-status-badge">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+            Cycle terminé
+          </span>
+</div>
+<!-- Étapes auditables et transparentes -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-label text-xs pt-1">
+<!-- Étape 1 -->
+<div class="p-3 rounded-lg bg-surface-container space-y-1" id="step-node-1">
+<div class="flex items-center justify-between">
+<span class="text-[10px] text-outline uppercase font-semibold">Étape 1</span>
+<span class="material-symbols-outlined text-emerald-600 text-[16px]">check_circle</span>
+</div>
+<p class="font-semibold text-on-surface">Extraction Gitea</p>
+<p class="text-[11px] text-on-surface-variant">Arbre git &amp; diffs commit 7f8a92c</p>
+<p class="text-[10px] text-outline pt-1">10:42:11 UTC</p>
+</div>
+<!-- Étape 2 -->
+<div class="p-3 rounded-lg bg-surface-container space-y-1" id="step-node-2">
+<div class="flex items-center justify-between">
+<span class="text-[10px] text-outline uppercase font-semibold">Étape 2</span>
+<span class="material-symbols-outlined text-emerald-600 text-[16px]" id="step-2-icon">check_circle</span>
+</div>
+<p class="font-semibold text-on-surface">Modèles &amp; Vues</p>
+<p class="text-[11px] text-on-surface-variant">Signature AST &amp; clés étrangères</p>
+<p class="text-[10px] text-outline pt-1">10:42:15 UTC</p>
+</div>
+<!-- Étape 3 -->
+<div class="p-3 rounded-lg bg-surface-container-high space-y-1" id="step-node-3">
+<div class="flex items-center justify-between">
+<span class="text-[10px] text-secondary uppercase font-semibold">Étape 3</span>
+<span class="material-symbols-outlined text-secondary text-[16px]" id="step-3-icon">visibility</span>
+</div>
+<p class="font-semibold text-on-surface">Prêt pour Relecture</p>
+<p class="text-[11px] text-on-surface-variant">3 fiches structurées prêtes</p>
+<p class="text-[10px] text-secondary font-semibold pt-1">10:42:18 UTC</p>
+</div>
+</div>
+</div>
+<!-- Section 3 : Résultats Sourcés -->
+<div class="space-y-6" id="results-container">
+<div class="flex items-center justify-between">
+<div class="space-y-0.5">
+<h3 class="font-headline text-lg font-bold text-on-surface">3 propositions de tâches générées</h3>
+<p class="text-xs text-on-surface-variant">Chaque proposition cite textuellement les modules inspectés. Validation obligatoire.</p>
+</div>
+<span class="font-label text-xs text-outline">Modèle : CodeLlama-70B (On-premise)</span>
+</div>
+<!-- Suggestion 1 : Sélectionnée & Mise en avant (Export CSV StreamingHttpResponse) -->
+<article class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-6 shadow-md ring-1 ring-secondary-container/40 space-y-5">
+<!-- Tag de mise en avant -->
+<div class="flex flex-wrap items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label text-xs font-bold uppercase tracking-wider">
+                Recommandation prioritaire
+              </span>
+<span class="font-label text-xs text-outline">Tâche suggérée #STK-CSV-01</span>
+</div>
+<span class="font-label text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">Impact mémoire : Faible</span>
+</div>
+<!-- Titre & Contexte Métier -->
+<div class="space-y-2">
+<h4 class="font-headline text-xl font-bold text-on-surface leading-tight">
+              Export CSV avec StreamingHttpResponse
+            </h4>
+<div class="p-3 rounded-lg bg-surface-container-low text-xs text-on-surface leading-relaxed">
+<span class="font-semibold text-secondary">Contexte terrain :</span> Dans les marchés ruraux et zones à connectivité intermittente, le volume cumulé des transactions d'inventaire journalier dépasse 40 000 lignes. L'utilisation d'une réponse HTTP classique provoquerait un débordement mémoire (OOM) sur le conteneur applicatif bas coût. Le streaming chunk par chunk est impératif.
+            </div>
+</div>
+<!-- Points d'entrée dans le code source (AST Source Inspection) -->
+<div class="space-y-2">
+<p class="text-xs font-semibold text-on-surface uppercase tracking-wider font-label flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">data_object</span>
+              Points d'ancrage vérifiés dans le dépôt
+            </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-label text-xs">
+<div class="p-2.5 rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="text-on-surface truncate">apps/inventory/models.py</span>
+<span class="text-secondary font-semibold shrink-0">class StockMovement</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="text-on-surface truncate">apps/inventory/views.py</span>
+<span class="text-on-surface-variant font-semibold shrink-0">MovementListView</span>
+</div>
+</div>
+</div>
+<!-- Étapes techniques structurées -->
+<div class="space-y-2.5">
+<p class="text-xs font-semibold text-on-surface uppercase tracking-wider font-label flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">format_list_numbered</span>
+              Étapes techniques séquentielles
+            </p>
+<ol class="space-y-2 text-xs font-body text-on-surface">
+<li class="flex items-start gap-2.5 p-2 rounded bg-surface">
+<span class="font-label font-bold text-secondary text-xs mt-0.5 shrink-0">01.</span>
+<span><strong>Créer le service d'itération génératrice :</strong> Implémenter un générateur Python tirant parti de <code class="font-label text-[11px] bg-surface-container px-1 py-0.5 rounded">.iterator(chunk_size=1000)</code> sur l'ORM Django pour streamer les lignes par paquets sans charger le QuerySet complet en RAM.</span>
+</li>
+<li class="flex items-start gap-2.5 p-2 rounded bg-surface">
+<span class="font-label font-bold text-secondary text-xs mt-0.5 shrink-0">02.</span>
+<span><strong>Brancher la vue Django &amp; Encodage UTF-8 BOM :</strong> Instancier <code class="font-label text-[11px] bg-surface-container px-1 py-0.5 rounded">StreamingHttpResponse</code> avec les headers <code class="font-label text-[11px] bg-surface-container px-1 py-0.5 rounded">text/csv; charset=utf-8-sig</code> pour assurer l'ouverture immédiate sans corruption d'accents sur tableurs locaux.</span>
+</li>
+<li class="flex items-start gap-2.5 p-2 rounded bg-surface">
+<span class="font-label font-bold text-secondary text-xs mt-0.5 shrink-0">03.</span>
+<span><strong>Prévoir la persistance IndexedDB de secours :</strong> Mettre en mémoire tampon locale les mouvements générés pendant les ruptures réseau avant déclenchement de l'export.</span>
+</li>
+</ol>
+</div>
+<!-- Critères de réussite recommandés (DoD) -->
+<div class="space-y-2">
+<p class="text-xs font-semibold text-on-surface uppercase tracking-wider font-label flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-emerald-600">checklist</span>
+              Critères de réussite recommandés (Definition of Done)
+            </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-body text-on-surface-variant">
+<label class="flex items-center gap-2 p-2 rounded bg-surface">
+<span class="material-symbols-outlined text-emerald-600 text-[16px]">check_box</span>
+<span>Consommation mémoire serveur &lt; 50 Mo sur 50 000 lignes</span>
+</label>
+<label class="flex items-center gap-2 p-2 rounded bg-surface">
+<span class="material-symbols-outlined text-emerald-600 text-[16px]">check_box</span>
+<span>En-tête Content-Disposition avec horodatage RFC 3339</span>
+</label>
+<label class="flex items-center gap-2 p-2 rounded bg-surface">
+<span class="material-symbols-outlined text-emerald-600 text-[16px]">check_box</span>
+<span>Filtrage par entrepôt (`warehouse_id`) préservé</span>
+</label>
+<label class="flex items-center gap-2 p-2 rounded bg-surface">
+<span class="material-symbols-outlined text-emerald-600 text-[16px]">check_box</span>
+<span>Test unitaire validant le code HTTP 200 et les chunks</span>
+</label>
+</div>
+</div>
+<!-- Inconnues et points à vérifier (Honnêteté intellectuelle de l'outil) -->
+<div class="p-3.5 rounded-lg bg-tertiary-fixed/30 space-y-1.5 text-xs text-on-surface">
+<div class="flex items-center gap-1.5 font-label font-semibold text-on-tertiary-fixed">
+<span class="material-symbols-outlined text-[16px]">help_center</span>
+<span>Inconnues et arbitrages laissés à la mainteneuse (Aïcha)</span>
+</div>
+<ul class="list-disc list-inside space-y-1 text-on-surface-variant text-[11px] leading-relaxed">
+<li>Format de date attendu par Excel en Afrique de l'Ouest : standardiser sur <code class="font-label">JJ/MM/AAAA</code> ou ISO-8601 (<code class="font-label">AAAA-MM-JJ</code>) ?</li>
+<li>Séparateur décimal : virgule (<code class="font-label">,</code>) ou point (<code class="font-label">.</code>) selon les paramètres régionaux des postes comptables.</li>
+</ul>
+</div>
+<!-- Barre d'action de transformation en tâche humaine -->
+<div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-surface-container">
+<div class="flex items-center gap-2 text-[11px] font-label text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-outline">verified</span>
+<span>Créera un brouillon non-publié dans Gitea Issues</span>
+</div>
+<div class="flex items-center gap-2 w-full sm:w-auto">
+<button class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-primary text-on-primary font-semibold text-xs hover:bg-primary-container transition-all flex items-center justify-center gap-2 shadow-sm" onclick="showDraftCreatedAlert()" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary-container">assignment_add</span>
+<span>En faire une tâche à relire</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Suggestion 2 : Gestion de la file d'attente hors-ligne -->
+<article class="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label text-xs text-outline font-semibold">Tâche suggérée #STK-OFF-02</span>
+<span class="font-label text-[11px] px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Client-side Sync</span>
+</div>
+<button class="text-xs font-semibold text-secondary hover:text-secondary-container transition-colors flex items-center gap-1 font-label" type="button">
+<span>Inspecter</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<h4 class="font-headline text-base font-semibold text-on-surface">
+            Gestion de la file d'attente hors-ligne (IndexedDB sync queue)
+          </h4>
+<p class="text-xs text-on-surface-variant line-clamp-2">
+            Interception des requêtes d'export en cas d'absence de réseau 3G/4G, mise en réserve dans IndexedDB avec réessai exponentiel et notification progressive à l'utilisateur.
+          </p>
+<div class="flex items-center gap-4 text-[11px] font-label text-outline pt-1">
+<span>Point d'entrée : <code class="text-on-surface">static/js/offline-store.js</code></span>
+<span>·</span>
+<span>Complexité : Moyenne</span>
+</div>
+</article>
+<!-- Suggestion 3 : Tests de charge de réconciliation -->
+<article class="rounded-xl bg-surface-container-lowest p-5 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label text-xs text-outline font-semibold">Tâche suggérée #STK-TST-03</span>
+<span class="font-label text-[11px] px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Quality &amp; Load</span>
+</div>
+<button class="text-xs font-semibold text-secondary hover:text-secondary-container transition-colors flex items-center gap-1 font-label" type="button">
+<span>Inspecter</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<h4 class="font-headline text-base font-semibold text-on-surface">
+            Tests de charge de réconciliation multi-terminaux
+          </h4>
+<p class="text-xs text-on-surface-variant line-clamp-2">
+            Génération d'un jeu de données de test à 100k mouvements pour vérifier l'absence d'interblocage (deadlocks) PostgreSQL lors de conciliations concurrentes de stock.
+          </p>
+<div class="flex items-center gap-4 text-[11px] font-label text-outline pt-1">
+<span>Point d'entrée : <code class="text-on-surface">tests/load/test_reconciliation.py</code></span>
+<span>·</span>
+<span>Complexité : Élevée</span>
+</div>
+</article>
+</div>
+<!-- Vue Loading (Scénario 2) -->
+<div class="hidden rounded-xl bg-surface-container-lowest p-10 shadow-sm text-center space-y-6" id="loading-container">
+<div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+<div class="w-16 h-16 rounded-full border-4 border-surface-container border-t-secondary-container animate-spin"></div>
+<span class="material-symbols-outlined text-primary text-[24px] absolute">memory</span>
+</div>
+<div class="space-y-2 max-w-md mx-auto">
+<h4 class="font-headline text-lg font-bold text-on-surface">Analyse statique en cours...</h4>
+<p class="font-body text-xs text-on-surface-variant leading-relaxed">
+            Parcours de l'AST Django (modèles, sérialiseurs et vues). Aucune clé d'API requise, traitement distribué sur les nœuds locaux du Hub DevStreet.
+          </p>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low max-w-sm mx-auto text-left font-label text-xs space-y-2">
+<div class="flex items-center gap-2 text-on-surface">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-ping"></span>
+<span>Lecture : apps/inventory/models.py:StockMovement</span>
+</div>
+<div class="text-[11px] text-outline pl-4">Recherche des clés de pagination et de stream...</div>
+</div>
+</div>
+<!-- Vue Quota / IA Indisponible (Scénario 4) -->
+<div class="hidden rounded-xl bg-surface-container-lowest p-8 shadow-sm space-y-6" id="quota-container">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[28px]">speed</span>
+</div>
+<div class="space-y-2">
+<h4 class="font-headline text-lg font-bold text-on-surface">Quota d'analyse temporairement atteint pour le projet Stock</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+              Pour préserver l'équité des ressources partagées sur l'infrastructure DevStreet, les analyses de dépôts sont limitées à 15 requêtes / heure pour cette organisation. Vos travaux d'ingénierie ne sont pas bloqués : vous pouvez structurer la tâche manuellement sans attendre.
+            </p>
+</div>
+</div>
+<div class="p-4 rounded-lg bg-surface-container flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-2 font-label text-xs text-on-surface">
+<span class="material-symbols-outlined text-outline text-[18px]">schedule</span>
+<span>Réinitialisation du quota dans : <strong>18 minutes</strong></span>
+</div>
+<button class="w-full sm:w-auto px-4 py-2 rounded-lg bg-primary text-on-primary font-semibold text-xs hover:bg-primary-container transition-all flex items-center justify-center gap-2" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span>Basculer vers l'éditeur de tâche manuel</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</div>
+<script>
+  // Logique du Simulateur de Recette UX
+  function setScenario(scen) {
+    // Reset classes boutons
+    document.querySelectorAll('.scen-btn').forEach(btn => {
+      btn.className = 'scen-btn px-3 py-1.5 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors';
+    });
+
+    const alertPanel = document.getElementById('scenario-alert-panel');
+    const resultsContainer = document.getElementById('results-container');
+    const loadingContainer = document.getElementById('loading-container');
+    const quotaContainer = document.getElementById('quota-container');
+    const consentCheck = document.getElementById('consent-check');
+    const mainBtn = document.getElementById('main-analyze-btn');
+    const consentHelper = document.getElementById('consent-helper-msg');
+    const pipelineBadge = document.getElementById('pipeline-status-badge');
+    const commitTag = document.getElementById('current-commit-tag');
+
+    // Cacher toutes les alertes spécifiques
+    alertPanel.className = 'hidden';
+    alertPanel.innerHTML = '';
+    resultsContainer.classList.remove('hidden');
+    loadingContainer.classList.add('hidden');
+    quotaContainer.classList.add('hidden');
+
+    if (scen === 'consent_missing') {
+      document.getElementById('btn-scen-1').className = 'scen-btn px-3 py-1.5 rounded bg-primary text-on-primary font-semibold shadow-sm transition-colors';
+      consentCheck.checked = false;
+      mainBtn.disabled = true;
+      consentHelper.classList.remove('hidden');
+      pipelineBadge.className = 'font-label text-xs font-semibold px-2.5 py-1 rounded bg-surface-container text-outline flex items-center gap-1.5';
+      pipelineBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>En attente d’autorisation';
+    } 
+    else if (scen === 'loading') {
+      document.getElementById('btn-scen-2').className = 'scen-btn px-3 py-1.5 rounded bg-primary text-on-primary font-semibold shadow-sm transition-colors';
+      consentCheck.checked = true;
+      mainBtn.disabled = true;
+      consentHelper.classList.add('hidden');
+      resultsContainer.classList.add('hidden');
+      loadingContainer.classList.remove('hidden');
+      pipelineBadge.className = 'font-label text-xs font-semibold px-2.5 py-1 rounded bg-amber-100 text-amber-900 flex items-center gap-1.5';
+      pipelineBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>Extraction AST en cours';
+    } 
+    else if (scen === 'ready') {
+      document.getElementById('btn-scen-3').className = 'scen-btn px-3 py-1.5 rounded bg-primary text-on-primary font-semibold shadow-sm transition-colors';
+      consentCheck.checked = true;
+      mainBtn.disabled = false;
+      consentHelper.classList.add('hidden');
+      resultsContainer.classList.remove('hidden');
+      pipelineBadge.className = 'font-label text-xs font-semibold px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 flex items-center gap-1.5';
+      pipelineBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Cycle terminé';
+      commitTag.textContent = '7f8a92c';
+    }
+    else if (scen === 'quota_exceeded') {
+      document.getElementById('btn-scen-4').className = 'scen-btn px-3 py-1.5 rounded bg-primary text-on-primary font-semibold shadow-sm transition-colors';
+      consentCheck.checked = true;
+      mainBtn.disabled = true;
+      resultsContainer.classList.add('hidden');
+      quotaContainer.classList.remove('hidden');
+      pipelineBadge.className = 'font-label text-xs font-semibold px-2.5 py-1 rounded bg-amber-100 text-amber-900 flex items-center gap-1.5';
+      pipelineBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>Limite de requêtes atteinte';
+    }
+    else if (scen === 'code_diverged') {
+      document.getElementById('btn-scen-5').className = 'scen-btn px-3 py-1.5 rounded bg-primary text-on-primary font-semibold shadow-sm transition-colors';
+      consentCheck.checked = true;
+      mainBtn.disabled = false;
+      commitTag.textContent = '8c4b11f (nouveau)';
+      alertPanel.className = 'block p-4 rounded-xl bg-amber-50 text-amber-900 space-y-2 shadow-sm border-l-4 border-secondary-container';
+      alertPanel.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-secondary text-[22px] shrink-0 mt-0.5">notification_important</span>
+            <div class="space-y-1 text-xs">
+              <p class="font-bold text-on-surface">Le code source distant a évolué depuis la dernière analyse</p>
+              <p class="text-on-surface-variant">Un commit récent (<code class="font-label font-bold text-secondary">8c4b11f</code> par @moussa) a été poussé sur la branche <code class="font-label">main</code> de Gitea. Les suggestions ci-dessous reposent sur le commit <code class="font-label">7f8a92c</code>.</p>
+            </div>
+          </div>
+          <button onclick="triggerManualAnalysis()" class="shrink-0 px-3 py-1.5 rounded bg-primary text-on-primary font-semibold font-label text-xs hover:bg-primary-container transition-colors">
+            Réaligner sur 8c4b11f
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  function handleConsentChange(checked) {
+    const mainBtn = document.getElementById('main-analyze-btn');
+    const helper = document.getElementById('consent-helper-msg');
+    mainBtn.disabled = !checked;
+    if (checked) {
+      helper.classList.add('hidden');
+    } else {
+      helper.classList.remove('hidden');
+    }
+  }
+
+  function triggerManualAnalysis() {
+    setScenario('loading');
+    setTimeout(() => {
+      setScenario('ready');
+    }, 1800);
+  }
+
+  function showDraftCreatedAlert() {
+    alert("Brouillon créé avec succès dans DevStreet Hub. La tâche a été placée dans le sas de relecture humaine d'Aïcha Diallo.");
+  }
+</script></main></div></body></html>

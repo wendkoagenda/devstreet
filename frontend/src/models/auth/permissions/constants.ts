@@ -22,6 +22,13 @@ export const PERMISSIONS = {
       UPDATE: "roles.update",
     },
   },
+  DEVSTREET_HUB_PROJECT: {
+    category: "projects",
+    actions: {
+      CREATE: "projects.create",
+      STAR: "projects.star",
+    },
+  },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -52,3 +59,6 @@ export const ROLE_VIEW = PERMISSIONS.ROLE.actions.VIEW;
 export const ROLE_CREATE = PERMISSIONS.ROLE.actions.CREATE;
 export const ROLE_DELETE = PERMISSIONS.ROLE.actions.DELETE;
 export const ROLE_UPDATE = PERMISSIONS.ROLE.actions.UPDATE;
+
+export const PROJECT_CREATE = PERMISSIONS.DEVSTREET_HUB_PROJECT.actions.CREATE;
+export const PROJECT_STAR = PERMISSIONS.DEVSTREET_HUB_PROJECT.actions.STAR;

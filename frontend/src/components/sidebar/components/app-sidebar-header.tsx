@@ -6,31 +6,32 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { t } from "i18next";
-import { useNavigate } from "react-router-dom";
+import { Terminal } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function AppSidebarHeader() {
-  const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
 
   const handleGoToHome = () => {
-    navigate("/");
     if (isMobile) setOpenMobile(false);
   };
 
   return (
-    <SidebarHeader>
+    <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="lg" asChild>
-            <a onClick={handleGoToHome}>
-              <div className="flex h-8 items-center justify-center text-sidebar-primary-foreground">
-                <img src={t("app.logo")} alt="Logo devstreet" className="h-5 w-auto object-contain" />
-              </div>
-              <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold">{t("app.name")}</span>
-                <span className="">{t("app.version")}</span>
-              </div>
-            </a>
+          <SidebarMenuButton size="lg" asChild className="hover:bg-transparent active:bg-transparent">
+            <Link to="/hub/projects" onClick={handleGoToHome} aria-label={t("sidebar.brand_home")}>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                <Terminal aria-hidden className="h-[18px] w-[18px]" />
+              </span>
+              <span className="text-lg font-bold tracking-tight text-foreground">
+                {t("sidebar.brand")}
+              </span>
+              <span className="rounded border border-brand-soft-border bg-brand-soft px-2 py-1 text-[10px] font-bold leading-none tracking-wide text-brand-strong">
+                {t("sidebar.brand_badge")}
+              </span>
+            </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

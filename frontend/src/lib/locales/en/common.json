@@ -92,7 +92,15 @@
     "my_account": "My Account",
     "disconnect": "Disconnect",
     "home": "Home",
-    "roles": "Roles"
+    "roles": "Roles",
+    "marketplace": "Marketplace",
+    "hub": "DevStreet Hub",
+    "forum": "Forum",
+    "profile": "My profile",
+    "explore_projects": "Explore projects",
+    "brand": "DevStreet",
+    "brand_badge": "Hub",
+    "brand_home": "DevStreet Hub home"
   },
   "language": {
     "toggle": "Toggle language",
@@ -108,7 +116,591 @@
   "breadcrumb_titles": {
     "home": "Home",
     "users_list": "Users List",
-    "roles_list": "Roles List"
+    "roles_list": "Roles List",
+    "hub": "DevStreet Hub",
+    "hub_projects": "Explore projects",
+    "hub_project_new": "Create a project",
+    "hub_project_detail": "Project page"
+  },
+  "hub": {
+    "common": {
+      "login": "Sign in",
+      "retry": "Retry",
+      "rate_limited": "Too many requests. Wait a moment before trying again."
+    },
+    "status": {
+      "draft": "Draft — visible only to you",
+      "published": "Public",
+      "archived": "Archived"
+    },
+    "explorer": {
+      "eyebrow": "DevStreet Repository Registry",
+      "title": "What do you want to build with others?",
+      "mobile_title": "Explore projects",
+      "description": "Discover community-led projects, understand their needs, and offer your contributions.",
+      "metric_projects": "Visible projects",
+      "metric_technologies": "Technologies",
+      "search_label": "Search projects",
+      "search_placeholder": "Search by keyword, project name, problem solved...",
+      "clear_search": "Clear search",
+      "technology_label": "Technology",
+      "all_technologies": "All technologies",
+      "all_short": "All",
+      "catalog_loading": "Loading catalog...",
+      "catalog_retry": "Retry",
+      "create": "Create a project",
+      "create_login": "Sign in to create",
+      "filter_search": "Search: {{search}}",
+      "filter_mine": "My projects",
+      "filter_owner": "Owner #{{id}}",
+      "active_filters": "Active filters",
+      "clear_all": "Clear all filters",
+      "remove_filter": "Remove filter {{filter}}",
+      "projects_available": "{{count}} projects available",
+      "list_label": "Project list",
+      "loading": "Loading projects"
+    },
+    "empty": {
+      "title": "No projects yet",
+      "text": "Published projects will appear here.",
+      "filtered_title": "No project matches your filters",
+      "filtered_text": "Widen your search by clearing the technology filter or changing the keyword."
+    },
+    "error": {
+      "title": "Unable to load projects",
+      "generic": "An error prevents the registry from loading. Retry or widen your filters.",
+      "network": "Connection failed. Check the network then retry.",
+      "forbidden": "You do not have access to these projects."
+    },
+    "pagination": {
+      "label": "Pagination",
+      "range_prefix": "Showing",
+      "range_to": "to",
+      "range_of": "of",
+      "projects": "projects",
+      "previous": "Previous",
+      "next": "Next",
+      "previous_short": "Previous",
+      "next_short": "Next",
+      "page": "Page {{page}}",
+      "mobile_summary": "Page {{page}} of {{pageCount}} • {{count}} projects found"
+    },
+    "card": {
+      "open": "Open {{title}}",
+      "discover": "Discover the project",
+      "open_draft": "Open draft",
+      "discover_hint": "Discover the project need",
+      "draft_ready": "Draft ready to publish",
+      "draft_git": "Git setup in progress"
+    },
+    "star": {
+      "add": "Star {{title}}",
+      "remove": "Unstar {{title}}",
+      "unavailable": "Drafts cannot be starred",
+      "login_required": "Sign in to star a project.",
+      "forbidden": "You are not allowed to star this project.",
+      "not_found": "Project not found.",
+      "conflict": "This action is no longer possible for this project.",
+      "error": "Unable to update the star."
+    },
+    "upcoming": {
+      "badge": "Coming soon",
+      "text": "This screen is not delivered yet. Return to the project page or exploration.",
+      "back": "Back",
+      "screens": {
+        "create_project": "Create a project",
+        "project_detail": "Project page",
+        "task_contribution": "Task and contribution",
+        "contribution_review": "Contribution review",
+        "ai_workshop": "AI workshop"
+      }
+    },
+    "profile": {
+      "title": "Achievements · {{name}}",
+      "description": "Published projects and visible contributions. Stars remain a separate social signal; there is no automatic ranking.",
+      "back_explore": "Back to exploration",
+      "account_section_title": "Projects and achievements",
+      "account_section_hint": "Bounded public preview, without changing your identity or permissions.",
+      "open_public": "Open public page",
+      "user_fallback": "User #{{id}}",
+      "role_owner": "Owner",
+      "stars": "{{count}} star(s)",
+      "open_project": "Open project",
+      "open_task": "View task",
+      "open_contribution": "View contributions",
+      "unavailable": "Achievement unavailable",
+      "story": "{{author}} proposed “{{summary}}” on {{project}}, reviewed by {{reviewer}}",
+      "story_pending": "{{author}} proposed “{{summary}}” on {{project}}",
+      "reviewer_unknown": "a maintainer",
+      "projects_title": "Published projects",
+      "contributions_title": "Contributions",
+      "preview_limit": "Preview of the latest {{limit}} entries. Longer lists stay paginated.",
+      "accepted_only_hint": "This preview only shows accepted public contributions.",
+      "list_visibility_hint": "The long list respects your read rights: a pending submission is never labeled as accepted.",
+      "projects_empty": "No visible published project.",
+      "contributions_empty": "No visible contribution.",
+      "see_all_projects": "See all projects",
+      "see_all_contributions": "See all contributions",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} / {{pageCount}}",
+      "tabs": {
+        "overview": "Overview",
+        "projects": "All projects",
+        "contributions": "All contributions"
+      },
+      "status": {
+        "accepted": "Accepted",
+        "submitted": "Proposed",
+        "rejected": "Rejected"
+      },
+      "errors": {
+        "not_found": "Profile or achievements not found.",
+        "forbidden": "Viewing not allowed.",
+        "list": "Unable to load the list."
+      }
+    },
+    "ai": {
+      "title": "AI workshop",
+      "description": "Describe the goal, generate a sourced analysis, then adopt a suggestion as a draft. Nothing is published automatically.",
+      "back_project": "Back to project page",
+      "consent": {
+        "title": "Sending authorization",
+        "text": "Code excerpts and repository context may be sent to an external provider to produce the analysis. Only the owner can grant or revoke this consent.",
+        "enabled": "Consent active",
+        "disabled": "Consent inactive",
+        "enable": "Allow sending",
+        "disable": "Revoke authorization",
+        "owner_only": "Only the owner can manage this consent."
+      },
+      "form": {
+        "title": "Goal to analyze",
+        "objective": "Objective",
+        "objective_example": "Add a CSV export",
+        "example_hint": "Typing aid example: “Add a CSV export”. Nothing is prefilled as if it had already been detected.",
+        "language": "Result language",
+        "lang_fr": "Français",
+        "lang_en": "English",
+        "generate": "Generate analysis",
+        "manual": "Create a task manually"
+      },
+      "manual": {
+        "title": "Manual task (draft)",
+        "hint": "Always available if the AI service is down, rate-limited, or if you prefer writing without analysis.",
+        "submit": "Create draft"
+      },
+      "progress": {
+        "queued": "Waiting…",
+        "running": "Analyzing excerpts…",
+        "succeeded": "Analysis ready",
+        "failed": "Analysis failed"
+      },
+      "failed": {
+        "title": "Analysis failed",
+        "text": "No partial result is shown as a success. You can retry later or create a task manually."
+      },
+      "result": {
+        "summary": "Summary",
+        "no_summary": "No summary provided.",
+        "entry_points": "Entry points",
+        "sources_hint": "References point to the analyzed SHA.",
+        "sources_stale": "The repository has changed since this analysis: these sources may no longer match current code.",
+        "unknowns": "Unknowns / limits",
+        "suggestions": "Task suggestions",
+        "no_suggestions": "No usable suggestions.",
+        "adopt": "Turn into a reviewable task"
+      },
+      "meta": {
+        "title": "Analysis context",
+        "model": "Model",
+        "sha": "Analyzed SHA",
+        "current_sha": "Repo SHA",
+        "prompt": "Prompt",
+        "disclaimer": "This analysis does not replace a human review, a security audit, or executed tests."
+      },
+      "toasts": {
+        "consent_on": "Consent saved.",
+        "consent_off": "Consent revoked.",
+        "ready": "Analysis available.",
+        "task_draft": "Draft created from the suggestion.",
+        "manual_task": "Draft task created."
+      },
+      "errors": {
+        "not_found": "Project or analysis not found.",
+        "forbidden": "Action not allowed.",
+        "login_required": "Session expired. Sign in again.",
+        "conflict": "This action is no longer possible.",
+        "quota": "Quota reached. No automatic retry.",
+        "unavailable": "AI service not configured or unavailable. Create the task manually.",
+        "network": "Connection failed. Check the network then retry.",
+        "owner_only_consent": "Only the owner can manage consent.",
+        "need_consent": "The owner must allow sending before generation.",
+        "objective_required": "Provide an objective.",
+        "failed": "The analysis failed.",
+        "poll_timeout": "Wait timed out. Try again later.",
+        "poll": "Unable to track progress.",
+        "consent": "Unable to save consent.",
+        "start": "Unable to start analysis.",
+        "adopt": "Unable to adopt the suggestion.",
+        "manual": "Unable to create the manual task."
+      }
+    },
+    "review": {
+      "title": "Review · {{title}}",
+      "description": "Read proposals, compare them to the task criteria, then decide. No Git merge is triggered here.",
+      "back_project": "Back to project page",
+      "list_title": "Proposals",
+      "empty": "No visible proposals for this project.",
+      "select_hint": "Select a proposal from the list.",
+      "self_notice": "You cannot review your own contribution, even as project owner.",
+      "readonly_notice": "This proposal has already been reviewed.",
+      "forbidden_notice": "You are not allowed to decide on these proposals.",
+      "panel": {
+        "proposal": "Proposal",
+        "criteria": "Task criteria",
+        "criteria_missing": "Unable to load criteria.",
+        "author": "Author",
+        "task": "Task",
+        "status": "Status",
+        "open_pr": "Open PR #{{number}}",
+        "no_pr": "No PR declared"
+      },
+      "decided": {
+        "accepted": "Reviewed and accepted by #{{id}}",
+        "rejected": "Reviewed and rejected by #{{id}}"
+      },
+      "form": {
+        "note": "Decision rationale",
+        "accept": "Accept the delivery",
+        "reject": "Reject with explanation",
+        "no_merge": "This UI does not perform a Git merge."
+      },
+      "toasts": {
+        "accepted": "Delivery accepted.",
+        "rejected": "Proposal rejected."
+      },
+      "errors": {
+        "not_found": "Project or proposals not found.",
+        "forbidden": "Action not allowed.",
+        "login_required": "Session expired. Sign in again.",
+        "conflict": "This contribution was already reviewed.",
+        "network": "Connection failed. Check the network then retry.",
+        "note_required": "A rationale is required.",
+        "self_review": "Self-review is not allowed.",
+        "already_decided": "Decision already taken.",
+        "decide": "Unable to save the decision."
+      }
+    },
+    "task": {
+      "back_project": "Back to project page",
+      "project_label": "Project · {{title}}",
+      "no_description": "No detailed instructions.",
+      "goto_correct": "Open the correct URL",
+      "first_step": {
+        "title": "Your first step"
+      },
+      "criteria": {
+        "title": "Acceptance criteria",
+        "empty": "No criteria defined yet.",
+        "hint": "This checklist is a guide: it is not auto-checked."
+      },
+      "sources": {
+        "title": "Context sources (AI proposal)",
+        "hint": "These links point to the analyzed SHA. The repository may have changed since."
+      },
+      "actions": {
+        "ask_help": "Ask for help",
+        "propose": "Propose my work",
+        "open_task": "Open task",
+        "close_task": "Close task"
+      },
+      "confirm": {
+        "close": "Closing this task will block new submissions. Continue?"
+      },
+      "help": {
+        "title": "Help request (draft)",
+        "default_title": "Help on task: {{title}}",
+        "default_body": "Hello,\n\nI need help moving forward on “{{title}}”.\n\nHere is where I am:\n",
+        "field_title": "Topic title",
+        "field_body": "Message",
+        "publish": "Publish to forum",
+        "forum_kept": "Forum is not connected (503). Your draft stays here; the task remains available."
+      },
+      "propose": {
+        "title": "Propose my work",
+        "hint": "Maintainer review is still required. A PR number will be checked in the linked repository. Without a PR, this is a declaration under review. You cannot self-accept.",
+        "summary": "Summary of your work",
+        "pr": "PR number (optional)",
+        "pr_optional": "e.g. 12",
+        "sha": "Commit SHA (optional)",
+        "sha_optional": "40–64 hex chars",
+        "submit": "Send proposal"
+      },
+      "contributions": {
+        "title": "Visible proposals",
+        "empty": "No proposals for this task yet.",
+        "author": "Author #{{id}}",
+        "status": {
+          "submitted": "Submitted",
+          "accepted": "Accepted",
+          "rejected": "Rejected"
+        }
+      },
+      "toasts": {
+        "help_sent": "Help request published.",
+        "submitted": "Proposal sent for review.",
+        "updated": "Task updated."
+      },
+      "errors": {
+        "not_found": "Task not found or inaccessible.",
+        "mismatch": "This task does not belong to this project.",
+        "forbidden": "You are not allowed to perform this action.",
+        "login_required": "Session expired. Sign in again.",
+        "conflict": "Action not possible in the current state.",
+        "network": "Connection failed. Check the network then retry.",
+        "forum_unavailable": "Forum is unavailable. The draft is kept locally.",
+        "help": "Unable to publish the help request.",
+        "submit": "Unable to send the proposal.",
+        "update": "Unable to update the task.",
+        "task_closed": "The task is closed: no new submissions."
+      }
+    },
+    "detail": {
+      "no_problem": "No need summary yet.",
+      "tabs_label": "Project page sections",
+      "tabs": {
+        "presentation": "Overview",
+        "code": "Code",
+        "contribute": "Contribute",
+        "team": "Team"
+      },
+      "page_of": "Page {{page}} / {{pageCount}}",
+      "actions": {
+        "demo": "Live demo",
+        "open_code": "Open code",
+        "ai": "Prepare AI contribution",
+        "reviews": "Review proposals",
+        "create_task": "Create task",
+        "continue_setup": "Continue setup",
+        "manage": "Project management",
+        "publish": "Publish project",
+        "archive": "Archive project"
+      },
+      "confirm": {
+        "publish": "Publishing makes this project visible in the Hub. Continue?",
+        "archive": "Archiving reduces visibility and may affect application evidence. Continue?",
+        "remove_member": "Remove this member from the team?"
+      },
+      "presentation": {
+        "title": "Context and description",
+        "empty": "No detailed description yet."
+      },
+      "code": {
+        "title": "Code repository",
+        "hint": "Repository status and clone URL in DevStreet. The file browser comes in the next step.",
+        "not_ready": "The repository is not ready yet. No URL is shown.",
+        "branch": "Main branch",
+        "status": "Status",
+        "ready": "Ready",
+        "clone": "Clone URL"
+      },
+      "contribute": {
+        "title": "Contribution tasks",
+        "empty": "No tasks yet. A maintainer can create one manually.",
+        "no_description": "No description.",
+        "open_task": "Open task"
+      },
+      "task_status": {
+        "draft": "Draft",
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "task_form": {
+        "title": "New task (draft)",
+        "name": "Title",
+        "description": "Description",
+        "submit": "Create task"
+      },
+      "team": {
+        "title": "Team",
+        "hint": "Without a public directory, invites use a user ID shared by the member. The business role does not grant Git push.",
+        "owner": "Owner · user #{{id}}",
+        "user": "User #{{id}}",
+        "user_id": "User ID",
+        "role": "Role",
+        "invite": "Add",
+        "remove": "Remove member",
+        "empty": "No members added yet.",
+        "roles": {
+          "maintainer": "Maintainer",
+          "contributor": "Contributor"
+        }
+      },
+      "toasts": {
+        "published": "Project published.",
+        "archived": "Project archived.",
+        "task_created": "Draft task created.",
+        "member_added": "Member added.",
+        "member_removed": "Member removed."
+      },
+      "errors": {
+        "not_found": "Project not found or inaccessible.",
+        "forbidden": "You do not have access to this project or action.",
+        "login_required": "Session expired. Sign in again.",
+        "conflict": "This transition is no longer possible.",
+        "network": "Connection failed. Check the network then retry.",
+        "publish": "Unable to publish the project.",
+        "archive": "Unable to archive the project.",
+        "task_create": "Unable to create the task.",
+        "member_add": "Unable to add this member.",
+        "member_remove": "Unable to remove this member."
+      }
+    },
+    "create": {
+      "title": "Create my project",
+      "title_resume": "Resume creation",
+      "badge": "private",
+      "description": "Pick a name, license and technologies. DevStreet prepares your repository automatically — without opening the forge UI.",
+      "description_resume": "Resume progress: Git identity, repository, then initialization. The draft is kept.",
+      "progress": {
+        "draft": "Draft",
+        "identity": "Git access",
+        "repository": "Repository",
+        "init": "Initialization"
+      },
+      "autosave": {
+        "on": "Project created",
+        "off": "Not created yet"
+      },
+      "gate": {
+        "title": "Creation restricted",
+        "login_text": "Sign in with an allowed account to create a project.",
+        "forbidden_text": "Your account does not have permission to create projects."
+      },
+      "sections": {
+        "presentation": "Your project",
+        "presentation_hint": "The slug is generated automatically; you can change it in advanced options.",
+        "repository": "Repository and initialization",
+        "repository_hint": "Everything stays in DevStreet. No visit to the forge UI is required.",
+        "publish": "Public publication (optional)",
+        "publish_hint": "The project stays private until an explicit publish action."
+      },
+      "advanced": {
+        "toggle": "Advanced options"
+      },
+      "fields": {
+        "title": "Project name",
+        "slug": "Identifier (slug)",
+        "slug_auto": "Generated automatically",
+        "slug_hint": "If left empty, the server picks a unique slug from the name.",
+        "problem": "Problem solved (optional)",
+        "description": "Detailed description (optional)",
+        "technologies": "Technologies",
+        "technologies_count": "{{count}} selected",
+        "remove_tech": "Remove {{label}}",
+        "license": "License",
+        "demo_url": "Demo link (optional)"
+      },
+      "licenses": {
+        "MIT": "MIT (recommended)",
+        "Apache-2.0": "Apache-2.0",
+        "BSD-2-Clause": "BSD-2-Clause",
+        "BSD-3-Clause": "BSD-3-Clause"
+      },
+      "init": {
+        "readme_title": "Initialize with a README",
+        "readme_text": "Creates README, LICENSE and .gitignore on the repository through DevStreet.",
+        "readme_done": "Repository initialized with README, license and .gitignore.",
+        "push_title": "Push an existing project",
+        "push_text": "Shows clone/push commands to upload your local code."
+      },
+      "repo": {
+        "status_ready": "Repository ready",
+        "status_pending": "Preparation in progress",
+        "preparing": "Resuming…",
+        "waiting_help": "DevStreet is preparing your Git access and repository. Please wait.",
+        "retry": "Resume preparation",
+        "retry_help": "The draft is kept. Resume will not create a second account or repository.",
+        "remote_url": "Clone URL",
+        "https": "HTTPS",
+        "url_placeholder": "Available after preparation",
+        "copy_url": "Copy URL",
+        "copy_cli": "Copy commands",
+        "copied": "Copied!",
+        "cli_title": "Commands to push your code",
+        "cli_waiting": "Commands appear once the real repository URL is ready.",
+        "security_title": "Never commit secrets",
+        "security_text": "No .env, tokens or API keys. Check your .gitignore before pushing.",
+        "auth_title": "Git authentication",
+        "auth_text": "Login {{login}} and the one-time forge password shown below (never stored in the browser).",
+        "password_panel_title": "Initial forge password",
+        "password_panel_text": "Copy this secret now. It is shown only once and never stored locally.",
+        "password_recovery_text": "Recovery after interruption: a new one-time secret was issued. No third-party password was reused.",
+        "copy_password": "Copy password",
+        "password_dismiss": "I've noted it / close"
+      },
+      "publish": {
+        "visibility_title": "Stays private until publish",
+        "visibility_text": "Publishing makes the project visible in the Hub and the repository public. It is never automatic.",
+        "integrity_label": "Confirmation:",
+        "integrity_text": "I verified that project “{{path}}” contains no secrets.",
+        "need_repo": "The repository must be ready before you can publish."
+      },
+      "actions": {
+        "create": "Create my project",
+        "creating": "Creating…",
+        "create_help": "One click saves the draft, prepares Git access and creates the private repository.",
+        "publish": "Publish project",
+        "new_draft": "New project"
+      },
+      "preview": {
+        "aside_label": "Project summary",
+        "card_title": "DevStreet card preview",
+        "live": "Preview",
+        "untitled": "New project",
+        "by": "by {{owner}}",
+        "you": "you",
+        "problem_placeholder": "The need summary will appear here.",
+        "stars": "{{count}} stars",
+        "forge_sync": "Repo ready",
+        "params": "Settings",
+        "owner": "Owner",
+        "visibility": "Initial visibility",
+        "visibility_private": "Private",
+        "visibility_public": "Public",
+        "forge": "Code storage",
+        "forge_name": "DevStreet (private)",
+        "branch": "Main branch",
+        "help_title": "Next?",
+        "help_text": "Initialize with a README in DevStreet, or push an existing project. Public publication stays optional."
+      },
+      "toasts": {
+        "repo_ready": "Project and repository ready.",
+        "initialized": "Repository initialized with README, license and .gitignore.",
+        "push_mode": "Push-existing mode: use the commands below.",
+        "published": "Project published.",
+        "forge_password_once": "Git credentials created",
+        "forge_password_hint": "The initial password is shown only once on this screen.",
+        "forge_password_recovered": "Git access recovered",
+        "forge_password_recovered_hint": "A new secret was issued after recovery."
+      },
+      "errors": {
+        "title": "Action failed",
+        "form_incomplete": "Enter at least the project name.",
+        "create": "Unable to create the project.",
+        "initialize": "Unable to initialize the repository.",
+        "identity_conflict": "Git identity conflict: administrative repair is required.",
+        "forge_unavailable": "The forge is unavailable. Your draft is kept: resume later.",
+        "draft_not_found": "This project was not found or is inaccessible.",
+        "publish": "Unable to publish the project.",
+        "repo_not_ready": "The repository must be ready before publishing.",
+        "integrity_required": "Confirm repository integrity before publishing.",
+        "login_required": "Session expired. Sign in again.",
+        "forbidden": "Permission denied for this action.",
+        "conflict": "Conflict: this slug or state is no longer available.",
+        "network": "Connection failed. Check the network then retry."
+      }
+    }
   },
   "auth": {
     "logout_title": "Logout",
@@ -142,7 +734,6 @@
     "name": "Roles and Permissions",
     "description": "Roles and Permissions management"
   },
-
   "pagination": {
     "previous": "Previous",
     "next": "Next",
@@ -191,7 +782,6 @@
     "success": "Your password has been changed successfully",
     "error": "An error occurred while changing your password"
   },
-
   "forgot_password": {
     "title": "Forgot password",
     "email_description": "Enter the email address of your account. We will send you a verification code.",
@@ -253,9 +843,7 @@
     "permissionsAssignedSuccess": "Permissions assigned successfully!",
     "assignmentError": "Failed to assign permissions",
     "role": "Role",
-
     "selectRoleFirst": "Please select a role first",
-
     "title": "Roles and Permissions",
     "description": "Roles and Permissions Management",
     "permissions": "Permissions",
@@ -280,7 +868,6 @@
     "roleName": "Name",
     "nameLabel": "Nom",
     "namePlaceholder": "",
-
     "descriptionLabel": "",
     "descriptionPlaceholder": "",
     "roleDescription": "Description",

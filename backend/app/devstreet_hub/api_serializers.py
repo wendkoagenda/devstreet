@@ -19,6 +19,7 @@ from app.devstreet_hub.repositories.workflow_repository import WorkflowRepositor
 class RepositorySerializer(serializers.ModelSerializer):
     clone_url = serializers.SerializerMethodField()
     browse_url = serializers.SerializerMethodField()
+    is_empty = serializers.SerializerMethodField()
 
     class Meta:
         model = Repository
@@ -29,12 +30,15 @@ class RepositorySerializer(serializers.ModelSerializer):
             "name",
             "default_branch",
             "current_sha",
+            "is_empty",
             "clone_url",
             "browse_url",
         )
         read_only_fields = fields
 
     def get_browse_url(self, obj):
+        # URL technique pour dériver le clone ; l'UI Hub ne doit pas imposer
+        # une visite de l'interface Gitea.
         url = config("GITEA_PUBLIC_URL", config("GITEA_URL")).rstrip("/")
         return (
             f"{url}/{quote(obj.namespace)}/{quote(obj.name)}"
@@ -45,6 +49,9 @@ class RepositorySerializer(serializers.ModelSerializer):
     def get_clone_url(self, obj):
         url = self.get_browse_url(obj)
         return url + ".git" if url else None
+
+    def get_is_empty(self, obj):
+        return obj.status == "ready" and not bool(obj.current_sha)
 
 
 class ProjectQuerySerializer(serializers.Serializer):
@@ -66,6 +73,18 @@ class ProjectWriteSerializer(serializers.ModelSerializer):
     technologies = serializers.PrimaryKeyRelatedField(
         queryset=Technology.objects.all(), many=True, required=False
     )
+    slug = serializers.CharField(
+        required=False, allow_blank=True, max_length=100
+    )
+    problem = serializers.CharField(
+        required=False, allow_blank=True, max_length=2000
+    )
+    description = serializers.CharField(
+        required=False, allow_blank=True, max_length=10000
+    )
+    demo_url = serializers.URLField(
+        required=False, allow_blank=True, allow_null=True
+    )
 
     class Meta:
         model = Project
@@ -84,12 +103,49 @@ class ProjectWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Le titre ne peut pas être vide.")
         return value.strip()
 
+    def validate_slug(self, value):
+        from app.devstreet_hub.services.project_slug import (
+            is_valid_slug,
+            normalize_slug,
+        )
+
+        value = (value or "").strip()
+        if not value:
+            return ""
+        slug = normalize_slug(value)
+        if not is_valid_slug(slug):
+            raise serializers.ValidationError("Slug invalide.")
+        return slug
+
     def validate_declared_license(self, value):
         if value not in ("MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause"):
             raise serializers.ValidationError(
                 "Choisissez une licence permissive prise en charge pour ce MVP."
             )
         return value
+
+
+class ProjectSetupSerializer(serializers.Serializer):
+    """État d'orchestration renvoyé après création ou reprise."""
+
+    draft = serializers.ChoiceField(choices=("ok",))
+    identity = serializers.ChoiceField(
+        choices=("pending", "ok", "failed", "conflict")
+    )
+    repository = serializers.ChoiceField(
+        choices=("pending", "ok", "failed")
+    )
+
+
+class InitializeRepositorySerializer(serializers.Serializer):
+    mode = serializers.ChoiceField(choices=("readme", "push_existing"))
+
+
+class InitializeRepositoryResponseSerializer(serializers.Serializer):
+    mode = serializers.ChoiceField(choices=("readme", "push_existing"))
+    initialized = serializers.BooleanField()
+    is_empty = serializers.BooleanField()
+    repository = RepositorySerializer()
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -122,6 +178,11 @@ class ProjectSerializer(serializers.ModelSerializer):
         if hasattr(obj, "star_count"):
             return obj.star_count
         return WorkflowRepository().star_count(obj)
+
+
+class ProjectCreateResponseSerializer(ProjectSerializer):
+    forge_access = serializers.DictField(required=False, allow_null=True)
+    setup = ProjectSetupSerializer()
 
 
 class TaskWriteSerializer(serializers.ModelSerializer):

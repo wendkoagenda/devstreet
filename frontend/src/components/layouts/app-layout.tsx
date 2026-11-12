@@ -27,19 +27,23 @@ export default function AppLayout() {
     "/": t("breadcrumb_titles.home"),
     "/users": t("breadcrumb_titles.users_list"),
     "/roles": t("breadcrumb_titles.roles_list"),
+    "/hub": t("breadcrumb_titles.hub"),
+    "/hub/projects": t("breadcrumb_titles.hub_projects"),
+    "/hub/projects/new": t("breadcrumb_titles.hub_project_new"),
+    "/hub/projects/*": t("breadcrumb_titles.hub_project_detail"),
   };
 
   // Générer les breadcrumbs
   const breadcrumbs = generateBreadcrumbs(location.pathname, breadcrumbTitles);
   return (
-    <SidebarProvider>
+    <SidebarProvider style={{ "--sidebar-width": "16.5rem" } as React.CSSProperties}>
       {/* Sidebar */}
       <AppSidebar />
 
       {/* Contenu principal */}
-      <div className="flex-1 overflow-auto">
+      <div className="min-w-0 flex-1 overflow-auto">
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
@@ -108,7 +112,7 @@ export default function AppLayout() {
               </Breadcrumb>
             </div>
           </header>
-          <div className="flex flex-col gap-4 p-6">
+          <div className="flex flex-col gap-4 p-4 sm:p-6 lg:p-8">
             <Outlet />
           </div>
         </SidebarInset>

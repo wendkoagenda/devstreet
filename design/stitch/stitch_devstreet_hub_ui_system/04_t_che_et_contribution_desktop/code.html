@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+
+<html lang="fr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-secondary": "#ffffff", "surface-bright": "#fcf8fa", "on-primary-fixed-variant": "#3f465c", "surface-container-lowest": "#ffffff", "surface-container-low": "#f6f3f5", "on-error": "#ffffff", "inverse-on-surface": "#f3f0f2", "on-surface-variant": "#45464d", tertiary: "#000000", "surface-dim": "#dcd9db", "primary-fixed-dim": "#bec6e0", "tertiary-fixed": "#fcdeb5", "surface-variant": "#e4e2e4", "secondary-fixed-dim": "#ffb599", "tertiary-fixed-dim": "#dec29a", "primary-fixed": "#dae2fd", "on-tertiary": "#ffffff", "on-primary-container": "#7c839b", "on-tertiary-fixed-variant": "#574425", "on-error-container": "#93000a", "on-tertiary-container": "#98805d", "surface-container": "#f0edef", "secondary-fixed": "#ffdbce", "on-secondary-fixed-variant": "#7f2b00", secondary: "#a73a00", "surface-container-high": "#eae7e9", outline: "#76777d", surface: "#fcf8fa", "on-primary": "#ffffff", "on-secondary-container": "#571a00", "on-background": "#1b1b1d", "tertiary-container": "#271901", "on-primary-fixed": "#131b2e", "error-container": "#ffdad6", "on-tertiary-fixed": "#271901", "secondary-container": "#fd651e", error: "#ba1a1a", background: "#fcf8fa", "primary-container": "#131b2e", "surface-tint": "#565e74", "inverse-primary": "#bec6e0", "outline-variant": "#c6c6cd", "on-secondary-fixed": "#370e00", primary: "#000000", "surface-container-highest": "#e4e2e4", "inverse-surface": "#303032", "on-surface": "#1b1b1d"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"space-2xl": "3rem", "gutter-sm": "1rem", "space-sm": "0.5rem", "space-lg": "1.5rem", gutter: "1.5rem", "space-md": "1rem", margin: "2rem", "space-xl": "2rem", "space-xs": "0.25rem", "margin-sm": "1rem"}, fontFamily: {"body-lg": ["Hanken Grotesk"], "body-md": ["Hanken Grotesk"], "label-sm": ["JetBrains Mono"], "headline-xl": ["Hanken Grotesk"], "headline-sm": ["Hanken Grotesk"], "body-sm": ["Hanken Grotesk"], "headline-xl-mobile": ["Hanken Grotesk"], "label-lg": ["JetBrains Mono"], "headline-lg": ["Hanken Grotesk"], "code-inline": ["JetBrains Mono"], "headline-md": ["Hanken Grotesk"], "headline-lg-mobile": ["Hanken Grotesk"], "label-md": ["JetBrains Mono"], headline: ["Poppins"], display: ["Poppins"], body: ["Poppins"], label: ["JetBrains Mono"]}, fontSize: {"body-lg": ["16px", {lineHeight: "26px", fontWeight: "400"}], "body-md": ["14px", {lineHeight: "22px", fontWeight: "400"}], "label-sm": ["11px", {lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "500"}], "headline-xl": ["40px", {lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700"}], "headline-sm": ["18px", {lineHeight: "26px", fontWeight: "600"}], "body-sm": ["12px", {lineHeight: "18px", fontWeight: "400"}], "headline-xl-mobile": ["30px", {lineHeight: "38px", letterSpacing: "-0.015em", fontWeight: "700"}], "label-lg": ["14px", {lineHeight: "20px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-lg": ["32px", {lineHeight: "40px", letterSpacing: "-0.015em", fontWeight: "600"}], "code-inline": ["13px", {lineHeight: "18px", fontWeight: "400"}], "headline-md": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}], "headline-lg-mobile": ["24px", {lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600"}], "label-md": ["12px", {lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-[264px] bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-secondary-container text-[18px]">terminal</span></div><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-semibold">DevStreet</span></div><span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm uppercase bg-secondary-container text-on-secondary font-bold tracking-wider">HUB</span></div><nav class="px-space-sm pt-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-medium rounded-lg"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="marketplace" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Marketplace</span></a><div class="flex flex-col pt-space-xs"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="devstreet-hub" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">hub</span><span>DevStreet Hub</span></div><span class="material-symbols-outlined text-[16px]">expand_more</span></a><div class="pl-8 pr-space-xs pt-space-xs flex flex-col gap-space-xs"><a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded-lg text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="explorer-les-projets" href="#"><span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span><span>Explorer les projets</span></a><a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded-lg text-body-sm font-body-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="mes-projets" href="#"><span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span><span>Mes projets</span></a></div></div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="forum" href="#"><span class="material-symbols-outlined text-[20px]">forum</span><span>Forum</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-body-md font-body-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="mon-profil" href="#"><span class="material-symbols-outlined text-[20px]">account_box</span><span>Mon profil</span></a></nav></div><div class="p-space-md bg-surface-container-low/60 m-space-sm rounded-xl"><div class="flex items-center justify-between mb-space-sm"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary text-label-md font-label-md font-semibold">AD</div><div class="flex flex-col"><span class="text-body-sm font-body-sm font-medium text-on-surface leading-tight">Aïcha Diallo</span><span class="text-label-sm font-label-sm text-on-surface-variant">@aicha</span></div></div><span class="px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-surface-container-high text-on-surface-variant font-medium">Lead</span></div><div class="pt-space-xs flex items-center justify-between text-on-surface-variant"><a class="flex items-center gap-1 text-label-sm font-label-sm hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[16px]">settings</span><span>Paramètres</span></a><a class="flex items-center gap-1 text-label-sm font-label-sm hover:text-error transition-colors" data-path="logout" href="#"><span class="material-symbols-outlined text-[16px]">logout</span><span>Déconnexion</span></a></div></div></aside><div class="pl-[264px]"><header class="fixed top-0 left-[264px] right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-sm text-body-sm font-body-sm text-on-surface-variant"><span class="hover:text-on-surface transition-colors cursor-pointer">DevStreet Hub</span><span class="material-symbols-outlined text-[16px] text-outline-variant">chevron_right</span><span class="hover:text-on-surface transition-colors cursor-pointer">Projets</span><span class="material-symbols-outlined text-[16px] text-outline-variant">chevron_right</span><span class="hover:text-on-surface transition-colors cursor-pointer">Stock</span><span class="material-symbols-outlined text-[16px] text-outline-variant">chevron_right</span><span class="text-label-md font-label-md font-medium text-on-surface px-space-xs py-0.5 rounded bg-surface-container-high">Tâche #01</span></div><div class="flex items-center gap-space-lg"><div class="relative flex items-center w-72 h-10 px-space-md rounded-lg bg-surface-container-low text-on-surface-variant focus-within:bg-surface-container-lowest focus-within:shadow-[0_1px_8px_rgba(0,0,0,0.04)] transition-all"><span class="material-symbols-outlined text-[18px] mr-space-sm text-outline">search</span><input class="w-full bg-transparent text-body-sm font-body-sm text-on-surface placeholder:text-outline-variant focus:outline-none" placeholder="Rechercher..." type="text"/><span class="px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-surface-container-high text-on-surface-variant ml-space-xs">⌘K</span></div><div class="flex items-center gap-space-md"><button aria-label="Notifications" class="relative p-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-secondary-container"></span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface px-space-xl pb-space-2xl"><div class="flex flex-col w-full">
+<!-- Subtle decorative ambient flare -->
+<div class="relative w-full max-w-[1440px] mx-auto">
+<div class="absolute -top-10 -right-20 w-96 h-96 bg-secondary-container/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<div class="absolute top-80 -left-20 w-80 h-80 bg-primary-container/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<!-- 1. En-tête de tâche -->
+<header class="mb-space-xl">
+<!-- Fil d'Ariane & Action rapide -->
+<div class="flex items-center justify-between gap-space-md mb-space-sm">
+<nav aria-label="Fil d'Ariane" class="flex items-center gap-space-xs text-body-sm font-body-sm text-on-surface-variant">
+<a class="hover:text-on-surface transition-colors" href="#">Projets</a>
+<span class="material-symbols-outlined text-[14px] text-outline-variant">chevron_right</span>
+<a class="hover:text-on-surface transition-colors" href="#">Stock</a>
+<span class="material-symbols-outlined text-[14px] text-outline-variant">chevron_right</span>
+<a class="hover:text-on-surface transition-colors" href="#">Tâches</a>
+<span class="material-symbols-outlined text-[14px] text-outline-variant">chevron_right</span>
+<span class="font-label-sm text-label-sm text-secondary px-space-xs py-0.5 rounded bg-secondary-fixed/50 font-medium">#01</span>
+</nav>
+<div class="flex items-center gap-space-sm text-label-sm font-label-sm text-on-surface-variant">
+<span class="inline-flex items-center gap-1.5 px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface">
+<span class="material-symbols-outlined text-[14px] text-outline">fork_right</span>
+<span>devstreet.forge/aicha/stock</span>
+</span>
+<span class="inline-flex items-center gap-1 px-space-xs py-0.5 rounded bg-surface-container-low text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">commit</span>
+<span>v1.4-rc2</span>
+</span>
+</div>
+</div>
+<!-- Titre principal & Badges -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pt-space-xs">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-label-lg text-label-lg font-bold text-secondary tracking-tight">#01</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
+              Ajouter l'export CSV des mouvements de stock
+            </h1>
+</div>
+<!-- Badges de statut & labels techniques -->
+<div class="flex items-center gap-space-sm flex-wrap mt-space-xs">
+<!-- Statut interactif avec pulse -->
+<div class="inline-flex items-center gap-2 px-space-sm py-1 rounded-full bg-surface-container-low text-body-sm font-body-sm text-on-surface font-medium shadow-sm" id="badge-status-open">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary-container"></span>
+</span>
+<span>Ouverte aux contributions</span>
+</div>
+<!-- Statut alternatif (caché par défaut) -->
+<div class="hidden items-center gap-2 px-space-sm py-1 rounded-full bg-surface-container-high text-body-sm font-body-sm text-on-surface-variant font-medium" id="badge-status-closed">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span>Tâche complétée &amp; fusionnée</span>
+</div>
+<span class="px-space-sm py-1 rounded text-label-sm font-label-sm uppercase tracking-wider font-semibold bg-error-container text-on-error-container">
+              Priorité Haute
+            </span>
+<span class="px-space-sm py-1 rounded text-label-sm font-label-sm uppercase tracking-wider font-semibold bg-surface-container-high text-on-surface-variant">
+              🌱 Bon premier ticket
+            </span>
+<span class="px-space-sm py-1 rounded text-label-sm font-label-sm font-semibold bg-secondary-fixed text-on-secondary-fixed flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span>+300 XP DevStreet</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Métadonnées & Auteur -->
+<div class="flex items-center gap-space-md flex-wrap mt-space-md pt-space-md bg-surface-container-lowest/60 rounded-xl px-space-md py-space-sm shadow-sm text-body-sm font-body-sm text-on-surface-variant">
+<div class="flex items-center gap-space-xs">
+<div class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-label-sm font-label-sm font-bold">
+            AD
+          </div>
+<span class="text-on-surface font-medium">@aicha</span>
+<span class="text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant">Mainteneuse</span>
+<span>ouverte il y a 2 jours</span>
+</div>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-outline">assignment_ind</span>
+<span>Assignation :</span>
+<span class="font-medium text-on-surface px-1.5 py-0.5 rounded bg-surface-container">Libre (non-assignée)</span>
+</div>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<div class="flex items-center gap-1.5 text-secondary font-medium">
+<span class="material-symbols-outlined text-[16px]">pending_actions</span>
+<span>1 proposition en cours d'examen</span>
+</div>
+</div>
+</header>
+<!-- Grille 2 Colonnes (65% / 35%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- ================= COLONNE DE GAUCHE (65% ~ 8 colonnes) ================= -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Objectif clair de la tâche -->
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center gap-space-sm mb-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">flag</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+              Objectif opérationnel
+            </h2>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface leading-relaxed">
+            Permettre aux commerçants et coopératives agricoles de générer des rapports périodiques de mouvements de stock (entrées, sorties, pertes) au format CSV standard sans latence et même en mode hors-ligne.
+          </p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm mt-space-md pt-space-sm">
+<div class="flex items-start gap-space-xs p-space-sm rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px] text-secondary mt-0.5">offline_bolt</span>
+<div>
+<p class="font-label-md text-label-md font-semibold text-on-surface">PWA &amp; Offline</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Fallback local IndexedDB</p>
+</div>
+</div>
+<div class="flex items-start gap-space-xs p-space-sm rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px] text-secondary mt-0.5">memory</span>
+<div>
+<p class="font-label-md text-label-md font-semibold text-on-surface">Zero-OOM</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Streaming 50 000+ lignes</p>
+</div>
+</div>
+<div class="flex items-start gap-space-xs p-space-sm rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px] text-secondary mt-0.5">table_view</span>
+<div>
+<p class="font-label-md text-label-md font-semibold text-on-surface">Format universel</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">UTF-8 BOM + Point-virgule</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Bloc mis en exergue : Ta première étape -->
+<section class="bg-primary-container text-on-primary rounded-xl p-space-lg shadow-md relative overflow-hidden">
+<div class="absolute -right-8 -bottom-8 w-44 h-44 bg-secondary-container/10 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center gap-space-xs mb-space-sm text-secondary-fixed">
+<span class="material-symbols-outlined text-[20px]">electric_bolt</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-semibold">⚡ Ta première étape</span>
+</div>
+<p class="font-body-md text-body-md text-surface-dim mb-space-md leading-relaxed">
+            Récupère la dernière version de la branche <code class="font-code-inline text-code-inline px-1.5 py-0.5 rounded bg-surface-container-highest/20 text-secondary-fixed">main</code> et inspecte le modèle <code class="font-code-inline text-code-inline px-1.5 py-0.5 rounded bg-surface-container-highest/20 text-secondary-fixed">StockMovement</code> dans <code class="font-code-inline text-code-inline px-1.5 py-0.5 rounded bg-surface-container-highest/20 text-secondary-fixed">inventory/models.py</code>. Crée ensuite un service dédié <code class="font-code-inline text-code-inline px-1.5 py-0.5 rounded bg-surface-container-highest/20 text-secondary-fixed">ExportService</code> qui streame les lignes sans saturer la mémoire du terminal local.
+          </p>
+<div class="bg-tertiary-container/80 rounded-lg p-space-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm overflow-x-auto">
+<span class="text-secondary-fixed-dim select-none font-label-sm text-label-sm font-semibold">$</span>
+<code class="font-code-inline text-code-inline text-on-primary whitespace-nowrap" id="bash-cmd">git checkout main &amp;&amp; git pull origin main &amp;&amp; git checkout -b feat/csv-export</code>
+</div>
+<button aria-label="Copier la commande" class="shrink-0 flex items-center gap-1.5 px-space-sm py-1 rounded bg-surface-container-highest/20 hover:bg-surface-container-highest/30 text-on-primary text-label-sm font-label-sm transition-all focus:outline-none" id="btn-copy-cmd" onclick="navigator.clipboard.writeText(document.getElementById('bash-cmd').innerText); const icon = this.querySelector('.material-symbols-outlined'); const txt = this.querySelector('.copy-txt'); icon.innerText='check'; txt.innerText='Copié !'; setTimeout(() =&gt; { icon.innerText='content_copy'; txt.innerText='Copier'; }, 2000);">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<span class="copy-txt">Copier</span>
+</button>
+</div>
+</section>
+<!-- Critères de réussite sous forme de checklist interactive -->
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">checklist</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+                Critères de réussite &amp; Relecture
+              </h2>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-medium" id="checklist-progress">
+              0 / 4 validés
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+            Cochez au fur et à mesure de votre progression technique locale pour guider votre implémentation.
+          </p>
+<!-- Liste des critères -->
+<div class="space-y-space-sm" id="criteria-checklist">
+<!-- Critère 1 -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<input class="criterion-check mt-1 w-4 h-4 rounded text-secondary-container focus:ring-0 focus:outline-none cursor-pointer" onchange="updateChecklistProgress()" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface group-hover:text-secondary transition-colors">
+                  Format CSV standardisé
+                </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                  Encodage UTF-8 avec BOM, séparateur point-virgule (<code class="font-code-inline text-code-inline text-on-surface bg-surface-container-high px-1 rounded">;</code>), colonnes obligatoires : <span class="font-code-inline text-code-inline text-on-surface">Date, ID Produit, Désignation, Type Mouvement, Quantité, Solde, Opérateur</span>.
+                </span>
+</div>
+</label>
+<!-- Critère 2 -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<input class="criterion-check mt-1 w-4 h-4 rounded text-secondary-container focus:ring-0 focus:outline-none cursor-pointer" onchange="updateChecklistProgress()" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface group-hover:text-secondary transition-colors">
+                  Performance &amp; Streaming mémoire
+                </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                  Utilisation impérative de <code class="font-code-inline text-code-inline text-on-surface bg-surface-container-high px-1 rounded">StreamingHttpResponse</code> (générateur itératif Django) pour supporter des exports volumineux de plus de 50 000 lignes sans crash de RAM sur les instances conteneurisées.
+                </span>
+</div>
+</label>
+<!-- Critère 3 -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<input class="criterion-check mt-1 w-4 h-4 rounded text-secondary-container focus:ring-0 focus:outline-none cursor-pointer" onchange="updateChecklistProgress()" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface group-hover:text-secondary transition-colors">
+                  Résilience hors-ligne (PWA)
+                </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                  Si l'export est déclenché sans connexion active au réseau GSM/Wi-Fi, déclencher une extraction immédiate depuis la table IndexedDB locale du client et générer le Blob CSV dans le navigateur.
+                </span>
+</div>
+</label>
+<!-- Critère 4 -->
+<label class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<input class="criterion-check mt-1 w-4 h-4 rounded text-secondary-container focus:ring-0 focus:outline-none cursor-pointer" onchange="updateChecklistProgress()" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface group-hover:text-secondary transition-colors">
+                  Tests unitaires &amp; Cas limites
+                </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                  Couverture minimale testée pour : caractères spéciaux et diacritiques (accentués), valeurs de stock négatives autorisées par ajustement, et préservation des virgules/guillemets dans les descriptions produits.
+                </span>
+</div>
+</label>
+</div>
+<!-- Note bienveillante -->
+<div class="mt-space-md p-space-sm rounded-lg bg-secondary-fixed/30 flex items-start gap-space-sm text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined text-[18px] text-secondary mt-0.5">info</span>
+<p class="font-body-sm text-body-sm leading-relaxed">
+<strong class="font-semibold">Note bienveillante :</strong> Les critères ne sont pas automatiquement validés par un script rigide dans l'UI. Ils servent de boussole pour structurer votre démarche et préparer la relecture humaine conjointe avec Aïcha.
+            </p>
+</div>
+</section>
+<!-- Références de fichiers et version du code -->
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md flex-wrap gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">folder_code</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+                Références du code source
+              </h2>
+</div>
+<a class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-sm text-label-sm font-semibold" href="https://devstreet.forge/aicha/stock" rel="noopener noreferrer" target="_blank">
+<span>↗ Consulter sur Gitea</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md mb-space-md">
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dépôt forge :</span>
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">devstreet.forge/aicha/stock</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Version de base :</span>
+<span class="font-label-sm text-label-sm font-semibold text-secondary">commit 7f8a92c (v1.4-rc2)</span>
+</div>
+</div>
+<!-- Arborescence des fichiers cibles -->
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-outline mb-space-xs font-semibold">
+            Fichiers cibles identifiés pour ce patch :
+          </p>
+<div class="space-y-space-xs font-label-md text-label-md">
+<!-- Fichier 1 -->
+<div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low/70">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[18px] text-secondary">add_circle</span>
+<span class="text-on-surface truncate">apps/inventory/services/export.py</span>
+</div>
+<span class="text-label-sm font-label-sm text-secondary px-2 py-0.5 rounded bg-secondary-fixed/50 font-medium shrink-0">
+                à créer
+              </span>
+</div>
+<!-- Fichier 2 -->
+<div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low/70">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[18px] text-outline">edit_note</span>
+<span class="text-on-surface truncate">apps/inventory/views.py</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant px-2 py-0.5 rounded bg-surface-container font-medium shrink-0">
+                ajouter endpoint CSV
+              </span>
+</div>
+<!-- Fichier 3 -->
+<div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low/70">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[18px] text-outline">rule</span>
+<span class="text-on-surface truncate">apps/inventory/tests/test_export.py</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant px-2 py-0.5 rounded bg-surface-container font-medium shrink-0">
+                tests requis
+              </span>
+</div>
+</div>
+</section>
+</div>
+<!-- ================= COLONNE DE DROITE (35% ~ 4 colonnes) ================= -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- CARTE 1 : Soumettre ma proposition (Formulaire de Moussa) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-md relative" id="card-submission">
+<!-- Entête du formulaire -->
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">send_and_archive</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+                Soumettre ma proposition
+              </h2>
+</div>
+</div>
+<!-- Info-bulle pédagogique -->
+<div class="p-space-sm rounded-lg bg-surface-container-low text-body-sm font-body-sm text-on-surface-variant mb-space-md flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-secondary mt-0.5">verified_user</span>
+<span>Une revue humaine par <strong class="text-on-surface font-semibold">Aïcha</strong> sera nécessaire avant toute intégration définitive dans la branche principale.</span>
+</div>
+<form class="space-y-space-md" id="proposal-form" onsubmit="event.preventDefault(); handleProposalSubmit();">
+<!-- Champ 1 : Résumé (Textarea obligatoire) -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface" for="proposal-summary">
+                  Résumé du travail effectué <span class="text-secondary">*</span>
+</label>
+<span class="font-label-sm text-label-sm text-outline">Obligatoire</span>
+</div>
+<textarea class="w-full p-space-sm bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded-lg focus:bg-surface-container-lowest focus:outline-none transition-all placeholder:text-outline-variant resize-y" id="proposal-summary" placeholder="Implémentation du générateur de CSV en streaming avec Django StreamingHttpResponse et fallback client IndexedDB pour la PWA..." required="" rows="4"></textarea>
+</div>
+<!-- Champ 2 : PR Gitea (facultatif) -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface" for="proposal-pr">
+                  Pull Request Gitea
+                </label>
+<span class="font-label-sm text-label-sm text-outline-variant">Facultatif</span>
+</div>
+<div class="relative flex items-center">
+<span class="absolute left-3 text-outline text-label-sm font-label-sm">#</span>
+<input class="w-full pl-7 pr-3 py-2 bg-surface-container-low text-on-surface font-label-md text-label-md rounded-lg focus:bg-surface-container-lowest focus:outline-none transition-all placeholder:text-outline-variant" id="proposal-pr" placeholder="14 ou https://devstreet.forge/.../pulls/14" type="text"/>
+</div>
+</div>
+<!-- Champ 3 : SHA Commit Git (facultatif) -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<label class="font-label-sm text-label-sm font-semibold text-on-surface" for="proposal-sha">
+                  SHA Commit Git
+                </label>
+<span class="font-label-sm text-label-sm text-outline-variant">Facultatif</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-2.5 text-[16px] text-outline">commit</span>
+<input class="w-full pl-8 pr-3 py-2 bg-surface-container-low text-on-surface font-label-md text-label-md rounded-lg focus:bg-surface-container-lowest focus:outline-none transition-all placeholder:text-outline-variant" id="proposal-sha" placeholder="ex: a4c9e81" type="text"/>
+</div>
+</div>
+<!-- Bouton d'action principal -->
+<button class="w-full py-2.5 px-space-md rounded-lg bg-primary-container text-on-primary hover:bg-tertiary-container text-label-md font-label-md font-semibold transition-all shadow-sm flex items-center justify-center gap-space-xs group" id="btn-submit-proposal" type="submit">
+<span class="hidden animate-spin material-symbols-outlined text-[18px]" id="btn-submit-spinner">progress_activity</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform" id="btn-submit-icon">publish</span>
+<span id="btn-submit-text">Soumettre pour revue</span>
+</button>
+<!-- Message d'état pour soumission -->
+<div class="hidden p-space-sm rounded-lg bg-surface-container text-body-sm font-body-sm text-on-surface" id="submit-status-banner"></div>
+<!-- Rappel éthique / bienveillance -->
+<p class="font-body-sm text-body-sm text-outline text-center leading-tight pt-1">
+              Rappel : Ne présente pas une soumission comme déjà acceptée. La mainteneuse valide après tests.
+            </p>
+</form>
+</div>
+<!-- CARTE 2 : Bloqué ? Demander de l'aide & Modal/Brouillon Forum -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="material-symbols-outlined text-secondary text-[22px]">help_center</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight">
+              Bloqué ? Demande d'aide
+            </h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md leading-relaxed">
+            Besoin d'une clarification sur les modèles ou l'architecture ? Pose ta question directement sur le Forum.
+          </p>
+<!-- Bouton pour basculer le panneau de brouillon forum -->
+<button class="w-full py-2 px-space-md rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-label-sm font-label-sm font-semibold transition-colors flex items-center justify-center gap-space-xs" id="btn-toggle-forum-draft" onclick="toggleForumDraft()">
+<span class="material-symbols-outlined text-[18px]">forum</span>
+<span>💬 Ouvrir un sujet sur le Forum DevStreet</span>
+</button>
+<!-- Panneau intégré discret de brouillon Forum -->
+<div class="hidden mt-space-md p-space-sm rounded-lg bg-surface-container-low animate-fadeIn" id="forum-draft-panel">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Brouillon forum</span>
+<button aria-label="Fermer le brouillon" class="text-outline hover:text-on-surface" onclick="toggleForumDraft()">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<div class="space-y-space-xs mb-space-sm">
+<div class="text-body-sm font-body-sm">
+<span class="text-outline text-label-sm font-label-sm block mb-0.5">Sujet pré-rempli :</span>
+<input class="w-full p-1.5 bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded focus:outline-none" id="forum-draft-title" type="text" value="[Stock #01] Question sur le format d'export CSV"/>
+</div>
+<div class="text-body-sm font-body-sm">
+<span class="text-outline text-label-sm font-label-sm block mb-0.5">Message :</span>
+<textarea class="w-full p-1.5 bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded focus:outline-none" id="forum-draft-body" placeholder="Décris ton blocage technique ici (ex: signature du générateur ou encodage Windows)..." rows="3"></textarea>
+</div>
+</div>
+<div class="flex items-center justify-between gap-space-xs">
+<button class="px-space-md py-1.5 rounded bg-primary-container text-on-primary hover:bg-tertiary-container font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1" id="btn-publish-forum" onclick="publishForumDraft()">
+<span class="material-symbols-outlined text-[16px]">send</span>
+<span>Publier après confirmation</span>
+</button>
+<span class="text-label-sm font-label-sm text-secondary hidden" id="forum-publish-feedback">Envoi confirmé !</span>
+</div>
+</div>
+<!-- Avertissement de tolérance forum (affichable ou basculable via recette) -->
+<div class="hidden mt-space-sm p-space-sm rounded-lg bg-surface-container text-on-surface-variant flex items-start gap-space-xs text-body-sm font-body-sm" id="forum-outage-alert">
+<span class="material-symbols-outlined text-[18px] text-outline mt-0.5">cloud_off</span>
+<div>
+<p class="font-semibold text-on-surface text-label-sm font-label-sm">Service d'envoi en maintenance</p>
+<p class="text-body-sm font-body-sm mt-0.5">
+                Note : Le forum reste disponible en lecture seule si le service d'envoi est temporairement en maintenance. Tes questions en cache seront transmises dès rétablissement.
+              </p>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-outline mt-space-sm">
+            Temps de réponse moyen des pairs et mentors : &lt; 3 heures.
+          </p>
+</div>
+<!-- Fiche Mainteneuse & Contact -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-bold text-label-md font-label-md">
+              AD
+            </div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-on-surface leading-tight">Aïcha Diallo</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Lead Développeuse &amp; Mainteneuse</p>
+</div>
+</div>
+<button class="px-space-sm py-1 rounded bg-surface-container-low hover:bg-surface-container text-on-surface text-label-sm font-label-sm font-medium transition-colors" title="Historique des revues">
+            Profil forge
+          </button>
+</div>
+</div>
+</div>
+<!-- ================= 4. BANDEAU INFÉRIEUR DE RECETTE UX / SCÉNARIOS DE TEST ================= -->
+<div class="mt-space-2xl pt-space-md border-t-0">
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">science</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">Console de Recette UX &amp; Scénarios</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant">Test interactif en direct</span>
+</div>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Bascule instantanément les 4 états de l'écran décrits dans la spécification :</span>
+</div>
+<!-- Barre de bascule d'états -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-sm">
+<!-- État 1 -->
+<button class="p-space-sm rounded-lg bg-surface-container-lowest shadow-sm text-left transition-all ring-2 ring-primary" id="state-btn-open" onclick="setRecipeState('open')">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">1. Tâche Ouverte</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">État nominal actif avec checklist et formulaire interactif.</p>
+</button>
+<!-- État 2 -->
+<button class="p-space-sm rounded-lg bg-surface-container hover:bg-surface-container-lowest text-left transition-all" id="state-btn-submitting" onclick="setRecipeState('submitting')">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">2. Soumission en cours</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Simulation d'envoi réseau et d'attente de réponse.</p>
+</button>
+<!-- État 3 -->
+<button class="p-space-sm rounded-lg bg-surface-container hover:bg-surface-container-lowest text-left transition-all" id="state-btn-closed" onclick="setRecipeState('closed')">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">3. Tâche fermée / fusionnée</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Soumission verrouillée avec message de clôture officiel.</p>
+</button>
+<!-- État 4 -->
+<button class="p-space-sm rounded-lg bg-surface-container hover:bg-surface-container-lowest text-left transition-all" id="state-btn-forum-down" onclick="setRecipeState('forum-down')">
+<div class="flex items-center gap-1.5 mb-1">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">4. Forum indisponible</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Dégradation gracieuse : lecture tâche préservée &amp; alerte maintenance.</p>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Checklist Interactive logic
+  function updateChecklistProgress() {
+    const checkboxes = document.querySelectorAll('.criterion-check');
+    const checked = Array.from(checkboxes).filter(c => c.checked).length;
+    const progressBadge = document.getElementById('checklist-progress');
+    progressBadge.innerText = `${checked} / ${checkboxes.length} validés`;
+    
+    if (checked === checkboxes.length) {
+      progressBadge.className = 'font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-bold';
+    } else {
+      progressBadge.className = 'font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-medium';
+    }
+  }
+
+  // Toggle Forum Draft Panel
+  function toggleForumDraft() {
+    const panel = document.getElementById('forum-draft-panel');
+    panel.classList.toggle('hidden');
+  }
+
+  // Publish Forum Draft
+  function publishForumDraft() {
+    const feedback = document.getElementById('forum-publish-feedback');
+    feedback.classList.remove('hidden');
+    setTimeout(() => {
+      feedback.classList.add('hidden');
+      toggleForumDraft();
+    }, 1800);
+  }
+
+  // Form Proposal Submit handler
+  function handleProposalSubmit() {
+    const submitBtn = document.getElementById('btn-submit-proposal');
+    const spinner = document.getElementById('btn-submit-spinner');
+    const icon = document.getElementById('btn-submit-icon');
+    const txt = document.getElementById('btn-submit-text');
+    const banner = document.getElementById('submit-status-banner');
+
+    spinner.classList.remove('hidden');
+    icon.classList.add('hidden');
+    txt.innerText = 'Envoi vers DevStreet Forge...';
+    submitBtn.disabled = true;
+
+    setTimeout(() => {
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+      icon.innerText = 'done_all';
+      txt.innerText = 'Proposition envoyée !';
+      banner.className = 'p-space-sm rounded-lg bg-surface-container-high text-body-sm font-body-sm text-on-surface font-medium block';
+      banner.innerHTML = '🚀 <strong>Proposition transmise avec succès !</strong> Aïcha a été notifiée sur Gitea pour effectuer la revue de code.';
+    }, 1200);
+  }
+
+  // Recipe states switcher
+  function setRecipeState(state) {
+    const btnOpen = document.getElementById('state-btn-open');
+    const btnSub = document.getElementById('state-btn-submitting');
+    const btnClosed = document.getElementById('state-btn-closed');
+    const btnForum = document.getElementById('state-btn-forum-down');
+
+    // Reset buttons visual state
+    [btnOpen, btnSub, btnClosed, btnForum].forEach(b => {
+      b.className = 'p-space-sm rounded-lg bg-surface-container hover:bg-surface-container-lowest text-left transition-all';
+    });
+
+    const badgeOpen = document.getElementById('badge-status-open');
+    const badgeClosed = document.getElementById('badge-status-closed');
+    const proposalForm = document.getElementById('proposal-form');
+    const submitBtn = document.getElementById('btn-submit-proposal');
+    const submitBanner = document.getElementById('submit-status-banner');
+    const spinner = document.getElementById('btn-submit-spinner');
+    const icon = document.getElementById('btn-submit-icon');
+    const txt = document.getElementById('btn-submit-text');
+    const forumAlert = document.getElementById('forum-outage-alert');
+    const draftBtn = document.getElementById('btn-toggle-forum-draft');
+
+    if (state === 'open') {
+      btnOpen.className = 'p-space-sm rounded-lg bg-surface-container-lowest shadow-sm text-left transition-all ring-2 ring-primary';
+      badgeOpen.classList.remove('hidden');
+      badgeClosed.classList.add('hidden');
+      proposalForm.style.opacity = '1';
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('bg-surface-container-high', 'text-outline');
+      submitBtn.classList.add('bg-primary-container', 'text-on-primary');
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+      icon.innerText = 'publish';
+      txt.innerText = 'Soumettre pour revue';
+      submitBanner.classList.add('hidden');
+      forumAlert.classList.add('hidden');
+      draftBtn.disabled = false;
+      draftBtn.style.opacity = '1';
+    } 
+    else if (state === 'submitting') {
+      btnSub.className = 'p-space-sm rounded-lg bg-surface-container-lowest shadow-sm text-left transition-all ring-2 ring-primary';
+      badgeOpen.classList.remove('hidden');
+      badgeClosed.classList.add('hidden');
+      proposalForm.style.opacity = '1';
+      submitBtn.disabled = true;
+      spinner.classList.remove('hidden');
+      icon.classList.add('hidden');
+      txt.innerText = 'Transmission des commits en cours...';
+      submitBanner.className = 'p-space-sm rounded-lg bg-surface-container-high text-body-sm font-body-sm text-on-surface block';
+      submitBanner.innerHTML = '⏳ Vérification du webhook Gitea et synchronisation de l\'identifiant SHA...';
+      forumAlert.classList.add('hidden');
+    }
+    else if (state === 'closed') {
+      btnClosed.className = 'p-space-sm rounded-lg bg-surface-container-lowest shadow-sm text-left transition-all ring-2 ring-primary';
+      badgeOpen.classList.add('hidden');
+      badgeClosed.classList.remove('hidden');
+      badgeClosed.classList.add('inline-flex');
+      submitBtn.disabled = true;
+      submitBtn.classList.remove('bg-primary-container', 'text-on-primary');
+      submitBtn.classList.add('bg-surface-container-high', 'text-outline');
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+      icon.innerText = 'lock';
+      txt.innerText = 'Soumissions closes pour cette tâche';
+      submitBanner.className = 'p-space-sm rounded-lg bg-surface-container-high text-body-sm font-body-sm text-on-surface font-medium block';
+      submitBanner.innerHTML = '✅ <strong>Cette tâche a été complétée et fusionnée</strong> dans <code class="font-code-inline text-code-inline">main</code> via la PR #14. Merci à tous les contributeurs !';
+      forumAlert.classList.add('hidden');
+    }
+    else if (state === 'forum-down') {
+      btnForum.className = 'p-space-sm rounded-lg bg-surface-container-lowest shadow-sm text-left transition-all ring-2 ring-primary';
+      badgeOpen.classList.remove('hidden');
+      badgeClosed.classList.add('hidden');
+      proposalForm.style.opacity = '1';
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('bg-surface-container-high', 'text-outline');
+      submitBtn.classList.add('bg-primary-container', 'text-on-primary');
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+      icon.innerText = 'publish';
+      txt.innerText = 'Soumettre pour revue';
+      submitBanner.classList.add('hidden');
+      
+      // Forum degraded gracefully
+      forumAlert.classList.remove('hidden');
+      draftBtn.disabled = true;
+      draftBtn.style.opacity = '0.6';
+      document.getElementById('forum-draft-panel').classList.add('hidden');
+    }
+  }
+</script></main></div></body></html>

@@ -58,6 +58,8 @@ DEVSTREET_HUB_GITEA_WEBHOOK_SECRET=
 
 `GITEA_PUBLIC_URL` est facultatif si l’URL d’accès interne est aussi l’URL publique. HTTPS est exigé hors développement local. Le token administratif sert au provisioning ; il ne sort jamais dans une réponse API. Le premier `POST /api/v1/forge-access` retourne un mot de passe Git initial une seule fois ; l’utilisateur doit le changer dans Gitea, puis créer son token Git personnel dans Gitea. Le mot de passe Django n’est jamais copié.
 
+Identités Git : login opaque `ds-{instance}-{clé}` lié via `ForgeIdentity` (voir [integrations.md](integrations.md)). Ne pas rattacher un compte Gitea préexistant sur la seule base d’un login historique `devstreet-user-{id}` ou d’un e-mail. Variable optionnelle `DEVSTREET_HUB_INSTANCE_ID` (2–8 caractères `[a-z0-9]`) pour préfixer les logins lorsque plusieurs installations Django partagent la même forge.
+
 Configurer un webhook Gitea vers `/api/v1/integrations/gitea/webhook` avec le secret déclaré et l’événement push. La signature HMAC est obligatoire ; un push met à jour l’information de fraîcheur, mais une analyse relit toujours le SHA dans Gitea.
 
 Pour la démonstration locale, un conteneur dédié `devstreet-chantier-gitea` est utilisé, image `docker.gitea.com/gitea:28.3.0`, volume nommé du même nom, port lié uniquement à `127.0.0.1:13000`. Pas de runners ni Actions. Cette configuration locale n’est pas un déploiement Datacloud livré.

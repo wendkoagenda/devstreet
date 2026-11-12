@@ -187,12 +187,31 @@ class Star(models.Model):
 
 
 class ForgeIdentity(models.Model):
+    """Liaison explicite Django ↔ Gitea. Le login opaque n'est jamais une preuve d'appartenance seul."""
+
+    STATUS_PENDING = "pending"
+    STATUS_LINKED = "linked"
+    STATUS_CONFLICT = "conflict"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "En attente de confirmation distante"),
+        (STATUS_LINKED, "Liée"),
+        (STATUS_CONFLICT, "Conflit — réparation administrative"),
+    ]
+
     user = models.OneToOneField(
         User, on_delete=models.PROTECT, related_name="forge_identity"
     )
-    login = models.CharField(max_length=100, unique=True)
-    gitea_user_id = models.BigIntegerField(unique=True)
+    login = models.CharField(max_length=40, unique=True)
+    # Null tant que la création distante n'est pas confirmée et liée.
+    gitea_user_id = models.BigIntegerField(unique=True, null=True, blank=True)
+    # Clé opaque persistée avant l'appel Gitea ; sert de preuve de corrélation.
+    provisioning_key = models.UUIDField(unique=True)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    conflict_reason = models.CharField(max_length=255, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
+    linked_at = models.DateTimeField(null=True, blank=True)
 
 
 class Repository(models.Model):

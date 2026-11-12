@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="mobile_tab" name="shell-type"/>
+<title>DevStreet - Explorer les projets</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#000000", "primary-light": "#1E293B", accent: "#EA580C", "accent-hover": "#C2410C", "accent-light": "#FFF7ED", "slate-sub": "#64748B", "slate-border": "#E2E8F0", "slate-bg": "#F1F5F9", background: "#fcf8fa", card: "#FFFFFF", "on-surface": "#1b1b1d", "on-surface-variant": "#45464d", "on-tertiary": "#ffffff", "surface-container-lowest": "#ffffff", surface: "#fcf8fa", "secondary-fixed-dim": "#ffb599", "secondary-container": "#fd651e", "on-secondary": "#ffffff", "outline-variant": "#c6c6cd", tertiary: "#000000", secondary: "#a73a00", "surface-container-low": "#f6f3f5", "on-secondary-fixed-variant": "#7f2b00", "primary-container": "#131b2e", "inverse-primary": "#bec6e0", "surface-container": "#f0edef", "on-tertiary-container": "#98805d", "tertiary-container": "#271901", "on-secondary-fixed": "#370e00", error: "#ba1a1a", "inverse-surface": "#303032", "surface-tint": "#565e74", "surface-variant": "#e4e2e4", "on-secondary-container": "#571a00", "on-background": "#1b1b1d", "on-error-container": "#93000a", "tertiary-fixed-dim": "#dec29a", "on-primary-fixed-variant": "#3f465c", outline: "#76777d", "tertiary-fixed": "#fcdeb5", "surface-dim": "#dcd9db", "on-tertiary-fixed-variant": "#574425", "inverse-on-surface": "#f3f0f2", "on-primary-container": "#7c839b", "on-primary-fixed": "#131b2e", "surface-container-highest": "#e4e2e4", "on-tertiary-fixed": "#271901", "primary-fixed": "#dae2fd", "on-primary": "#ffffff", "surface-bright": "#fcf8fa", "on-error": "#ffffff", "primary-fixed-dim": "#bec6e0", "surface-container-high": "#eae7e9", "error-container": "#ffdad6", "secondary-fixed": "#ffdbce"}, fontFamily: {sans: ["Poppins", "sans-serif"], mono: ["JetBrains Mono", "monospace"], headline: ["Poppins"], display: ["Poppins"], body: ["Poppins"], label: ["JetBrains Mono"]}, fontSize: {}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};
+  </script>
+<style>
+    @layer base {
+      html, body {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background-color: #F8FAFC;
+        font-family: 'Poppins', sans-serif;
+      }
+      body {
+        overscroll-behavior-y: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-sans text-on-surface flex flex-col min-h-screen">
+<!-- Header Mobile -->
+<header class="fixed top-0 w-full z-40 pt-safe bg-card/90 backdrop-blur-md border-b border-slate-border">
+<div class="h-14 px-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button aria-label="Open drawer navigation" class="w-10 h-10 flex items-center justify-center rounded-xl text-primary hover:bg-slate-bg transition-colors" type="button">
+<span class="material-symbols-outlined text-[24px]">menu</span>
+</button>
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined text-[17px]">terminal</span>
+</div>
+<span class="font-bold text-lg text-primary tracking-tight">DevStreet</span>
+</div>
+</div>
+<div class="flex items-center">
+<button aria-label="Profil utilisateur" class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Contenu Principal -->
+<main class="flex-1 w-full pt-14 pb-24 px-4 py-4 max-w-md mx-auto">
+<div class="flex flex-col w-full space-y-4 pt-2">
+<!-- En-tête & CTA Créer un projet -->
+<section class="flex flex-col space-y-3">
+<div>
+<h1 class="text-2xl font-bold text-primary tracking-tight leading-tight">Explorer les projets</h1>
+<p class="text-xs text-slate-sub font-normal mt-0.5">Sur quoi veux-tu construire avec d'autres ?</p>
+</div>
+<button class="w-full h-11 bg-primary hover:bg-primary-light active:scale-[0.99] text-white font-medium text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span>Créer un projet</span>
+</button>
+</section>
+<!-- Recherche & Filtres interactifs -->
+<section class="flex flex-col space-y-2.5">
+<!-- Champ de recherche -->
+<div class="relative w-full flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-slate-sub text-[20px] pointer-events-none">search</span>
+<input class="w-full h-11 pl-11 pr-10 rounded-xl bg-card border border-slate-border text-on-surface text-sm outline-none placeholder:text-slate-sub focus:border-accent focus:ring-1 focus:ring-accent transition-all shadow-sm" placeholder="Rechercher un projet, une techno..." type="search" value="stock"/>
+<button aria-label="Effacer la saisie" class="absolute right-3.5 text-slate-sub hover:text-primary flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+</button>
+</div>
+<!-- Carrousel horizontal de tags -->
+<div class="w-full overflow-x-auto no-scrollbar -mx-4 px-4 flex items-center gap-2 py-0.5">
+<button class="flex-shrink-0 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium bg-card border border-slate-border text-slate-sub hover:text-primary hover:bg-slate-bg transition-colors" type="button">
+            Tous
+          </button>
+<button class="flex-shrink-0 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium bg-accent text-white flex items-center gap-1 shadow-sm" type="button">
+<span>Python</span>
+<span class="material-symbols-outlined text-[14px]">check</span>
+</button>
+<button class="flex-shrink-0 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium bg-accent text-white flex items-center gap-1 shadow-sm" type="button">
+<span>Django</span>
+<span class="material-symbols-outlined text-[14px]">check</span>
+</button>
+<button class="flex-shrink-0 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium bg-card border border-slate-border text-slate-sub hover:text-primary hover:bg-slate-bg transition-colors" type="button">
+            PostgreSQL
+          </button>
+<button class="flex-shrink-0 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium bg-card border border-slate-border text-slate-sub hover:text-primary hover:bg-slate-bg transition-colors" type="button">
+            React
+          </button>
+<button class="flex-shrink-0 px-3.5 py-1.5 rounded-full font-mono text-xs font-medium bg-card border border-slate-border text-slate-sub hover:text-primary hover:bg-slate-bg transition-colors" type="button">
+            Go
+          </button>
+</div>
+<!-- Filtres actifs & Reset -->
+<div class="flex items-center justify-between bg-card border border-slate-border px-3.5 py-2.5 rounded-xl">
+<div class="flex items-center gap-2 min-w-0 flex-1">
+<span class="material-symbols-outlined text-accent text-[18px] flex-shrink-0">tune</span>
+<p class="text-xs text-slate-sub truncate">
+              Filtres : <span class="font-mono text-primary font-semibold">Python, Django</span>
+<span class="text-slate-sub ml-1">(24 résultats)</span>
+</p>
+</div>
+<button class="text-xs text-accent font-medium hover:underline flex items-center gap-0.5 ml-2 flex-shrink-0" type="button">
+<span>Effacer</span>
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+</section>
+<!-- Liste des cartes de projets -->
+<section class="flex flex-col space-y-3.5" id="projects-container">
+<!-- Carte 1 : Stock (Aïcha Diallo) -->
+<article class="w-full bg-card rounded-2xl p-4 border border-slate-border shadow-sm flex flex-col space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full border border-slate-border flex-shrink-0 overflow-hidden bg-slate-bg">
+<img class="w-full h-full object-cover" data-alt="Portrait photo de Aïcha Diallo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw-50EmbSQkfy1f-QeG9mldYkpAPOfY7BXHBd3YmWQQb-o-GkdSPw4I5tF2mXe4VE2zE6XrdY5LImYGuHi1pqAcGYNMY_jYTPqdle3cd_SVe9C247duqRAxoL2tTB7dyoAwtNFuQsjupvf7-se9beOrUzmQtk9CUcoCyCkp8lNlUnhkjNx1DQJPjeGioQF5UpuNiF41v9hmbvAgQnvgw_KjXuRJvrZnu8XbAYmIQq1"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-sm font-semibold text-primary truncate leading-tight">Aïcha Diallo</span>
+<span class="font-mono text-[11px] text-slate-sub truncate">@aicha</span>
+</div>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-slate-bg text-slate-sub font-mono text-[11px] font-medium border border-slate-border">
+              Public
+            </span>
+</div>
+<div class="flex flex-col space-y-1">
+<div class="flex items-center gap-2">
+<h2 class="text-base font-bold text-primary hover:text-accent transition-colors cursor-pointer">
+                Stock
+              </h2>
+<span class="px-1.5 py-0.5 rounded bg-slate-bg font-mono text-[11px] font-medium text-slate-sub border border-slate-border">v1.4</span>
+</div>
+<p class="text-xs leading-relaxed text-slate-sub line-clamp-3">
+              Outil de gestion de stock et de traçabilité pour petits commerces et grossistes de quartier, adapté aux connexions intermittentes.
+            </p>
+</div>
+<!-- Tags technologiques -->
+<div class="flex flex-wrap gap-1.5 pt-0.5">
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">Python</span>
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">Django</span>
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">PostgreSQL</span>
+</div>
+<!-- Pied de carte -->
+<div class="pt-3 border-t border-slate-border flex items-center justify-between">
+<div class="flex items-center gap-4 text-slate-sub">
+<button class="star-btn flex items-center gap-1 font-mono text-xs text-primary hover:text-accent transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-accent" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-semibold">48</span>
+</button>
+<div class="flex items-center gap-1 text-xs text-slate-sub">
+<span class="material-symbols-outlined text-[16px] text-slate-sub">assignment_late</span>
+<span>3 tâches</span>
+</div>
+</div>
+<a class="text-xs font-semibold text-accent flex items-center gap-1 hover:text-accent-hover transition-colors" href="#">
+<span>Voir</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</a>
+</div>
+</article>
+<!-- Carte 2 : AfriPay SDK (Kwame Mensah) -->
+<article class="w-full bg-card rounded-2xl p-4 border border-slate-border shadow-sm flex flex-col space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full border border-slate-border flex-shrink-0 overflow-hidden bg-slate-bg">
+<img class="w-full h-full object-cover" data-alt="Portrait photo de Kwame Mensah" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnhrJ5q4awltW03HjDrB5pVwRBVF5_WxrWvzeh9qXlVcW6OPX-rofOoaQj2sYSRyXUiKViNDr2MFrwq5UlVYxQ-AzeDgvp2dLZ9YrUXIP-A_mUjo_H92SpUwCtnAoY850CNBBMFCrjt2gJRzjlx2tRJcBfxBmmaXOkp43MAbkx62oczQV4Bec-OyB1z-Xnqqa2wzkMoY48GqateZjfMB3iJfQtUqcWQVdLHK4oklb2"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-sm font-semibold text-primary truncate leading-tight">Kwame Mensah</span>
+<span class="font-mono text-[11px] text-slate-sub truncate">@kwame_dev</span>
+</div>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-slate-bg text-slate-sub font-mono text-[11px] font-medium border border-slate-border">
+              Public
+            </span>
+</div>
+<div class="flex flex-col space-y-1">
+<div class="flex items-center gap-2">
+<h2 class="text-base font-bold text-primary hover:text-accent transition-colors cursor-pointer">
+                AfriPay SDK
+              </h2>
+<span class="px-1.5 py-0.5 rounded bg-slate-bg font-mono text-[11px] font-medium text-slate-sub border border-slate-border">OSS</span>
+</div>
+<p class="text-xs leading-relaxed text-slate-sub line-clamp-3">
+              Librairie unifiée pour agréger les passerelles Mobile Money (Wave, Orange Money, MTN MoMo) pour applications Python et Node.js.
+            </p>
+</div>
+<!-- Tags technologiques -->
+<div class="flex flex-wrap gap-1.5 pt-0.5">
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">Python</span>
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">FastAPI</span>
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">Redis</span>
+</div>
+<!-- Pied de carte -->
+<div class="pt-3 border-t border-slate-border flex items-center justify-between">
+<div class="flex items-center gap-4 text-slate-sub">
+<button class="star-btn flex items-center gap-1 font-mono text-xs text-primary hover:text-accent transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-accent" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-semibold">124</span>
+</button>
+<div class="flex items-center gap-1 text-xs text-slate-sub">
+<span class="material-symbols-outlined text-[16px] text-slate-sub">group_add</span>
+<span>2 contributeurs</span>
+</div>
+</div>
+<a class="text-xs font-semibold text-accent flex items-center gap-1 hover:text-accent-hover transition-colors" href="#">
+<span>Voir</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</a>
+</div>
+</article>
+<!-- Carte 3 : DakarTransit (Moussa Traoré) -->
+<article class="w-full bg-card rounded-2xl p-4 border border-slate-border shadow-sm flex flex-col space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-full border border-slate-border flex-shrink-0 overflow-hidden bg-slate-bg">
+<img class="w-full h-full object-cover" data-alt="Portrait photo de Moussa Traoré" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6JWKHotNguekfp3iFAQB-kS5Sx1lgrZ4Rcy8B0vg6S0oUj2-ldtXnolheDtWeaD5D0cyJIZdCRl3RM_sebszNglQRfIfO30lIK2_XniWhKpI8eHL_G7KGSwFF-PNFRXcZtITSyzfDDIP90ez7q9S5ARp1fo4NBFnG-XNT9xBAqkFdfemqMqH18yAvtrxOZj9snMp6Xtx87KQcbt8FsZ4lHyS629Q2TkxaG2h9dxJY"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="text-sm font-semibold text-primary truncate leading-tight">Moussa Traoré</span>
+<span class="font-mono text-[11px] text-slate-sub truncate">@mtraore</span>
+</div>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-slate-bg text-slate-sub font-mono text-[11px] font-medium border border-slate-border">
+              Public
+            </span>
+</div>
+<div class="flex flex-col space-y-1">
+<div class="flex items-center gap-2">
+<h2 class="text-base font-bold text-primary hover:text-accent transition-colors cursor-pointer">
+                DakarTransit
+              </h2>
+<span class="px-1.5 py-0.5 rounded bg-slate-bg font-mono text-[11px] font-medium text-slate-sub border border-slate-border">Beta</span>
+</div>
+<p class="text-xs leading-relaxed text-slate-sub line-clamp-3">
+              API de calcul d'itinéraires et d'horaires pour les réseaux de bus urbains et transports partagés.
+            </p>
+</div>
+<!-- Tags technologiques -->
+<div class="flex flex-wrap gap-1.5 pt-0.5">
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">Go</span>
+<span class="px-2 py-0.5 rounded bg-slate-bg border border-slate-border text-primary font-mono text-[11px] font-medium">PostgreSQL</span>
+</div>
+<!-- Pied de carte -->
+<div class="pt-3 border-t border-slate-border flex items-center justify-between">
+<div class="flex items-center gap-4 text-slate-sub">
+<button class="star-btn flex items-center gap-1 font-mono text-xs text-primary hover:text-accent transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-slate-sub">star</span>
+<span class="font-semibold">37</span>
+</button>
+<div class="flex items-center gap-1 text-xs text-slate-sub">
+<span class="material-symbols-outlined text-[16px] text-slate-sub">alt_route</span>
+<span>Routing API</span>
+</div>
+</div>
+<a class="text-xs font-semibold text-accent flex items-center gap-1 hover:text-accent-hover transition-colors" href="#">
+<span>Voir</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</a>
+</div>
+</article>
+</section>
+<!-- Pagination Mobile -->
+<nav aria-label="Pagination des projets" class="flex flex-col items-center space-y-2 pt-2">
+<div class="grid grid-cols-2 gap-3 w-full">
+<button class="h-10 px-4 rounded-xl bg-slate-bg border border-slate-border text-slate-sub cursor-not-allowed flex items-center justify-center gap-1 font-medium text-xs" disabled="" type="button">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span>Précédente</span>
+</button>
+<button class="h-10 px-4 rounded-xl bg-card border border-slate-border text-primary active:bg-slate-bg shadow-sm flex items-center justify-center gap-1 font-medium text-xs hover:border-accent transition-colors" type="button">
+<span>Suivante</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<div class="flex items-center justify-center gap-2 pt-1">
+<span class="font-mono text-xs text-slate-sub">
+            Page <span class="font-semibold text-primary">1</span> sur 4
+          </span>
+<span class="w-1 h-1 rounded-full bg-slate-sub"></span>
+<span class="font-mono text-xs text-slate-sub">24 projets trouvés</span>
+</div>
+</nav>
+</div>
+<!-- Drawer mobile & overlay -->
+<div class="fixed inset-0 z-50 bg-primary/50 backdrop-blur-sm transition-opacity opacity-0 pointer-events-none duration-300" id="drawer-scrim"></div>
+<aside class="fixed top-0 left-0 bottom-0 z-50 w-72 max-w-[80vw] bg-card border-r border-slate-border shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col p-safe" id="mobile-drawer">
+<div class="h-14 px-4 flex items-center justify-between border-b border-slate-border bg-slate-bg">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[15px]">terminal</span>
+</div>
+<span class="font-bold text-sm text-primary">Menu</span>
+</div>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-sub hover:text-primary hover:bg-card" id="close-drawer" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-1">
+<span class="font-mono text-[11px] font-semibold text-slate-sub px-2 uppercase tracking-wider">Navigation</span>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-accent-light text-accent font-medium text-xs mt-1" href="#">
+<span class="material-symbols-outlined text-[18px]">explore</span>
+<span>Explorer les projets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-sub hover:bg-slate-bg hover:text-primary font-medium text-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">code</span>
+<span>Mes Projets &amp; Snippets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-sub hover:bg-slate-bg hover:text-primary font-medium text-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">group</span>
+<span>Communauté &amp; Développeurs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-sub hover:bg-slate-bg hover:text-primary font-medium text-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">bookmark</span>
+<span>Favoris sauvegardés</span>
+</a>
+<div class="pt-4">
+<span class="font-mono text-[11px] font-semibold text-slate-sub px-2 uppercase tracking-wider">Ressources</span>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-sub hover:bg-slate-bg hover:text-primary font-medium text-xs mt-1" href="#">
+<span class="material-symbols-outlined text-[18px]">menu_book</span>
+<span>Documentation API</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-sub hover:bg-slate-bg hover:text-primary font-medium text-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span>Charte Open Source</span>
+</a>
+</div>
+</div>
+<div class="p-4 border-t border-slate-border bg-slate-bg flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-xs">
+            DS
+          </div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-primary">DevStreet Dakar</span>
+<span class="font-mono text-[10px] text-accent">En ligne</span>
+</div>
+</div>
+<button aria-label="Paramètres" class="text-slate-sub hover:text-primary" type="button">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+</button>
+</div>
+</aside>
+</main>
+<!-- Barre de navigation basse (Mobile Bottom Navigation) -->
+<nav class="fixed bottom-0 w-full z-40 pb-safe bg-card/95 backdrop-blur-md border-t border-slate-border">
+<div class="h-16 px-2 flex items-center justify-around max-w-md mx-auto">
+<a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-12 transition-colors text-accent font-semibold" data-path="explorer" href="#">
+<span class="material-symbols-outlined text-[22px]">explore</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Explorer</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="marketplace" href="#">
+<span class="material-symbols-outlined text-[22px]">storefront</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="mes-projets" href="#">
+<span class="material-symbols-outlined text-[22px]">folder_code</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Projets</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="forum" href="#">
+<span class="material-symbols-outlined text-[22px]">forum</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Forum</span>
+</a>
+<a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-slate-sub hover:text-primary transition-colors" data-path="mon-profil" href="#">
+<span class="material-symbols-outlined text-[22px]">account_circle</span>
+<span class="text-[11px] mt-0.5 tracking-tight font-medium">Profil</span>
+</a>
+</div>
+</nav>
+<script>
+    // Micro-interaction toggle drawer
+    const drawer = document.getElementById('mobile-drawer');
+    const scrim = document.getElementById('drawer-scrim');
+    const closeBtn = document.getElementById('close-drawer');
+    const menuButton = document.querySelector('header button[aria-label="Open drawer navigation"]');
+
+    function openDrawer() {
+      if (!drawer || !scrim) return;
+      drawer.classList.remove('-translate-x-full');
+      scrim.classList.remove('opacity-0', 'pointer-events-none');
+      scrim.classList.add('opacity-100');
+    }
+
+    function closeDrawer() {
+      if (!drawer || !scrim) return;
+      drawer.classList.add('-translate-x-full');
+      scrim.classList.remove('opacity-100');
+      scrim.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    if (menuButton) {
+      menuButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDrawer();
+      });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    if (scrim) scrim.addEventListener('click', closeDrawer);
+
+    // Micro-interaction étoiles
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const countSpan = this.querySelector('span:last-child');
+        const starIcon = this.querySelector('.material-symbols-outlined');
+        let count = parseInt(countSpan.textContent, 10);
+        const isStarred = starIcon.getAttribute('style')?.includes('FILL');
+
+        if (isStarred) {
+          starIcon.removeAttribute('style');
+          starIcon.classList.remove('text-accent');
+          starIcon.classList.add('text-slate-sub');
+          countSpan.textContent = count - 1;
+        } else {
+          starIcon.setAttribute('style', "font-variation-settings: 'FILL' 1;");
+          starIcon.classList.remove('text-slate-sub');
+          starIcon.classList.add('text-accent');
+          countSpan.textContent = count + 1;
+        }
+      });
+    });
+  </script>
+</body></html>
