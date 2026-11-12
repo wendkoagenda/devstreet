@@ -467,6 +467,8 @@
     },
     "detail": {
       "no_problem": "No need summary yet.",
+      "languages_empty": "No languages detected yet.",
+      "languages_waiting_repo": "Languages will appear after the first code push.",
       "tabs_label": "Project page sections",
       "tabs": {
         "presentation": "Overview",
@@ -586,7 +588,7 @@
       "title": "Create my project",
       "title_resume": "Resume creation",
       "badge": "private",
-      "description": "Pick a name, license and technologies. DevStreet prepares your repository automatically — without opening the forge UI.",
+      "description": "Pick a name and license. Languages are detected automatically after the first push — without opening the forge UI.",
       "description_resume": "Resume progress: Git identity, repository, then initialization. The draft is kept.",
       "progress": {
         "draft": "Draft",
@@ -623,6 +625,7 @@
         "description": "Detailed description (optional)",
         "technologies": "Technologies",
         "technologies_count": "{{count}} selected",
+        "technologies_auto": "Languages (HTML, Python, etc.) are detected automatically once code is pushed to the repository. No manual selection.",
         "remove_tech": "Remove {{label}}",
         "license": "License",
         "demo_url": "Demo link (optional)"
@@ -694,6 +697,7 @@
         "by": "by {{owner}}",
         "you": "you",
         "problem_placeholder": "The need summary will appear here.",
+        "languages_auto": "Languages are detected automatically after the first push.",
         "stars": "{{count}} stars",
         "forge_sync": "Repo ready",
         "params": "Settings",

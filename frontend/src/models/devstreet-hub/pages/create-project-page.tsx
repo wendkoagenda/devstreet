@@ -177,11 +177,8 @@ export default function CreateProjectPage() {
         <div className="flex flex-col gap-8 lg:col-span-8">
           <CreateProjectFormSection
             form={wizard.form}
-            technologies={wizard.technologies}
-            isLoadingTechs={wizard.isLoadingTechs}
             locked={formLocked}
             onPatch={wizard.patchForm}
-            onToggleTechnology={wizard.toggleTechnology}
           />
 
           {!wizard.project ? (
@@ -252,7 +249,6 @@ export default function CreateProjectPage() {
 
         <CreateProjectPreview
           form={wizard.form}
-          selectedTechnologies={wizard.selectedTechnologies}
           ownerLabel={ownerLabel}
           ownerInitials={ownerInitials}
           repoReady={wizard.repoReady}

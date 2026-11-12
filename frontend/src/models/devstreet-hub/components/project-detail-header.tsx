@@ -8,15 +8,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Project, Technology } from "../schema";
+import type { Project } from "../schema";
 import type { ProjectStarView } from "../hooks/use-project-star";
+import { DetectedLanguageTags } from "./detected-language-tags";
 import { ProjectStatusBadge } from "./project-status-badge";
 import { StarButton } from "./star-button";
-import { TechnologyTag } from "./technology-tag";
+
+interface DetectedLanguage {
+  name: string;
+  percent?: number;
+}
 
 interface ProjectDetailHeaderProps {
   project: Project;
-  technologies: Technology[];
+  detectedLanguages: DetectedLanguage[];
+  languagesPending: boolean;
   star: ProjectStarView;
   isOwner: boolean;
   canPublish: boolean;
@@ -35,7 +41,8 @@ interface ProjectDetailHeaderProps {
 
 export function ProjectDetailHeader({
   project,
-  technologies,
+  detectedLanguages,
+  languagesPending,
   star,
   isOwner,
   canPublish,
@@ -70,13 +77,20 @@ export function ProjectDetailHeader({
           <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
             {project.problem || t("hub.detail.no_problem")}
           </p>
-          {technologies.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {technologies.map((tech) => (
-                <TechnologyTag key={tech.id} id={tech.id} label={tech.label} />
-              ))}
-            </div>
-          ) : null}
+          <div className="mt-3">
+            {languagesPending ? (
+              <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
+            ) : (
+              <DetectedLanguageTags
+                languages={detectedLanguages}
+                emptyHint={
+                  canOpenCode
+                    ? t("hub.detail.languages_empty")
+                    : t("hub.detail.languages_waiting_repo")
+                }
+              />
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

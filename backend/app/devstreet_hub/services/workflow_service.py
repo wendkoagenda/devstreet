@@ -7,9 +7,11 @@ from urllib.parse import quote
 from django.db import transaction
 from django.utils import timezone
 from django.utils.module_loading import import_string
+from django.utils.text import slugify
 from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
 from app.core.services.audit_service import record
 from app.devstreet_hub.conf import config
+from app.devstreet_hub.models import Technology
 from app.devstreet_hub.permissions.policy import (
     require_permission,
     require_maintainer,
@@ -102,6 +104,29 @@ class WorkflowService:
             )
         return items[:12]
 
+    def _sync_technologies_from_languages(self, project, languages, actor):
+        """Remplace les technologies manuelles par les langues détectées du dépôt."""
+        techs = []
+        for item in languages:
+            name = (item.get("name") or "").strip()
+            if not name:
+                continue
+            slug = slugify(name)[:80] or f"lang-{len(techs) + 1}"
+            tech, created = Technology.objects.get_or_create(
+                slug=slug,
+                defaults={
+                    "label": name[:80],
+                    "created_by": actor.pk,
+                    "updated_by": actor.pk,
+                },
+            )
+            if not created and tech.label != name[:80]:
+                tech.label = name[:80]
+                tech.updated_by = actor.pk
+                tech.save(update_fields=["label", "updated_by", "updated_at"])
+            techs.append(tech)
+        self.repo.set_technologies(project, techs)
+
     def code_summary(self, actor, project):
         """Statistiques et métadonnées d'exploration ; pas de compteur d'étoiles Gitea."""
         project, repository = self._ready_repository(actor, project)
@@ -117,6 +142,8 @@ class WorkflowService:
         languages = [] if is_empty else self._language_breakdown(
             self.forge.get_languages(repository)
         )
+        if not is_empty:
+            self._sync_technologies_from_languages(project, languages, actor)
         commit_count = None
         if not is_empty:
             commit_count = self.forge.count_commits(repository, ref=default_branch)

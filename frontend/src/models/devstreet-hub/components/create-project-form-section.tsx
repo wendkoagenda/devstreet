@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,26 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PROJECT_LICENSES, type ProjectLicense, type Technology } from "../schema";
+import { PROJECT_LICENSES, type ProjectLicense } from "../schema";
 import type { CreateProjectFormState } from "../hooks/use-create-project";
-import { TechnologyTag } from "./technology-tag";
 
 interface CreateProjectFormSectionProps {
   form: CreateProjectFormState;
-  technologies: Technology[];
-  isLoadingTechs: boolean;
   locked: boolean;
   onPatch: (patch: Partial<CreateProjectFormState>) => void;
-  onToggleTechnology: (id: number) => void;
 }
 
 export function CreateProjectFormSection({
   form,
-  technologies,
-  isLoadingTechs,
   locked,
   onPatch,
-  onToggleTechnology,
 }: CreateProjectFormSectionProps) {
   const { t } = useTranslation();
 
@@ -89,59 +82,9 @@ export function CreateProjectFormSection({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-2 sm:col-span-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label>{t("hub.create.fields.technologies")}</Label>
-            <span className="text-[11px] text-muted-foreground">
-              {t("hub.create.fields.technologies_count", {
-                count: form.technologies.length,
-              })}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {form.technologies.map((id) => {
-              const tech = technologies.find((item) => item.id === id);
-              if (!tech) return null;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  disabled={locked}
-                  onClick={() => onToggleTechnology(id)}
-                  className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary px-2 py-1 text-xs font-medium text-foreground transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-60"
-                  aria-label={t("hub.create.fields.remove_tech", { label: tech.label })}
-                >
-                  <TechnologyTag
-                    id={tech.id}
-                    label={tech.label}
-                    className="border-0 bg-transparent p-0"
-                  />
-                  <X aria-hidden className="size-3.5" />
-                </button>
-              );
-            })}
-            {isLoadingTechs ? (
-              <span className="text-xs text-muted-foreground">{t("common.loading")}</span>
-            ) : (
-              technologies
-                .filter((tech) => !form.technologies.includes(tech.id))
-                .slice(0, 12)
-                .map((tech) => (
-                  <Button
-                    key={tech.id}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={locked}
-                    className="h-7 rounded-md border-dashed text-xs"
-                    onClick={() => onToggleTechnology(tech.id)}
-                  >
-                    + {tech.label}
-                  </Button>
-                ))
-            )}
-          </div>
-        </div>
+        <p className="sm:col-span-2 text-xs leading-relaxed text-muted-foreground">
+          {t("hub.create.fields.technologies_auto")}
+        </p>
       </div>
 
       <div className="border-t border-border pt-2">

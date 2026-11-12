@@ -60,7 +60,8 @@ function toPayload(form: CreateProjectFormState): ProjectWritePayload {
   const payload: ProjectWritePayload = {
     title: form.title.trim(),
     declared_license: form.declared_license,
-    technologies: form.technologies,
+    // Langues détectées automatiquement après le premier push (via Gitea).
+    technologies: [],
     problem: form.problem.trim(),
     description: form.description.trim(),
     demo_url: demo ? demo : null,

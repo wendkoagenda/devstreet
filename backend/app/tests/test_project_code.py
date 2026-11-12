@@ -1,5 +1,6 @@
 """Exploration du dépôt via Django (pas d'iframe / pas de jeton admin côté client)."""
 
+from app.devstreet_hub.models import Technology
 from app.devstreet_hub.services.errors import ExternalUnavailable
 from app.tests.devstreet_hub_base import DevStreetHubAPITestCase
 
@@ -77,6 +78,26 @@ class ProjectCodeBrowseTests(DevStreetHubAPITestCase):
         self.assertEqual(tree.data["readme"]["name"], "README.md")
         self.assertIn("# Hello", tree.data["readme"]["content"])
         self.assertEqual(tree.data["latest_commit"]["author_name"], "Forge User")
+
+    def test_summary_syncs_technologies_from_detected_languages(self):
+        Technology.objects.create(
+            label="Go",
+            slug="go",
+            created_by=self.aicha.pk,
+            updated_by=self.aicha.pk,
+        )
+        self.proj.technologies.set(Technology.objects.filter(slug="go"))
+        self.assertEqual(
+            list(self.proj.technologies.values_list("slug", flat=True)),
+            ["go"],
+        )
+
+        summary = self.client.get(f"/api/v1/projects/{self.proj.pk}/code/summary")
+        self.assertEqual(summary.status_code, 200, summary.data)
+        self.proj.refresh_from_db()
+        slugs = list(self.proj.technologies.values_list("slug", flat=True))
+        self.assertEqual(slugs, ["html"])
+        self.assertTrue(Technology.objects.filter(slug="html", label="HTML").exists())
 
     def test_blob_returns_html_as_text_not_executed(self):
         self.forge.get_contents.return_value = {

@@ -2,13 +2,15 @@ import {
   BookMarked,
   Check,
   ChevronRight,
+  Code2,
   Copy,
-  File,
+  FileCode2,
   Folder,
   GitBranch,
   GitCommitHorizontal,
   HardDrive,
   Tag,
+  Terminal,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -26,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { languageColor } from "../functions/language-colors";
 import { SafeMarkdown } from "../functions/safe-markdown";
 import { useProjectCode } from "../hooks/use-project-code";
 import { CodeFileViewer } from "./code-file-viewer";
@@ -62,6 +63,17 @@ function formatRelative(iso: string | null | undefined, fallback: string): strin
   return `${days} j`;
 }
 
+function fileIconColor(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".html") || lower.endsWith(".htm")) return "#e34c26";
+  if (lower.endsWith(".css") || lower.endsWith(".scss")) return "#563d7c";
+  if (lower.endsWith(".js") || lower.endsWith(".jsx")) return "#f1e05a";
+  if (lower.endsWith(".ts") || lower.endsWith(".tsx")) return "#3178c6";
+  if (lower.endsWith(".py")) return "#3572A5";
+  if (lower.endsWith(".md")) return "#083fa1";
+  return "hsl(var(--muted-foreground))";
+}
+
 export function CodeBrowser({
   projectId,
   projectTitle,
@@ -76,7 +88,7 @@ export function CodeBrowser({
   const repoLabel = useMemo(() => {
     const ns = namespaceHint || "…";
     const name = repoNameHint || "…";
-    return `${ns} / ${name}`;
+    return { ns, name };
   }, [namespaceHint, repoNameHint]);
 
   const cloneUrl = code.summary?.clone_url ?? null;
@@ -92,7 +104,7 @@ export function CodeBrowser({
 
   if (code.isLoading && !code.summary) {
     return (
-      <p className="rounded-lg border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+      <p className="border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
         {t("common.loading")}
       </p>
     );
@@ -100,7 +112,7 @@ export function CodeBrowser({
 
   if (code.isError && !code.summary) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-10 text-center">
+      <div className="flex flex-col items-center gap-3 border border-destructive/30 bg-destructive/5 px-4 py-10 text-center">
         <p className="text-sm text-destructive">
           {code.errorStatus === 503
             ? t("hub.detail.code.forge_unavailable")
@@ -117,11 +129,11 @@ export function CodeBrowser({
 
   if (code.isEmpty) {
     return (
-      <div className="flex flex-col gap-4 rounded-lg border border-dashed border-border bg-card p-6">
+      <div className="flex flex-col gap-4 border border-dashed border-border bg-card p-6">
         <h3 className="text-sm font-bold text-foreground">{t("hub.detail.code.empty_title")}</h3>
         <p className="text-sm text-muted-foreground">{t("hub.detail.code.empty_text")}</p>
         {cloneUrl ? (
-          <p className="break-all rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-xs">
+          <p className="break-all border border-border bg-muted/40 px-3 py-2 font-mono text-xs">
             {cloneUrl}
           </p>
         ) : null}
@@ -146,7 +158,7 @@ export function CodeBrowser({
   if (code.mode === "blob") {
     if (code.isLoading || (code.isFetching && !code.blob && !code.isError)) {
       return (
-        <p className="rounded-lg border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+        <p className="border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
           {t("common.loading")}
         </p>
       );
@@ -165,7 +177,7 @@ export function CodeBrowser({
       );
     }
     return (
-      <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card px-4 py-10 text-center">
+      <div className="flex flex-col items-center gap-3 border border-border bg-card px-4 py-10 text-center">
         <p className="text-sm text-muted-foreground">{t("hub.detail.code.file_not_found")}</p>
         <Button type="button" variant="outline" className="h-8 text-xs" onClick={code.goRoot}>
           {t("hub.detail.code.back_tree")}
@@ -177,40 +189,49 @@ export function CodeBrowser({
   const entries = code.tree?.entries ?? [];
   const commit = code.tree?.latest_commit;
   const stats = code.summary?.stats;
+  const languages = code.summary?.languages ?? [];
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-      <div className="min-w-0 flex-1">
-        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-5">
+      <div className="min-w-0 flex-1 space-y-3">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
           <BookMarked aria-hidden className="size-4 text-muted-foreground" />
-          <span className="font-semibold text-foreground">{repoLabel}</span>
+          <span className="text-muted-foreground">{repoLabel.ns}</span>
+          <span className="text-muted-foreground">/</span>
+          <span className="font-semibold text-foreground">{repoLabel.name}</span>
         </div>
 
-        <div className="mb-3 flex flex-wrap items-center gap-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <GitCommitHorizontal aria-hidden className="size-3.5" />
-            {stats?.commits != null
-              ? t("hub.detail.code.stat_commits", { count: stats.commits })
-              : t("hub.detail.code.stat_commits_unknown")}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <GitBranch aria-hidden className="size-3.5" />
-            {stats?.branches != null
-              ? t("hub.detail.code.stat_branches", { count: stats.branches })
-              : t("hub.detail.code.stat_na")}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Tag aria-hidden className="size-3.5" />
-            {stats?.tags != null
-              ? t("hub.detail.code.stat_tags", { count: stats.tags })
-              : t("hub.detail.code.stat_na")}
-          </span>
+        <div className="grid grid-cols-3 overflow-hidden border border-border bg-muted/30 text-xs">
+          <div className="flex items-center justify-center gap-1.5 border-r border-border px-2 py-2 text-muted-foreground">
+            <GitCommitHorizontal aria-hidden className="size-3.5 shrink-0" />
+            <span>
+              {stats?.commits != null
+                ? t("hub.detail.code.stat_commits", { count: stats.commits })
+                : t("hub.detail.code.stat_commits_unknown")}
+            </span>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 border-r border-border px-2 py-2 text-muted-foreground">
+            <GitBranch aria-hidden className="size-3.5 shrink-0" />
+            <span>
+              {stats?.branches != null
+                ? t("hub.detail.code.stat_branches", { count: stats.branches })
+                : t("hub.detail.code.stat_na")}
+            </span>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 px-2 py-2 text-muted-foreground">
+            <Tag aria-hidden className="size-3.5 shrink-0" />
+            <span>
+              {stats?.tags != null
+                ? t("hub.detail.code.stat_tags", { count: stats.tags })
+                : t("hub.detail.code.stat_na")}
+            </span>
+          </div>
         </div>
 
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Select value={code.ref} onValueChange={code.setBranch}>
-              <SelectTrigger className="h-8 w-[min(100%,14rem)] rounded-md bg-card text-xs">
+              <SelectTrigger className="h-8 w-[min(100%,12rem)] rounded-md border-border bg-card text-xs shadow-none">
                 <GitBranch aria-hidden className="mr-1.5 size-3.5" />
                 <SelectValue />
               </SelectTrigger>
@@ -226,13 +247,19 @@ export function CodeBrowser({
               </SelectContent>
             </Select>
 
-            <nav aria-label={t("hub.detail.code.breadcrumb")} className="flex flex-wrap items-center gap-0.5 text-xs">
+            <nav
+              aria-label={t("hub.detail.code.breadcrumb")}
+              className="flex flex-wrap items-center gap-0.5 text-xs"
+            >
               {code.breadcrumbs.map((crumb, index) => {
                 const isLast = index === code.breadcrumbs.length - 1;
                 return (
                   <span key={crumb.path || "root"} className="inline-flex items-center">
                     {index > 0 ? (
-                      <ChevronRight aria-hidden className="mx-0.5 size-3 text-muted-foreground" />
+                      <ChevronRight
+                        aria-hidden
+                        className="mx-0.5 size-3 text-muted-foreground"
+                      />
                     ) : null}
                     {isLast ? (
                       <span className="font-semibold text-foreground">
@@ -241,7 +268,7 @@ export function CodeBrowser({
                     ) : (
                       <button
                         type="button"
-                        className="rounded px-1 text-brand hover:underline"
+                        className="rounded px-1 text-info hover:underline"
                         onClick={() => code.openPath(crumb.path, "tree")}
                       >
                         {crumb.label || projectTitle}
@@ -256,16 +283,18 @@ export function CodeBrowser({
           {cloneUrl ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="h-8 gap-1.5 rounded-md text-xs font-semibold">
+                <Button className="h-8 gap-1.5 rounded-md bg-info px-3 text-xs font-semibold text-info-foreground hover:bg-info/90">
+                  <Code2 aria-hidden className="size-3.5" />
                   {t("hub.detail.code.clone_menu")}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80 p-3">
-                <p className="mb-2 text-[11px] font-semibold text-muted-foreground">
+              <DropdownMenuContent align="end" className="w-[22rem] p-3">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                  <Terminal aria-hidden className="size-3.5" />
                   {t("hub.detail.code.clone_https")}
-                </p>
+                </div>
                 <div className="flex items-center gap-2">
-                  <code className="min-w-0 flex-1 truncate rounded border border-border bg-muted/50 px-2 py-1.5 text-[11px]">
+                  <code className="min-w-0 flex-1 truncate rounded-md border border-border bg-muted/50 px-2 py-1.5 text-[11px]">
                     {cloneUrl}
                   </code>
                   <Button
@@ -287,17 +316,23 @@ export function CodeBrowser({
           ) : null}
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <div className="overflow-hidden border border-border bg-card">
           {commit ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2 text-xs">
-              <div className="min-w-0 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2 text-xs">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span
+                  aria-hidden
+                  className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-success/20 text-[10px] font-bold text-success"
+                >
+                  {(commit.author_name || "?").slice(0, 1).toUpperCase()}
+                </span>
                 <span className="font-semibold text-foreground">
                   {commit.author_name || t("hub.detail.code.unknown_author")}
                 </span>
                 <span className="font-mono text-muted-foreground">{commit.short_sha}</span>
                 <span className="truncate text-muted-foreground">{commit.message}</span>
               </div>
-              <span className="text-muted-foreground">
+              <span className="shrink-0 text-muted-foreground">
                 {formatRelative(commit.authored_at, t("hub.detail.code.just_now"))}
               </span>
             </div>
@@ -324,7 +359,7 @@ export function CodeBrowser({
                 <li>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/40"
+                    className="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/40"
                     onClick={() => {
                       const parent = code.path.includes("/")
                         ? code.path.split("/").slice(0, -1).join("/")
@@ -332,8 +367,12 @@ export function CodeBrowser({
                       code.openPath(parent, "tree");
                     }}
                   >
-                    <Folder aria-hidden className="size-4 text-muted-foreground" />
-                    <span className="font-medium text-foreground">..</span>
+                    <span className="inline-flex items-center gap-2 font-medium text-foreground">
+                      <Folder aria-hidden className="size-4 text-muted-foreground" />
+                      ..
+                    </span>
+                    <span />
+                    <span />
                   </button>
                 </li>
               ) : null}
@@ -341,7 +380,7 @@ export function CodeBrowser({
                 <li key={entry.path}>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/40"
+                    className="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted/40"
                     onClick={() =>
                       code.openPath(
                         entry.path,
@@ -349,24 +388,27 @@ export function CodeBrowser({
                       )
                     }
                   >
-                    {entry.type === "dir" ? (
-                      <Folder aria-hidden className="size-4 shrink-0 text-brand" />
-                    ) : (
-                      <File aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-                    )}
-                    <span
-                      className={cn(
-                        "min-w-0 flex-1 truncate font-medium",
-                        entry.type === "dir" ? "text-foreground" : "text-foreground"
+                    <span className="inline-flex min-w-0 items-center gap-2 font-medium text-foreground">
+                      {entry.type === "dir" ? (
+                        <Folder aria-hidden className="size-4 shrink-0 text-info" />
+                      ) : (
+                        <FileCode2
+                          aria-hidden
+                          className="size-4 shrink-0"
+                          style={{ color: fileIconColor(entry.name) }}
+                        />
                       )}
-                    >
-                      {entry.name}
+                      <span className="truncate">{entry.name}</span>
                     </span>
-                    {commit ? (
-                      <span className="hidden max-w-[40%] truncate text-muted-foreground md:inline">
-                        {commit.message}
-                      </span>
-                    ) : null}
+                    <span className="hidden truncate text-muted-foreground md:inline">
+                      {commit?.message || ""}
+                    </span>
+                    <span className="hidden shrink-0 text-muted-foreground sm:inline">
+                      {formatRelative(
+                        commit?.authored_at,
+                        t("hub.detail.code.just_now")
+                      )}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -375,8 +417,8 @@ export function CodeBrowser({
         </div>
 
         {code.tree?.readme ? (
-          <section className="mt-4 overflow-hidden rounded-lg border border-border bg-card">
-            <div className="border-b border-border bg-muted/30 px-3 py-2 text-xs font-semibold text-foreground">
+          <section className="overflow-hidden border border-border bg-card">
+            <div className="border-b border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-foreground">
               {code.tree.readme.name}
             </div>
             <div className="p-4">
@@ -391,55 +433,61 @@ export function CodeBrowser({
         ) : null}
       </div>
 
-      <aside className="w-full shrink-0 lg:w-64">
-        <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 text-xs">
-          <div>
-            <h3 className="mb-1.5 font-semibold text-foreground">
-              {t("hub.detail.code.sidebar_description")}
-            </h3>
-            <p className="leading-relaxed text-muted-foreground">
-              {code.summary?.description || t("hub.detail.code.no_description")}
-            </p>
-          </div>
-          <ul className="flex flex-col gap-1.5 text-muted-foreground">
-            {code.summary?.size_kib != null ? (
-              <li className="inline-flex items-center gap-1.5">
-                <HardDrive aria-hidden className="size-3.5" />
-                {t("hub.detail.code.size", { size: code.summary.size_kib })}
-              </li>
-            ) : null}
-          </ul>
-          {(code.summary?.languages?.length ?? 0) > 0 ? (
-            <div>
-              <h3 className="mb-2 font-semibold text-foreground">
-                {t("hub.detail.code.languages")}
-              </h3>
-              <div className="mb-2 flex h-2 overflow-hidden rounded-full bg-muted">
-                {code.summary!.languages.map((lang, index) => (
-                  <span
-                    key={lang.name}
-                    className={cn(
-                      "h-full",
-                      index % 3 === 0 && "bg-brand",
-                      index % 3 === 1 && "bg-info",
-                      index % 3 === 2 && "bg-warning"
-                    )}
-                    style={{ width: `${lang.percent}%` }}
-                    title={`${lang.name} ${lang.percent}%`}
-                  />
-                ))}
-              </div>
-              <ul className="flex flex-col gap-1">
-                {code.summary!.languages.map((lang) => (
-                  <li key={lang.name} className="flex justify-between gap-2">
-                    <span className="text-foreground">{lang.name}</span>
-                    <span className="text-muted-foreground">{lang.percent}%</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+      <aside className="w-full shrink-0 space-y-5 lg:w-60">
+        <div>
+          <h3 className="mb-1.5 text-xs font-semibold text-foreground">
+            {t("hub.detail.code.sidebar_description")}
+          </h3>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {code.summary?.description || t("hub.detail.code.no_description")}
+          </p>
         </div>
+
+        {code.summary?.size_kib != null ? (
+          <ul className="space-y-1.5 text-xs text-muted-foreground">
+            <li className="inline-flex items-center gap-1.5">
+              <HardDrive aria-hidden className="size-3.5" />
+              {t("hub.detail.code.size", { size: code.summary.size_kib })}
+            </li>
+          </ul>
+        ) : null}
+
+        {languages.length > 0 ? (
+          <div>
+            <h3 className="mb-2 text-xs font-semibold text-foreground">
+              {t("hub.detail.code.languages")}
+            </h3>
+            <div className="mb-2 flex h-2.5 overflow-hidden rounded-sm bg-muted">
+              {languages.map((lang) => (
+                <span
+                  key={lang.name}
+                  className="h-full"
+                  style={{
+                    width: `${lang.percent}%`,
+                    backgroundColor: languageColor(lang.name),
+                  }}
+                  title={`${lang.name} ${lang.percent}%`}
+                />
+              ))}
+            </div>
+            <ul className="space-y-1">
+              {languages.map((lang) => (
+                <li
+                  key={lang.name}
+                  className="flex items-center gap-2 text-xs text-foreground"
+                >
+                  <span
+                    aria-hidden
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: languageColor(lang.name) }}
+                  />
+                  <span className="font-medium">{lang.name}</span>
+                  <span className="text-muted-foreground">{lang.percent}%</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </aside>
     </div>
   );

@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useGetProjectCodeSummaryQuery } from "../api";
 import { ProjectDetailHeader } from "../components/project-detail-header";
 import {
   CodePanel,
@@ -13,7 +14,6 @@ import {
 } from "../components/project-detail-panels";
 import { ProjectDetailTabs } from "../components/project-detail-tabs";
 import { useProjectDetail } from "../hooks/use-project-detail";
-import type { Technology } from "../schema";
 
 export default function ProjectDetailPage() {
   const { t } = useTranslation();
@@ -21,13 +21,11 @@ export default function ProjectDetailPage() {
   const projectId = Number(params.id);
   const detail = useProjectDetail(projectId);
   const [showTaskForm, setShowTaskForm] = useState(false);
-
-  const technologies = useMemo(() => {
-    if (!detail.project) return [] as Technology[];
-    return detail.project.technologies
-      .map((id) => detail.technologiesById.get(id))
-      .filter((item): item is Technology => Boolean(item));
-  }, [detail.project, detail.technologiesById]);
+  const repositoryReady = detail.repository?.status === "ready";
+  const codeSummaryQuery = useGetProjectCodeSummaryQuery(projectId, {
+    skip: !repositoryReady || !Number.isFinite(projectId) || projectId <= 0,
+  });
+  const detectedLanguages = codeSummaryQuery.data?.languages ?? [];
 
   if (!Number.isFinite(projectId) || projectId <= 0) {
     return (
@@ -79,13 +77,13 @@ export default function ProjectDetailPage() {
 
   const project = detail.project;
   const repository = detail.repository;
-  const repositoryReady = repository?.status === "ready";
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <ProjectDetailHeader
         project={project}
-        technologies={technologies}
+        detectedLanguages={detectedLanguages}
+        languagesPending={Boolean(repositoryReady && codeSummaryQuery.isLoading)}
         star={detail.star}
         isOwner={detail.isOwner}
         canPublish={detail.isOwner && detail.access.canPublishProject}

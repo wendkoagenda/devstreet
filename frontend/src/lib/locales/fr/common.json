@@ -520,6 +520,8 @@
     },
     "detail": {
       "no_problem": "Aucun résumé de besoin renseigné pour le moment.",
+      "languages_empty": "Aucune langue détectée pour l’instant.",
+      "languages_waiting_repo": "Les langages apparaîtront après le premier push de code.",
       "tabs_label": "Sections de la fiche projet",
       "tabs": {
         "presentation": "Présentation",
@@ -639,7 +641,7 @@
       "title": "Créer mon projet",
       "title_resume": "Reprendre la création",
       "badge": "privé",
-      "description": "Choisis un nom, une licence et tes technologies. DevStreet prépare automatiquement ton dépôt — sans ouvrir l'interface forge.",
+      "description": "Choisis un nom et une licence. Les langages sont détectés automatiquement après le premier push — sans ouvrir l'interface forge.",
       "description_resume": "Reprends la progression : identité Git, dépôt, puis initialisation. Le brouillon est conservé.",
       "progress": {
         "draft": "Brouillon",
@@ -676,6 +678,7 @@
         "description": "Description détaillée (optionnelle)",
         "technologies": "Technologies",
         "technologies_count": "{{count}} sélectionnée(s)",
+        "technologies_auto": "Les langages (HTML, Python, etc.) sont détectés automatiquement une fois le code poussé dans le dépôt. Pas de sélection manuelle.",
         "remove_tech": "Retirer {{label}}",
         "license": "Licence",
         "demo_url": "Lien de démonstration (optionnel)"
@@ -747,6 +750,7 @@
         "by": "par {{owner}}",
         "you": "toi",
         "problem_placeholder": "Le résumé du besoin apparaîtra ici.",
+        "languages_auto": "Langages détectés automatiquement après le premier push.",
         "stars": "{{count}} étoiles",
         "forge_sync": "Dépôt prêt",
         "params": "Paramètres",
