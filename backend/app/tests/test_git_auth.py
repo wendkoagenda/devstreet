@@ -5,7 +5,7 @@ from unittest.mock import patch
 import base64
 import secrets
 
-from django.test import override_settings
+from django.test import SimpleTestCase, override_settings
 from django.utils import timezone
 from rest_framework.exceptions import Throttled
 
@@ -292,3 +292,55 @@ class GitDeviceAuthTests(DevStreetHubAPITestCase):
         blob = str(detail.data)
         self.assertNotIn("admin-never-leaked", blob)
         self.assertNotIn("gitea-pat-", blob)
+
+
+@override_settings(
+    DEBUG=True,
+    DEVSTREET_HUB_GITEA_URL="http://127.0.0.1:13000",
+    DEVSTREET_HUB_GITEA_TOKEN="test-token",
+)
+class GiteaPatMustChangePasswordTests(SimpleTestCase):
+    """Le flag must_change_password ne doit pas bloquer les PAT après création."""
+
+    def test_create_user_access_token_clears_must_change_password(self):
+        import httpx
+        from unittest.mock import patch
+        from app.devstreet_hub.services.gitea_client import GiteaClient
+
+        calls = []
+
+        def handler(request):
+            calls.append(request)
+            if request.method == "POST" and request.url.path.endswith("/tokens"):
+                return httpx.Response(
+                    201,
+                    json={
+                        "id": 42,
+                        "name": "t",
+                        "sha1": "a" * 40,
+                        "token_last_eight": "a" * 8,
+                    },
+                )
+            return httpx.Response(200, json={})
+
+        original = httpx.Client
+        with patch(
+            "app.devstreet_hub.services.gitea_client.httpx.Client",
+            side_effect=lambda **kwargs: original(
+                transport=httpx.MockTransport(handler), **kwargs
+            ),
+        ), patch.object(
+            GiteaClient,
+            "reissue_password",
+            side_effect=lambda **kw: calls.append(("reissue", kw)) or "temp-secret",
+        ) as _:
+            client = GiteaClient()
+            payload = client.create_user_access_token(
+                login="ds-demo",
+                email="demo@example.test",
+                name="pc",
+            )
+        self.assertEqual(payload["sha1"], "a" * 40)
+        reissues = [c for c in calls if isinstance(c, tuple) and c[0] == "reissue"]
+        self.assertGreaterEqual(len(reissues), 2)
+        self.assertFalse(reissues[-1][1]["must_change_password"])

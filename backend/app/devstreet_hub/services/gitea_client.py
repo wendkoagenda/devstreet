@@ -232,9 +232,11 @@ class GiteaClient:
                 "La forge ne répond pas correctement ; réessayez."
             ) from error
         finally:
-            # Invalide le mot de passe temporaire : seul le PAT reste utilisable.
+            # Invalide le mot de passe temporaire (secret aléatoire inconnu de l'utilisateur).
+            # must_change_password DOIT rester False : sinon Gitea bloque aussi les PAT
+            # (git push / API) jusqu'à un changement de mot de passe interactif.
             self.reissue_password(
-                login=login, email=email, must_change_password=True
+                login=login, email=email, must_change_password=False
             )
         if not isinstance(payload, dict) or not payload.get("sha1"):
             raise ExternalUnavailable(
@@ -268,7 +270,7 @@ class GiteaClient:
             ) from error
         finally:
             self.reissue_password(
-                login=login, email=email, must_change_password=True
+                login=login, email=email, must_change_password=False
             )
 
     def provision_identity(self, actor, *, login: str, provisioning_key):

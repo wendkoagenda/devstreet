@@ -48,10 +48,23 @@ python -m devstreet auth logout
 - Aucun secret dans l’URL du remote ni dans les arguments Git.
 - Droits = permissions Gitea du compte utilisateur (scopes `read/write:repository`, `read:user`).
 
+## Smoke local
+
+```powershell
+cd backend
+.\venv\Scripts\python.exe scripts\smoke_git_computer_auth.py
+```
+
+Crée un compte jetable `smoke-computer-auth@devstreet.local`, un dépôt privé `ds-computer-auth-smoke`, exerce authorize → push/fetch → révocation → refus. N’envoie jamais le dépôt `devstreet`.
+
 ## Limites restantes
 
 - Le credential helper DevStreet est ajouté en tête de `credential.helper` global ; les autres helpers sont conservés.
 - En local, le CLI appelle `{hub}/api/v1` (proxy Vite) sauf `--api`.
 - Pas de SSH dans cette version.
 - Pas de refresh automatique du PAT (révocation + reconnexion).
-- Vérification push/fetch réelle : dépôt de test dédié uniquement (pas le dépôt `devstreet`).
+
+## Point critique Gitea
+
+Après création du PAT, le mot de passe temporaire est invalidé avec `must_change_password=False`.  
+Si ce flag reste `True`, Gitea bloque **aussi** les PAT (API et `git push` HTTPS) jusqu’à un changement de mot de passe interactif.
