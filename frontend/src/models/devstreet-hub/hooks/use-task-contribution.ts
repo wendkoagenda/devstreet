@@ -65,10 +65,17 @@ export function useTaskContribution(projectId: number, taskId: number) {
     project && access.userId != null && project.owner_id === access.userId
   );
   const canMaintain = isOwner || access.canUpdateTask;
+  /** Droit API de soumettre une contribution (tâche ouverte + projet publié). */
   const canSubmit =
     access.canSubmitContribution &&
     task?.status === "open" &&
     project?.status === "published";
+  /**
+   * CTA « Proposer mon travail » : réservé au contributeur.
+   * Le propriétaire / mainteneur qui a ouvert la tâche gère (fermer, revue),
+   * il ne doit pas voir ce bouton en action principale.
+   */
+  const showProposeCta = canSubmit && !canMaintain;
 
   const firstStep = useMemo(() => {
     if (!task) return null;
@@ -218,6 +225,7 @@ export function useTaskContribution(projectId: number, taskId: number) {
     },
     canMaintain,
     canSubmit,
+    showProposeCta,
     helpDraft,
     setHelpDraft,
     forumUnavailable,

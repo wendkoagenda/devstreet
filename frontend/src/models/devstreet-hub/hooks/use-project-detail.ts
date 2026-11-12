@@ -18,6 +18,7 @@ import { apiDetailOf, httpStatusOf } from "../functions/api-error";
 import type {
   ProjectDetailTab,
   ProjectMemberWrite,
+  TaskStatus,
   TaskWrite,
   Technology,
 } from "../schema";
@@ -32,11 +33,18 @@ const TABS: ProjectDetailTab[] = [
   "team",
 ];
 
+type TaskFilter = Extract<TaskStatus, "open" | "closed" | "draft">;
+
 function parseTab(value: string | null): ProjectDetailTab {
   if (value && TABS.includes(value as ProjectDetailTab)) {
     return value as ProjectDetailTab;
   }
   return "presentation";
+}
+
+function parseTaskStatus(value: string | null): TaskFilter {
+  if (value === "closed" || value === "draft" || value === "open") return value;
+  return "open";
 }
 
 /**
@@ -50,6 +58,8 @@ export function useProjectDetail(projectId: number) {
 
   const tab = parseTab(searchParams.get("tab"));
   const tasksPage = Math.max(1, Number(searchParams.get("tasks_page") || "1"));
+  const tasksStatus = parseTaskStatus(searchParams.get("tasks_status"));
+  const tasksSearch = (searchParams.get("tasks_q") || "").trim();
   const membersPage = Math.max(
     1,
     Number(searchParams.get("members_page") || "1")
@@ -65,7 +75,13 @@ export function useProjectDetail(projectId: number) {
   });
 
   const tasksQuery = useGetProjectTasksQuery(
-    { projectId, page: tasksPage, page_size: PAGE_SIZE },
+    {
+      projectId,
+      page: tasksPage,
+      page_size: PAGE_SIZE,
+      status: tasksStatus,
+      search: tasksSearch || undefined,
+    },
     { skip: !project || tab !== "contribute" }
   );
 
@@ -116,7 +132,11 @@ export function useProjectDetail(projectId: number) {
     (next: ProjectDetailTab) => {
       const params = new URLSearchParams(searchParams);
       params.set("tab", next);
-      if (next !== "contribute") params.delete("tasks_page");
+      if (next !== "contribute") {
+        params.delete("tasks_page");
+        params.delete("tasks_status");
+        params.delete("tasks_q");
+      }
       if (next !== "team") params.delete("members_page");
       setSearchParams(params, { replace: true });
     },
@@ -128,6 +148,30 @@ export function useProjectDetail(projectId: number) {
       const params = new URLSearchParams(searchParams);
       params.set("tab", "contribute");
       params.set("tasks_page", String(page));
+      setSearchParams(params, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
+
+  const setTasksStatus = useCallback(
+    (status: TaskFilter) => {
+      const params = new URLSearchParams(searchParams);
+      params.set("tab", "contribute");
+      params.set("tasks_status", status);
+      params.set("tasks_page", "1");
+      setSearchParams(params, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
+
+  const setTasksSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams);
+      params.set("tab", "contribute");
+      const trimmed = value.trim();
+      if (trimmed) params.set("tasks_q", trimmed);
+      else params.delete("tasks_q");
+      params.set("tasks_page", "1");
       setSearchParams(params, { replace: true });
     },
     [searchParams, setSearchParams]
@@ -199,6 +243,21 @@ export function useProjectDetail(projectId: number) {
     [addMember, mapError, project, t]
   );
 
+  const updateMemberRole = useCallback(
+    async (body: ProjectMemberWrite) => {
+      if (!project) return false;
+      try {
+        await addMember({ projectId: project.id, body }).unwrap();
+        toast.success(t("hub.detail.toasts.member_updated"));
+        return true;
+      } catch (error) {
+        toast.error(mapError(error, "hub.detail.errors.member_update"));
+        return false;
+      }
+    },
+    [addMember, mapError, project, t]
+  );
+
   const ejectMember = useCallback(
     async (userId: number) => {
       if (!project) return;
@@ -231,6 +290,10 @@ export function useProjectDetail(projectId: number) {
     tasksLoading: tasksQuery.isLoading || tasksQuery.isFetching,
     tasksPage,
     setTasksPage,
+    tasksStatus,
+    setTasksStatus,
+    tasksSearch,
+    setTasksSearch,
     members: membersQuery.data,
     membersLoading: membersQuery.isLoading || membersQuery.isFetching,
     membersPage,
@@ -240,6 +303,7 @@ export function useProjectDetail(projectId: number) {
     archive,
     createManualTask,
     inviteMember,
+    updateMemberRole,
     ejectMember,
     isBusy:
       publishState.isLoading ||

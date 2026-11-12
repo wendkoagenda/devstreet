@@ -25,6 +25,7 @@ schema_view = get_schema_view(
         path('api/', include('app.core.urls')),
         path('api/', include('app.metier.urls')),
         path('api/', include('app.devstreet_hub.urls')),
+        path('api/', include('app.ai.urls')),
     ],
 )
 
@@ -35,7 +36,7 @@ urlpatterns = [
     # API Metier (application pour les modèles métier)
     path('api/', include('app.metier.urls')),
     path('api/', include('app.devstreet_hub.urls')),
-    
+    path('api/', include('app.ai.urls')),
 ]
 
 # Administration Django : exposée seulement si ENABLE_ADMIN est actif

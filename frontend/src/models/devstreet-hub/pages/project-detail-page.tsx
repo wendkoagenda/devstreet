@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { ProjectDetailHeader } from "../components/project-detail-header";
 import {
   CodePanel,
-  ContributePanel,
-  CreateTaskForm,
   PresentationPanel,
-  TeamPanel,
 } from "../components/project-detail-panels";
+import { ContributeTasksPanel } from "../components/contribute-tasks-panel";
+import { CreateTaskForm } from "../components/create-task-form";
 import { ProjectDetailTabs } from "../components/project-detail-tabs";
+import { TeamPanel } from "../components/team-panel";
+import { HubAssistantPanel } from "@/models/ai/components/hub-assistant-panel";
 import { useProjectDetail } from "../hooks/use-project-detail";
 
 export default function ProjectDetailPage() {
@@ -125,28 +126,35 @@ export default function ProjectDetailPage() {
       ) : null}
 
       {detail.tab === "contribute" ? (
-        <div className="flex flex-col gap-4">
-          {showTaskForm ? (
-            <CreateTaskForm
-              isBusy={detail.isBusy}
-              onCancel={() => setShowTaskForm(false)}
-              onSubmit={async (body) => {
-                const ok = await detail.createManualTask(body);
-                if (ok) setShowTaskForm(false);
-                return ok;
-              }}
-            />
-          ) : null}
-          <ContributePanel
+        showTaskForm ? (
+          <CreateTaskForm
+            isBusy={detail.isBusy}
+            onCancel={() => setShowTaskForm(false)}
+            onSubmit={async (body) => {
+              const ok = await detail.createManualTask(body);
+              if (ok) {
+                setShowTaskForm(false);
+                detail.setTasksStatus("draft");
+              }
+              return ok;
+            }}
+          />
+        ) : (
+          <ContributeTasksPanel
             projectId={project.id}
             tasks={detail.tasks}
             loading={detail.tasksLoading}
             page={detail.tasksPage}
-            onPageChange={detail.setTasksPage}
+            status={detail.tasksStatus}
+            search={detail.tasksSearch}
             canCreateTask={detail.access.canCreateTask}
+            canSeeDrafts={detail.isOwner || detail.access.canCreateTask}
+            onPageChange={detail.setTasksPage}
+            onStatusChange={detail.setTasksStatus}
+            onSearchChange={detail.setTasksSearch}
             onOpenCreateTask={() => setShowTaskForm(true)}
           />
-        </div>
+        )
       ) : null}
 
       {detail.tab === "team" ? (
@@ -159,6 +167,7 @@ export default function ProjectDetailPage() {
           canManage={detail.isOwner && detail.access.canManageMembers}
           isBusy={detail.isBusy}
           onInvite={detail.inviteMember}
+          onUpdateRole={detail.updateMemberRole}
           onRemove={(userId) => {
             if (window.confirm(t("hub.detail.confirm.remove_member"))) {
               void detail.ejectMember(userId);
@@ -166,6 +175,8 @@ export default function ProjectDetailPage() {
           }}
         />
       ) : null}
+
+      <HubAssistantPanel projectId={project.id} projectTitle={project.title} />
     </div>
   );
 }

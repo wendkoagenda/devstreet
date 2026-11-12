@@ -320,6 +320,20 @@ export type CodeBlob = z.infer<typeof codeBlobSchema>;
 export type ProjectTasksParams = {
   page?: number;
   page_size?: number;
+  status?: TaskStatus;
+  search?: string;
+};
+
+export type ProjectTasksPage = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ContributionTask[];
+  status_counts?: {
+    open: number;
+    closed: number;
+    draft: number;
+  };
 };
 
 export type ProjectMembersParams = {

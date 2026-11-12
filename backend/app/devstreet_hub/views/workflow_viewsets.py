@@ -1,5 +1,6 @@
 """Routes de workflows. Les règles sont dans WorkflowService, l'auth reste celle du core."""
 
+from django.db.models import Q
 from django.http import HttpResponse
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
@@ -32,7 +33,9 @@ from app.devstreet_hub.api_serializers import (
     AdoptSuggestionSerializer,
     DiscussionWriteSerializer,
     DiscussionSerializer,
+    AssistantChatSerializer,
 )
+from app.ai.serializers import AiChatResponseSerializer
 from app.devstreet_hub.services.workflow_service import WorkflowService
 from app.devstreet_hub.api_serializers import (
     ProjectQuerySerializer,
@@ -117,6 +120,21 @@ class ProjectViewSet(
             **validated(ConsentSerializer, request.data)
         )
         return Response(ProjectSerializer(obj).data)
+
+    @swagger_auto_schema(
+        method="post",
+        request_body=AssistantChatSerializer,
+        responses={200: AiChatResponseSerializer},
+        tags=["V1 - Project"],
+    )
+    @action(detail=True, methods=["post"], url_path="assistant/chat")
+    def assistant_chat(self, request, pk=None):
+        result = WorkflowService().assistant_chat(
+            request.user,
+            self.get_object(),
+            validated(AssistantChatSerializer, request.data),
+        )
+        return Response(AiChatResponseSerializer(result).data)
 
     @swagger_auto_schema(tags=["V1 - Project"], methods=["post"])
     @action(detail=True, methods=["post"])
@@ -311,9 +329,26 @@ class ProjectViewSet(
             )
             return Response(TaskSerializer(obj).data, status=201)
         qs = service.repo.visible_tasks(request.user, project_id=project.pk)
-        return self.get_paginated_response(
+        status_counts = {
+            "open": qs.filter(status="open").count(),
+            "closed": qs.filter(status="closed").count(),
+            "draft": qs.filter(status="draft").count(),
+        }
+        status_filter = (request.query_params.get("status") or "").strip().lower()
+        if status_filter in ("open", "closed", "draft"):
+            qs = qs.filter(status=status_filter)
+        search = (
+            request.query_params.get("search") or request.query_params.get("q") or ""
+        ).strip()
+        if search:
+            qs = qs.filter(
+                Q(title__icontains=search) | Q(description__icontains=search)
+            )
+        response = self.get_paginated_response(
             TaskSerializer(self.paginate_queryset(qs), many=True).data
         )
+        response.data["status_counts"] = status_counts
+        return response
 
     @swagger_auto_schema(
         method="post",

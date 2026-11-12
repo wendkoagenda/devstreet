@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -22,6 +22,8 @@ import { useHubAccess } from "./use-hub-access";
 
 const MAX_POLLS = 24;
 
+export type WorkshopView = "compose" | "results";
+
 function nextDelayMs(attempt: number): number {
   return Math.min(10_000, 1000 * 2 ** Math.min(attempt, 3));
 }
@@ -37,22 +39,54 @@ function asResult(raw: Analysis["result"]): AnalysisResult | null {
   };
 }
 
+function adoptedStorageKey(analysisId: number): string {
+  return `hub-ai-adopted-${analysisId}`;
+}
+
+function readAdopted(analysisId: number): Record<number, number> {
+  try {
+    const raw = sessionStorage.getItem(adoptedStorageKey(analysisId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, number>;
+    return Object.fromEntries(
+      Object.entries(parsed).map(([key, value]) => [Number(key), value])
+    );
+  } catch {
+    return {};
+  }
+}
+
+function writeAdopted(analysisId: number, map: Record<number, number>): void {
+  try {
+    sessionStorage.setItem(adoptedStorageKey(analysisId), JSON.stringify(map));
+  } catch {
+    // sessionStorage indisponible : les badges adoptés ne survivent pas au refresh
+  }
+}
+
 /**
- * Écran 06 : atelier IA guidé (consentement, génération, adoption).
+ * Écran 06 : atelier contribution (manuel + IA optionnelle).
  * Suit docs/devstreet_hub/interfaces/06-atelier-ia.md.
  */
 export function useAiWorkshop(projectId: number) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const access = useHubAccess();
 
   const [objective, setObjective] = useState("");
   const [language, setLanguage] = useState<"fr" | "en">("fr");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [view, setView] = useState<WorkshopView>("compose");
+  const [selectedSuggestion, setSelectedSuggestion] = useState(0);
+  const [adoptedByIndex, setAdoptedByIndex] = useState<Record<number, number>>(
+    {}
+  );
   const [polling, setPolling] = useState(false);
   const pollAttempt = useRef(0);
   const pollTimer = useRef<number | null>(null);
   const stopped = useRef(false);
+  const hydratedFromUrl = useRef(false);
 
   const projectQuery = useGetProjectQuery(projectId, {
     skip: !Number.isFinite(projectId) || projectId <= 0,
@@ -77,6 +111,7 @@ export function useAiWorkshop(projectId: number) {
   const canCreateTask = access.canCreateTask;
 
   const result = useMemo(() => asResult(analysis?.result), [analysis?.result]);
+  const suggestions = result?.suggested_tasks ?? [];
   const currentSha = repository?.current_sha ?? null;
   const isSourcesStale = Boolean(
     analysis?.commit_sha &&
@@ -87,8 +122,8 @@ export function useAiWorkshop(projectId: number) {
   const clearPoll = useCallback(() => {
     if (pollTimer.current != null) {
       window.clearTimeout(pollTimer.current);
-      pollTimer.current = null;
     }
+    pollTimer.current = null;
   }, []);
 
   useEffect(() => {
@@ -98,6 +133,44 @@ export function useAiWorkshop(projectId: number) {
       clearPoll();
     };
   }, [clearPoll]);
+
+  const syncAnalysisUrl = useCallback(
+    (analysisId: number | null) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (analysisId == null) {
+            next.delete("analysis");
+          } else {
+            next.set("analysis", String(analysisId));
+          }
+          return next;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
+
+  const applyAnalysis = useCallback(
+    (next: Analysis, options?: { switchToResults?: boolean }) => {
+      setAnalysis(next);
+      syncAnalysisUrl(next.id);
+      if (
+        options?.switchToResults !== false &&
+        (next.status === "succeeded" || next.status === "failed")
+      ) {
+        setView("results");
+      }
+    },
+    [syncAnalysisUrl]
+  );
+
+  useEffect(() => {
+    if (!analysis) return;
+    setSelectedSuggestion(0);
+    setAdoptedByIndex(readAdopted(analysis.id));
+  }, [analysis?.id]);
 
   const mapError = useCallback(
     (error: unknown, fallbackKey: string) => {
@@ -116,6 +189,14 @@ export function useAiWorkshop(projectId: number) {
     [t]
   );
 
+  const openTask = useCallback(
+    (taskId: number) => {
+      if (!project) return;
+      navigate(`/hub/projects/${project.id}/tasks/${taskId}`);
+    },
+    [navigate, project]
+  );
+
   const schedulePoll = useCallback(
     (analysisId: number) => {
       clearPoll();
@@ -131,11 +212,13 @@ export function useAiWorkshop(projectId: number) {
         if (stopped.current) return;
         try {
           const next = await fetchAnalysis(analysisId).unwrap();
-          setAnalysis(next);
+          applyAnalysis(next);
           if (next.status === "succeeded" || next.status === "failed") {
             setPolling(false);
             if (next.status === "failed") {
               toast.error(t("hub.ai.errors.failed"));
+            } else {
+              toast.success(t("hub.ai.toasts.ready"));
             }
             return;
           }
@@ -146,8 +229,40 @@ export function useAiWorkshop(projectId: number) {
         }
       }, delay);
     },
-    [clearPoll, fetchAnalysis, mapError, t]
+    [applyAnalysis, clearPoll, fetchAnalysis, mapError, t]
   );
+
+  useEffect(() => {
+    if (hydratedFromUrl.current) return;
+    const raw = searchParams.get("analysis");
+    const analysisId = raw ? Number(raw) : NaN;
+    if (!Number.isFinite(analysisId) || analysisId <= 0) {
+      hydratedFromUrl.current = true;
+      return;
+    }
+    hydratedFromUrl.current = true;
+    void (async () => {
+      try {
+        const next = await fetchAnalysis(analysisId).unwrap();
+        if (next.project_id !== projectId) return;
+        applyAnalysis(next);
+        if (next.status === "queued" || next.status === "running") {
+          pollAttempt.current = 0;
+          setPolling(true);
+          schedulePoll(next.id);
+        }
+      } catch {
+        syncAnalysisUrl(null);
+      }
+    })();
+  }, [
+    applyAnalysis,
+    fetchAnalysis,
+    projectId,
+    schedulePoll,
+    searchParams,
+    syncAnalysisUrl,
+  ]);
 
   const toggleConsent = useCallback(
     async (enabled: boolean) => {
@@ -200,8 +315,8 @@ export function useAiWorkshop(projectId: number) {
         projectId: project.id,
         body,
       }).unwrap();
-      setAnalysis(created);
       pollAttempt.current = 0;
+      applyAnalysis(created);
       if (created.status === "succeeded") {
         setPolling(false);
         toast.success(t("hub.ai.toasts.ready"));
@@ -228,6 +343,7 @@ export function useAiWorkshop(projectId: number) {
     }
   }, [
     access,
+    applyAnalysis,
     canAnalyze,
     createAnalysis,
     hasConsent,
@@ -246,18 +362,38 @@ export function useAiWorkshop(projectId: number) {
         toast.error(t("hub.ai.errors.forbidden"));
         return;
       }
+      if (adoptedByIndex[suggestionIndex] != null) {
+        openTask(adoptedByIndex[suggestionIndex]);
+        return;
+      }
       try {
         const task = await adoptSuggestion({
           projectId: project.id,
           body: { analysis_id: analysis.id, suggestion_index: suggestionIndex },
         }).unwrap();
-        toast.success(t("hub.ai.toasts.task_draft"));
-        navigate(`/hub/projects/${project.id}/tasks/${task.id}`);
+        const nextMap = { ...adoptedByIndex, [suggestionIndex]: task.id };
+        setAdoptedByIndex(nextMap);
+        writeAdopted(analysis.id, nextMap);
+        toast.success(t("hub.ai.toasts.task_draft"), {
+          action: {
+            label: t("hub.ai.toasts.open_task"),
+            onClick: () => openTask(task.id),
+          },
+        });
       } catch (error) {
         toast.error(mapError(error, "hub.ai.errors.adopt"));
       }
     },
-    [adoptSuggestion, analysis, canCreateTask, mapError, navigate, project, t]
+    [
+      adoptSuggestion,
+      adoptedByIndex,
+      analysis,
+      canCreateTask,
+      mapError,
+      openTask,
+      project,
+      t,
+    ]
   );
 
   const createManual = useCallback(
@@ -272,16 +408,30 @@ export function useAiWorkshop(projectId: number) {
           projectId: project.id,
           body,
         }).unwrap();
-        toast.success(t("hub.ai.toasts.manual_task"));
-        navigate(`/hub/projects/${project.id}/tasks/${task.id}`);
+        toast.success(t("hub.ai.toasts.manual_task"), {
+          action: {
+            label: t("hub.ai.toasts.open_task"),
+            onClick: () => openTask(task.id),
+          },
+        });
         return true;
       } catch (error) {
         toast.error(mapError(error, "hub.ai.errors.manual"));
         return false;
       }
     },
-    [canCreateTask, createTask, mapError, navigate, project, t]
+    [canCreateTask, createTask, mapError, openTask, project, t]
   );
+
+  const clearResults = useCallback(() => {
+    clearPoll();
+    setPolling(false);
+    setAnalysis(null);
+    setAdoptedByIndex({});
+    setSelectedSuggestion(0);
+    setView("compose");
+    syncAnalysisUrl(null);
+  }, [clearPoll, syncAnalysisUrl]);
 
   const progressLabel = useMemo(() => {
     if (!analysis) return null;
@@ -305,10 +455,18 @@ export function useAiWorkshop(projectId: number) {
     setLanguage,
     analysis,
     result,
+    suggestions,
     currentSha,
     isSourcesStale,
     progressLabel,
     polling,
+    view,
+    setView,
+    selectedSuggestion,
+    setSelectedSuggestion,
+    adoptedByIndex,
+    openTask,
+    clearResults,
     isLoading: projectQuery.isLoading,
     isError: projectQuery.isError,
     errorStatus: httpStatusOf(projectQuery.error),

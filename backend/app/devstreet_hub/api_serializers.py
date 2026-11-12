@@ -365,6 +365,13 @@ class DiscussionWriteSerializer(serializers.Serializer):
     body = serializers.CharField(max_length=5000)
 
 
+class AssistantChatSerializer(serializers.Serializer):
+    message = serializers.CharField(max_length=8000)
+    conversation_id = serializers.IntegerField(required=False, min_value=1)
+    task_id = serializers.IntegerField(required=False, min_value=1)
+    include_repo = serializers.BooleanField(required=False, default=True)
+
+
 class DiscussionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectDiscussionLink

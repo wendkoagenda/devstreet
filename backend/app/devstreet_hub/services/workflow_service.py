@@ -968,10 +968,10 @@ class WorkflowService:
             )
         if project.status == "archived" or project.repository.status != "ready":
             raise Conflict("Le dépôt doit être prêt et le projet actif.")
-        model = config("OPENAI_MODEL")
-        if not model or not config("OPENAI_API_KEY"):
+        model = config("OPENAI_MODEL") or "gpt-4o-mini"
+        if not config("OPENAI_API_KEY"):
             raise ExternalUnavailable(
-                "Configurez le modèle et la clé OpenAI côté serveur."
+                "Configurez la clé OpenAI côté serveur (AI_OPENAI_API_KEY)."
             )
         sha = self.forge.head(project.repository)
         key = hashlib.sha256(
@@ -979,15 +979,22 @@ class WorkflowService:
                 [project.pk, sha, objective, language, model, "contribution-v1"]
             ).encode()
         ).hexdigest()
+        daily_limit = int(config("AI_DAILY_LIMIT", 20) or 20)
+        project_limit = int(config("AI_PROJECT_DAILY_LIMIT", 2) or 2)
+        inline_worker = str(config("AI_INLINE_WORKER", "")).lower() in (
+            "1",
+            "true",
+            "yes",
+        )
         with transaction.atomic():
             self.repo.locked_project(project.pk)
             daily, project_daily = self.repo.reserve_analysis(actor, project, {})
             cached = self.repo.cached_analysis(key)
             if cached:
                 return cached
-            if daily >= int(config("AI_DAILY_LIMIT", 20)) or project_daily >= 2:
+            if daily >= daily_limit or project_daily >= project_limit:
                 raise QuotaExceeded()
-            return self.repo.create_analysis(
+            analysis = self.repo.create_analysis(
                 actor,
                 project,
                 objective=objective,
@@ -996,6 +1003,13 @@ class WorkflowService:
                 cache_key=key,
                 commit_sha=sha,
             )
+        # Local : traiter immédiatement sans cron (flag explicite ; les tests ne l'activent pas).
+        if inline_worker and analysis.status == "queued":
+            from app.devstreet_hub.services.analysis_worker import process_next
+
+            process_next()
+            analysis.refresh_from_db()
+        return analysis
 
     def link_discussion(self, actor, project, data):
         require_permission(actor, "projects.discuss")
@@ -1040,3 +1054,76 @@ class WorkflowService:
                 forum_topic_id=str(topic_id),
                 **{k: data[k] for k in ("request_key", "title", "body")}
             )
+
+    def _assistant_context(self, actor, project, *, task_id=None, include_repo=True):
+        """Assemble un contexte court pour l'assistant partagé (pas de clés, pas de secrets)."""
+        project = self.repo.visible_project(actor, project.pk)
+        parts = [
+            f"Projet #{project.pk} : {project.title}",
+            f"Statut projet : {project.status}",
+            f"Licence : {project.declared_license}",
+        ]
+        if project.problem:
+            parts.append(f"Besoin : {project.problem[:1500]}")
+        if project.description:
+            parts.append(f"Description : {project.description[:3000]}")
+
+        task = None
+        if task_id:
+            task = self.repo.task(actor, task_id)
+            if task.project_id != project.pk:
+                raise ValidationError({"task_id": "Cette tâche n'appartient pas au projet."})
+            parts.append(f"Tâche #{task.pk} : {task.title} (statut {task.status})")
+            if task.description:
+                parts.append(f"Consignes tâche : {task.description[:3000]}")
+            criteria = task.acceptance_criteria or []
+            if criteria:
+                parts.append(
+                    "Critères de réussite :\n"
+                    + "\n".join(f"- {item}" for item in criteria[:10])
+                )
+
+        if include_repo:
+            from app.devstreet_hub.models import Repository
+
+            repository = Repository.objects.filter(project_id=project.pk).first()
+            if repository is not None and repository.status == "ready":
+                try:
+                    sha = self.forge.head(repository)
+                    sources = self.forge.collect_sources(repository, sha)
+                    if sources:
+                        parts.append(f"Commit analysé : {sha}")
+                        for source in sources[:8]:
+                            path = source.get("path", "")
+                            content = source.get("content", "")[:2500]
+                            parts.append(
+                                f"Fichier {source.get('source_id', path)} ({path}) :\n{content}"
+                            )
+                except (ExternalUnavailable, Conflict):
+                    parts.append("Dépôt : extraits indisponibles pour le moment.")
+
+        return "\n\n".join(parts), task
+
+    def assistant_chat(self, actor, project, data):
+        """Façade Hub → app.ai ChatService avec contexte projet/tâche/repo."""
+        from app.ai.services.chat_service import ChatService
+
+        require_permission(actor, "ai.chat")
+        project = self.repo.visible_project(actor, project.pk)
+        context_text, task = self._assistant_context(
+            actor,
+            project,
+            task_id=data.get("task_id"),
+            include_repo=data.get("include_repo", True),
+        )
+        title = project.title
+        if task:
+            title = f"{project.title} · {task.title}"
+        return ChatService().chat(
+            actor,
+            message=data["message"],
+            consumer="hub",
+            conversation_id=data.get("conversation_id"),
+            context_text=context_text,
+            title=title[:180],
+        )

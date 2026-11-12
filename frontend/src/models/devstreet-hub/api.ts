@@ -29,6 +29,7 @@ import type {
   ProjectMembersParams,
   ProjectProfile,
   ProjectTasksParams,
+  ProjectTasksPage,
   ProjectWritePayload,
   Repository,
   StarResult,
@@ -90,7 +91,7 @@ export const devstreetHubApi = createApi({
     }),
 
     getProjectTasks: builder.query<
-      Paginated<ContributionTask>,
+      ProjectTasksPage,
       { projectId: number } & ProjectTasksParams
     >({
       query: ({ projectId, ...params }) =>

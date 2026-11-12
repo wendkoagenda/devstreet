@@ -29,6 +29,12 @@ export const PERMISSIONS = {
       STAR: "projects.star",
     },
   },
+  AI: {
+    category: "ai",
+    actions: {
+      CHAT: "ai.chat",
+    },
+  },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -62,3 +68,4 @@ export const ROLE_UPDATE = PERMISSIONS.ROLE.actions.UPDATE;
 
 export const PROJECT_CREATE = PERMISSIONS.DEVSTREET_HUB_PROJECT.actions.CREATE;
 export const PROJECT_STAR = PERMISSIONS.DEVSTREET_HUB_PROJECT.actions.STAR;
+export const AI_CHAT = PERMISSIONS.AI.actions.CHAT;
