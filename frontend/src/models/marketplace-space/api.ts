@@ -6,7 +6,19 @@ import type { MySpace } from "./schema";
 export const marketplaceSpaceApi = createApi({
   reducerPath: "marketplaceSpaceApi",
   baseQuery,
-  tagTypes: ["MySpace"],
+  tagTypes: [
+    "MySpace",
+    "MySkills",
+    "Offers",
+    "MyOffers",
+    "MyCandidatures",
+    "OfferCandidatures",
+    "Deck",
+    "Pool",
+    "Connections",
+    "Availabilities",
+    "Experiences",
+  ],
   endpoints: (builder) => ({
     getMySpace: builder.query<MySpace, void>({
       query: () => "/marketplace/me",

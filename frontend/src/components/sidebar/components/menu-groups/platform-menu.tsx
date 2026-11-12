@@ -22,18 +22,28 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MARKETPLACE_ADMIN_PAGES } from "@/models/marketplace-space/admin-pages";
+import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 
 export default function PlatformMenu() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
   const permissions = usePermissions();
+  const { hasProfil, isRecruiter } = useMySpace();
   const hubActive = location.pathname.startsWith("/hub");
 
-  // Écrans de la marketplace pour tout utilisateur connecté (les nouveaux écrans s'ajoutent ici)
+  // Écrans de la marketplace : ceux qui supposent un profil n'apparaissent qu'une fois le profil créé,
+  // ceux du recruteur qu'une fois l'entreprise créée
   const marketplaceItems = [
-    { title: "Mon profil pro", url: "/marketplace/profile" },
-  ];
+    { title: "Mon profil pro", url: "/marketplace/profile", visible: true },
+    { title: "Offres pour moi", url: "/marketplace/offers", visible: hasProfil },
+    {
+      title: "Mes candidatures",
+      url: "/marketplace/applications",
+      visible: hasProfil,
+    },
+    { title: "Mes offres", url: "/marketplace/my-offers", visible: isRecruiter },
+  ].filter((item) => item.visible);
   // L'administration (listes CRUD) n'apparaît que pour les rôles qui ont au moins une permission de lecture
   const canAdministerMarketplace = MARKETPLACE_ADMIN_PAGES.some(
     (page) => permissions[page.permission]
@@ -67,7 +77,7 @@ export default function PlatformMenu() {
                 {marketplaceItems.map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
-                      isActive={location.pathname === item.url}
+                      isActive={location.pathname.startsWith(item.url)}
                       onClick={() => go(item.url)}
                     >
                       <span

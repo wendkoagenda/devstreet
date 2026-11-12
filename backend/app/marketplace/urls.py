@@ -14,6 +14,7 @@ from app.marketplace.views.availability_viewset import AvailabilityViewSet
 from app.marketplace.views.review_viewset import ReviewViewSet
 from app.marketplace.views.swipe_viewset import SwipeViewSet
 from app.marketplace.views.connection_viewset import ConnectionViewSet
+from app.marketplace.views import market_views
 from app.marketplace.views.me_views import MeCompanyView, MeProfilView, MeView
 
 router = DefaultRouter(trailing_slash=False)
@@ -35,6 +36,17 @@ urlpatterns = [
     path('v1/marketplace/me', MeView.as_view(), name='marketplace-me'),
     path('v1/marketplace/me/profil', MeProfilView.as_view(), name='marketplace-me-profil'),
     path('v1/marketplace/me/company', MeCompanyView.as_view(), name='marketplace-me-company'),
+    path('v1/marketplace/skills', market_views.skills_list, name='marketplace-skills'),
+    path('v1/marketplace/me/skills', market_views.my_skills, name='marketplace-me-skills'),
+    path('v1/marketplace/offers', market_views.offers_list, name='marketplace-offers'),
+    path('v1/marketplace/offers/<int:offer_id>', market_views.offer_detail, name='marketplace-offer'),
+    path('v1/marketplace/offers/<int:offer_id>/apply', market_views.offer_apply, name='marketplace-offer-apply'),
+    path('v1/marketplace/me/candidatures', market_views.my_candidatures, name='marketplace-me-candidatures'),
+    path('v1/marketplace/me/offers', market_views.my_offers, name='marketplace-me-offers'),
+    path('v1/marketplace/me/offers/<int:offer_id>', market_views.my_offer_detail, name='marketplace-me-offer'),
+    path('v1/marketplace/me/offers/<int:offer_id>/candidatures', market_views.offer_candidatures, name='marketplace-me-offer-candidatures'),
+    path('v1/marketplace/me/offers/<int:offer_id>/recommended-profils', market_views.offer_recommended_profils, name='marketplace-me-offer-profils'),
+    path('v1/marketplace/candidatures/<int:candidature_id>/decision', market_views.candidature_decision, name='marketplace-candidature-decision'),
     path('v1/', include(router.urls)),
 ]
 

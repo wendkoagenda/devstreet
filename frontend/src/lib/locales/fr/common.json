@@ -190,7 +190,15 @@
     "marketplace_availabilities": "Disponibilités",
     "marketplace_reviews": "Avis",
     "marketplace_swipes": "Swipes",
-    "marketplace_connections": "Connexions"
+    "marketplace_connections": "Connexions",
+    "marketplace_offers_list": "Offres",
+    "marketplace_offer": "Fiche de l'offre",
+    "marketplace_apply": "Candidature",
+    "marketplace_applications": "Mes candidatures",
+    "marketplace_my_offers": "Mes offres",
+    "marketplace_offer_new": "Publier une offre",
+    "marketplace_offer_manage": "Gestion de l'offre",
+    "marketplace_offer_edit": "Modifier"
   },
   "hub": {
     "common": {

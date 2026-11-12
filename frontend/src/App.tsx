@@ -28,6 +28,13 @@ import TaskContributionPage from "./models/devstreet-hub/pages/task-contribution
 import ContributionReviewPage from "./models/devstreet-hub/pages/contribution-review-page";
 import AiWorkshopPage from "./models/devstreet-hub/pages/ai-workshop-page";
 import ProjectProfilePage from "./models/devstreet-hub/pages/project-profile-page";
+import OffersPage from "./models/marketplace-offers/pages/offers-page";
+import OfferDetailPage from "./models/marketplace-offers/pages/offer-detail-page";
+import OfferApplyPage from "./models/marketplace-offers/pages/offer-apply-page";
+import MyApplicationsPage from "./models/marketplace-offers/pages/my-applications-page";
+import MyOffersPage from "./models/marketplace-offers/pages/my-offers-page";
+import OfferFormPage from "./models/marketplace-offers/pages/offer-form-page";
+import OfferManagePage from "./models/marketplace-offers/pages/offer-manage-page";
 import MyProfilePage from "./models/marketplace-space/pages/my-profile-page";
 import MarketplaceAdminPage from "./models/marketplace-space/pages/marketplace-admin-page";
 import { useAuthSlice } from "./models/auth/slice";
@@ -92,6 +99,14 @@ function App() {
           <Route element={<ConnectionList />} path="/admin/marketplace/connections" />
 
 <Route element={<MyProfilePage />} path="/marketplace/profile" />
+          <Route element={<OffersPage />} path="/marketplace/offers" />
+          <Route element={<OfferDetailPage />} path="/marketplace/offers/:id" />
+          <Route element={<OfferApplyPage />} path="/marketplace/offers/:id/apply" />
+          <Route element={<MyApplicationsPage />} path="/marketplace/applications" />
+          <Route element={<MyOffersPage />} path="/marketplace/my-offers" />
+          <Route element={<OfferFormPage />} path="/marketplace/my-offers/new" />
+          <Route element={<OfferManagePage />} path="/marketplace/my-offers/:id" />
+          <Route element={<OfferFormPage />} path="/marketplace/my-offers/:id/edit" />
 
           <Route
             element={<MarketplaceAdminPage />}

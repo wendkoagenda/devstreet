@@ -137,7 +137,15 @@
     "marketplace_availabilities": "Availability",
     "marketplace_reviews": "Reviews",
     "marketplace_swipes": "Swipes",
-    "marketplace_connections": "Connections"
+    "marketplace_connections": "Connections",
+    "marketplace_offers_list": "Offers",
+    "marketplace_offer": "Offer",
+    "marketplace_apply": "Application",
+    "marketplace_applications": "My applications",
+    "marketplace_my_offers": "My offers",
+    "marketplace_offer_new": "Post an offer",
+    "marketplace_offer_manage": "Manage offer",
+    "marketplace_offer_edit": "Edit"
   },
   "hub": {
     "common": {
