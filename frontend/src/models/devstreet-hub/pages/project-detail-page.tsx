@@ -107,7 +107,10 @@ export default function ProjectDetailPage() {
       <ProjectDetailTabs active={detail.tab} onChange={detail.setTab} />
 
       {detail.tab === "presentation" ? (
-        <PresentationPanel project={project} />
+        <PresentationPanel
+          project={project}
+          canEdit={detail.isOwner && detail.access.canUpdateProject}
+        />
       ) : null}
 
       {detail.tab === "code" ? (

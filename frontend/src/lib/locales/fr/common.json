@@ -548,7 +548,15 @@
       },
       "presentation": {
         "title": "Contexte et description",
-        "empty": "Aucune description détaillée pour le moment."
+        "edit": "Modifier la présentation",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "problem_label": "Résumé du besoin",
+        "description_label": "Description détaillée",
+        "problem_placeholder": "En une ou deux phrases, le besoin auquel répond le projet…",
+        "description_placeholder": "Contexte, objectifs, public concerné…",
+        "problem_empty": "Tu pourras ajouter ici un court résumé du besoin.",
+        "empty": "La description détaillée pourra être complétée quand tu le souhaites."
       },
       "code": {
         "title": "Dépôt de code",
@@ -627,7 +635,8 @@
         "archived": "Projet archivé.",
         "task_created": "Tâche brouillon créée.",
         "member_added": "Membre ajouté.",
-        "member_removed": "Membre retiré."
+        "member_removed": "Membre retiré.",
+        "presentation_saved": "Présentation mise à jour."
       },
       "errors": {
         "not_found": "Projet introuvable ou inaccessible.",
@@ -639,7 +648,8 @@
         "archive": "Impossible d'archiver le projet.",
         "task_create": "Impossible de créer la tâche.",
         "member_add": "Impossible d'ajouter ce membre.",
-        "member_remove": "Impossible de retirer ce membre."
+        "member_remove": "Impossible de retirer ce membre.",
+        "presentation_save": "Impossible d'enregistrer la présentation."
       }
     },
     "create": {

@@ -495,7 +495,15 @@
       },
       "presentation": {
         "title": "Context and description",
-        "empty": "No detailed description yet."
+        "edit": "Edit presentation",
+        "save": "Save",
+        "saving": "Saving…",
+        "problem_label": "Need summary",
+        "description_label": "Detailed description",
+        "problem_placeholder": "In a sentence or two, the need this project addresses…",
+        "description_placeholder": "Context, goals, audience…",
+        "problem_empty": "You can add a short need summary here when ready.",
+        "empty": "The detailed description can be filled in whenever you like."
       },
       "code": {
         "title": "Code repository",
@@ -574,7 +582,8 @@
         "archived": "Project archived.",
         "task_created": "Draft task created.",
         "member_added": "Member added.",
-        "member_removed": "Member removed."
+        "member_removed": "Member removed.",
+        "presentation_saved": "Presentation updated."
       },
       "errors": {
         "not_found": "Project not found or inaccessible.",
@@ -586,7 +595,8 @@
         "archive": "Unable to archive the project.",
         "task_create": "Unable to create the task.",
         "member_add": "Unable to add this member.",
-        "member_remove": "Unable to remove this member."
+        "member_remove": "Unable to remove this member.",
+        "presentation_save": "Unable to save the presentation."
       }
     },
     "create": {
