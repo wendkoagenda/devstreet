@@ -7,10 +7,9 @@ import {
   useGetProjectQuery,
   useGetProjectRepositoryQuery,
   useGetTechnologiesQuery,
-  useProvisionForgeAccessMutation,
-  useProvisionRepositoryMutation,
+  useInitializeRepositoryMutation,
   usePublishProjectMutation,
-  useUpdateProjectMutation,
+  useResumeProjectSetupMutation,
 } from "../api";
 import { apiDetailOf, httpStatusOf } from "../functions/api-error";
 import { slugifyProjectTitle } from "../functions/project-slug";
@@ -19,13 +18,15 @@ import {
   type ForgeAccess,
   type Project,
   type ProjectLicense,
+  type ProjectSetup,
   type ProjectWritePayload,
   type Technology,
 } from "../schema";
 import { useHubAccess } from "./use-hub-access";
 import { useAuthSlice } from "@/models/auth/slice";
 
-export type WizardStep = 1 | 2 | 3;
+/** Étapes de progression visibles après le clic principal. */
+export type ProgressStep = "form" | "draft" | "identity" | "repository" | "init" | "done";
 
 export interface CreateProjectFormState {
   title: string;
@@ -37,6 +38,7 @@ export interface CreateProjectFormState {
   technologies: number[];
   slugTouched: boolean;
   integrityConfirmed: boolean;
+  showAdvanced: boolean;
 }
 
 const INITIAL_FORM: CreateProjectFormState = {
@@ -49,28 +51,31 @@ const INITIAL_FORM: CreateProjectFormState = {
   technologies: [],
   slugTouched: false,
   integrityConfirmed: false,
+  showAdvanced: false,
 };
 
 function toPayload(form: CreateProjectFormState): ProjectWritePayload {
   const demo = form.demo_url.trim();
-  return {
+  const payload: ProjectWritePayload = {
     title: form.title.trim(),
-    slug: form.slug.trim(),
+    declared_license: form.declared_license,
+    technologies: form.technologies,
     problem: form.problem.trim(),
     description: form.description.trim(),
     demo_url: demo ? demo : null,
-    declared_license: form.declared_license,
-    technologies: form.technologies,
   };
+  if (form.slugTouched && form.slug.trim()) {
+    payload.slug = form.slug.trim();
+  }
+  return payload;
 }
 
 function isFormReady(form: CreateProjectFormState): boolean {
-  return (
-    form.title.trim().length > 0 &&
-    form.slug.trim().length > 0 &&
-    /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug.trim()) &&
-    form.problem.trim().length > 0
-  );
+  if (!form.title.trim()) return false;
+  if (form.slugTouched && form.slug.trim()) {
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug.trim());
+  }
+  return true;
 }
 
 function licenseOf(value: string | undefined): ProjectLicense {
@@ -91,12 +96,24 @@ function formFromProject(project: Project): CreateProjectFormState {
     technologies: project.technologies ?? [],
     slugTouched: true,
     integrityConfirmed: false,
+    showAdvanced: false,
   };
 }
 
+function stripCreateExtras(result: Project & {
+  forge_access?: ForgeAccess | null;
+  setup?: ProjectSetup;
+}): Project {
+  const { forge_access: _fa, setup: _setup, ...project } = result as Project & {
+    forge_access?: ForgeAccess | null;
+    setup?: ProjectSetup;
+  };
+  return project;
+}
+
 /**
- * Orchestration du wizard de création : brouillon → forge/provision → publication.
- * Reprise via `?draft=:id`. Les droits restent contrôlés côté serveur.
+ * Création simplifiée : un bouton orchestre brouillon + identité + dépôt.
+ * Reprise via `?draft=:id` et `POST .../setup` ; init README/push dans le Hub.
  */
 export function useCreateProject() {
   const { t } = useTranslation();
@@ -113,10 +130,13 @@ export function useCreateProject() {
   const [form, setForm] = useState<CreateProjectFormState>(INITIAL_FORM);
   const [project, setProject] = useState<Project | null>(null);
   const [forgeAccess, setForgeAccess] = useState<ForgeAccess | null>(null);
+  const [setup, setSetup] = useState<ProjectSetup | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [provisionFailed, setProvisionFailed] = useState(false);
+  const [setupFailed, setSetupFailed] = useState(false);
+  const [initMode, setInitMode] = useState<"readme" | "push_existing" | null>(null);
   const hydratedDraftId = useRef<number | null>(null);
+  const createLock = useRef(false);
 
   const draftQuery = useGetProjectQuery(draftId, { skip: !hasDraftId });
   const repositoryQuery = useGetProjectRepositoryQuery(draftId, {
@@ -130,17 +150,16 @@ export function useCreateProject() {
   const technologies: Technology[] = techPage?.results ?? [];
 
   const [createProject, createState] = useCreateProjectMutation();
-  const [updateProject, updateState] = useUpdateProjectMutation();
-  const [provisionForgeAccess, forgeState] = useProvisionForgeAccessMutation();
-  const [provisionRepository, provisionState] = useProvisionRepositoryMutation();
+  const [resumeSetup, resumeState] = useResumeProjectSetupMutation();
+  const [initializeRepository, initState] = useInitializeRepositoryMutation();
   const [publishProject, publishState] = usePublishProjectMutation();
 
   const isBusy =
     createState.isLoading ||
-    updateState.isLoading ||
-    forgeState.isLoading ||
-    provisionState.isLoading ||
-    publishState.isLoading;
+    resumeState.isLoading ||
+    initState.isLoading ||
+    publishState.isLoading ||
+    createLock.current;
 
   const isHydratingDraft =
     hasDraftId && draftQuery.isLoading && hydratedDraftId.current !== draftId;
@@ -152,9 +171,11 @@ export function useCreateProject() {
     setProject(null);
     setForm(INITIAL_FORM);
     setForgeAccess(null);
+    setSetup(null);
     setLastSavedAt(null);
     setActionError(null);
-    setProvisionFailed(false);
+    setSetupFailed(false);
+    setInitMode(null);
   }, [hasDraftId]);
 
   useEffect(() => {
@@ -171,7 +192,13 @@ export function useCreateProject() {
     setForm(formFromProject(merged));
     setLastSavedAt(new Date(merged.updated_at));
     setActionError(null);
-    setProvisionFailed(false);
+    setSetupFailed(merged.repository?.status !== "ready");
+    setInitMode(
+      merged.repository?.status === "ready" &&
+        (merged.repository.is_empty === false || Boolean(merged.repository.current_sha))
+        ? "readme"
+        : null
+    );
     hydratedDraftId.current = draftId;
   }, [draftId, draftQuery.data, hasDraftId, repositoryQuery.data]);
 
@@ -183,7 +210,8 @@ export function useCreateProject() {
       if (
         prev.repository?.id === repository.id &&
         prev.repository?.status === repository.status &&
-        prev.repository?.clone_url === repository.clone_url
+        prev.repository?.clone_url === repository.clone_url &&
+        prev.repository?.current_sha === repository.current_sha
       ) {
         return prev;
       }
@@ -192,17 +220,29 @@ export function useCreateProject() {
   }, [repositoryQuery.data]);
 
   const repoReady = project?.repository?.status === "ready";
+  const repoEmpty =
+    repoReady &&
+    (project?.repository?.is_empty ?? !project?.repository?.current_sha);
   const cloneUrl = project?.repository?.clone_url ?? null;
-  const browseUrl = project?.repository?.browse_url ?? null;
   const defaultBranch = project?.repository?.default_branch || "main";
   const forgeLogin = forgeAccess?.login ?? project?.repository?.namespace ?? null;
   const hasInitialPassword = Boolean(forgeAccess?.initial_password);
 
-  const activeStep: WizardStep = useMemo(() => {
-    if (!project) return 1;
-    if (!repoReady) return 2;
-    return 3;
-  }, [project, repoReady]);
+  const progressStep: ProgressStep = useMemo(() => {
+    if (!project) return "form";
+    if (!setup && !repoReady) {
+      return setupFailed ? "identity" : "draft";
+    }
+    if (setup?.identity === "failed" || setup?.identity === "conflict") {
+      return "identity";
+    }
+    if (setup?.repository === "failed" || (!repoReady && setup?.identity === "ok")) {
+      return "repository";
+    }
+    if (repoReady && repoEmpty && !initMode) return "init";
+    if (repoReady) return "done";
+    return "draft";
+  }, [initMode, project, repoEmpty, repoReady, setup, setupFailed]);
 
   const formReady = isFormReady(form);
   const canPublish = Boolean(
@@ -222,6 +262,41 @@ export function useCreateProject() {
       if (status === 429) return t("hub.common.rate_limited");
       if (status === null) return t("hub.create.errors.network");
       return t(fallbackKey);
+    },
+    [t]
+  );
+
+  const applySetupResult = useCallback(
+    (result: Project & { forge_access?: ForgeAccess | null; setup?: ProjectSetup }) => {
+      const nextProject = stripCreateExtras(result);
+      setProject(nextProject);
+      if (result.forge_access) {
+        setForgeAccess(result.forge_access);
+        if (result.forge_access.initial_password) {
+          toast.message(
+            result.forge_access.password_recovery_required
+              ? t("hub.create.toasts.forge_password_recovered")
+              : t("hub.create.toasts.forge_password_once"),
+            {
+              description: result.forge_access.password_recovery_required
+                ? t("hub.create.toasts.forge_password_recovered_hint")
+                : t("hub.create.toasts.forge_password_hint"),
+            }
+          );
+        }
+      }
+      if (result.setup) {
+        setSetup(result.setup);
+        const failed =
+          result.setup.identity !== "ok" || result.setup.repository !== "ok";
+        setSetupFailed(failed);
+        if (!failed) {
+          toast.success(t("hub.create.toasts.repo_ready"));
+        }
+      }
+      setLastSavedAt(new Date());
+      setActionError(null);
+      return nextProject;
     },
     [t]
   );
@@ -253,117 +328,99 @@ export function useCreateProject() {
     setActionError(null);
   }, []);
 
-  const saveDraft = useCallback(async () => {
+  const createMyProject = useCallback(async () => {
     if (!canCreateProject) {
       requestLogin();
-      return null;
+      return;
     }
     if (!isFormReady(form)) {
       setActionError(t("hub.create.errors.form_incomplete"));
-      return null;
+      return;
     }
+    if (createLock.current || createState.isLoading) return;
+    createLock.current = true;
 
-    const payload = toPayload(form);
     try {
-      const wasCreate = !project;
-      const saved = project
-        ? await updateProject({ projectId: project.id, body: payload }).unwrap()
-        : await createProject(payload).unwrap();
-      setProject((prev) =>
-        prev?.repository
-          ? { ...saved, repository: prev.repository }
-          : saved
-      );
-      setLastSavedAt(new Date());
-      setActionError(null);
-      toast.success(t("hub.create.toasts.draft_saved"));
-      if (wasCreate) {
-        navigate(`/hub/projects/new?draft=${saved.id}`, { replace: true });
-        hydratedDraftId.current = saved.id;
+      if (project) {
+        const result = await resumeSetup(project.id).unwrap();
+        applySetupResult(result);
+        return;
       }
-      return saved;
+
+      const result = await createProject(toPayload(form)).unwrap();
+      const saved = applySetupResult(result);
+      navigate(`/hub/projects/new?draft=${saved.id}`, { replace: true });
+      hydratedDraftId.current = saved.id;
+
+      if (result.setup && (result.setup.identity !== "ok" || result.setup.repository !== "ok")) {
+        const message =
+          result.setup.identity === "conflict"
+            ? t("hub.create.errors.identity_conflict")
+            : t("hub.create.errors.forge_unavailable");
+        setActionError(message);
+        toast.error(message);
+      }
     } catch (error) {
-      const message = mapError(error, "hub.create.errors.save");
+      const message = mapError(error, "hub.create.errors.create");
       setActionError(message);
+      setSetupFailed(true);
       toast.error(message);
-      return null;
+    } finally {
+      createLock.current = false;
     }
   }, [
+    applySetupResult,
     canCreateProject,
     createProject,
+    createState.isLoading,
     form,
     mapError,
     navigate,
     project,
     requestLogin,
+    resumeSetup,
     t,
-    updateProject,
   ]);
 
-  const prepareRepository = useCallback(async () => {
-    if (!canCreateProject) {
-      requestLogin();
-      return;
-    }
-
-    let current = project;
-    if (!current) {
-      current = await saveDraft();
-      if (!current) return;
-    } else if (isFormReady(form)) {
-      const refreshed = await saveDraft();
-      if (refreshed) current = refreshed;
-    }
-
+  const initializeWithReadme = useCallback(async () => {
+    if (!project || !repoReady) return;
     try {
-      const access = await provisionForgeAccess().unwrap();
-      setForgeAccess(access);
-      if (access.initial_password) {
-        toast.message(
-          access.password_recovery_required
-            ? t("hub.create.toasts.forge_password_recovered")
-            : t("hub.create.toasts.forge_password_once"),
-          {
-            description: access.password_recovery_required
-              ? t("hub.create.toasts.forge_password_recovered_hint")
-              : t("hub.create.toasts.forge_password_hint"),
-          }
-        );
-      }
-
-      const repository = await provisionRepository(current.id).unwrap();
+      const result = await initializeRepository({
+        projectId: project.id,
+        body: { mode: "readme" },
+      }).unwrap();
       setProject((prev) =>
-        prev ? { ...prev, repository } : { ...current!, repository }
+        prev ? { ...prev, repository: result.repository } : prev
       );
-      setLastSavedAt(new Date());
+      setInitMode("readme");
       setActionError(null);
-      setProvisionFailed(false);
-      if (repository.status === "ready") {
-        toast.success(t("hub.create.toasts.repo_ready"));
-      } else {
-        toast.message(t("hub.create.toasts.repo_pending"));
-      }
+      toast.success(t("hub.create.toasts.initialized"));
     } catch (error) {
-      const status = httpStatusOf(error);
-      const message =
-        status === 503
-          ? t("hub.create.errors.forge_unavailable")
-          : mapError(error, "hub.create.errors.provision");
+      const message = mapError(error, "hub.create.errors.initialize");
       setActionError(message);
-      setProvisionFailed(true);
       toast.error(message);
     }
-  }, [
-    canCreateProject,
-    form,
-    mapError,
-    project,
-    provisionForgeAccess,
-    provisionRepository,
-    requestLogin,
-    saveDraft,
-    t,
-  ]);
+  }, [initializeRepository, mapError, project, repoReady, t]);
+
+  const choosePushExisting = useCallback(async () => {
+    if (!project || !repoReady) return;
+    try {
+      const result = await initializeRepository({
+        projectId: project.id,
+        body: { mode: "push_existing" },
+      }).unwrap();
+      setProject((prev) =>
+        prev ? { ...prev, repository: result.repository } : prev
+      );
+      setInitMode("push_existing");
+      setActionError(null);
+      toast.message(t("hub.create.toasts.push_mode"));
+    } catch (error) {
+      const message = mapError(error, "hub.create.errors.initialize");
+      setActionError(message);
+      toast.error(message);
+    }
+  }, [initializeRepository, mapError, project, repoReady, t]);
 
   const publish = useCallback(async () => {
     if (!project) return;
@@ -420,7 +477,7 @@ export function useCreateProject() {
       "# 2. Indexer et commiter les fichiers sources",
       "git add .",
       `git commit -m "${commitMsg}"`,
-      "# 3. Publier la branche principale sur la forge",
+      "# 3. Publier la branche principale",
       `git branch -M ${defaultBranch}`,
       `git push -u origin ${defaultBranch}`,
     ].join("\n");
@@ -442,22 +499,24 @@ export function useCreateProject() {
     forgeAccess,
     forgeLogin,
     hasInitialPassword,
+    setup,
+    progressStep,
     technologies,
     selectedTechnologies,
     isLoadingTechs,
     isHydratingDraft,
     draftLoadError,
-    activeStep,
     formReady,
     canPublish,
     repoReady,
+    repoEmpty,
     cloneUrl,
-    browseUrl,
     defaultBranch,
     gitCommands,
+    initMode,
     lastSavedAt,
     actionError,
-    provisionFailed,
+    setupFailed,
     isBusy,
     isAuthenticated,
     isInitialized,
@@ -465,8 +524,9 @@ export function useCreateProject() {
     user,
     patchForm,
     toggleTechnology,
-    saveDraft,
-    prepareRepository,
+    createMyProject,
+    initializeWithReadme,
+    choosePushExisting,
     publish,
     dismissError,
     dismissInitialPassword,

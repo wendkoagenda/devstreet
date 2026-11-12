@@ -38,10 +38,137 @@ class WorkflowService:
         require_permission(actor, "projects.create")
         data = dict(data)
         technologies = data.pop("technologies", [])
+        data = self._normalize_project_write(data, exclude_pk=None, creating=True)
         with transaction.atomic():
             project = self.repo.create_project(actor, data, technologies)
             record("project.created", actor=actor, target=project)
         return project
+
+    def _normalize_project_write(self, data, *, exclude_pk, creating=False):
+        from app.devstreet_hub.services.project_slug import (
+            allocate_unique_slug,
+            is_valid_slug,
+            normalize_slug,
+        )
+
+        data = dict(data)
+        if "demo_url" in data and data["demo_url"] in (None, ""):
+            data["demo_url"] = ""
+        if creating:
+            data.setdefault("problem", "")
+            data.setdefault("description", "")
+
+        if "slug" in data or creating:
+            raw_slug = (data.get("slug") or "").strip()
+            if raw_slug:
+                slug = normalize_slug(raw_slug)
+                if not is_valid_slug(slug):
+                    raise ValidationError({"slug": "Slug invalide."})
+                if self.repo.slug_exists(slug, exclude_pk=exclude_pk):
+                    raise ValidationError({"slug": "Ce slug est déjà pris."})
+                data["slug"] = slug
+            elif creating:
+                data["slug"] = allocate_unique_slug(
+                    data.get("title") or "projet",
+                    exists=lambda candidate: self.repo.slug_exists(candidate),
+                )
+            else:
+                data.pop("slug", None)
+        return data
+
+    def create_and_setup(self, actor, data):
+        """Crée le brouillon puis orchestre identité forge + dépôt (reprise sans doublon)."""
+        project = self.create_project(actor, data)
+        return self._run_setup(actor, project)
+
+    def resume_setup(self, actor, project):
+        """Reprend identité + dépôt après échec partiel ; idempotent si déjà prêts."""
+        require_permission(actor, "projects.create")
+        require_owner(actor, project)
+        return self._run_setup(actor, project)
+
+    def _run_setup(self, actor, project):
+        setup = {"draft": "ok", "identity": "pending", "repository": "pending"}
+        forge_access = None
+        try:
+            forge_access = self.provision_identity(actor)
+            setup["identity"] = "ok"
+        except Conflict:
+            setup["identity"] = "conflict"
+            project = self.repo.visible_project(actor, project.pk)
+            return {"project": project, "forge_access": None, "setup": setup}
+        except ExternalUnavailable:
+            setup["identity"] = "failed"
+            project = self.repo.visible_project(actor, project.pk)
+            return {"project": project, "forge_access": forge_access, "setup": setup}
+
+        try:
+            repository = self.provision_repository(actor, project)
+            setup["repository"] = "ok" if repository.status == "ready" else "failed"
+        except ExternalUnavailable:
+            setup["repository"] = "failed"
+        except Conflict:
+            setup["repository"] = "failed"
+
+        project = self.repo.visible_project(actor, project.pk)
+        return {
+            "project": project,
+            "forge_access": forge_access,
+            "setup": setup,
+        }
+
+    def initialize_repository(self, actor, project, *, mode: str):
+        """Initialise le dépôt dans DevStreet : scaffold Gitea ou consignes de push."""
+        require_permission(actor, "projects.create")
+        require_owner(actor, project)
+        repository = project.repository
+        if repository.status != "ready":
+            raise Conflict("Le dépôt doit être prêt avant l’initialisation.")
+
+        if mode == "push_existing":
+            return {
+                "mode": mode,
+                "initialized": False,
+                "is_empty": not bool(repository.current_sha),
+                "repository": repository,
+            }
+
+        if mode != "readme":
+            raise ValidationError({"mode": "Mode d’initialisation inconnu."})
+
+        if repository.current_sha:
+            raise Conflict("Le dépôt contient déjà des commits.")
+
+        from app.devstreet_hub.services.repo_scaffold import scaffold_files
+
+        try:
+            if not self.forge.repo_is_empty(repository):
+                sha = self.forge.head(repository)
+                self.repo.save(repository, current_sha=sha)
+                raise Conflict("Le dépôt contient déjà des commits.")
+            result = self.forge.initialize_scaffold(
+                repository,
+                scaffold_files(
+                    title=project.title,
+                    problem=project.problem,
+                    declared_license=project.declared_license,
+                ),
+            )
+        except ExternalUnavailable:
+            raise
+
+        repository = self.repo.save(
+            repository,
+            current_sha=result["sha"],
+            default_branch=result.get("branch") or repository.default_branch,
+        )
+        record("project.repository_initialized", actor=actor, target=project)
+        return {
+            "mode": mode,
+            "initialized": True,
+            "is_empty": False,
+            "repository": repository,
+        }
 
     def update_project(self, actor, project, data):
         require_permission(actor, "projects.update")
@@ -52,6 +179,9 @@ class WorkflowService:
             if project.status == "archived":
                 raise Conflict("Un projet archivé ne se modifie plus.")
             technologies = data.pop("technologies", None)
+            data = self._normalize_project_write(
+                data, exclude_pk=project.pk, creating=False
+            )
             if technologies is not None:
                 self.repo.set_technologies(project, technologies)
             self.repo.save(project, updated_by=actor.pk, **data)
@@ -261,8 +391,14 @@ class WorkflowService:
                 repository = project.repository
                 if repository.status == "ready":
                     return repository
+                from app.devstreet_hub.models import ForgeIdentity
+
                 identity = self.repo.identity(actor)
-                if not identity:
+                if (
+                    not identity
+                    or identity.status != ForgeIdentity.STATUS_LINKED
+                    or not identity.gitea_user_id
+                ):
                     raise Conflict(
                         "Initialisez d’abord votre accès Git avec /forge-access."
                     )

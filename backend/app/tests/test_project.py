@@ -34,7 +34,26 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
         project = Project.objects.get(pk=response.data["id"])
         self.assertEqual(project.owner, self.aicha)
         self.assertEqual(project.status, "draft")
-        self.assertEqual(project.repository.status, "pending")
+        self.assertEqual(project.repository.status, "ready")
+        self.assertEqual(response.data["setup"]["identity"], "ok")
+        self.assertEqual(response.data["setup"]["repository"], "ok")
+        self.assertIn("forge_access", response.data)
+
+    def test_create_allocates_slug_when_absent_and_handles_collision(self):
+        Project.objects.create(
+            owner=self.aicha,
+            title="Stock",
+            slug="stock",
+            created_by=self.aicha.pk,
+            updated_by=self.aicha.pk,
+        )
+        response = self.client.post(
+            "/api/v1/projects",
+            {"title": "Stock", "declared_license": "MIT"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(response.data["slug"], "stock-2")
 
     def test_create_ignores_forged_owner_and_published_status(self):
         response = self.client.post(
@@ -127,7 +146,10 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
             )
 
     def test_publish_requires_ready_repository(self):
+        self.forge.provision_repository.side_effect = ExternalUnavailable()
         response = self.client.post("/api/v1/projects", self.body(), format="json")
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(response.data["setup"]["repository"], "failed")
         self.assertEqual(
             self.client.post(
                 f'/api/v1/projects/{response.data["id"]}/publish'
@@ -222,13 +244,46 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
         )
 
     def test_repository_provision_is_retryable_and_idempotent(self):
-        project_id = self.client.post(
-            "/api/v1/projects", self.body(), format="json"
-        ).data["id"]
+        self.forge.create_user.side_effect = ExternalUnavailable()
+        created = self.client.post("/api/v1/projects", self.body(), format="json")
+        self.assertEqual(created.status_code, 201, created.data)
+        project_id = created.data["id"]
+        self.assertEqual(created.data["setup"]["identity"], "failed")
         self.assertEqual(
             self.client.post(f"/api/v1/projects/{project_id}/provision").status_code,
             409,
         )
+
+        # Restaure la création d'identité pour la reprise.
+        users = self._forge_users_by_login
+        users_by_id = self._forge_users_by_id
+        next_id = {"value": self._next_gitea_id}
+
+        def create_user(*, login, email, provisioning_key, password=None):
+            from app.devstreet_hub.services.forge_identity_tokens import (
+                description_with_marker,
+                has_correlation,
+            )
+            from app.devstreet_hub.services.errors import Conflict
+
+            existing = users.get(login)
+            if existing:
+                if has_correlation(existing, provisioning_key):
+                    return existing, ""
+                raise Conflict("Compte Git déjà présent sans preuve.")
+            password = password or "one-time-secret"
+            user = {
+                "id": next_id["value"],
+                "login": login,
+                "email": email,
+                "description": description_with_marker(provisioning_key),
+            }
+            next_id["value"] += 1
+            users[login] = user
+            users_by_id[user["id"]] = user
+            return user, password
+
+        self.forge.create_user.side_effect = create_user
         first = self.client.post("/api/v1/forge-access")
         self.assertEqual(first.status_code, 200, first.data)
         self.assertIn("initial_password", first.data)
@@ -250,15 +305,40 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
             }
 
         self.forge.provision_repository.side_effect = provision_repository
+        setup = self.client.post(f"/api/v1/projects/{project_id}/setup")
+        self.assertEqual(setup.status_code, 200, setup.data)
+        self.assertEqual(setup.data["setup"]["repository"], "ok")
         self.assertEqual(
             self.client.post(f"/api/v1/projects/{project_id}/provision").status_code,
             200,
         )
-        self.assertEqual(
-            self.client.post(f"/api/v1/projects/{project_id}/provision").status_code,
-            200,
+
+    def test_initialize_readme_writes_scaffold_once(self):
+        created = self.client.post("/api/v1/projects", self.body(), format="json")
+        project_id = created.data["id"]
+        first = self.client.post(
+            f"/api/v1/projects/{project_id}/initialize",
+            {"mode": "readme"},
+            format="json",
         )
-        self.assertEqual(self.forge.provision_repository.call_count, 2)
+        self.assertEqual(first.status_code, 200, first.data)
+        self.assertTrue(first.data["initialized"])
+        self.assertFalse(first.data["is_empty"])
+        self.assertEqual(first.data["repository"]["current_sha"], "b" * 40)
+        self.assertEqual(self.forge.initialize_scaffold.call_count, 1)
+        second = self.client.post(
+            f"/api/v1/projects/{project_id}/initialize",
+            {"mode": "readme"},
+            format="json",
+        )
+        self.assertEqual(second.status_code, 409)
+        push = self.client.post(
+            f"/api/v1/projects/{project_id}/initialize",
+            {"mode": "push_existing"},
+            format="json",
+        )
+        self.assertEqual(push.status_code, 200)
+        self.assertFalse(push.data["initialized"])
 
     def test_consent_is_owner_only_and_revocable(self):
         project = self.project()

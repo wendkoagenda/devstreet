@@ -1,27 +1,31 @@
 # 02 — Créer le projet et préparer son dépôt
 
-**Statut : à réaliser.** Parcours du propriétaire, sans créer de compte Django ni de rôle IAM.
+**Statut : livré (étape 1 headless).** Parcours du propriétaire dans DevStreet, sans ouvrir l’interface Gitea et sans créer de compte Django / rôle IAM.
 
 ## À regrouper
 
-Un parcours en trois étapes : **Présenter → Préparer le dépôt → Publier**. Le projet est sauvegardé en brouillon dès la première étape. Une interruption doit permettre de revenir sur sa fiche sans ressaisir les informations.
+Un parcours **à un bouton principal** : **Créer mon projet**. Le serveur orchestre brouillon Django + identité Git + dépôt privé. Ensuite, l’utilisateur initialise dans DevStreet (**README** ou **envoyer un projet existant**). La publication publique reste une action explicite séparée.
 
 | Route | Intégration |
 | --- | --- |
 | GET /api/v1/technologies | Sélection des technologies existantes |
-| POST /api/v1/projects | Envoyer titre, slug, problème, description, démo optionnelle, licence et IDs de technologies ; conserver l’ID retourné |
-| PATCH /api/v1/projects/{id} | Reprendre et corriger le brouillon |
-| POST /api/v1/forge-access | Préparer l’identité Git liée au compte existant (login opaque + preuve de corrélation) ; secret initial retourné une seule fois à sa création ou reprise contrôlée (`password_recovery_required`) |
-| POST /api/v1/projects/{id}/provision | Créer/retrouver le dépôt, privé tant que le projet est brouillon |
-| GET /api/v1/projects/{id}/repository | Afficher état et URL Git ; aucune fausse URL tant que le dépôt n’est pas prêt |
-| POST /api/v1/projects/{id}/publish | Rendre le dépôt public puis confirmer la publication de la fiche |
+| POST /api/v1/projects | Titre + licence (+ techno, options avancées). **Slug optionnel** (généré côté serveur avec collision). Réponse 201 : projet + `setup` + `forge_access` éventuel |
+| PATCH /api/v1/projects/{id} | Corriger la fiche (slug toujours unique) |
+| POST /api/v1/projects/{id}/setup | Reprise après échec partiel : identité + dépôt, **idempotent**, sans doublon |
+| POST /api/v1/forge-access | Toujours disponible pour reprise identité seule (preuves de corrélation inchangées) |
+| POST /api/v1/projects/{id}/provision | Reprise dépôt seule (idempotent si `ready`) |
+| GET /api/v1/projects/{id}/repository | État, `clone_url`, `is_empty`, `current_sha` ; pas d’URL fictive |
+| POST /api/v1/projects/{id}/initialize | `{ "mode": "readme" \| "push_existing" }` — README/LICENSE/.gitignore via API Gitea, ou consignes de push |
+| POST /api/v1/projects/{id}/publish | Rendre le dépôt public puis publier la fiche (jamais implicite) |
 
 ## UX proposée
 
-Chaque étape explique le résultat : « Les autres comprendront ton projet », puis « Voici où envoyer ton code ». Les commandes Git affichées utilisent seulement l’URL publique fournie, jamais le jeton administratif. Pour la première connexion Git, proposer la transition explicite vers Gitea pour changer le mot de passe initial et créer un token personnel. Un panneau à usage unique permet de copier le secret initial ; aucune persistance locale automatique.
+Formulaire minimal : **nom**, **licence**, **technologies**. Slug / problème / description / démo dans **options avancées**. Un CTA **Créer mon projet** ; progression lisible (brouillon → accès Git → dépôt → initialisation). En cas d’échec : garder le brouillon, bouton **Reprendre**, aucun second compte / dépôt.
 
-Erreur de provisionnement : garder le brouillon et proposer « Réessayer ». Avant publication, indiquer clairement que le code deviendra public. La licence reste déclarative : ce choix ne constitue pas un audit de ses dépendances.
+Après dépôt prêt et vide : **Initialiser avec un README** (écriture réelle Gitea) ou **Envoyer un projet existant** (commandes clone/push dans le Hub). Afficher le secret forge **une seule fois** ; aucun jeton admin dans le navigateur ; **aucun bouton** qui impose d’ouvrir l’UI Gitea.
+
+La création reste **privée**. Publier exige confirmation d’intégrité. La licence reste déclarative.
 
 ## Terminé lorsque
 
-L’utilisateur peut reprendre son brouillon ; un retry ne crée pas de second dépôt ; l’absence de forge donne un message explicite ; publier est impossible avant confirmation du dépôt ; le secret initial n’est pas conservé dans l’état persistant du frontend.
+Slug auto + collision gérés serveur ; création orchestrée avec reprise sans doublons ; init README réelle via Gitea ; publication explicite ; parcours 100 % DevStreet pour cette étape ; secret initial non persisté côté frontend.

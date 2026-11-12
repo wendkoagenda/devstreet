@@ -71,6 +71,12 @@ class WorkflowRepository(ProjectRepository):
             ).exists()
         )
 
+    def slug_exists(self, slug: str, *, exclude_pk=None) -> bool:
+        qs = Project.objects.filter(slug=slug)
+        if exclude_pk is not None:
+            qs = qs.exclude(pk=exclude_pk)
+        return qs.exists()
+
     def create_project(self, actor, data, technologies):
         project = self.create(
             owner=actor, created_by=actor.pk, updated_by=actor.pk, **data

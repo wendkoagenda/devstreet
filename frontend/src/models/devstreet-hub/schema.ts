@@ -7,6 +7,7 @@ export const repositorySchema = z.object({
   name: z.string().nullable().optional(),
   default_branch: z.string().nullable().optional(),
   current_sha: z.string().nullable().optional(),
+  is_empty: z.boolean().optional(),
   clone_url: z.string().nullable().optional(),
   browse_url: z.string().nullable().optional(),
 });
@@ -61,10 +62,11 @@ export const projectWriteSchema = z.object({
   slug: z
     .string()
     .trim()
-    .min(1)
     .max(100)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  problem: z.string().trim().min(1).max(2000),
+    .regex(/^$|^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .optional()
+    .default(""),
+  problem: z.string().trim().max(2000).optional().default(""),
   description: z.string().max(10000).default(""),
   demo_url: z.string().url().nullable().optional().or(z.literal("")),
   declared_license: projectLicenseSchema,
@@ -80,6 +82,28 @@ export const forgeAccessSchema = z.object({
   password_recovery_required: z.boolean().optional(),
 });
 
+export const projectSetupSchema = z.object({
+  draft: z.literal("ok"),
+  identity: z.enum(["pending", "ok", "failed", "conflict"]),
+  repository: z.enum(["pending", "ok", "failed"]),
+});
+
+export const projectCreateResultSchema = projectSchema.extend({
+  forge_access: forgeAccessSchema.optional().nullable(),
+  setup: projectSetupSchema.optional(),
+});
+
+export const initializeRepositorySchema = z.object({
+  mode: z.enum(["readme", "push_existing"]),
+});
+
+export const initializeRepositoryResultSchema = z.object({
+  mode: z.enum(["readme", "push_existing"]),
+  initialized: z.boolean(),
+  is_empty: z.boolean(),
+  repository: repositorySchema,
+});
+
 export type Repository = z.infer<typeof repositorySchema>;
 export type ProjectStatus = z.infer<typeof projectStatusSchema>;
 export type Project = z.infer<typeof projectSchema>;
@@ -89,6 +113,12 @@ export type StarResponse = StarResult;
 export type ProjectLicense = z.infer<typeof projectLicenseSchema>;
 export type ProjectWrite = z.infer<typeof projectWriteSchema>;
 export type ForgeAccess = z.infer<typeof forgeAccessSchema>;
+export type ProjectSetup = z.infer<typeof projectSetupSchema>;
+export type ProjectCreateResult = z.infer<typeof projectCreateResultSchema>;
+export type InitializeRepositoryPayload = z.infer<typeof initializeRepositorySchema>;
+export type InitializeRepositoryResult = z.infer<
+  typeof initializeRepositoryResultSchema
+>;
 
 export type ProjectListParams = {
   page?: number;
@@ -105,13 +135,13 @@ export type TechnologyListParams = {
   ordering?: string;
 };
 
-/** Payload API : `demo_url` vide devient null. */
+/** Payload API : slug/problem optionnels ; `demo_url` vide devient null. */
 export type ProjectWritePayload = {
   title: string;
-  slug: string;
-  problem: string;
-  description: string;
-  demo_url: string | null;
+  slug?: string;
+  problem?: string;
+  description?: string;
+  demo_url?: string | null;
   declared_license: ProjectLicense;
   technologies: number[];
 };

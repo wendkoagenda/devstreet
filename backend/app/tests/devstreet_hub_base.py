@@ -109,6 +109,11 @@ class DevStreetHubAPITestCase(APITestCase):
             }
 
         self.forge.provision_repository.side_effect = provision_repository
+        self.forge.repo_is_empty.return_value = True
+        self.forge.initialize_scaffold.side_effect = lambda repository, files: {
+            "sha": "b" * 40,
+            "branch": "main",
+        }
         self.forge.head.return_value = "a" * 40
         self.forge.pull_request.return_value = {"number": 1}
         self.addCleanup(cache.clear)

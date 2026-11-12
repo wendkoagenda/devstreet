@@ -1,24 +1,26 @@
-import { Check, Copy, ExternalLink, KeyRound, Shield, Terminal } from "lucide-react";
+import { Check, Copy, FileText, KeyRound, Shield, Terminal, Upload } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ForgeAccess } from "../schema";
-import type { WizardStep } from "../hooks/use-create-project";
+import type { ProgressStep } from "../hooks/use-create-project";
 
 interface CreateProjectRepoSectionProps {
-  activeStep: WizardStep;
+  progressStep: ProgressStep;
   repoReady: boolean;
+  repoEmpty: boolean;
   cloneUrl: string | null;
-  browseUrl: string | null;
   gitCommands: string | null;
   forgeAccess: ForgeAccess | null;
   forgeLogin: string | null;
   hasInitialPassword: boolean;
   isBusy: boolean;
-  canPrepare: boolean;
-  provisionFailed: boolean;
-  onPrepare: () => void;
+  setupFailed: boolean;
+  initMode: "readme" | "push_existing" | null;
+  onRetrySetup: () => void;
+  onInitReadme: () => void;
+  onInitPush: () => void;
   onDismissPassword: () => void;
 }
 
@@ -32,26 +34,30 @@ async function copyText(value: string): Promise<boolean> {
 }
 
 export function CreateProjectRepoSection({
-  activeStep,
+  progressStep,
   repoReady,
+  repoEmpty,
   cloneUrl,
-  browseUrl,
   gitCommands,
   forgeAccess,
   forgeLogin,
   hasInitialPassword,
   isBusy,
-  canPrepare,
-  provisionFailed,
-  onPrepare,
+  setupFailed,
+  initMode,
+  onRetrySetup,
+  onInitReadme,
+  onInitPush,
   onDismissPassword,
 }: CreateProjectRepoSectionProps) {
   const { t } = useTranslation();
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCli, setCopiedCli] = useState(false);
   const [copiedPassword, setCopiedPassword] = useState(false);
-  const focused = activeStep === 2;
+  const focused = progressStep === "identity" || progressStep === "repository" || progressStep === "init";
   const initialPassword = forgeAccess?.initial_password ?? null;
+  const showInitChoices = repoReady && repoEmpty && !initMode;
+  const showPushCommands = Boolean(initMode === "push_existing" || (repoReady && !repoEmpty && initMode !== "readme"));
 
   const handleCopyUrl = async () => {
     if (!cloneUrl) return;
@@ -82,7 +88,7 @@ export function CreateProjectRepoSection({
 
   return (
     <section
-      aria-labelledby="create-step-2-title"
+      aria-labelledby="create-repo-title"
       className={cn(
         "relative flex flex-col gap-6 overflow-hidden rounded-2xl border bg-card p-6 shadow-card sm:p-7",
         focused ? "border-2 border-brand/40 shadow-card-hover" : "border-border"
@@ -91,23 +97,13 @@ export function CreateProjectRepoSection({
       <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-brand/10 blur-3xl" />
 
       <div className="flex flex-col justify-between gap-3 border-b border-border pb-4 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold",
-              focused ? "bg-brand text-brand-foreground" : "bg-secondary text-foreground"
-            )}
-          >
-            2
-          </div>
-          <div className="flex flex-col">
-            <h2 className="text-base font-bold text-foreground" id="create-step-2-title">
-              {t("hub.create.sections.repository")}
-            </h2>
-            <span className="text-xs text-muted-foreground">
-              {t("hub.create.sections.repository_hint")}
-            </span>
-          </div>
+        <div className="flex flex-col">
+          <h2 className="text-base font-bold text-foreground" id="create-repo-title">
+            {t("hub.create.sections.repository")}
+          </h2>
+          <span className="text-xs text-muted-foreground">
+            {t("hub.create.sections.repository_hint")}
+          </span>
         </div>
         <div
           className={cn(
@@ -132,23 +128,60 @@ export function CreateProjectRepoSection({
       {!repoReady ? (
         <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-secondary/50 p-4">
           <p className="text-xs leading-relaxed text-muted-foreground">
-            {provisionFailed
+            {setupFailed
               ? t("hub.create.repo.retry_help")
-              : t("hub.create.repo.prepare_help")}
+              : t("hub.create.repo.waiting_help")}
           </p>
-          <Button
-            type="button"
-            onClick={onPrepare}
-            disabled={!canPrepare || isBusy}
-            className="h-9 w-full gap-2 rounded-lg text-xs font-semibold sm:w-auto"
-          >
-            {isBusy
-              ? t("hub.create.repo.preparing")
-              : provisionFailed
-                ? t("hub.create.repo.retry")
-                : t("hub.create.repo.prepare")}
-          </Button>
+          {setupFailed ? (
+            <Button
+              type="button"
+              onClick={onRetrySetup}
+              disabled={isBusy}
+              className="h-9 w-full gap-2 rounded-lg text-xs font-semibold sm:w-auto"
+            >
+              {isBusy ? t("hub.create.repo.preparing") : t("hub.create.repo.retry")}
+            </Button>
+          ) : null}
         </div>
+      ) : null}
+
+      {showInitChoices ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={onInitReadme}
+            className="flex flex-col gap-2 rounded-xl border border-border bg-secondary/40 p-4 text-left transition-colors hover:border-brand/40 hover:bg-brand-soft/30 disabled:opacity-60"
+          >
+            <FileText aria-hidden className="size-5 text-brand" />
+            <span className="text-sm font-semibold text-foreground">
+              {t("hub.create.init.readme_title")}
+            </span>
+            <span className="text-xs leading-relaxed text-muted-foreground">
+              {t("hub.create.init.readme_text")}
+            </span>
+          </button>
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={onInitPush}
+            className="flex flex-col gap-2 rounded-xl border border-border bg-secondary/40 p-4 text-left transition-colors hover:border-brand/40 hover:bg-brand-soft/30 disabled:opacity-60"
+          >
+            <Upload aria-hidden className="size-5 text-brand" />
+            <span className="text-sm font-semibold text-foreground">
+              {t("hub.create.init.push_title")}
+            </span>
+            <span className="text-xs leading-relaxed text-muted-foreground">
+              {t("hub.create.init.push_text")}
+            </span>
+          </button>
+        </div>
+      ) : null}
+
+      {initMode === "readme" && !repoEmpty ? (
+        <p className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-xs text-success">
+          {t("hub.create.init.readme_done")}
+        </p>
       ) : null}
 
       <div className="flex flex-col gap-2">
@@ -179,44 +212,38 @@ export function CreateProjectRepoSection({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-            <Terminal aria-hidden className="size-4 text-muted-foreground" />
-            {t("hub.create.repo.cli_title")}
-          </span>
-          {gitCommands ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleCopyCli}
-              className="h-7 gap-1 text-xs text-brand"
-            >
-              {copiedCli ? t("hub.create.repo.copied") : t("hub.create.repo.copy_cli")}
-            </Button>
-          ) : null}
-        </div>
-        {gitCommands ? (
-          <div className="flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary p-4 text-xs text-primary-foreground shadow-md">
-            <div className="flex items-center justify-between border-b border-primary-foreground/10 pb-2 text-[11px] text-primary-foreground/60">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-destructive/80" />
-                <span className="h-2.5 w-2.5 rounded-full bg-warning/80" />
-                <span className="h-2.5 w-2.5 rounded-full bg-success/80" />
-                <span className="ml-2 font-medium">{t("hub.create.repo.terminal")}</span>
-              </span>
-            </div>
-            <pre className="overflow-x-auto whitespace-pre-wrap py-1 font-sans leading-relaxed text-primary-foreground/90">
-              {gitCommands}
-            </pre>
+      {showPushCommands || initMode === "push_existing" ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <Terminal aria-hidden className="size-4 text-muted-foreground" />
+              {t("hub.create.repo.cli_title")}
+            </span>
+            {gitCommands ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyCli}
+                className="h-7 gap-1 text-xs text-brand"
+              >
+                {copiedCli ? t("hub.create.repo.copied") : t("hub.create.repo.copy_cli")}
+              </Button>
+            ) : null}
           </div>
-        ) : (
-          <p className="rounded-xl border border-dashed border-border bg-secondary/40 px-4 py-3 text-xs text-muted-foreground">
-            {t("hub.create.repo.cli_waiting")}
-          </p>
-        )}
-      </div>
+          {gitCommands ? (
+            <div className="flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary p-4 text-xs text-primary-foreground shadow-md">
+              <pre className="overflow-x-auto whitespace-pre-wrap py-1 font-sans leading-relaxed text-primary-foreground/90">
+                {gitCommands}
+              </pre>
+            </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-border bg-secondary/40 px-4 py-3 text-xs text-muted-foreground">
+              {t("hub.create.repo.cli_waiting")}
+            </p>
+          )}
+        </div>
+      ) : null}
 
       <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-soft/80 p-4">
         <Shield aria-hidden className="mt-0.5 size-5 shrink-0 text-warning" />
@@ -239,18 +266,6 @@ export function CreateProjectRepoSection({
               login: forgeLogin ? `@${forgeLogin}` : t("hub.create.preview.you"),
             })}
           </p>
-          {browseUrl ? (
-            <Button
-              asChild
-              variant="outline"
-              className="mt-2 h-8 w-fit gap-1.5 rounded-lg text-xs"
-            >
-              <a href={browseUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink aria-hidden className="size-3.5" />
-                {t("hub.create.repo.open_forge")}
-              </a>
-            </Button>
-          ) : null}
         </div>
       </div>
 
@@ -295,14 +310,6 @@ export function CreateProjectRepoSection({
                 ? t("hub.create.repo.copied")
                 : t("hub.create.repo.copy_password")}
             </Button>
-            {browseUrl ? (
-              <Button asChild variant="outline" className="h-8 gap-1.5 text-xs">
-                <a href={browseUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink aria-hidden className="size-3.5" />
-                  {t("hub.create.repo.change_password")}
-                </a>
-              </Button>
-            ) : null}
             <Button
               type="button"
               className="h-8 text-xs"

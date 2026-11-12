@@ -11,6 +11,9 @@ from drf_yasg import openapi
 from app.devstreet_hub.api_serializers import (
     ProjectSerializer,
     ProjectWriteSerializer,
+    ProjectCreateResponseSerializer,
+    InitializeRepositorySerializer,
+    InitializeRepositoryResponseSerializer,
     RepositorySerializer,
     TaskSerializer,
     TaskWriteSerializer,
@@ -70,14 +73,18 @@ class ProjectViewSet(
 
     @swagger_auto_schema(
         request_body=ProjectWriteSerializer,
-        responses={201: ProjectSerializer},
+        responses={201: ProjectCreateResponseSerializer},
         tags=["V1 - Project"],
     )
     def create(self, request):
-        obj = WorkflowService().create_project(
+        result = WorkflowService().create_and_setup(
             request.user, validated(ProjectWriteSerializer, request.data)
         )
-        return Response(ProjectSerializer(obj).data, status=201)
+        data = ProjectSerializer(result["project"]).data
+        data["setup"] = result["setup"]
+        if result.get("forge_access") is not None:
+            data["forge_access"] = result["forge_access"]
+        return Response(data, status=201)
 
     @swagger_auto_schema(
         request_body=ProjectWriteSerializer,
@@ -135,6 +142,43 @@ class ProjectViewSet(
     def provision(self, request, pk=None):
         obj = WorkflowService().provision_repository(request.user, self.get_object())
         return Response(RepositorySerializer(obj).data)
+
+    @swagger_auto_schema(
+        method="post",
+        responses={200: ProjectCreateResponseSerializer},
+        tags=["V1 - Project"],
+    )
+    @action(detail=True, methods=["post"], url_path="setup")
+    def setup(self, request, pk=None):
+        """Reprend identité forge + dépôt après échec partiel (idempotent)."""
+        result = WorkflowService().resume_setup(request.user, self.get_object())
+        data = ProjectSerializer(result["project"]).data
+        data["setup"] = result["setup"]
+        if result.get("forge_access") is not None:
+            data["forge_access"] = result["forge_access"]
+        return Response(data)
+
+    @swagger_auto_schema(
+        method="post",
+        request_body=InitializeRepositorySerializer,
+        responses={200: InitializeRepositoryResponseSerializer},
+        tags=["V1 - Project"],
+    )
+    @action(detail=True, methods=["post"], url_path="initialize")
+    def initialize(self, request, pk=None):
+        result = WorkflowService().initialize_repository(
+            request.user,
+            self.get_object(),
+            **validated(InitializeRepositorySerializer, request.data),
+        )
+        return Response(
+            {
+                "mode": result["mode"],
+                "initialized": result["initialized"],
+                "is_empty": result["is_empty"],
+                "repository": RepositorySerializer(result["repository"]).data,
+            }
+        )
 
     @swagger_auto_schema(tags=["V1 - Project"], methods=["get"])
     @action(detail=True, methods=["get"])

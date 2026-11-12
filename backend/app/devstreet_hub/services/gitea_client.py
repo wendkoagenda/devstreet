@@ -238,6 +238,53 @@ class GiteaClient:
         if result.get("private") != (not public):
             raise ExternalUnavailable("La visibilité Git n’a pas été confirmée.")
 
+    def repo_is_empty(self, repository) -> bool:
+        """True si la branche par défaut n'existe pas encore (dépôt sans commit)."""
+        branch = self.request(
+            "GET",
+            self.repo_path(repository)
+            + "/branches/"
+            + quote(repository.default_branch or "main", safe=""),
+            missing_ok=True,
+        )
+        return branch is None
+
+    def create_file(self, repository, *, path: str, content: str, message: str, branch: str):
+        """Crée un fichier via l'API contents Gitea (contenu base64)."""
+        encoded = base64.b64encode(content.encode("utf-8")).decode("ascii")
+        return self.request(
+            "POST",
+            self.repo_path(repository) + "/contents/" + quote(path, safe="/"),
+            {
+                "content": encoded,
+                "message": message,
+                "branch": branch,
+            },
+        )
+
+    def initialize_scaffold(self, repository, files: list[tuple[str, str]]):
+        """Écrit les fichiers d'init un par un ; le premier commit crée la branche."""
+        branch = repository.default_branch or "main"
+        if not self.repo_is_empty(repository):
+            raise Conflict("Le dépôt contient déjà des commits.")
+        last_sha = ""
+        for path, content in files:
+            result = self.create_file(
+                repository,
+                path=path,
+                content=content,
+                message=f"chore: add {path}",
+                branch=branch,
+            )
+            commit = (result or {}).get("commit") or {}
+            sha = commit.get("sha") or ""
+            if isinstance(sha, str) and sha:
+                last_sha = sha
+        if not last_sha:
+            # Relecture si la forge omet le SHA dans la dernière réponse.
+            last_sha = self.head(repository)
+        return {"sha": last_sha, "branch": branch}
+
     def head(self, repository):
         branch = self.request(
             "GET",
