@@ -19,7 +19,7 @@ export function TechnologyTag({ id, label, className }: TechnologyTagProps) {
   return (
     <span
       className={cn(
-        "inline-flex h-6 items-center gap-1.5 rounded border border-border bg-secondary px-2 font-mono text-[11px] text-secondary-foreground",
+        "inline-flex h-6 items-center gap-1.5 rounded border border-border bg-secondary px-2 text-[11px] text-secondary-foreground",
         className
       )}
     >

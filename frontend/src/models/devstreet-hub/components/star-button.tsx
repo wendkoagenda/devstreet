@@ -29,7 +29,7 @@ export function StarButton({ projectTitle, view, onToggle, className }: StarButt
       aria-label={label}
       title={label}
       className={cn(
-        "relative z-10 inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 font-mono text-xs transition-colors",
+        "relative z-10 inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
         "disabled:cursor-not-allowed disabled:opacity-60",
         starred

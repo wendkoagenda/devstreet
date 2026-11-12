@@ -49,7 +49,7 @@ export function ExplorerPagination({
     <>
       {/* Ordinateur : pages numérotées */}
       <section className="mb-8 hidden items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 shadow-sm md:flex">
-        <p className="font-mono text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {t("hub.pagination.range_prefix")}{" "}
           <span className="font-bold text-foreground">{first}</span>{" "}
           {t("hub.pagination.range_to")}{" "}
@@ -78,7 +78,7 @@ export function ExplorerPagination({
                 disabled={isBusy && slot !== page}
                 onClick={() => slot !== page && onPageChange(slot)}
                 className={cn(
-                  "h-8 min-w-8 rounded-lg border px-2 font-mono text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "h-8 min-w-8 rounded-lg border px-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   slot === page
                     ? "border-primary bg-primary font-bold text-primary-foreground shadow-sm"
                     : "border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
@@ -87,7 +87,7 @@ export function ExplorerPagination({
                 {slot}
               </button>
             ) : (
-              <span key={slot} aria-hidden className="px-1 font-mono text-xs text-muted-foreground">
+              <span key={slot} aria-hidden className="px-1 text-xs text-muted-foreground">
                 …
               </span>
             )
@@ -126,7 +126,7 @@ export function ExplorerPagination({
             <ArrowRight aria-hidden className="h-4 w-4" />
           </button>
         </div>
-        <p className="mt-3 text-center font-mono text-xs text-muted-foreground">
+        <p className="mt-3 text-center text-xs text-muted-foreground">
           {t("hub.pagination.mobile_summary", { page, pageCount, count })}
         </p>
       </nav>

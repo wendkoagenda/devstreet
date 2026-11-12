@@ -240,7 +240,7 @@ export default function ForgotPasswordForm() {
                         field.onChange(event.target.value.replace(/\D/g, ""))
                       }
                       placeholder={t("forgot_password.code_placeholder")}
-                      className="h-12 text-center font-mono text-xl tracking-[0.5em]"
+                      className="h-12 text-center text-xl tracking-[0.5em]"
                     />
                   </FormControl>
                   <FormMessage />

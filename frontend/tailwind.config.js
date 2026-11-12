@@ -5,14 +5,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
+        // Police unique plateforme : Poppins partout (y compris si un utilitaire font-mono reste)
         sans: ["Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: [
-          "JetBrains Mono",
-          "ui-monospace",
-          "SFMono-Regular",
-          "Menlo",
-          "monospace",
-        ],
+        mono: ["Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

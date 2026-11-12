@@ -11,10 +11,10 @@ interface MetricProps {
 function Metric({ label, value }: MetricProps) {
   return (
     <div className="flex flex-col">
-      <span className="mb-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
-      <span className="font-mono text-lg font-bold text-foreground">{value ?? "—"}</span>
+      <span className="text-lg font-bold text-foreground">{value ?? "—"}</span>
     </div>
   );
 }
@@ -34,8 +34,8 @@ export default function ExploreProjectsPage() {
         renderIntro={({ projectCount, technologyCount }) => (
           <header className="mb-6 flex flex-col justify-between gap-5 md:mb-8 md:flex-row md:items-end">
             <div className="max-w-2xl">
-              <span className="mb-3 hidden items-center gap-1.5 rounded-md border border-brand-soft-border bg-brand-soft px-2 py-1 font-mono text-[11px] font-medium text-brand-strong md:inline-flex">
-                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand" />
+              <span className="mb-3 hidden items-center gap-2 rounded-md border border-brand-soft-border bg-brand-soft px-3 py-1.5 text-[11px] font-medium leading-none tracking-wide text-brand-strong md:inline-flex">
+                <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
                 {t("hub.explorer.eyebrow")}
               </span>
               <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">

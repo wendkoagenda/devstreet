@@ -167,7 +167,7 @@ export function ExplorerToolbar({
             variant="outline"
             size="sm"
             onClick={onRetryCatalog}
-            className="gap-2 rounded-full font-mono text-xs"
+            className="gap-2 rounded-full text-xs"
           >
             <RotateCw aria-hidden />
             {t("hub.explorer.catalog_retry")}
@@ -189,7 +189,7 @@ export function ExplorerToolbar({
                     aria-checked={selected}
                     onClick={() => onTechnologyChange(tech.slug)}
                     className={cn(
-                      "inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3.5 font-mono text-xs transition-colors",
+                      "inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3.5 text-xs transition-colors",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       selected
                         ? "border-brand-strong bg-brand-strong font-semibold text-brand-foreground"

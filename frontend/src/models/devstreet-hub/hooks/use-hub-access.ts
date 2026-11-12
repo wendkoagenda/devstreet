@@ -31,6 +31,18 @@ export function useHubAccess() {
     userId,
     canCreateProject: isSuperAdmin || hasPermission(PROJECT_CREATE),
     canStarProject: isSuperAdmin || hasPermission(PROJECT_STAR),
+    canUpdateProject: isSuperAdmin || hasPermission("projects.update"),
+    canPublishProject: isSuperAdmin || hasPermission("projects.publish"),
+    canArchiveProject: isSuperAdmin || hasPermission("projects.archive"),
+    canManageMembers: isSuperAdmin || hasPermission("projects.members"),
+    canCreateTask: isSuperAdmin || hasPermission("contribution-tasks.create"),
+    canUpdateTask: isSuperAdmin || hasPermission("contribution-tasks.update"),
+    canSubmitContribution:
+      isSuperAdmin || hasPermission("contributions.create"),
+    canDiscuss: isSuperAdmin || hasPermission("projects.discuss"),
+    canAnalyze: isSuperAdmin || hasPermission("projects.analyze"),
+    canReviewContributions:
+      isSuperAdmin || hasPermission("contributions.review"),
     requestLogin,
   };
 }

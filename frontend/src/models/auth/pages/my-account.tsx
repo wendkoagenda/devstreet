@@ -9,17 +9,27 @@ import { useChangePasswordDialogStore } from "../slice";
 import { useEffect, useState } from "react";
 
 import { MyAccountLoader } from "../../../helpers/loaders/my-account-loader";
-import { User } from "@/models/user/schema";
+import type { User } from "../schema";
+import { useAuthSlice } from "../slice";
+import { MyAccountHubProfile } from "@/models/devstreet-hub/components/my-account-hub-profile";
 
 export default function MyAccount() {
   const { t } = useTranslation();
   const { openChangePasswordDialog } = useChangePasswordDialogStore();
+  const sessionUser = useAuthSlice((state) => state.user);
 
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (sessionUser) {
+      setUser(sessionUser);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     const fetchUser = () => {
       try {
         const userData = localStorage.getItem("user");
@@ -37,9 +47,8 @@ export default function MyAccount() {
       }
     };
 
-    // Remove the arbitrary timeout - fetch immediately
     fetchUser();
-  }, []);
+  }, [sessionUser]);
 
   if (isLoading) {
     return <MyAccountLoader />;
@@ -167,6 +176,9 @@ export default function MyAccount() {
           </CardContent>
         </Card>
       </div>
+
+      {user.id ? <MyAccountHubProfile userId={user.id} /> : null}
+
       <ChangePasswordDialog />
     </div>
   );

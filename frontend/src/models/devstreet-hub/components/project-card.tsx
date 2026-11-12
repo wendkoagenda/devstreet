@@ -56,7 +56,7 @@ export function ProjectCard({
             </h2>
             <ProjectStatusBadge status={project.status} />
             {project.declared_license ? (
-              <span className="rounded bg-brand-soft px-1.5 py-0.5 font-mono text-[10px] font-semibold text-brand-strong">
+              <span className="rounded bg-brand-soft px-1.5 py-0.5 text-[10px] font-semibold text-brand-strong">
                 {project.declared_license}
               </span>
             ) : null}
@@ -87,7 +87,7 @@ export function ProjectCard({
         <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
           <div
             className={cn(
-              "flex min-w-0 items-center gap-1.5 font-mono text-[11px]",
+              "flex min-w-0 items-center gap-1.5 text-[11px]",
               isDraft ? "text-warning" : "text-muted-foreground"
             )}
           >

@@ -43,7 +43,7 @@ export default function PlatformMenu() {
           >
             <Store />
             <span>Marketplace</span>
-            <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+            <span className="ml-auto text-[10px] text-muted-foreground">
               bientôt
             </span>
           </SidebarMenuButton>
@@ -82,7 +82,7 @@ export default function PlatformMenu() {
           >
             <MessageSquare />
             <span>Forum</span>
-            <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+            <span className="ml-auto text-[10px] text-muted-foreground">
               bientôt
             </span>
           </SidebarMenuButton>

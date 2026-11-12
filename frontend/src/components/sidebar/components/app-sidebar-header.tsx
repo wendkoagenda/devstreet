@@ -28,7 +28,7 @@ export default function AppSidebarHeader() {
               <span className="text-lg font-bold tracking-tight text-foreground">
                 {t("sidebar.brand")}
               </span>
-              <span className="rounded border border-brand-soft-border bg-brand-soft px-1.5 py-0.5 font-mono text-[10px] font-bold text-brand-strong">
+              <span className="rounded border border-brand-soft-border bg-brand-soft px-2 py-1 text-[10px] font-bold leading-none tracking-wide text-brand-strong">
                 {t("sidebar.brand_badge")}
               </span>
             </Link>
