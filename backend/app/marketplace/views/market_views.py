@@ -11,6 +11,7 @@ from app.marketplace.market_serializers import (
     OfferWriteSerializer,
     ProfilSkillsSerializer,
 )
+from app.marketplace.services.dashboard_service import DashboardService
 from app.marketplace.services.market_service import MarketService
 
 
@@ -123,3 +124,11 @@ def candidature_decision(request, candidature_id):
     """POST /marketplace/candidatures/<id>/decision : présélectionner, refuser ou accepter."""
     data = _valid(DecisionSerializer, request)
     return Response(MarketService.decide(request.user, candidature_id, data["status"]))
+
+
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def dashboard(request):
+    """GET /marketplace/me/dashboard : indicateurs de mon profil, de mes candidatures et, si je recrute, de mon entreprise."""
+    return Response(DashboardService.build(request.user))

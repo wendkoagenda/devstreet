@@ -36,6 +36,7 @@ urlpatterns = [
     path('v1/marketplace/me', MeView.as_view(), name='marketplace-me'),
     path('v1/marketplace/me/profil', MeProfilView.as_view(), name='marketplace-me-profil'),
     path('v1/marketplace/me/company', MeCompanyView.as_view(), name='marketplace-me-company'),
+    path('v1/marketplace/me/dashboard', market_views.dashboard, name='marketplace-me-dashboard'),
     path('v1/marketplace/skills', market_views.skills_list, name='marketplace-skills'),
     path('v1/marketplace/me/skills', market_views.my_skills, name='marketplace-me-skills'),
     path('v1/marketplace/offers', market_views.offers_list, name='marketplace-offers'),

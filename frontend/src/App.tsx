@@ -41,6 +41,7 @@ import NetworkPage from "./models/marketplace-network/pages/network-page";
 import ProfileViewPage from "./models/marketplace-network/pages/profile-view-page";
 import AvailabilityPage from "./models/marketplace-profile/pages/availability-page";
 import MyCvPage from "./models/marketplace-profile/pages/my-cv-page";
+import DashboardPage from "./models/marketplace-dashboard/pages/dashboard-page";
 import MyProfilePage from "./models/marketplace-space/pages/my-profile-page";
 import MarketplaceAdminPage from "./models/marketplace-space/pages/marketplace-admin-page";
 import { useAuthSlice } from "./models/auth/slice";
@@ -104,7 +105,8 @@ function App() {
 
           <Route element={<ConnectionList />} path="/admin/marketplace/connections" />
 
-<Route element={<MyProfilePage />} path="/marketplace/profile" />
+<Route element={<DashboardPage />} path="/marketplace" />
+          <Route element={<MyProfilePage />} path="/marketplace/profile" />
           <Route element={<OffersPage />} path="/marketplace/offers" />
           <Route element={<OfferDetailPage />} path="/marketplace/offers/:id" />
           <Route element={<OfferApplyPage />} path="/marketplace/offers/:id/apply" />

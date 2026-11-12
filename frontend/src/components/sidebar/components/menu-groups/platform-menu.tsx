@@ -35,6 +35,12 @@ export default function PlatformMenu() {
   // Écrans de la marketplace : ceux qui supposent un profil n'apparaissent qu'une fois le profil créé,
   // ceux du recruteur qu'une fois l'entreprise créée
   const marketplaceItems = [
+    {
+      title: "Tableau de bord",
+      url: "/marketplace",
+      visible: true,
+      exact: true,
+    },
     { title: "Mon profil pro", url: "/marketplace/profile", visible: true },
     { title: "Offres pour moi", url: "/marketplace/offers", visible: hasProfil },
     {
@@ -65,6 +71,7 @@ export default function PlatformMenu() {
   const isItemActive = (url: string) => {
     const path = location.pathname;
     if (path === url) return true;
+    if (marketplaceItems.find((item) => item.url === url)?.exact) return false;
     if (!path.startsWith(`${url}/`)) return false;
     return !marketplaceItems.some(
       (other) =>

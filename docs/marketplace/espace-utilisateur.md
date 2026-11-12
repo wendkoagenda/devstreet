@@ -14,6 +14,7 @@ Les endpoints `/api/v1/marketplace/...` sont ouverts à tout utilisateur connect
 
 | Domaine | Endpoint | Rôle |
 | --- | --- | --- |
+| Tableau de bord | `GET marketplace/me/dashboard` | Indicateurs du profil, des candidatures et, pour un recruteur, de son entreprise |
 | Profil | `GET marketplace/me` | Profil et entreprise de l'utilisateur |
 | | `POST` / `PATCH marketplace/me/profil` | Créer / modifier son profil |
 | | `POST` / `PATCH marketplace/me/company` | Créer son entreprise (il en devient propriétaire) / la modifier |
@@ -40,6 +41,14 @@ Les endpoints `/api/v1/marketplace/...` sont ouverts à tout utilisateur connect
 | | `PATCH` / `DELETE marketplace/me/experiences/<id>` | |
 | CV | `GET marketplace/me/cv` | Mon CV en PDF |
 | | `GET marketplace/profils/<id>/cv` | CV d'un profil, selon `cv_visibility` |
+
+## Tableau de bord
+
+La page `/marketplace` s'adapte au profil. Toutes les valeurs sont celles de l'utilisateur connecté (code : `services/dashboard_service.py`).
+
+- **Recruteur** (profil rattaché à une entreprise) : offres ouvertes, brouillons et clôturées, candidatures reçues et à traiter, vues des offres, taille du vivier, candidatures par semaine sur 8 semaines, répartition par statut, offres les plus actives et dernières candidatures avec leur score.
+- **Candidat** (tout profil, recruteur compris) : répartition de ses candidatures par statut, missions à venir, trois offres recommandées.
+- **Profil** : complétude sur 8 critères avec les éléments manquants, statut du jour du calendrier (le plus contraignant des périodes en cours) et prochaine disponibilité, note moyenne des avis publics, nombre de connexions.
 
 ## Règles métier
 
