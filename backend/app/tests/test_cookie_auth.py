@@ -177,5 +177,5 @@ class CodePermissionTests(APITestCase):
         self.assertFalse(user.has_permission('users.view'))
 
     def test_anonymous_visitor_gets_401_not_500_on_a_code_protected_route(self):
-        self.assertEqual(APIClient().get('/api/v1/elitests').status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(APIClient().post('/api/v1/projects', {}, format='json').status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(APIClient().get('/api/v1/users').status_code, status.HTTP_401_UNAUTHORIZED)

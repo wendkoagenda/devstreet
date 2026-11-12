@@ -56,8 +56,8 @@
       "tests": [
         "backend/app/tests/test_access_policy.py",
         "backend/app/tests/test_cookie_auth.py",
-        "backend/app/tests/test_elitest.py",
-        "backend/app/tests/test_elitest_pagination.py"
+        "backend/app/tests/test_project.py",
+        "backend/app/tests/test_technology.py"
       ],
       "verify": "Relancer test_access_policy et les tests backend complets ; vérifier qu'un gestionnaire ne peut pas s'attribuer un rôle plus puissant et qu'un visiteur anonyme reçoit 401."
     },

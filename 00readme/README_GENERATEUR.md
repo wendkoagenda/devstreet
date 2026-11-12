@@ -11,6 +11,8 @@ models_zones/zone_N/<modele>.json ─► validation ─► backend (app/<app_nam
 
 Le backend se génère avant le frontend. Les deux lisent le même JSON.
 
+Les anciens CRUD de démonstration ne sont plus installés. Pour essayer le générateur, copier `backend/scripts/examples/model.json` dans une nouvelle zone sous `scripts/models_zones/`, adapter ses noms, puis utiliser `ExampleRecord` à la place des noms illustratifs ci-dessous. Les exemples du guide ne sont pas des routes actives.
+
 ## 1. Décrire le modèle
 
 Créer le fichier dans `backend/scripts/models_zones/zone_N/` (nom libre). Modèle de départ : `zone_1/elitest.json`.

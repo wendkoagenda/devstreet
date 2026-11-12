@@ -37,7 +37,7 @@ python manage.py migrate
 python manage.py makemigrations
 python manage.py init_data                     # seed default roles & permissions
 python manage.py test                          # all tests
-python manage.py test app.tests.test_elitest   # single test module
+python manage.py test app.tests.test_project   # single test module
 python manage.py check
 ```
 
@@ -87,9 +87,10 @@ The generator tracks state in `scripts/generator/improved_state.json` (MD5 check
 
 Flow: `Client → ViewSet → Service → Repository → DB`. Never put business logic in views or ORM calls in services.
 
-Two Django apps under `backend/app/`, each with the same layout:
+Django apps under `backend/app/`, each with the same layout:
 - `core/` — auth, users, roles, permissions (the devstreet base)
-- `metier/` — business/domain features (where generated models land)
+- `metier/` — shared storage utilities and generator extension points; demo migration history only
+- `devstreet_hub/` — project collaboration module (historical Django label: `projects`)
 
 Each app contains: `interfaces/` (repository contracts), `repositories/` (ORM access), `services/` (business logic), `permissions/` (code-based checks like `users.view`), `views/` (DRF ViewSets), `serializers.py`, `models.py`, `management/commands/` (seeders). Tests live in `backend/app/tests/`.
 
@@ -97,7 +98,7 @@ Auth: JWT via SimpleJWT (`/api/token/`, `/api/token/refresh`), email as username
 
 ### Frontend — feature slices
 
-Each feature lives in `frontend/src/models/<feature>/` with: `api.ts` (RTK Query endpoints), `schema.ts` (Zod schemas), `slice.ts` (Redux slice), `pages/`, `components/`. Existing features: `auth`, `user`, `roles-permissions`, `common`, plus generated ones (e.g. `elitest`).
+Each feature lives in `frontend/src/models/<feature>/` with: `api.ts` (RTK Query endpoints), `schema.ts` (Zod schemas), `slice.ts` (Redux slice), `pages/`, `components/`. Existing features: `auth`, `user`, `roles-permissions`, `common`. Demo feature slices were removed.
 
 Cross-cutting files the generator also updates (touch carefully — they must stay parseable by the generator):
 - `src/redux/store.ts` — store registration

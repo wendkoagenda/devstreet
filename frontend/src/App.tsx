@@ -1,8 +1,3 @@
-import GadoList from "./models/gado/pages/gado-list";
-import FusionList from "./models/fusion/pages/fusion-list";
-import DragonList from "./models/dragon/pages/dragon-list";
-import ElitestyList from "./models/elitesty/pages/elitesty-list";
-import ElitestList from "./models/elitest/pages/elitest-list";
 import { Route, Routes } from "react-router-dom";
 import PrivateRoute from "./components/layouts/private-route";
 import PublicRoute from "./components/layouts/public-route";
@@ -35,17 +30,7 @@ function App() {
 
             <Route element={<RolePermissionManagement />} path="/roles" />
 
-            <Route element={<ElitestList />} path="/elitests" />
-
-                      <Route element={<ElitestyList />} path="/elitesties" />
-
-          <Route element={<DragonList />} path="/dragons" />
-
-          <Route element={<FusionList />} path="/fusions" />
-
-          <Route element={<GadoList />} path="/gados" />
-
-<Route element={<MyAccount />} path="/my-account" />
+            <Route element={<MyAccount />} path="/my-account" />
           </Route>
         </Route>
 

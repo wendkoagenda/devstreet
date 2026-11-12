@@ -1,0 +1,14 @@
+{
+  "model_name": "ExampleRecord",
+  "app_name": "metier",
+  "fields": [
+    {
+      "name": "title",
+      "type": "CharField",
+      "max_length": 200
+    }
+  ],
+  "meta": {
+    "resource_plural": "example-records"
+  }
+}

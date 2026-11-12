@@ -1,90 +1,8 @@
 {
   "version": "2.0",
   "created_at": "2025-08-13T11:13:13.513780",
-  "last_updated": "2026-11-12T12:22:55.785797",
+  "last_updated": "2026-11-12T14:09:44.674030",
   "generated_apis": {
-    "Elitest": {
-      "model_name": "Elitest",
-      "zone": "zone_1",
-      "file": "elitest.json",
-      "generated_at": "2026-06-14T21:32:07.703526",
-      "status": "active",
-      "auto_detected": false,
-      "resource_plural": "elitests",
-      "api_endpoints": [
-        "/api/v1/elitests/",
-        "/api/v1/elitests/{id}/"
-      ],
-      "relations": [
-        "Elitest.elitesties -> Elitesty (m2m)"
-      ]
-    },
-    "Elitesty": {
-      "model_name": "Elitesty",
-      "app_name": "metier",
-      "zone": "zone_1",
-      "file": "elitesty.json",
-      "generated_at": "2026-11-11T13:52:42.654168",
-      "status": "active",
-      "auto_detected": false,
-      "resource_plural": "elitesties",
-      "api_endpoints": [
-        "/api/v1/elitesties/",
-        "/api/v1/elitesties/{id}/"
-      ],
-      "relations": [
-        "Elitest.elitesties -> Elitesty (m2m)"
-      ]
-    },
-    "Dragon": {
-      "model_name": "Dragon",
-      "app_name": "metier",
-      "zone": "zone_1",
-      "file": "dragon.json",
-      "generated_at": "2026-11-11T14:11:34.934942",
-      "status": "active",
-      "auto_detected": false,
-      "resource_plural": "dragons",
-      "api_endpoints": [
-        "/api/v1/dragons/",
-        "/api/v1/dragons/{id}/"
-      ],
-      "relations": [
-        "Dragon.fusion -> Fusion (fk)"
-      ]
-    },
-    "Fusion": {
-      "model_name": "Fusion",
-      "app_name": "metier",
-      "zone": "zone_1",
-      "file": "fusion.json",
-      "generated_at": "2026-11-11T14:11:41.344092",
-      "status": "active",
-      "auto_detected": false,
-      "resource_plural": "fusions",
-      "api_endpoints": [
-        "/api/v1/fusions/",
-        "/api/v1/fusions/{id}/"
-      ],
-      "relations": [
-        "Dragon.fusion -> Fusion (fk)"
-      ]
-    },
-    "Gado": {
-      "model_name": "Gado",
-      "app_name": "garoapp",
-      "zone": "zone_1",
-      "file": "gado.json",
-      "generated_at": "2026-11-11T14:13:44.939873",
-      "status": "active",
-      "auto_detected": false,
-      "resource_plural": "gados",
-      "api_endpoints": [
-        "/api/v1/gados/",
-        "/api/v1/gados/{id}/"
-      ],
-      "relations": []
-    },
     "ContributionTask": {
       "model_name": "ContributionTask",
       "app_name": "devstreet_hub",
@@ -131,186 +49,70 @@
       "relations": []
     }
   },
-  "generated_frontends": {
-    "Elitest": {
-      "model_name": "Elitest",
-      "zone": "zone_1",
-      "file": "elitest.json",
-      "generated_at": "2026-06-14T21:32:07.703526",
-      "status": "active",
-      "auto_detected": true,
-      "path": "frontend/src/models/elitest/"
-    },
-    "Elitesty": {
-      "model_name": "Elitesty",
-      "zone": "zone_1",
-      "file": "elitesty.json",
-      "generated_at": "2026-11-11T13:53:43.728480",
-      "status": "active",
-      "auto_detected": false,
-      "path": "frontend/src/models/elitesty/"
-    },
-    "Dragon": {
-      "model_name": "Dragon",
-      "zone": "zone_1",
-      "file": "dragon.json",
-      "generated_at": "2026-11-11T14:11:35.041616",
-      "status": "active",
-      "auto_detected": false,
-      "path": "frontend/src/models/dragon/"
-    },
-    "Fusion": {
-      "model_name": "Fusion",
-      "zone": "zone_1",
-      "file": "fusion.json",
-      "generated_at": "2026-11-11T14:11:41.486266",
-      "status": "active",
-      "auto_detected": false,
-      "path": "frontend/src/models/fusion/"
-    },
-    "Gado": {
-      "model_name": "Gado",
-      "zone": "zone_1",
-      "file": "gado.json",
-      "generated_at": "2026-11-11T14:13:45.058764",
-      "status": "active",
-      "auto_detected": false,
-      "path": "frontend/src/models/gado/"
-    }
-  },
+  "generated_frontends": {},
   "available_models": {
-    "zone_1": {
-      "Elitest": {
-        "file": "elitest.json",
-        "uploaded_at": "2026-05-16T05:53:17.587017"
+    "devstreet_hub": {
+      "ContributionTask": {
+        "file": "contribution_task.json",
+        "uploaded_at": "2026-11-12T14:09:43.404485"
       },
-      "Elitesty": {
-        "file": "elitesty.json",
-        "uploaded_at": "2026-06-14T20:24:21.973292"
+      "Project": {
+        "file": "project.json",
+        "uploaded_at": "2026-11-12T14:09:43.407306"
       },
-      "Dragon": {
-        "file": "dragon.json",
-        "uploaded_at": "2026-11-09T11:02:10.841584"
-      },
-      "Fusion": {
-        "file": "fusion.json",
-        "uploaded_at": "2026-11-09T11:07:24.348297"
-      },
-      "Gado": {
-        "file": "gado.json",
-        "uploaded_at": "2026-11-11T14:13:36.949350"
+      "Technology": {
+        "file": "technology.json",
+        "uploaded_at": "2026-11-12T14:09:43.409675"
       }
     }
   },
   "file_checksums": {
-    "models.py": {
-      "checksum": "abc69ba454c63b4e0cd08c024e4bfe49",
-      "last_updated": "2026-11-12T12:22:55.765944"
-    },
-    "serializers.py": {
-      "checksum": "722583aa1003d533809c8aa28e954199",
-      "last_updated": "2026-11-12T12:22:55.766940"
-    },
-    "urls.py": {
-      "checksum": "0b0c0fc8f8948f8bb6e61008e89e1f2a",
-      "last_updated": "2026-11-12T12:22:55.766940"
-    },
-    "views/elitest_viewset.py": {
-      "checksum": "ba61d872eb57c86188455dd490a49882",
-      "last_updated": "2026-11-12T12:22:55.768438"
-    },
-    "views/elitesty_viewset.py": {
-      "checksum": "89a2d8629b759110b03210e9d0e1c206",
-      "last_updated": "2026-11-12T12:22:55.768438"
-    },
-    "views/dragon_viewset.py": {
-      "checksum": "c6e23e3edae819c1591a0d16df566c19",
-      "last_updated": "2026-11-12T12:22:55.766940"
-    },
-    "views/fusion_viewset.py": {
-      "checksum": "837a9469acad2786178274abae93dd7a",
-      "last_updated": "2026-11-12T12:22:55.769954"
-    },
-    "garoapp::models.py": {
-      "checksum": "84b693b1c3cdaec63a48f40856e8b406",
-      "last_updated": "2026-11-12T12:22:55.769954"
-    },
-    "garoapp::serializers.py": {
-      "checksum": "9d86d26c5d4db15d075c7bda0e793be3",
-      "last_updated": "2026-11-12T12:22:55.769954"
-    },
-    "garoapp::urls.py": {
-      "checksum": "228b250a8036ca3293986ddc8746527a",
-      "last_updated": "2026-11-12T12:22:55.771490"
-    },
-    "garoapp::views/gado_viewset.py": {
-      "checksum": "e0a7de404cb429e86a5637673d781550",
-      "last_updated": "2026-11-12T12:22:55.772548"
-    },
     "devstreet_hub::models.py": {
       "checksum": "832165af5043942370d6c8b95661de26",
-      "last_updated": "2026-11-12T12:22:55.772548"
+      "last_updated": "2026-11-12T14:09:44.662318"
     },
     "devstreet_hub::serializers.py": {
       "checksum": "021b2e355c0c5926efb88e1b64df3d1c",
-      "last_updated": "2026-11-12T12:22:55.773542"
+      "last_updated": "2026-11-12T14:09:44.663836"
     },
     "devstreet_hub::urls.py": {
       "checksum": "43ae165a7ed9488d137b6feb75aa9cdd",
-      "last_updated": "2026-11-12T12:22:55.773542"
+      "last_updated": "2026-11-12T14:09:44.663836"
     },
     "devstreet_hub::views/contributiontask_viewset.py": {
       "checksum": "e135a6bd5c09f0a3975c2fd4da491a55",
-      "last_updated": "2026-11-12T12:22:55.775636"
+      "last_updated": "2026-11-12T14:09:44.665352"
     },
     "devstreet_hub::views/project_viewset.py": {
       "checksum": "3592e6a88be90d6da0341fd2daed4bec",
-      "last_updated": "2026-11-12T12:22:55.776648"
+      "last_updated": "2026-11-12T14:09:44.666880"
     },
     "devstreet_hub::views/technology_viewset.py": {
       "checksum": "66456941b303360e7aa69d82a3f7e299",
-      "last_updated": "2026-11-12T12:22:55.776648"
+      "last_updated": "2026-11-12T14:09:44.667391"
+    },
+    "models.py": {
+      "checksum": "4e9d82c63a1428b5e08015e6415af5ba",
+      "last_updated": "2026-11-12T14:09:44.659791"
+    },
+    "serializers.py": {
+      "checksum": "fbcfbd95256f625f3ca5f3b261103505",
+      "last_updated": "2026-11-12T14:09:44.659791"
+    },
+    "urls.py": {
+      "checksum": "80aaf133dd45575a91ec2c4bdb6cb245",
+      "last_updated": "2026-11-12T14:09:44.661303"
     }
   },
-  "relations": [
-    {
-      "source": "Dragon",
-      "target": "Fusion",
-      "type": "fk",
-      "field": "fusion",
-      "related_name": "dragons",
-      "on_delete": "models.RESTRICT",
-      "nullable": true,
-      "app_label": "metier",
-      "target_app_label": "metier",
-      "created_at": "2026-11-11T14:15:44.563590"
-    },
-    {
-      "source": "Elitest",
-      "target": "Elitesty",
-      "type": "m2m",
-      "field": "elitesties",
-      "related_name": "elitests",
-      "on_delete": "models.RESTRICT",
-      "nullable": true,
-      "app_label": "metier",
-      "target_app_label": "metier",
-      "created_at": "2026-11-11T14:19:57.940835"
-    }
-  ],
+  "relations": [],
   "statistics": {
-    "total_models": 5,
-    "total_apis": 8,
-    "total_frontends": 5,
-    "total_relations": 2,
+    "total_models": 3,
+    "total_apis": 3,
+    "total_frontends": 0,
+    "total_relations": 0,
     "zones_used": [
-      "zone_1"
+      "devstreet_hub"
     ]
   },
-  "apps": {
-    "garoapp": {
-      "created_at": "2026-11-11T14:12:37.238194",
-      "dotted_path": "app.garoapp"
-    }
-  }
+  "apps": {}
 }

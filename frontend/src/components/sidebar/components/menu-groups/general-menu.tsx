@@ -12,7 +12,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { usePermissions } from "@/hooks/use-permissions";
 import { Icons } from "@/lib/constants/icons";
 import { t } from "i18next";
 import { ChevronDown } from "lucide-react";
@@ -23,47 +22,10 @@ export default function GeneralMenu() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
-  const { canViewElitests, canViewElitesties, canViewDragons, canViewFusions, canViewGados } = usePermissions();
 
   const generalMenu = [
     {
-      items: [
-        {
-          title: "Elitests",
-          url: "elitests",
-          isActive: false,
-          icon: Icons.FileText,
-          permission: canViewElitests,
-        },
-        {
-          title: "Elitesties",
-          url: "elitesties",
-          isActive: false,
-          icon: Icons.FileText,
-          permission: canViewElitesties,
-        },
-        {
-          title: "Dragons",
-          url: "dragons",
-          isActive: false,
-          icon: Icons.FileText,
-          permission: canViewDragons,
-        },
-        {
-          title: "Fusions",
-          url: "fusions",
-          isActive: false,
-          icon: Icons.FileText,
-          permission: canViewFusions,
-        },
-        {
-          title: "Gados",
-          url: "gados",
-          isActive: false,
-          icon: Icons.FileText,
-          permission: canViewGados,
-        },
-      ] as {
+      items: [] as {
         title: string;
         url: string;
         isActive: boolean;
