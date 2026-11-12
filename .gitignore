@@ -95,6 +95,9 @@ backend/local_settings.py
 .env
 frontend/.env
 backend/.env
+backend/.local/
+# Backups de génération locaux ; les anciens fichiers déjà suivis restent inchangés.
+backend/scripts/generator/backups/*.backup
 
 # Valeurs de deploiement par branche (git-cli/deploy_env.py) : contiennent des secrets, jamais versionnees
 .env.deploy.*

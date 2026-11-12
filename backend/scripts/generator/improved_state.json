@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "created_at": "2025-08-13T11:13:13.513780",
-  "last_updated": "2026-11-11T14:21:25.409601",
+  "last_updated": "2026-11-12T11:59:03.757036",
   "generated_apis": {
     "Elitest": {
       "model_name": "Elitest",
@@ -84,6 +84,51 @@
         "/api/v1/gados/{id}/"
       ],
       "relations": []
+    },
+    "ContributionTask": {
+      "model_name": "ContributionTask",
+      "app_name": "projects",
+      "zone": "chantier",
+      "file": "contribution_task.json",
+      "generated_at": "2026-11-12T11:17:43.804076",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "contribution-tasks",
+      "api_endpoints": [
+        "/api/v1/contribution-tasks/",
+        "/api/v1/contribution-tasks/{id}/"
+      ],
+      "relations": []
+    },
+    "Project": {
+      "model_name": "Project",
+      "app_name": "projects",
+      "zone": "chantier",
+      "file": "project.json",
+      "generated_at": "2026-11-12T11:17:43.864790",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "projects",
+      "api_endpoints": [
+        "/api/v1/projects/",
+        "/api/v1/projects/{id}/"
+      ],
+      "relations": []
+    },
+    "Technology": {
+      "model_name": "Technology",
+      "app_name": "projects",
+      "zone": "chantier",
+      "file": "technology.json",
+      "generated_at": "2026-11-12T11:17:43.921287",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "technologies",
+      "api_endpoints": [
+        "/api/v1/technologies/",
+        "/api/v1/technologies/{id}/"
+      ],
+      "relations": []
     }
   },
   "generated_frontends": {
@@ -160,47 +205,71 @@
   "file_checksums": {
     "models.py": {
       "checksum": "abc69ba454c63b4e0cd08c024e4bfe49",
-      "last_updated": "2026-11-11T14:21:25.404376"
+      "last_updated": "2026-11-12T11:59:03.734149"
     },
     "serializers.py": {
       "checksum": "722583aa1003d533809c8aa28e954199",
-      "last_updated": "2026-11-11T14:21:25.404500"
+      "last_updated": "2026-11-12T11:59:03.735312"
     },
     "urls.py": {
       "checksum": "0b0c0fc8f8948f8bb6e61008e89e1f2a",
-      "last_updated": "2026-11-11T14:21:25.404589"
+      "last_updated": "2026-11-12T11:59:03.735312"
     },
     "views/elitest_viewset.py": {
       "checksum": "ba61d872eb57c86188455dd490a49882",
-      "last_updated": "2026-11-11T14:21:25.405333"
+      "last_updated": "2026-11-12T11:59:03.738631"
     },
     "views/elitesty_viewset.py": {
       "checksum": "89a2d8629b759110b03210e9d0e1c206",
-      "last_updated": "2026-11-11T14:21:25.405203"
+      "last_updated": "2026-11-12T11:59:03.737617"
     },
     "views/dragon_viewset.py": {
       "checksum": "c6e23e3edae819c1591a0d16df566c19",
-      "last_updated": "2026-11-11T14:21:25.405014"
+      "last_updated": "2026-11-12T11:59:03.737107"
     },
     "views/fusion_viewset.py": {
       "checksum": "837a9469acad2786178274abae93dd7a",
-      "last_updated": "2026-11-11T14:21:25.405574"
+      "last_updated": "2026-11-12T11:59:03.739346"
     },
     "garoapp::models.py": {
       "checksum": "84b693b1c3cdaec63a48f40856e8b406",
-      "last_updated": "2026-11-11T14:21:25.405921"
+      "last_updated": "2026-11-12T11:59:03.739859"
     },
     "garoapp::serializers.py": {
       "checksum": "9d86d26c5d4db15d075c7bda0e793be3",
-      "last_updated": "2026-11-11T14:21:25.406492"
+      "last_updated": "2026-11-12T11:59:03.739859"
     },
     "garoapp::urls.py": {
       "checksum": "228b250a8036ca3293986ddc8746527a",
-      "last_updated": "2026-11-11T14:21:25.407064"
+      "last_updated": "2026-11-12T11:59:03.739859"
     },
     "garoapp::views/gado_viewset.py": {
       "checksum": "e0a7de404cb429e86a5637673d781550",
-      "last_updated": "2026-11-11T14:21:25.407449"
+      "last_updated": "2026-11-12T11:59:03.739859"
+    },
+    "projects::models.py": {
+      "checksum": "832165af5043942370d6c8b95661de26",
+      "last_updated": "2026-11-12T11:59:03.739859"
+    },
+    "projects::serializers.py": {
+      "checksum": "43055f280b784d7dbbcd5f71bec017ef",
+      "last_updated": "2026-11-12T11:59:03.743225"
+    },
+    "projects::urls.py": {
+      "checksum": "1052282ad2f562206af7be3c0c57ff65",
+      "last_updated": "2026-11-12T11:59:03.743225"
+    },
+    "projects::views/contributiontask_viewset.py": {
+      "checksum": "2e4c1b349f3ac7ac1dd524a6af98e05a",
+      "last_updated": "2026-11-12T11:59:03.743225"
+    },
+    "projects::views/project_viewset.py": {
+      "checksum": "b63d657494791d9ff414c68c31f84e4b",
+      "last_updated": "2026-11-12T11:59:03.743225"
+    },
+    "projects::views/technology_viewset.py": {
+      "checksum": "de9fdb306fedd41b0ebc96e263da0d5a",
+      "last_updated": "2026-11-12T11:59:03.746153"
     }
   },
   "relations": [
@@ -231,7 +300,7 @@
   ],
   "statistics": {
     "total_models": 5,
-    "total_apis": 5,
+    "total_apis": 8,
     "total_frontends": 5,
     "total_relations": 2,
     "zones_used": [
