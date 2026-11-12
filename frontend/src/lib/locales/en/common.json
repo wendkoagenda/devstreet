@@ -120,7 +120,24 @@
     "hub": "DevStreet Hub",
     "hub_projects": "Explore projects",
     "hub_project_new": "Create a project",
-    "hub_project_detail": "Project page"
+    "hub_project_detail": "Project page",
+    "marketplace": "Marketplace",
+    "marketplace_profile": "My pro profile",
+    "admin": "Administration",
+    "marketplace_admin": "Marketplace",
+    "marketplace_companies": "Companies",
+    "marketplace_skills": "Skills",
+    "marketplace_profils": "Profiles",
+    "marketplace_offers": "Offers",
+    "marketplace_candidatures": "Applications",
+    "marketplace_profil_skills": "Profile skills",
+    "marketplace_experiences": "Experiences",
+    "marketplace_prestations": "Services",
+    "marketplace_profil_histories": "Profile history",
+    "marketplace_availabilities": "Availability",
+    "marketplace_reviews": "Reviews",
+    "marketplace_swipes": "Swipes",
+    "marketplace_connections": "Connections"
   },
   "hub": {
     "common": {

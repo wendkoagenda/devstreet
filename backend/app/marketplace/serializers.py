@@ -1212,3 +1212,29 @@ class ConnectionSerializer(serializers.ModelSerializer):
         Validation personnalisée des données.
         """
         return data
+
+
+class MeProfilWriteSerializer(serializers.ModelSerializer):
+    """Champs du profil que l'utilisateur modifie lui-même (le compte, le slug et l'entreprise sont gérés par le service)."""
+
+    class Meta:
+        model = Profil
+        fields = ['headline', 'bio', 'phone', 'country', 'city', 'remote', 'timezone', 'default_hours_per_week', 'is_open_to_work', 'daily_rate', 'currency', 'years_of_experience', 'languages', 'github_url', 'linkedin_url', 'portfolio_url', 'cv_visibility']
+
+    def validate_country(self, value):
+        if len(value) != 2 or not value.isalpha():
+            raise serializers.ValidationError("Code pays ISO à 2 lettres attendu (ex. BF, SN).")
+        return value.upper()
+
+
+class MeCompanyWriteSerializer(serializers.ModelSerializer):
+    """Champs de l'entreprise que son propriétaire modifie (vérification, slug et auteur restent côté serveur)."""
+
+    class Meta:
+        model = Company
+        fields = ['name', 'description', 'sector', 'size', 'website', 'contact_email', 'phone', 'country', 'city', 'address']
+
+    def validate_country(self, value):
+        if len(value) != 2 or not value.isalpha():
+            raise serializers.ValidationError("Code pays ISO à 2 lettres attendu (ex. BF, SN).")
+        return value.upper()

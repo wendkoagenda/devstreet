@@ -28,6 +28,8 @@ import TaskContributionPage from "./models/devstreet-hub/pages/task-contribution
 import ContributionReviewPage from "./models/devstreet-hub/pages/contribution-review-page";
 import AiWorkshopPage from "./models/devstreet-hub/pages/ai-workshop-page";
 import ProjectProfilePage from "./models/devstreet-hub/pages/project-profile-page";
+import MyProfilePage from "./models/marketplace-space/pages/my-profile-page";
+import MarketplaceAdminPage from "./models/marketplace-space/pages/marketplace-admin-page";
 import { useAuthSlice } from "./models/auth/slice";
 import { useEffect } from "react";
 
@@ -63,31 +65,38 @@ function App() {
             <Route element={<HomePage />} path="/" />
             <Route element={<UsersList />} path="/users" />
             <Route element={<RolePermissionManagement />} path="/roles" />
-                      <Route element={<CompanyList />} path="/companies" />
+                      <Route element={<CompanyList />} path="/admin/marketplace/companies" />
 
-          <Route element={<SkillList />} path="/skills" />
+          <Route element={<SkillList />} path="/admin/marketplace/skills" />
 
-          <Route element={<ProfilList />} path="/profils" />
+          <Route element={<ProfilList />} path="/admin/marketplace/profils" />
 
-          <Route element={<OfferList />} path="/offers" />
+          <Route element={<OfferList />} path="/admin/marketplace/offers" />
 
-          <Route element={<CandidatureList />} path="/candidatures" />
+          <Route element={<CandidatureList />} path="/admin/marketplace/candidatures" />
 
-          <Route element={<ProfilSkillList />} path="/profil-skills" />
+          <Route element={<ProfilSkillList />} path="/admin/marketplace/profil-skills" />
 
-          <Route element={<ExperienceList />} path="/experiences" />
+          <Route element={<ExperienceList />} path="/admin/marketplace/experiences" />
 
-          <Route element={<PrestationList />} path="/prestations" />
+          <Route element={<PrestationList />} path="/admin/marketplace/prestations" />
 
-          <Route element={<ProfilHistoryList />} path="/profil-histories" />
+          <Route element={<ProfilHistoryList />} path="/admin/marketplace/profil-histories" />
 
-          <Route element={<AvailabilityList />} path="/availabilities" />
+          <Route element={<AvailabilityList />} path="/admin/marketplace/availabilities" />
 
-          <Route element={<ReviewList />} path="/reviews" />
+          <Route element={<ReviewList />} path="/admin/marketplace/reviews" />
 
-          <Route element={<SwipeList />} path="/swipes" />
+          <Route element={<SwipeList />} path="/admin/marketplace/swipes" />
 
-          <Route element={<ConnectionList />} path="/connections" />
+          <Route element={<ConnectionList />} path="/admin/marketplace/connections" />
+
+<Route element={<MyProfilePage />} path="/marketplace/profile" />
+
+          <Route
+            element={<MarketplaceAdminPage />}
+            path="/admin/marketplace"
+          />
 
 <Route element={<MyAccount />} path="/my-account" />
           </Route>

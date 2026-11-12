@@ -31,6 +31,23 @@ export default function AppLayout() {
     "/hub/projects": t("breadcrumb_titles.hub_projects"),
     "/hub/projects/new": t("breadcrumb_titles.hub_project_new"),
     "/hub/projects/*": t("breadcrumb_titles.hub_project_detail"),
+    "/marketplace": t("breadcrumb_titles.marketplace"),
+    "/marketplace/profile": t("breadcrumb_titles.marketplace_profile"),
+    "/admin": t("breadcrumb_titles.admin"),
+    "/admin/marketplace": t("breadcrumb_titles.marketplace_admin"),
+    "/admin/marketplace/companies": t("breadcrumb_titles.marketplace_companies"),
+    "/admin/marketplace/skills": t("breadcrumb_titles.marketplace_skills"),
+    "/admin/marketplace/profils": t("breadcrumb_titles.marketplace_profils"),
+    "/admin/marketplace/offers": t("breadcrumb_titles.marketplace_offers"),
+    "/admin/marketplace/candidatures": t("breadcrumb_titles.marketplace_candidatures"),
+    "/admin/marketplace/profil-skills": t("breadcrumb_titles.marketplace_profil_skills"),
+    "/admin/marketplace/experiences": t("breadcrumb_titles.marketplace_experiences"),
+    "/admin/marketplace/prestations": t("breadcrumb_titles.marketplace_prestations"),
+    "/admin/marketplace/profil-histories": t("breadcrumb_titles.marketplace_profil_histories"),
+    "/admin/marketplace/availabilities": t("breadcrumb_titles.marketplace_availabilities"),
+    "/admin/marketplace/reviews": t("breadcrumb_titles.marketplace_reviews"),
+    "/admin/marketplace/swipes": t("breadcrumb_titles.marketplace_swipes"),
+    "/admin/marketplace/connections": t("breadcrumb_titles.marketplace_connections"),
   };
 
   // Générer les breadcrumbs

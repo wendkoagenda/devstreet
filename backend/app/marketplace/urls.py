@@ -14,6 +14,7 @@ from app.marketplace.views.availability_viewset import AvailabilityViewSet
 from app.marketplace.views.review_viewset import ReviewViewSet
 from app.marketplace.views.swipe_viewset import SwipeViewSet
 from app.marketplace.views.connection_viewset import ConnectionViewSet
+from app.marketplace.views.me_views import MeCompanyView, MeProfilView, MeView
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'companies', CompanyViewSet, basename='companies')
@@ -31,6 +32,9 @@ router.register(r'swipes', SwipeViewSet, basename='swipes')
 router.register(r'connections', ConnectionViewSet, basename='connections')
 
 urlpatterns = [
+    path('v1/marketplace/me', MeView.as_view(), name='marketplace-me'),
+    path('v1/marketplace/me/profil', MeProfilView.as_view(), name='marketplace-me-profil'),
+    path('v1/marketplace/me/company', MeCompanyView.as_view(), name='marketplace-me-company'),
     path('v1/', include(router.urls)),
 ]
 
