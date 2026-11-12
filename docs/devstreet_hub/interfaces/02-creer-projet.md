@@ -11,7 +11,7 @@ Un parcours en trois étapes : **Présenter → Préparer le dépôt → Publier
 | GET /api/v1/technologies | Sélection des technologies existantes |
 | POST /api/v1/projects | Envoyer titre, slug, problème, description, démo optionnelle, licence et IDs de technologies ; conserver l’ID retourné |
 | PATCH /api/v1/projects/{id} | Reprendre et corriger le brouillon |
-| POST /api/v1/forge-access | Préparer l’identité Git liée au compte existant ; secret initial retourné une seule fois à sa création |
+| POST /api/v1/forge-access | Préparer l’identité Git liée au compte existant (login opaque + preuve de corrélation) ; secret initial retourné une seule fois à sa création ou reprise contrôlée (`password_recovery_required`) |
 | POST /api/v1/projects/{id}/provision | Créer/retrouver le dépôt, privé tant que le projet est brouillon |
 | GET /api/v1/projects/{id}/repository | Afficher état et URL Git ; aucune fausse URL tant que le dépôt n’est pas prêt |
 | POST /api/v1/projects/{id}/publish | Rendre le dépôt public puis confirmer la publication de la fiche |

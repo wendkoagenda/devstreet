@@ -120,9 +120,57 @@ class WorkflowRepository(ProjectRepository):
     def identity(self, actor):
         return ForgeIdentity.objects.filter(user=actor).first()
 
-    def create_identity(self, actor, data):
+    def locked_identity(self, actor):
+        return (
+            ForgeIdentity.objects.select_for_update()
+            .filter(user=actor)
+            .first()
+        )
+
+    def create_pending_identity(self, actor, *, login, provisioning_key):
         return ForgeIdentity.objects.create(
-            user=actor, login=data["login"], gitea_user_id=data["id"]
+            user=actor,
+            login=login,
+            provisioning_key=provisioning_key,
+            gitea_user_id=None,
+            status=ForgeIdentity.STATUS_PENDING,
+        )
+
+    def mark_identity_linked(self, identity, *, gitea_user_id, login=None):
+        from django.utils import timezone
+
+        values = {
+            "gitea_user_id": gitea_user_id,
+            "status": ForgeIdentity.STATUS_LINKED,
+            "conflict_reason": "",
+            "linked_at": timezone.now(),
+        }
+        if login:
+            values["login"] = login
+        return self.save(identity, **values)
+
+    def mark_identity_conflict(self, identity, reason: str):
+        return self.save(
+            identity,
+            status=ForgeIdentity.STATUS_CONFLICT,
+            conflict_reason=reason[:255],
+        )
+
+    def create_identity(self, actor, data):
+        """Compatibilité tests historiques : crée une identité déjà liée."""
+        from app.devstreet_hub.services.forge_identity_tokens import (
+            new_provisioning_key,
+        )
+        from django.utils import timezone
+
+        key = data.get("provisioning_key") or new_provisioning_key()
+        return ForgeIdentity.objects.create(
+            user=actor,
+            login=data["login"],
+            gitea_user_id=data["id"],
+            provisioning_key=key,
+            status=ForgeIdentity.STATUS_LINKED,
+            linked_at=timezone.now(),
         )
 
     def visible_tasks(self, actor, project_id=None):

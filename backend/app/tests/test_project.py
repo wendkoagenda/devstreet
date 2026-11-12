@@ -240,7 +240,16 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
             self.client.post(f"/api/v1/projects/{project_id}/provision").status_code,
             503,
         )
-        self.forge.provision_repository.side_effect = None
+
+        def provision_repository(repository, identity):
+            return {
+                "id": 201,
+                "default_branch": "main",
+                "private": True,
+                "owner": {"id": identity.gitea_user_id},
+            }
+
+        self.forge.provision_repository.side_effect = provision_repository
         self.assertEqual(
             self.client.post(f"/api/v1/projects/{project_id}/provision").status_code,
             200,

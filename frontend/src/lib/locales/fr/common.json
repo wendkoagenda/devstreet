@@ -257,13 +257,494 @@
       "unavailable": "Les brouillons ne peuvent pas être étoilés"
     },
     "upcoming": {
-      "back": "Retour à l'exploration",
+      "back": "Retour",
       "screens": {
         "project_detail": "Fiche projet",
-        "create_project": "Créer un projet"
+        "create_project": "Créer un projet",
+        "task_contribution": "Tâche et contribution",
+        "contribution_review": "Revue des contributions",
+        "ai_workshop": "Atelier IA"
       },
       "badge": "À venir",
-      "text": "Cet écran n'est pas encore livré. L'exploration reste disponible."
+      "text": "Cet écran n'est pas encore livré. Reviens à la fiche ou à l'exploration."
+    },
+    "profile": {
+      "title": "Réalisations · {{name}}",
+      "description": "Projets publiés et contributions visibles. Les étoiles restent un indicateur social séparé ; aucun classement automatique.",
+      "back_explore": "Retour à l'exploration",
+      "account_section_title": "Projets et réalisations",
+      "account_section_hint": "Aperçu public borné, sans modifier ton identité ni tes permissions.",
+      "open_public": "Voir la page publique",
+      "user_fallback": "Utilisateur #{{id}}",
+      "role_owner": "Propriétaire",
+      "stars": "{{count}} étoile(s)",
+      "open_project": "Ouvrir le projet",
+      "open_task": "Voir la tâche",
+      "open_contribution": "Voir les contributions",
+      "unavailable": "Réalisation indisponible",
+      "story": "{{author}} a proposé « {{summary}} » sur {{project}}, relu par {{reviewer}}",
+      "story_pending": "{{author}} a proposé « {{summary}} » sur {{project}}",
+      "reviewer_unknown": "un mainteneur",
+      "projects_title": "Projets publiés",
+      "contributions_title": "Contributions",
+      "preview_limit": "Aperçu des {{limit}} dernières entrées. Les listes longues restent paginées.",
+      "accepted_only_hint": "Cet aperçu ne montre que des contributions acceptées et publiques.",
+      "list_visibility_hint": "La liste longue respecte tes droits de lecture : une soumission en attente n'est jamais présentée comme acceptée.",
+      "projects_empty": "Aucun projet publié visible.",
+      "contributions_empty": "Aucune contribution visible.",
+      "see_all_projects": "Voir tous les projets",
+      "see_all_contributions": "Voir toutes les contributions",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "page": "Page {{page}} / {{pageCount}}",
+      "tabs": {
+        "overview": "Aperçu",
+        "projects": "Tous les projets",
+        "contributions": "Toutes les contributions"
+      },
+      "status": {
+        "accepted": "Acceptée",
+        "submitted": "Proposée",
+        "rejected": "Refusée"
+      },
+      "errors": {
+        "not_found": "Profil ou réalisations introuvables.",
+        "forbidden": "Consultation non autorisée.",
+        "list": "Impossible de charger la liste."
+      }
+    },
+    "ai": {
+      "title": "Atelier IA",
+      "description": "Décris l'objectif, génère une analyse sourcée, puis adopte une suggestion en brouillon. Rien n'est publié automatiquement.",
+      "back_project": "Retour à la fiche projet",
+      "consent": {
+        "title": "Autorisation d'envoi",
+        "text": "Des extraits de code et le contexte du dépôt peuvent être envoyés à un fournisseur externe pour produire l'analyse. Seul le propriétaire peut activer ou retirer ce consentement.",
+        "enabled": "Consentement actif",
+        "disabled": "Consentement inactif",
+        "enable": "Autoriser l'envoi",
+        "disable": "Retirer l'autorisation",
+        "owner_only": "Seul le propriétaire peut gérer ce consentement."
+      },
+      "form": {
+        "title": "Objectif à analyser",
+        "objective": "Objectif",
+        "objective_example": "Ajouter un export CSV",
+        "example_hint": "Exemple d'aide à la saisie : « Ajouter un export CSV ». Aucune donnée n'est préremplie comme si elle avait été détectée.",
+        "language": "Langue du résultat",
+        "lang_fr": "Français",
+        "lang_en": "English",
+        "generate": "Générer l'analyse",
+        "manual": "Créer une tâche manuellement"
+      },
+      "manual": {
+        "title": "Tâche manuelle (brouillon)",
+        "hint": "Toujours disponible si le service IA est indisponible, en quota, ou si tu préfères rédiger sans analyse.",
+        "submit": "Créer le brouillon"
+      },
+      "progress": {
+        "queued": "En attente…",
+        "running": "Analyse des extraits…",
+        "succeeded": "Analyse prête",
+        "failed": "Analyse échouée"
+      },
+      "failed": {
+        "title": "Échec de l'analyse",
+        "text": "Aucun résultat partiel n'est affiché comme un succès. Tu peux réessayer plus tard ou créer une tâche manuellement."
+      },
+      "result": {
+        "summary": "Résumé",
+        "no_summary": "Aucun résumé fourni.",
+        "entry_points": "Points d'entrée",
+        "sources_hint": "Les références pointent vers le SHA analysé.",
+        "sources_stale": "Le dépôt a évolué depuis cette analyse : ces sources ne représentent plus forcément le code courant.",
+        "unknowns": "Inconnues / limites",
+        "suggestions": "Suggestions de tâches",
+        "no_suggestions": "Aucune suggestion exploitable.",
+        "adopt": "En faire une tâche à relire"
+      },
+      "meta": {
+        "title": "Contexte d'analyse",
+        "model": "Modèle",
+        "sha": "SHA analysé",
+        "current_sha": "SHA dépôt",
+        "prompt": "Prompt",
+        "disclaimer": "Cette analyse ne remplace pas une revue humaine, un audit de sécurité, ni des tests exécutés."
+      },
+      "toasts": {
+        "consent_on": "Consentement enregistré.",
+        "consent_off": "Consentement retiré.",
+        "ready": "Analyse disponible.",
+        "task_draft": "Brouillon créé à partir de la suggestion.",
+        "manual_task": "Tâche brouillon créée."
+      },
+      "errors": {
+        "not_found": "Projet ou analyse introuvable.",
+        "forbidden": "Action non autorisée.",
+        "login_required": "Session expirée. Reconnecte-toi.",
+        "conflict": "Cette action n'est plus possible.",
+        "quota": "Quota atteint. Pas de nouvel essai automatique.",
+        "unavailable": "Service IA non configuré ou indisponible. Crée la tâche manuellement.",
+        "network": "Connexion impossible. Vérifie le réseau puis réessaie.",
+        "owner_only_consent": "Seul le propriétaire peut gérer le consentement.",
+        "need_consent": "Le propriétaire doit autoriser l'envoi avant une génération.",
+        "objective_required": "Indique un objectif.",
+        "failed": "L'analyse a échoué.",
+        "poll_timeout": "Délai d'attente dépassé. Réessaie plus tard.",
+        "poll": "Impossible de suivre la progression.",
+        "consent": "Impossible d'enregistrer le consentement.",
+        "start": "Impossible de démarrer l'analyse.",
+        "adopt": "Impossible d'adopter la suggestion.",
+        "manual": "Impossible de créer la tâche manuelle."
+      }
+    },
+    "review": {
+      "title": "Revue · {{title}}",
+      "description": "Lis les propositions, compare-les aux critères de la tâche, puis décide. Aucun merge Git n'est déclenché ici.",
+      "back_project": "Retour à la fiche projet",
+      "list_title": "Propositions",
+      "empty": "Aucune proposition visible pour ce projet.",
+      "select_hint": "Sélectionne une proposition dans la liste.",
+      "self_notice": "Tu ne peux pas revoir ta propre contribution, même en tant que propriétaire.",
+      "readonly_notice": "Cette proposition a déjà été revue.",
+      "forbidden_notice": "Tu n'as pas le droit de décider sur ces propositions.",
+      "panel": {
+        "proposal": "Proposition",
+        "criteria": "Critères de la tâche",
+        "criteria_missing": "Impossible de charger les critères.",
+        "author": "Auteur",
+        "task": "Tâche",
+        "status": "État",
+        "open_pr": "Ouvrir PR #{{number}}",
+        "no_pr": "Aucune PR déclarée"
+      },
+      "decided": {
+        "accepted": "Relu et accepté par #{{id}}",
+        "rejected": "Relu et refusé par #{{id}}"
+      },
+      "form": {
+        "note": "Motif de décision",
+        "accept": "Accepter la réalisation",
+        "reject": "Refuser avec explication",
+        "no_merge": "Cette interface n'effectue pas de fusion Git."
+      },
+      "toasts": {
+        "accepted": "Réalisation acceptée.",
+        "rejected": "Proposition refusée."
+      },
+      "errors": {
+        "not_found": "Projet ou propositions introuvables.",
+        "forbidden": "Action non autorisée.",
+        "login_required": "Session expirée. Reconnecte-toi.",
+        "conflict": "Cette contribution a déjà été revue.",
+        "network": "Connexion impossible. Vérifie le réseau puis réessaie.",
+        "note_required": "Le motif est obligatoire.",
+        "self_review": "Auto-revue interdite.",
+        "already_decided": "Décision déjà prise.",
+        "decide": "Impossible d'enregistrer la décision."
+      }
+    },
+    "task": {
+      "back_project": "Retour à la fiche projet",
+      "project_label": "Projet · {{title}}",
+      "no_description": "Aucune consigne détaillée.",
+      "goto_correct": "Ouvrir la bonne URL",
+      "first_step": {
+        "title": "Ta première étape"
+      },
+      "criteria": {
+        "title": "Critères de réussite",
+        "empty": "Aucun critère défini pour le moment.",
+        "hint": "Cette checklist sert de guide : elle n'est pas cochée automatiquement."
+      },
+      "sources": {
+        "title": "Sources du contexte (proposition IA)",
+        "hint": "Ces liens pointent vers le SHA analysé. Le dépôt a pu évoluer depuis."
+      },
+      "actions": {
+        "ask_help": "Demander de l'aide",
+        "propose": "Proposer mon travail",
+        "open_task": "Ouvrir la tâche",
+        "close_task": "Fermer la tâche"
+      },
+      "confirm": {
+        "close": "Fermer cette tâche bloquera les nouvelles soumissions. Continuer ?"
+      },
+      "help": {
+        "title": "Demande d'aide (brouillon)",
+        "default_title": "Aide sur la tâche : {{title}}",
+        "default_body": "Bonjour,\n\nJ'ai besoin d'aide pour avancer sur « {{title}} ».\n\nVoici où j'en suis :\n",
+        "field_title": "Titre du sujet",
+        "field_body": "Message",
+        "publish": "Publier sur le forum",
+        "forum_kept": "Le forum n'est pas raccordé (503). Ton brouillon reste ici ; la tâche reste accessible."
+      },
+      "propose": {
+        "title": "Proposer mon travail",
+        "hint": "Une revue mainteneur reste nécessaire. Un numéro de PR sera vérifié dans le dépôt lié. Sans PR, c'est une déclaration soumise à revue. Tu ne peux pas t'auto-accepter.",
+        "summary": "Résumé de ta réalisation",
+        "pr": "Numéro de PR (optionnel)",
+        "pr_optional": "ex. 12",
+        "sha": "SHA de commit (optionnel)",
+        "sha_optional": "40–64 caractères hex",
+        "submit": "Envoyer la proposition"
+      },
+      "contributions": {
+        "title": "Propositions visibles",
+        "empty": "Aucune proposition pour cette tâche.",
+        "author": "Auteur #{{id}}",
+        "status": {
+          "submitted": "Soumise",
+          "accepted": "Acceptée",
+          "rejected": "Refusée"
+        }
+      },
+      "toasts": {
+        "help_sent": "Demande d'aide publiée.",
+        "submitted": "Proposition envoyée pour revue.",
+        "updated": "Tâche mise à jour."
+      },
+      "errors": {
+        "not_found": "Tâche introuvable ou inaccessible.",
+        "mismatch": "Cette tâche n'appartient pas à ce projet.",
+        "forbidden": "Tu n'as pas le droit d'effectuer cette action.",
+        "login_required": "Session expirée. Reconnecte-toi.",
+        "conflict": "Action impossible dans l'état actuel.",
+        "network": "Connexion impossible. Vérifie le réseau puis réessaie.",
+        "forum_unavailable": "Le forum n'est pas disponible. Le brouillon est conservé localement.",
+        "help": "Impossible de publier la demande d'aide.",
+        "submit": "Impossible d'envoyer la proposition.",
+        "update": "Impossible de mettre à jour la tâche.",
+        "task_closed": "La tâche est fermée : plus de nouvelles soumissions."
+      }
+    },
+    "detail": {
+      "no_problem": "Aucun résumé de besoin renseigné pour le moment.",
+      "tabs_label": "Sections de la fiche projet",
+      "tabs": {
+        "presentation": "Présentation",
+        "code": "Code",
+        "contribute": "Contribuer",
+        "team": "Équipe"
+      },
+      "page_of": "Page {{page}} / {{pageCount}}",
+      "actions": {
+        "demo": "Démo en ligne",
+        "open_code": "Ouvrir le code",
+        "ai": "Préparer contribution IA",
+        "reviews": "Examiner les propositions",
+        "create_task": "Créer une tâche",
+        "continue_setup": "Continuer la préparation",
+        "manage": "Gestion du projet",
+        "publish": "Publier le projet",
+        "archive": "Archiver le projet"
+      },
+      "confirm": {
+        "publish": "Publier ce projet le rendra visible dans le Hub. Continuer ?",
+        "archive": "Archiver réduit la visibilité et peut affecter les preuves de candidature. Continuer ?",
+        "remove_member": "Retirer ce membre de l'équipe ?"
+      },
+      "presentation": {
+        "title": "Contexte et description",
+        "empty": "Aucune description détaillée pour le moment."
+      },
+      "code": {
+        "title": "Dépôt de code",
+        "hint": "Pour P0, les fichiers, branches et PR s'ouvrent dans la forge Gitea.",
+        "not_ready": "Le dépôt n'est pas encore prêt. Aucune URL forge n'est affichée.",
+        "branch": "Branche principale",
+        "status": "État",
+        "ready": "Prêt",
+        "clone": "URL de clone"
+      },
+      "contribute": {
+        "title": "Tâches de contribution",
+        "empty": "Aucune tâche pour le moment. Un mainteneur peut en créer une manuellement.",
+        "no_description": "Pas de description.",
+        "open_task": "Consulter la tâche"
+      },
+      "task_status": {
+        "draft": "Brouillon",
+        "open": "Ouverte",
+        "closed": "Fermée"
+      },
+      "task_form": {
+        "title": "Nouvelle tâche (brouillon)",
+        "name": "Titre",
+        "description": "Description",
+        "submit": "Créer la tâche"
+      },
+      "team": {
+        "title": "Équipe",
+        "hint": "Sans annuaire public, l'invitation se fait par ID utilisateur communiqué par le membre. Le rôle métier n'accorde pas le push Git.",
+        "owner": "Propriétaire · utilisateur #{{id}}",
+        "user": "Utilisateur #{{id}}",
+        "user_id": "ID utilisateur",
+        "role": "Rôle",
+        "invite": "Ajouter",
+        "remove": "Retirer le membre",
+        "empty": "Aucun membre ajouté pour le moment.",
+        "roles": {
+          "maintainer": "Mainteneur",
+          "contributor": "Contributeur"
+        }
+      },
+      "toasts": {
+        "published": "Projet publié.",
+        "archived": "Projet archivé.",
+        "task_created": "Tâche brouillon créée.",
+        "member_added": "Membre ajouté.",
+        "member_removed": "Membre retiré."
+      },
+      "errors": {
+        "not_found": "Projet introuvable ou inaccessible.",
+        "forbidden": "Tu n'as pas accès à ce projet ou à cette action.",
+        "login_required": "Session expirée. Reconnecte-toi.",
+        "conflict": "Cette transition n'est plus possible.",
+        "network": "Connexion impossible. Vérifie le réseau puis réessaie.",
+        "publish": "Impossible de publier le projet.",
+        "archive": "Impossible d'archiver le projet.",
+        "task_create": "Impossible de créer la tâche.",
+        "member_add": "Impossible d'ajouter ce membre.",
+        "member_remove": "Impossible de retirer ce membre."
+      }
+    },
+    "create": {
+      "title": "Créer et publier un projet",
+      "title_resume": "Reprendre le brouillon",
+      "badge": "forge",
+      "description": "Renseigne les informations de ton projet, configure son dépôt de code puis publie-le pour ouvrir la collaboration.",
+      "description_resume": "Reprends là où tu t'étais arrêté : présente, prépare le dépôt, puis publie. Rien n'est perdu.",
+      "step_label": "Étape {{step}}",
+      "step_done": "Terminé",
+      "step_current": "En cours",
+      "step_pending": "À valider",
+      "steps": {
+        "1": { "title": "Présenter le projet" },
+        "2": { "title": "Préparer le dépôt Git" },
+        "3": { "title": "Publier & ouvrir" }
+      },
+      "validated": "Validé",
+      "autosave": {
+        "on": "Brouillon sauvegardé",
+        "off": "Brouillon non enregistré"
+      },
+      "gate": {
+        "title": "Création réservée",
+        "login_text": "Connecte-toi avec un compte autorisé pour créer et publier un projet.",
+        "forbidden_text": "Ton compte n'a pas la permission de créer des projets."
+      },
+      "sections": {
+        "presentation": "Présentation générale du projet",
+        "repository": "Préparer le dépôt de code",
+        "repository_hint": "Forge souveraine intégrée et gérée par DevStreet (Gitea)",
+        "publish": "Finaliser et publier le projet",
+        "publish_hint": "Dernière étape avant la mise en avant dans le Hub public"
+      },
+      "fields": {
+        "title": "Nom du projet",
+        "slug": "Identifiant canonique (slug)",
+        "problem": "Problème résolu & promesse (résumé court)",
+        "description": "Description détaillée & contexte opérationnel",
+        "technologies": "Technologies clés (catalogue DevStreet)",
+        "technologies_count": "{{count}} technologie(s) sélectionnée(s)",
+        "remove_tech": "Retirer {{label}}",
+        "license": "Licence open-source",
+        "demo_url": "Lien de démonstration (optionnel)"
+      },
+      "licenses": {
+        "MIT": "MIT (recommandée)",
+        "Apache-2.0": "Apache-2.0",
+        "BSD-2-Clause": "BSD-2-Clause",
+        "BSD-3-Clause": "BSD-3-Clause"
+      },
+      "repo": {
+        "status_ready": "Dépôt Gitea prêt & provisionné",
+        "status_pending": "Dépôt en attente de provisionnement",
+        "prepare": "Provisionner le dépôt",
+        "preparing": "Provisionnement…",
+        "prepare_help": "Enregistre d'abord le brouillon, puis provisionne ton accès forge et le dépôt distant.",
+        "retry": "Réessayer le provisionnement",
+        "retry_help": "Le brouillon est conservé. Réessaie quand la forge sera disponible : aucun second dépôt ne sera créé si le premier existe déjà.",
+        "remote_url": "URL Git distante (remote origin)",
+        "https": "Protocole HTTPS",
+        "url_placeholder": "Disponible après provisionnement",
+        "copy_url": "Copier l'URL",
+        "copy_cli": "Copier les commandes",
+        "copied": "Copié !",
+        "cli_title": "Initialiser et pousser ton premier commit",
+        "cli_waiting": "Les commandes Git apparaîtront uniquement lorsque l'URL réelle du dépôt sera prête. Aucune URL fictive n'est affichée.",
+        "terminal": "bash — terminal local",
+        "security_title": "Règle de sécurité : aucune information sensible",
+        "security_text": "Ne commite jamais de secrets, fichiers .env, jetons ou clés d'API. Vérifie ton .gitignore avant le push.",
+        "auth_title": "Comment t'authentifier lors du git push ?",
+        "auth_text": "Utilise ton identifiant forge {{login}} et ton mot de passe de forge DevStreet (affiché une seule fois à la création).",
+        "password_once": "Mot de passe initial (affiché une seule fois) : {{password}}",
+        "password_panel_title": "Mot de passe forge initial",
+        "password_panel_text": "Ce secret n'est affiché qu'une seule fois. Copie-le, change-le sur la forge, puis ferme ce panneau. Il n'est jamais enregistré dans le navigateur.",
+        "password_recovery_text": "Reprise contrôlée après une interruption : un nouveau secret a été émis une seule fois. Change-le immédiatement sur la forge. Aucun mot de passe tiers n'a été réutilisé.",
+        "copy_password": "Copier le mot de passe",
+        "password_dismiss": "J'ai noté / fermer",
+        "open_forge": "Ouvrir la forge",
+        "change_password": "Changer le mot de passe sur la forge"
+      },
+      "publish": {
+        "visibility_title": "Visibilité publique",
+        "visibility_text": "En publiant, le projet devient indexable dans le Hub, lié à son dépôt Git, et ouvert aux contributions.",
+        "integrity_label": "Confirmation d'intégrité :",
+        "integrity_text": "J'ai vérifié que le code déposé sur {{path}} est exempt de secrets d'authentification et de données personnelles confidentielles.",
+        "need_repo": "Le dépôt doit être prêt avant de pouvoir publier."
+      },
+      "actions": {
+        "save_draft": "Enregistrer comme brouillon",
+        "publish": "Publier le projet",
+        "new_draft": "Nouveau brouillon"
+      },
+      "preview": {
+        "aside_label": "Récapitulatif du projet",
+        "card_title": "Aperçu fiche DevStreet",
+        "live": "Aperçu",
+        "untitled": "Nouveau projet",
+        "by": "par {{owner}}",
+        "you": "toi",
+        "problem_placeholder": "Le résumé du besoin apparaîtra ici.",
+        "stars": "{{count}} étoiles",
+        "forge_sync": "Forge sync",
+        "params": "Paramètres de publication",
+        "owner": "Propriétaire",
+        "visibility": "Visibilité initiale",
+        "visibility_public": "Public (open source)",
+        "forge": "Forge de code",
+        "forge_name": "Gitea DevStreet",
+        "branch": "Branche principale",
+        "help_title": "Besoin d'un coup de main ?",
+        "help_text": "Prépare un README clair, un .gitignore solide, puis invite des co-mainteneurs une fois le projet publié."
+      },
+      "toasts": {
+        "draft_saved": "Brouillon enregistré.",
+        "repo_ready": "Dépôt provisionné.",
+        "repo_pending": "Provisionnement lancé. Le dépôt n'est pas encore prêt.",
+        "published": "Projet publié.",
+        "forge_password_once": "Identifiants forge créés",
+        "forge_password_hint": "Le mot de passe initial n'est affiché qu'une seule fois sur cet écran.",
+        "forge_password_recovered": "Accès forge repris",
+        "forge_password_recovered_hint": "Un nouveau secret a été émis après reprise. Change-le sur la forge immédiatement."
+      },
+      "errors": {
+        "title": "Action impossible",
+        "form_incomplete": "Renseigne au minimum le nom, le slug et le résumé.",
+        "save": "Impossible d'enregistrer le brouillon.",
+        "provision": "Impossible de provisionner le dépôt. Vérifie que Gitea est disponible.",
+        "forge_unavailable": "La forge est indisponible (503). Ton brouillon est conservé : réessaie plus tard.",
+        "draft_not_found": "Ce brouillon est introuvable ou inaccessible.",
+        "publish": "Impossible de publier le projet.",
+        "repo_not_ready": "Le dépôt doit être prêt avant la publication.",
+        "integrity_required": "Confirme l'intégrité du dépôt avant de publier.",
+        "login_required": "Session expirée. Reconnecte-toi.",
+        "forbidden": "Permission refusée pour cette action.",
+        "conflict": "Conflit : ce slug ou cet état n'est plus disponible.",
+        "network": "Connexion impossible. Vérifie le réseau puis réessaie."
+      }
     }
   },
   "auth": {
