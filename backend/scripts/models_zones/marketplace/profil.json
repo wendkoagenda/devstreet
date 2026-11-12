@@ -1,0 +1,179 @@
+{
+  "model_name": "Profil",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "is_company_owner",
+      "type": "BooleanField",
+      "help_text": "Propriétaire de l'entreprise rattachée",
+      "default": false
+    },
+    {
+      "name": "slug",
+      "type": "SlugField",
+      "max_length": 160,
+      "help_text": "URL publique du profil",
+      "unique": true
+    },
+    {
+      "name": "photo",
+      "type": "FileField",
+      "help_text": "Photo, affichée sur le CV",
+      "blank": true,
+      "default": "",
+      "allowed_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+      ],
+      "max_size_mb": 5
+    },
+    {
+      "name": "headline",
+      "type": "CharField",
+      "max_length": 160,
+      "help_text": "Accroche (ex. « Dev React, 5 ans »)",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "bio",
+      "type": "TextField",
+      "help_text": "Résumé, utilisé en tête du CV",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "phone",
+      "type": "CharField",
+      "max_length": 20,
+      "help_text": "Téléphone",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "country",
+      "type": "CharField",
+      "max_length": 2,
+      "help_text": "Code pays ISO 3166-1"
+    },
+    {
+      "name": "city",
+      "type": "CharField",
+      "max_length": 100,
+      "help_text": "Ville",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "remote",
+      "type": "BooleanField",
+      "help_text": "Accepte le télétravail",
+      "default": true
+    },
+    {
+      "name": "timezone",
+      "type": "CharField",
+      "max_length": 50,
+      "help_text": "Fuseau horaire IANA (ex. Africa/Ouagadougou)",
+      "default": "UTC"
+    },
+    {
+      "name": "default_hours_per_week",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Capacité hebdomadaire par défaut, hors périodes du calendrier",
+      "default": 40
+    },
+    {
+      "name": "is_open_to_work",
+      "type": "BooleanField",
+      "help_text": "Visible dans l'annuaire et les recommandations",
+      "default": true
+    },
+    {
+      "name": "daily_rate",
+      "type": "DecimalField",
+      "max_digits": 12,
+      "decimal_places": 2,
+      "help_text": "Tarif journalier indicatif",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "currency",
+      "type": "CharField",
+      "max_length": 3,
+      "help_text": "Devise ISO 4217",
+      "default": "XOF"
+    },
+    {
+      "name": "years_of_experience",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Années d'expérience",
+      "default": 0
+    },
+    {
+      "name": "languages",
+      "type": "JSONField",
+      "help_text": "Langues parlées, ex. [{\"language\": \"fr\", \"level\": \"native\"}]",
+      "default": [],
+      "blank": true
+    },
+    {
+      "name": "github_url",
+      "type": "URLField",
+      "help_text": "Profil GitHub",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "linkedin_url",
+      "type": "URLField",
+      "help_text": "Profil LinkedIn",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "portfolio_url",
+      "type": "URLField",
+      "help_text": "Portfolio",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "cv_visibility",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Qui peut télécharger le CV",
+      "choices": [
+        [
+          "public",
+          "Public"
+        ],
+        [
+          "companies",
+          "Entreprises"
+        ],
+        [
+          "private",
+          "Privé"
+        ]
+      ],
+      "default": "companies"
+    },
+    {
+      "name": "embedding",
+      "type": "JSONField",
+      "help_text": "Vecteur pour le matching IA (pgvector), dimension selon le modèle d'embeddings retenu (JSON provisoire, futur VectorField pgvector)",
+      "null": true,
+      "blank": true
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_profil",
+    "resource_plural": "profils",
+    "verbose_name": "Profil",
+    "verbose_name_plural": "Profils"
+  }
+}

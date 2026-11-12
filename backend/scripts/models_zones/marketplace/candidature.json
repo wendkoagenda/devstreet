@@ -1,0 +1,71 @@
+{
+  "model_name": "Candidature",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "message",
+      "type": "TextField",
+      "help_text": "Message de motivation",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "status",
+      "type": "CharField",
+      "max_length": 15,
+      "help_text": "Statut de la candidature",
+      "choices": [
+        [
+          "sent",
+          "Envoyée"
+        ],
+        [
+          "shortlisted",
+          "Présélectionnée"
+        ],
+        [
+          "rejected",
+          "Refusée"
+        ],
+        [
+          "accepted",
+          "Acceptée"
+        ]
+      ],
+      "default": "sent"
+    },
+    {
+      "name": "ai_match_score",
+      "type": "DecimalField",
+      "max_digits": 5,
+      "decimal_places": 2,
+      "help_text": "Score du moteur de recommandation, de 0 à 100",
+      "null": true,
+      "blank": true
+    },
+    {
+      "name": "cv_snapshot",
+      "type": "FileField",
+      "help_text": "CV PDF figé au moment de la candidature",
+      "blank": true,
+      "default": "",
+      "allowed_extensions": [
+        ".pdf"
+      ],
+      "max_size_mb": 10
+    },
+    {
+      "name": "decided_at",
+      "type": "DateTimeField",
+      "help_text": "Date de la décision de l'entreprise",
+      "null": true,
+      "blank": true
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_candidature",
+    "resource_plural": "candidatures",
+    "verbose_name": "Candidature",
+    "verbose_name_plural": "Candidatures"
+  }
+}

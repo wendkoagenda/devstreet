@@ -1,0 +1,37 @@
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
+from app.marketplace.views.company_viewset import CompanyViewSet
+from app.marketplace.views.skill_viewset import SkillViewSet
+from app.marketplace.views.profil_viewset import ProfilViewSet
+from app.marketplace.views.offer_viewset import OfferViewSet
+from app.marketplace.views.candidature_viewset import CandidatureViewSet
+from app.marketplace.views.profilskill_viewset import ProfilSkillViewSet
+from app.marketplace.views.experience_viewset import ExperienceViewSet
+from app.marketplace.views.prestation_viewset import PrestationViewSet
+from app.marketplace.views.profilhistory_viewset import ProfilHistoryViewSet
+from app.marketplace.views.availability_viewset import AvailabilityViewSet
+from app.marketplace.views.review_viewset import ReviewViewSet
+from app.marketplace.views.swipe_viewset import SwipeViewSet
+from app.marketplace.views.connection_viewset import ConnectionViewSet
+
+router = DefaultRouter(trailing_slash=False)
+router.register(r'companies', CompanyViewSet, basename='companies')
+router.register(r'skills', SkillViewSet, basename='skills')
+router.register(r'profils', ProfilViewSet, basename='profils')
+router.register(r'offers', OfferViewSet, basename='offers')
+router.register(r'candidatures', CandidatureViewSet, basename='candidatures')
+router.register(r'profil-skills', ProfilSkillViewSet, basename='profil-skills')
+router.register(r'experiences', ExperienceViewSet, basename='experiences')
+router.register(r'prestations', PrestationViewSet, basename='prestations')
+router.register(r'profil-histories', ProfilHistoryViewSet, basename='profil-histories')
+router.register(r'availabilities', AvailabilityViewSet, basename='availabilities')
+router.register(r'reviews', ReviewViewSet, basename='reviews')
+router.register(r'swipes', SwipeViewSet, basename='swipes')
+router.register(r'connections', ConnectionViewSet, basename='connections')
+
+urlpatterns = [
+    path('v1/', include(router.urls)),
+]
+
+app_name = 'marketplace'

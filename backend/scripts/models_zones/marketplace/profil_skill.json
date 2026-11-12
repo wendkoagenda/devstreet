@@ -1,0 +1,23 @@
+{
+  "model_name": "ProfilSkill",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "level",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Niveau déclaré, de 1 à 5"
+    },
+    {
+      "name": "years",
+      "type": "PositiveSmallIntegerField",
+      "help_text": "Années de pratique",
+      "default": 0
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_profil_skill",
+    "resource_plural": "profil-skills",
+    "verbose_name": "Compétence du profil",
+    "verbose_name_plural": "Compétences du profil"
+  }
+}

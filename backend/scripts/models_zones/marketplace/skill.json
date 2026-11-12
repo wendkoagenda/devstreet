@@ -1,0 +1,84 @@
+{
+  "model_name": "Skill",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "name",
+      "type": "CharField",
+      "max_length": 80,
+      "help_text": "Nom (ex. « Django »)",
+      "unique": true
+    },
+    {
+      "name": "slug",
+      "type": "SlugField",
+      "max_length": 90,
+      "help_text": "Identifiant URL",
+      "unique": true
+    },
+    {
+      "name": "type",
+      "type": "CharField",
+      "max_length": 4,
+      "help_text": "Compétence technique ou comportementale",
+      "choices": [
+        [
+          "hard",
+          "Technique"
+        ],
+        [
+          "soft",
+          "Comportementale"
+        ]
+      ]
+    },
+    {
+      "name": "category",
+      "type": "CharField",
+      "max_length": 20,
+      "help_text": "Famille de compétences",
+      "choices": [
+        [
+          "frontend",
+          "Frontend"
+        ],
+        [
+          "backend",
+          "Backend"
+        ],
+        [
+          "mobile",
+          "Mobile"
+        ],
+        [
+          "devops",
+          "DevOps"
+        ],
+        [
+          "data",
+          "Data"
+        ],
+        [
+          "design",
+          "Design"
+        ],
+        [
+          "management",
+          "Management"
+        ],
+        [
+          "soft",
+          "Comportementale"
+        ]
+      ],
+      "blank": true,
+      "default": ""
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_skill",
+    "resource_plural": "skills",
+    "verbose_name": "Compétence",
+    "verbose_name_plural": "Compétences"
+  }
+}

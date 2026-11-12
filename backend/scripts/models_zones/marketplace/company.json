@@ -1,0 +1,169 @@
+{
+  "model_name": "Company",
+  "app_name": "marketplace",
+  "fields": [
+    {
+      "name": "name",
+      "type": "CharField",
+      "max_length": 150,
+      "help_text": "Nom de l'entreprise"
+    },
+    {
+      "name": "slug",
+      "type": "SlugField",
+      "max_length": 160,
+      "help_text": "URL publique",
+      "unique": true
+    },
+    {
+      "name": "logo",
+      "type": "FileField",
+      "help_text": "Logo, stocké en stockage objet",
+      "blank": true,
+      "default": "",
+      "allowed_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+      ],
+      "max_size_mb": 5
+    },
+    {
+      "name": "description",
+      "type": "TextField",
+      "help_text": "Présentation de l'entreprise",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "sector",
+      "type": "CharField",
+      "max_length": 30,
+      "help_text": "Secteur d'activité",
+      "choices": [
+        [
+          "fintech",
+          "Fintech"
+        ],
+        [
+          "ecommerce",
+          "E-commerce"
+        ],
+        [
+          "agritech",
+          "Agritech"
+        ],
+        [
+          "edtech",
+          "Edtech"
+        ],
+        [
+          "health",
+          "Santé"
+        ],
+        [
+          "ngo",
+          "ONG"
+        ],
+        [
+          "public",
+          "Secteur public"
+        ],
+        [
+          "other",
+          "Autre"
+        ]
+      ]
+    },
+    {
+      "name": "size",
+      "type": "CharField",
+      "max_length": 10,
+      "help_text": "Taille de l'entreprise",
+      "choices": [
+        [
+          "1-10",
+          "1-10"
+        ],
+        [
+          "11-50",
+          "11-50"
+        ],
+        [
+          "51-200",
+          "51-200"
+        ],
+        [
+          "200+",
+          "200+"
+        ]
+      ],
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "website",
+      "type": "URLField",
+      "help_text": "Site web",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "contact_email",
+      "type": "EmailField",
+      "help_text": "E-mail de contact",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "phone",
+      "type": "CharField",
+      "max_length": 20,
+      "help_text": "Téléphone",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "country",
+      "type": "CharField",
+      "max_length": 2,
+      "help_text": "Code pays ISO 3166-1 (ex. BF, SN)"
+    },
+    {
+      "name": "city",
+      "type": "CharField",
+      "max_length": 100,
+      "help_text": "Ville",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "address",
+      "type": "CharField",
+      "max_length": 255,
+      "help_text": "Adresse",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "is_verified",
+      "type": "BooleanField",
+      "help_text": "Vérifiée par l'admin",
+      "default": false
+    },
+    {
+      "name": "verified_at",
+      "type": "DateTimeField",
+      "help_text": "Date de vérification",
+      "null": true,
+      "blank": true
+    }
+  ],
+  "meta": {
+    "db_table": "marketplace_company",
+    "resource_plural": "companies",
+    "verbose_name": "Entreprise",
+    "verbose_name_plural": "Entreprises"
+  }
+}
