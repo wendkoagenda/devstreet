@@ -1,0 +1,153 @@
+name: CD - ORCHESTRATEUR
+
+# Description du workflow :
+# - Deploie automatiquement une branche (develop, main ou prod) apres un push ou un merge dont la CI est verte :
+#   appele par `CI - ORCHESTRATEUR` (job deploiement), puis construction des images, puis deploiement.
+# - Lancement manuel : choisir la branche dans « Use workflow from » et, pour un retour arriere, un commit complet.
+#   Reserve aux GIT_MASTER_USERS.
+# - Chaque branche a son environnement GitHub du meme nom, utilisable seulement depuis cette branche : le run
+#   s'execute donc toujours sur la branche deployee, avec le fichier de workflow de cette branche.
+# - Le mode d'acces a la VM vient de la variable DEPLOY_ACCES de l'environnement : ssh (IP publique et cle privee)
+#   ou gcp (sans IP publique, tunnel IAP).
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit complet (40 caracteres). Vide = dernier commit de la branche
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Un seul deploiement a la fois par environnement ; un deploiement en cours n'est jamais interrompu
+concurrency:
+  group: cd-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  autorisation:
+    name: autorisation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      branche: ${{ steps.autorisation.outputs.branche }}
+      sha: ${{ steps.autorisation.outputs.sha }}
+      deployer: ${{ steps.autorisation.outputs.deployer }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Branche, auteur et commit
+        id: autorisation
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          set -eu
+          branche="$GITHUB_REF_NAME"
+          case "$branche" in
+            develop|main|prod) ;;
+            *) echo "::error::Lancer depuis develop, main ou prod (« Use workflow from ») : $branche n'a pas d'environnement."; exit 1 ;;
+          esac
+          deployer=true
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            # Liste lue dans develop : une branche modifiee ne peut pas s'y ajouter
+            masters="$(git show origin/develop:git-cli/access_control.conf | sed -n 's/^GIT_MASTER_USERS="\(.*\)"/\1/p')"
+            case ",$masters," in
+              *",$GITHUB_ACTOR,"*) ;;
+              *) echo "::error::$GITHUB_ACTOR n'est pas dans GIT_MASTER_USERS : lancement manuel refuse."; exit 1 ;;
+            esac
+            if [ -n "$INPUT_SHA" ]; then
+              sha="$INPUT_SHA"
+            else
+              sha="$GITHUB_SHA"
+            fi
+          else
+            sha="$GITHUB_SHA"
+            # Les CI ne s'annulent pas et peuvent finir dans le desordre : un commit depasse ne doit pas remplacer un plus recent
+            git fetch --quiet origin "$branche"
+            if [ "$sha" != "$(git rev-parse "origin/$branche")" ]; then
+              deployer=false
+              echo "Le commit $sha n'est plus la pointe de $branche : deploiement ignore (un commit plus recent le remplace)." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          if ! printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::sha doit etre un commit complet de 40 caracteres hexadecimaux."
+            exit 1
+          fi
+          {
+            echo "branche=$branche"
+            echo "sha=$sha"
+            echo "deployer=$deployer"
+          } >> "$GITHUB_OUTPUT"
+
+  cible:
+    name: cible
+    needs: autorisation
+    if: needs.autorisation.outputs.deployer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: ${{ needs.autorisation.outputs.branche }}
+    outputs:
+      acces: ${{ steps.cible.outputs.acces }}
+    steps:
+      - name: Mode d'acces a la VM
+        id: cible
+        env:
+          ACCES: ${{ vars.DEPLOY_ACCES }}
+          BRANCHE: ${{ needs.autorisation.outputs.branche }}
+          SHA: ${{ needs.autorisation.outputs.sha }}
+        run: |
+          set -eu
+          case "$ACCES" in
+            ssh|gcp) ;;
+            *) echo "::error::DEPLOY_ACCES absent ou inconnu dans l'environnement $BRANCHE (« $ACCES »). Voir 00readme/README_CD.md."; exit 1 ;;
+          esac
+          echo "acces=$ACCES" >> "$GITHUB_OUTPUT"
+          echo "Deploiement de $SHA sur $BRANCHE (acces : $ACCES)." >> "$GITHUB_STEP_SUMMARY"
+
+  images:
+    name: images
+    needs: [autorisation, cible]
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/cd-build-images.yml
+    with:
+      sha: ${{ needs.autorisation.outputs.sha }}
+
+  deploiement-ssh:
+    name: deploiement-ssh
+    needs: [autorisation, cible, images]
+    if: needs.cible.outputs.acces == 'ssh'
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/cd-deploiement-ssh.yml
+    with:
+      branche: ${{ needs.autorisation.outputs.branche }}
+      sha: ${{ needs.autorisation.outputs.sha }}
+      backend_image: ${{ needs.images.outputs.backend_image }}
+      frontend_image: ${{ needs.images.outputs.frontend_image }}
+    secrets: inherit
+
+  deploiement-gcp:
+    name: deploiement-gcp
+    needs: [autorisation, cible, images]
+    if: needs.cible.outputs.acces == 'gcp'
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    uses: ./.github/workflows/cd-deploiement-gcp.yml
+    with:
+      branche: ${{ needs.autorisation.outputs.branche }}
+      sha: ${{ needs.autorisation.outputs.sha }}
+      backend_image: ${{ needs.images.outputs.backend_image }}
+      frontend_image: ${{ needs.images.outputs.frontend_image }}
+    secrets: inherit

@@ -1,0 +1,44 @@
+"""Serializers pour l'application metier (remise à neuf)."""
+from rest_framework import serializers
+from app.metier.models import Elitest
+
+# Ajoutez vos serializers personnalisés ici.
+
+
+class ElitestSerializer(serializers.ModelSerializer):
+    """
+    Serializer pour les elitests.
+    """
+    
+    class Meta:
+        model = Elitest
+        fields = '__all__'
+
+    def get_fields(self):
+        """
+        Marque les champs système en lecture seule s'ils existent.
+        """
+        fields = super().get_fields()
+        for sys_field in ['id', 'created_by', 'updated_by', 'created_at', 'updated_at']:
+            if sys_field in fields:
+                fields[sys_field].read_only = True
+        return fields
+
+    def to_representation(self, instance):
+        """
+        Personnalise la représentation des données.
+        """
+        data = super().to_representation(instance)
+        
+        # Ajouter des informations supplémentaires si nécessaire
+        data['created_at'] = instance.created_at.isoformat() if hasattr(instance, 'created_at') else None
+        data['updated_at'] = instance.updated_at.isoformat() if hasattr(instance, 'updated_at') else None
+        
+        return data
+
+    def validate(self, data):
+        """
+        Validation personnalisée des données.
+        """
+        # Ajoutez ici vos validations personnalisées
+        return data

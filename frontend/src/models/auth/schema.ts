@@ -1,0 +1,151 @@
+import { TFunction } from "i18next";
+import { z } from "zod";
+
+export const loginSchema = (t: TFunction) =>
+  z.object({
+    email: z.string().email(t("validation.email.invalid")),
+    password: z.string().min(8, t("validation.password.min_length")),
+  });
+
+export type LoginSchema = {
+  email: string;
+  password: string;
+};
+
+/** Réponse de connexion : les jetons sont dans des cookies HttpOnly, jamais dans le corps. */
+export type LoginResponse = {
+  user: {
+    id: number;
+    email: string;
+    username: string;
+    full_name: string;
+    roles: string[];
+  };
+};
+
+export interface Auth {
+  username: string;
+  password: string;
+}
+export interface User {
+  id: number;
+  full_name: string;
+  username: string;
+  email: string;
+  roles?: string[];
+  permissions?: string[];
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  permissions: string[];
+
+  // États des dialogues
+  isChangePasswordDialogOpen: boolean;
+
+  // Méthodes de gestion des permissions
+  setPermissions: (permissions: string[]) => void;
+  hasPermission: (permission: string) => boolean;
+
+  // Méthodes d'authentification
+  loadSession: () => Promise<boolean>;
+  logout: () => Promise<void>;
+  initializeAuth: () => Promise<void>;
+  reinitializeAuth: () => void;
+
+  // Méthodes de gestion des dialogues
+  openChangePasswordDialog: () => void;
+  closeChangePasswordDialog: () => void;
+
+  // Méthodes utilitaires
+  getCurrentUserId: () => number | string | null;
+
+  // État d'initialisation
+  isInitialized: boolean;
+}
+
+export const changePasswordSchema = (t: TFunction) =>
+  z.object({
+    old_password: z.string().min(1, t("validation.password.required")),
+    new_password: z.string().min(12, t("validation.password.min_length_new")),
+    new_password_confirm: z
+      .string()
+      .min(1, t("validation.password_confirm.required")),
+  });
+
+export type ChangePasswordSchema = {
+  old_password: string;
+  new_password: string;
+  new_password_confirm: string;
+};
+
+export type ChangePasswordResponse = {
+  message: string;
+};
+
+// ======================== MOT DE PASSE OUBLIÉ ========================
+export const forgotPasswordEmailSchema = (t: TFunction) =>
+  z.object({
+    email: z.string().email(t("validation.email.invalid")),
+  });
+
+export type ForgotPasswordEmailSchema = {
+  email: string;
+};
+
+export const verifyResetCodeSchema = (t: TFunction) =>
+  z.object({
+    code: z.string().regex(/^\d{6}$/, t("forgot_password.code_invalid")),
+  });
+
+export type VerifyResetCodeSchema = {
+  code: string;
+};
+
+export const resetPasswordSchema = (t: TFunction) =>
+  z
+    .object({
+      new_password: z.string().min(12, t("validation.password.min_length_new")),
+      new_password_confirm: z
+        .string()
+        .min(1, t("validation.password_confirm.required")),
+    })
+    .refine((data) => data.new_password === data.new_password_confirm, {
+      message: t("validation.password.not_match"),
+      path: ["new_password_confirm"],
+    });
+
+export type ResetPasswordSchema = {
+  new_password: string;
+  new_password_confirm: string;
+};
+
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type ForgotPasswordResponse = {
+  message: string;
+};
+
+export type VerifyResetCodeRequest = {
+  email: string;
+  code: string;
+};
+
+export type VerifyResetCodeResponse = {
+  message: string;
+  reset_token: string;
+};
+
+export type ConfirmPasswordResetRequest = {
+  reset_token: string;
+  new_password: string;
+  new_password_confirm: string;
+};
+
+export type ConfirmPasswordResetResponse = {
+  message: string;
+};

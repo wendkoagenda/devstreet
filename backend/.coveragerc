@@ -1,0 +1,10 @@
+# Mesure de couverture (CI) : affichée dans le résumé du job, sans seuil pour l'instant
+[run]
+source = app,config,scripts
+omit =
+    */migrations/*
+    */tests/*
+    */__main__.py
+
+[report]
+skip_empty = True

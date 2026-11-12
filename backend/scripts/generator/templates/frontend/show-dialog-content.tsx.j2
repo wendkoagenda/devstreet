@@ -1,0 +1,70 @@
+{% set has_file = dialog_fields | selectattr('is_file') | list | length > 0 %}
+{% if has_file %}
+import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
+{% endif %}
+import { Label } from "@/components/ui/label";
+import { use{{ model_name_pascal }}Store } from "../../slice";
+
+{% if has_file %}
+const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"];
+
+function isImagePath(path: string | null | undefined): boolean {
+  if (!path) return false;
+  const lower = path.toLowerCase();
+  return IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+{% endif %}
+
+export default function Show{{ model_name_pascal }}DialogContent() {
+  const { selected{{ model_name_pascal }} } = use{{ model_name_pascal }}Store();
+
+  if (!selected{{ model_name_pascal }}) return null;
+
+  return (
+    <div className="flex flex-col gap-4 mx-4">
+      <div className="max-h-[60vh] overflow-y-auto px-2 py-1">
+        <div className="space-y-4">
+{% for field in dialog_fields %}
+          <div>
+            <Label className="text-sm font-medium">{{ field.label }}</Label>
+            <p className="mt-1">
+{% if field.is_boolean %}
+              {selected{{ model_name_pascal }}.{{ field.name }} ? "Oui" : "Non"}
+{% elif field.is_select %}
+              {(() => {
+                const labels = {{ field.choices_labels_json }} as Record<string, string>;
+                const value = selected{{ model_name_pascal }}.{{ field.name }};
+                return labels[String(value ?? "")] ?? String(value ?? "—");
+              })()}
+{% elif field.is_file %}
+              {selected{{ model_name_pascal }}.{{ field.name }} ? (
+                isImagePath(selected{{ model_name_pascal }}.{{ field.name }}) ? (
+                  <img
+                    src={buildMediaUrl(selected{{ model_name_pascal }}.{{ field.name }}!)}
+                    alt="{{ field.label }}"
+                    className="max-h-40 rounded border"
+                  />
+                ) : (
+                  <a
+                    href={buildMediaUrl(selected{{ model_name_pascal }}.{{ field.name }}!)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline"
+                  >
+                    Telecharger le fichier
+                  </a>
+                )
+              ) : (
+                "—"
+              )}
+{% else %}
+              {String(selected{{ model_name_pascal }}.{{ field.name }} ?? "—")}
+{% endif %}
+            </p>
+          </div>
+{% endfor %}
+        </div>
+      </div>
+    </div>
+  );
+}

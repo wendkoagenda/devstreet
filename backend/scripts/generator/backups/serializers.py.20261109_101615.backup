@@ -1,0 +1,47 @@
+"""Serializers pour l'application metier (remise à neuf)."""
+from rest_framework import serializers
+from app.metier.models import Elitest
+
+# Ajoutez vos serializers personnalisés ici.
+
+
+from app.metier.services.storage_service import get_storage_service
+class ElitestSerializer(serializers.ModelSerializer):
+    """
+    Serializer pour les elitests.
+    """
+    
+    class Meta:
+        model = Elitest
+        # Champs listés explicitement : un champ ajouté plus tard au modèle n'est jamais exposé automatiquement
+        fields = ['id', 'uuid', 'titre', 'statut', 'description', 'prix', 'document', 'created_by', 'updated_by', 'created_at', 'updated_at']
+
+    def get_fields(self):
+        """
+        Marque les champs système en lecture seule s'ils existent.
+        """
+        fields = super().get_fields()
+        for sys_field in ['id', 'created_by', 'updated_by', 'created_at', 'updated_at']:
+            if sys_field in fields:
+                fields[sys_field].read_only = True
+        return fields
+
+    def to_representation(self, instance):
+        """
+        Personnalise la représentation des données.
+        """
+        data = super().to_representation(instance)
+        
+        data['created_at'] = instance.created_at.isoformat() if hasattr(instance, 'created_at') else None
+        data['updated_at'] = instance.updated_at.isoformat() if hasattr(instance, 'updated_at') else None
+        storage = get_storage_service()
+        if getattr(instance, 'document', None):
+            data['document_url'] = storage.url(getattr(instance, 'document'))
+        
+        return data
+
+    def validate(self, data):
+        """
+        Validation personnalisée des données.
+        """
+        return data

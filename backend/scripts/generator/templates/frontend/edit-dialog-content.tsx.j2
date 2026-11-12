@@ -1,0 +1,244 @@
+{% set has_boolean = form_fields | selectattr('is_boolean') | list | length > 0 %}
+{% set has_textarea = form_fields | selectattr('is_textarea') | list | length > 0 %}
+{% set has_select = form_fields | selectattr('is_select') | list | length > 0 %}
+{% set has_file = form_fields | selectattr('is_file') | list | length > 0 %}
+{% if has_file %}
+import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
+{% endif %}
+{% if has_boolean %}
+import { Checkbox } from "@/components/ui/checkbox";
+{% endif %}
+{% if has_textarea %}
+import { Textarea } from "@/components/ui/textarea";
+{% endif %}
+{% if has_select %}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+{% endif %}
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { CreationSuccessSonner } from "@/helpers/api/feed-backs";
+import IconAndButtonDisplayer from "@/helpers/displayers/icon-and-button-displayer";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { useForm, type Resolver } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import { useUpdate{{ model_name_pascal }}Mutation } from "../../api";
+import {
+  update{{ model_name_pascal }}Schema,
+  type Update{{ model_name_pascal }}FormValues,
+  type Update{{ model_name_pascal }}Schema,
+} from "../../schema";
+import { use{{ model_name_pascal }}Store } from "../../slice";
+import { renderFetchBaseQueryError } from "@/helpers/api/global-error-catcher";
+
+export default function Edit{{ model_name_pascal }}DialogContent() {
+  const { t } = useTranslation();
+  const { selected{{ model_name_pascal }}, closeShowDialog, disableEditMode } = use{{ model_name_pascal }}Store();
+  const [updateItem, { isLoading: isSubmitting }] = useUpdate{{ model_name_pascal }}Mutation();
+  const [globalError, setGlobalError] = useState<React.ReactNode>(null);
+{% if has_file_fields %}
+  const [files, setFiles] = useState<Record<string, File | undefined>>({});
+{% endif %}
+
+  const form = useForm<Update{{ model_name_pascal }}FormValues, unknown, Update{{ model_name_pascal }}Schema>({
+    resolver: zodResolver(update{{ model_name_pascal }}Schema(t)) as Resolver<
+      Update{{ model_name_pascal }}FormValues,
+      unknown,
+      Update{{ model_name_pascal }}Schema
+    >,
+    defaultValues: selected{{ model_name_pascal }}
+      ? {
+          id: selected{{ model_name_pascal }}.id,
+{% for field in form_fields %}
+{% if not field.is_file %}
+{% if field.is_number %}
+          {{ field.name }}:
+            selected{{ model_name_pascal }}.{{ field.name }} != null
+              ? Number(selected{{ model_name_pascal }}.{{ field.name }})
+              : undefined,
+{% else %}
+          {{ field.name }}: selected{{ model_name_pascal }}.{{ field.name }},
+{% endif %}
+{% endif %}
+{% endfor %}
+        }
+      : {},
+  });
+
+  const onSubmit = form.handleSubmit(async (data) => {
+    try {
+      setGlobalError(null);
+      await updateItem({ ...data{% if has_file_fields %}, _files: files{% endif %} }).unwrap();
+      closeShowDialog();
+      CreationSuccessSonner("Element mis a jour avec succes");
+    } catch (err) {
+      const error = err as FetchBaseQueryError;
+      if (error.status === 400 && error.data) {
+        const errorData = error.data as Record<string, string[]>;
+        Object.entries(errorData).forEach(([field, messages]) => {
+          if (Array.isArray(messages) && messages.length > 0) {
+            form.setError(field as keyof Update{{ model_name_pascal }}Schema, {
+              message: messages[0],
+            });
+          }
+        });
+      } else {
+        setGlobalError(renderFetchBaseQueryError(error, t));
+      }
+    }
+  });
+
+  if (!selected{{ model_name_pascal }}) return null;
+
+  return (
+    <div className="flex flex-col gap-4 mx-4">
+      {globalError && <div className="mb-4">{globalError}</div>}
+      <Form {...form}>
+        <div className="max-h-[60vh] overflow-y-auto px-2 py-1">
+          <div className="space-y-4">
+{% for field in form_fields %}
+{% if field.is_file %}
+            <FormItem>
+              <FormLabel className="text-sm font-medium">
+                {{ field.label }}{% if field.is_required %} *{% endif %}
+              </FormLabel>
+              {selected{{ model_name_pascal }}.{{ field.name }} && (
+                <a
+                  href={buildMediaUrl(selected{{ model_name_pascal }}.{{ field.name }}!)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-primary underline block mb-2"
+                >
+                  Fichier actuel
+                </a>
+              )}
+              <FormControl>
+                <Input
+                  type="file"
+                  accept="{{ field.accept_attr }}"
+                  className="h-10"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    setFiles((prev) => ({ ...prev, {{ field.name }}: file }));
+                  }}
+                />
+              </FormControl>
+              {files.{{ field.name }} && (
+                <p className="text-sm text-muted-foreground">{files.{{ field.name }}?.name}</p>
+              )}
+            </FormItem>
+{% else %}
+            <FormField
+              control={form.control}
+              name="{{ field.name }}"
+              render={({ field: formField }) => (
+                <FormItem className="{% if field.is_boolean %}flex flex-row items-center justify-between rounded-lg border p-4 bg-muted/50{% endif %}">
+                  <FormLabel className="text-sm font-medium">
+                    {{ field.label }}{% if field.is_required %} *{% endif %}
+                  </FormLabel>
+                  <FormControl>
+{% if field.is_boolean %}
+                    <Checkbox
+                      checked={Boolean(formField.value)}
+                      onCheckedChange={(checked) => formField.onChange(Boolean(checked))}
+                    />
+{% elif field.is_select %}
+                    <Select
+                      value={
+                        formField.value != null && formField.value !== undefined
+                          ? String(formField.value)
+                          : undefined
+                      }
+                      onValueChange={(value) =>
+                        formField.onChange(
+                          {% if field.django_type in ['IntegerField', 'BigIntegerField', 'PositiveIntegerField'] %}
+                          Number(value)
+                          {% else %}
+                          value
+                          {% endif %}
+                        )
+                      }
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Selectionner..." />
+                      </SelectTrigger>
+                      <SelectContent>
+{% for choice in field.choices %}
+                        <SelectItem value="{{ choice.value }}">{{ choice.label }}</SelectItem>
+{% endfor %}
+                      </SelectContent>
+                    </Select>
+{% elif field.is_number %}
+                    <Input
+                      type="number"
+                      value={(formField.value as number | undefined) ?? ""}
+                      onChange={(e) =>
+                        formField.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                      }
+                      className="h-10"
+                    />
+{% elif field.is_date %}
+                    <Input type="{{ field.input_type }}" {...formField} className="h-10" />
+{% elif field.is_textarea %}
+                    <Textarea
+                      {...formField}
+                      value={formField.value ?? ""}
+                      onChange={(e) =>
+                        formField.onChange({% if field.is_nullable %}e.target.value === "" ? null : {% endif %}e.target.value)
+                      }
+                      className="min-h-[100px] resize-y"
+                    />
+{% elif field.is_nullable %}
+                    <Input
+                      {...formField}
+                      value={formField.value ?? ""}
+                      onChange={(e) =>
+                        formField.onChange(e.target.value === "" ? null : e.target.value)
+                      }
+                      className="h-10"
+                    />
+{% else %}
+                    <Input {...formField} className="h-10" />
+{% endif %}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+{% endif %}
+{% endfor %}
+          </div>
+
+          <div className="flex justify-end gap-4 mt-6">
+            <IconAndButtonDisplayer
+              type="cancel"
+              text={t("cancel")}
+              onClick={disableEditMode}
+              variant="outline"
+            />
+            <IconAndButtonDisplayer
+              type="save"
+              text={isSubmitting ? t("actions.submitting") : t("save")}
+              onClick={onSubmit}
+              variant="default"
+            />
+          </div>
+        </div>
+      </Form>
+    </div>
+  );
+}

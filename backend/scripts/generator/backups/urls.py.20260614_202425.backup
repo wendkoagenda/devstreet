@@ -1,0 +1,13 @@
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
+from app.metier.views.elitest_viewset import ElitestViewSet
+
+router = DefaultRouter(trailing_slash=False)
+router.register(r'elitests', ElitestViewSet, basename='elitests')
+
+urlpatterns = [
+    path('v1/', include(router.urls)),
+]
+
+app_name = 'metier'

@@ -1,0 +1,67 @@
+name: CI - ORCHESTRATEUR
+
+# Description du workflow :
+# Point d'entree de la CI : appelle les workflows par sujet sur chaque pull request, chaque revue de pull request
+# et chaque push vers develop/main/prod. Chaque workflow reste lancable seul (Actions > Run workflow).
+# - ci-backend, ci-frontend, ci-securite, ci-non-regression : appeles ici, tous les quatre.
+# - La revue de pull request relance l'orchestrateur pour que la non-regression voie l'approbation d'un responsable.
+# - Push vers develop/main/prod : si tout est vert, appelle cd-orchestrateur (deploiement de la branche).
+# - Lancement manuel de l'orchestrateur : backend, frontend et securite seulement. La comparaison de deux
+#   references se lance directement dans ci-non-regression.
+# Controles a rendre obligatoires dans les reglages de branche : voir 00readme/README_CI.md.
+
+on:
+  pull_request:
+  pull_request_review:
+    types: [submitted, dismissed]
+  push:
+    branches: [develop, main, prod]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend:
+    name: backend
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci-backend.yml
+
+  frontend:
+    name: frontend
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci-frontend.yml
+
+  securite:
+    name: securite
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci-securite.yml
+
+  non-regression:
+    name: non-regression
+    if: github.event_name != 'workflow_dispatch'
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    uses: ./.github/workflows/ci-non-regression.yml
+
+  # Push ou merge vers develop, main ou prod : deploiement de la branche une fois toute la CI verte.
+  # Le run s'execute sur la branche poussee : son environnement GitHub (reserve a cette branche) est donc accessible.
+  deploiement:
+    name: deploiement
+    needs: [backend, frontend, securite, non-regression]
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/cd-orchestrateur.yml
+    secrets: inherit

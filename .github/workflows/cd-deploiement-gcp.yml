@@ -1,0 +1,121 @@
+name: CD - DEPLOIEMENT GCP
+
+# Description du workflow :
+# - Deploie un commit sur une VM GCP SANS IP publique : tunnel IAP et Workload Identity Federation (aucune cle, aucun secret).
+# - Meme deroulement que CD - DEPLOIEMENT SSH : seule la facon d'atteindre la VM change (deploy/ci/gcp-vm.sh).
+# - Prerequis cote GCP : 00readme/README_CD.md §7.
+# Lancement : par cd-orchestrateur quand DEPLOY_ACCES vaut gcp dans l'environnement de la branche. Pas de lancement direct.
+
+on:
+  workflow_call:
+    inputs:
+      branche:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+      backend_image:
+        required: true
+        type: string
+      frontend_image:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-deploiement-${{ inputs.branche }}
+  cancel-in-progress: false
+
+jobs:
+  deploiement:
+    name: deploiement
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Secrets et variables de l'environnement GitHub de la branche (reserve a cette branche)
+    environment: ${{ inputs.branche }}
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    env:
+      BRANCHE: ${{ inputs.branche }}
+      DEPLOY_SHA: ${{ inputs.sha }}
+      BACKEND_IMAGE: ${{ inputs.backend_image }}
+      FRONTEND_IMAGE: ${{ inputs.frontend_image }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - name: Rendre les fichiers d'environnement
+        working-directory: backend
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          python3 -m scripts.deploy_env.render --sortie "$RUNNER_TEMP/rendu"
+
+      - name: Lire la cible GCP
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          lire() { printf '%s' "$VARS_JSON" | jq -r --arg k "$1" '.[$k]'; }
+          # Valeurs deja validees par le rendu (format strict) : sans danger dans les commandes qui suivent
+          {
+            echo "GCP_PROJECT_ID=$(lire GCP_PROJECT_ID)"
+            echo "GCP_ZONE=$(lire GCP_ZONE)"
+            echo "GCP_INSTANCE=$(lire GCP_INSTANCE)"
+            echo "GCP_WIF_PROVIDER=$(lire GCP_WIF_PROVIDER)"
+            echo "GCP_SERVICE_ACCOUNT=$(lire GCP_SERVICE_ACCOUNT)"
+            echo "NAMESPACE=$(sed -n "s/^DEPLOY_NAMESPACE='\(.*\)'$/\1/p" "$RUNNER_TEMP/rendu/compose.env")"
+            echo "DOMAIN=$(sed -n "s/^DEPLOY_DOMAIN='\(.*\)'$/\1/p" "$RUNNER_TEMP/rendu/compose.env")"
+          } >> "$GITHUB_ENV"
+
+      - name: Envoyer et deployer
+        shell: bash
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          . deploy/ci/gcp-vm.sh
+          gcp_auth
+          app_dir="/opt/apps/$NAMESPACE"
+
+          echo "== Envoi de deploy/"
+          tar -czf - deploy | vm_gcp "set -eu; mkdir -p $app_dir; rm -rf $app_dir/deploy; tar -xzf - -C $app_dir"
+
+          echo "== Envoi de la configuration (droits 600)"
+          tar -czf - -C "$RUNNER_TEMP/rendu" backend.env compose.env | vm_gcp "set -eu; umask 077; tar -xzf - -C $app_dir"
+
+          echo "== Deploiement"
+          printf '%s\n%s\n' "$GITHUB_ACTOR" "$REGISTRY_TOKEN" | vm_gcp "cd $app_dir && sh deploy/vm/deployer.sh"
+
+      - name: Controle de bout en bout
+        run: |
+          set -eu
+          curl -fsS --max-time 15 --retry 6 --retry-delay 10 --retry-all-errors "https://$DOMAIN/api/health"
+          echo
+          curl -fsS --max-time 15 --retry 6 --retry-delay 10 --retry-all-errors -o /dev/null "https://$DOMAIN/"
+          {
+            echo "### Deploiement $BRANCHE (GCP, IAP)"
+            echo "- Domaine : https://$DOMAIN"
+            echo "- Commit : $DEPLOY_SHA"
+            echo "- Backend : $BACKEND_IMAGE"
+            echo "- Frontend : $FRONTEND_IMAGE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer les identifiants et les fichiers rendus
+        if: always()
+        shell: bash
+        run: |
+          . deploy/ci/gcp-vm.sh
+          gcp_cleanup
+          rm -rf "$RUNNER_TEMP/rendu"

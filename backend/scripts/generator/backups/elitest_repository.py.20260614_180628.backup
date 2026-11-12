@@ -1,0 +1,107 @@
+"""
+Elitest repository implementation pour les opérations d'accès aux données.
+"""
+from typing import List, Optional
+from django.db.models import QuerySet, Q
+from app.metier.models import Elitest
+from app.metier.interfaces.elitest_repository_interface import ElitestRepositoryInterface
+
+
+class ElitestRepository(ElitestRepositoryInterface):
+    """
+    Implémentation concrète des opérations du repository elitests.
+    """
+
+    def get_all(self) -> QuerySet:
+        """
+        Obtenir tous les metier.
+
+        Returns:
+            QuerySet: Tous les metier
+        """
+        return Elitest.objects.all()
+
+    def get_by_id(self, metier_id: int) -> Optional[Elitest]:
+        """
+        Obtenir un metier par ID.
+
+        Args:
+            metier_id (int): L'ID du metier
+
+        Returns:
+            Optional[Elitest]: Le metier si trouvé, None sinon
+        """
+        try:
+            return Elitest.objects.get(id=metier_id)
+        except Elitest.DoesNotExist:
+            return None
+
+    def get_by_uuid(self, uuid: str) -> Optional[Elitest]:
+        """
+        Obtenir un metier par UUID.
+
+        Args:
+            uuid (str): L'UUID du metier
+
+        Returns:
+            Optional[Elitest]: Le metier si trouvé, None sinon
+        """
+        try:
+            return Elitest.objects.get(uuid=uuid)
+        except Elitest.DoesNotExist:
+            return None
+
+    def create(self, **kwargs) -> Elitest:
+        """
+        Créer un nouveau metier.
+
+        Args:
+            **kwargs: Données du metier
+
+        Returns:
+            Elitest: Le metier créé
+        """
+        return Elitest.objects.create(**kwargs)
+
+    def update(self, metier: Elitest, **kwargs) -> Elitest:
+        """
+        Mettre à jour un metier existant.
+
+        Args:
+            metier (Elitest): Le metier à mettre à jour
+            **kwargs: Données mises à jour
+
+        Returns:
+            Elitest: Le metier mis à jour
+        """
+        for field, value in kwargs.items():
+            if hasattr(metier, field):
+                setattr(metier, field, value)
+
+        metier.save()
+        return metier
+
+    def delete(self, metier: Elitest) -> bool:
+        """
+        Supprimer un metier.
+
+        Args:
+            metier (Elitest): Le metier à supprimer
+
+        Returns:
+            bool: True si supprimé avec succès
+        """
+        metier.delete()
+        return True
+
+    def exists_by_id(self, metier_id: int) -> bool:
+        """
+        Vérifier si un metier existe par ID.
+
+        Args:
+            metier_id (int): L'ID du metier
+
+        Returns:
+            bool: True si le metier existe, False sinon
+        """
+        return Elitest.objects.filter(id=metier_id).exists()

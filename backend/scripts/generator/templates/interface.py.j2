@@ -1,0 +1,105 @@
+"""
+{{ model.model_name }} repository interface définissant le contrat pour l'accès aux données {{ model.model_name|lower }}s.
+"""
+{% set has_uuid_field = model.fields.values() | selectattr('type', 'equalto', 'UUIDField') | list | length > 0 %}
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from django.db.models import QuerySet
+from app.{{ model.app_name }}.models import {{ model.model_name }}
+
+
+class {{ model.model_name }}RepositoryInterface(ABC):
+    """
+    Interface abstraite pour les opérations du repository {{ model.model_name|lower }}s.
+    """
+
+    @abstractmethod
+    def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
+        """
+        Obtenir les {{ model.snake_name }}, avec recherche textuelle et tri facultatifs.
+
+        Returns:
+            QuerySet: Les {{ model.snake_name }} filtrés et triés
+        """
+        pass
+
+    @abstractmethod
+    def get_by_id(self, {{ model.snake_name }}_id: int) -> Optional[{{ model.model_name }}]:
+        """
+        Obtenir un {{ model.snake_name }} par ID.
+
+        Args:
+            {{ model.snake_name }}_id (int): L'ID du {{ model.snake_name }}
+
+        Returns:
+            Optional[{{ model.model_name }}]: Le {{ model.snake_name }} si trouvé, None sinon
+        """
+        pass
+
+{% if has_uuid_field %}
+    @abstractmethod
+    def get_by_uuid(self, uuid: str) -> Optional[{{ model.model_name }}]:
+        """
+        Obtenir un {{ model.snake_name }} par UUID.
+
+        Args:
+            uuid (str): L'UUID du {{ model.snake_name }}
+
+        Returns:
+            Optional[{{ model.model_name }}]: Le {{ model.snake_name }} si trouvé, None sinon
+        """
+        pass
+
+{% endif %}
+    @abstractmethod
+    def create(self, **kwargs) -> {{ model.model_name }}:
+        """
+        Créer un nouveau {{ model.snake_name }}.
+
+        Args:
+            **kwargs: Données du {{ model.snake_name }}
+
+        Returns:
+            {{ model.model_name }}: Le {{ model.snake_name }} créé
+        """
+        pass
+
+    @abstractmethod
+    def update(self, {{ model.snake_name }}: {{ model.model_name }}, **kwargs) -> {{ model.model_name }}:
+        """
+        Mettre à jour un {{ model.snake_name }} existant.
+
+        Args:
+            {{ model.snake_name }} ({{ model.model_name }}): Le {{ model.snake_name }} à mettre à jour
+            **kwargs: Données mises à jour
+
+        Returns:
+            {{ model.model_name }}: Le {{ model.snake_name }} mis à jour
+        """
+        pass
+
+    @abstractmethod
+    def delete(self, {{ model.snake_name }}: {{ model.model_name }}) -> bool:
+        """
+        Supprimer un {{ model.snake_name }}.
+
+        Args:
+            {{ model.snake_name }} ({{ model.model_name }}): Le {{ model.snake_name }} à supprimer
+
+        Returns:
+            bool: True si supprimé avec succès
+        """
+        pass
+
+    @abstractmethod
+    def exists_by_id(self, {{ model.snake_name }}_id: int) -> bool:
+        """
+        Vérifier si un {{ model.snake_name }} existe par ID.
+
+        Args:
+            {{ model.snake_name }}_id (int): L'ID du {{ model.snake_name }}
+
+        Returns:
+            bool: True si le {{ model.snake_name }} existe, False sinon
+        """
+        pass

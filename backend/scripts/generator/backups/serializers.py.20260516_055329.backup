@@ -1,0 +1,4 @@
+"""Serializers pour l'application metier (remise à neuf)."""
+from rest_framework import serializers
+
+# Ajoutez vos serializers personnalisés ici.

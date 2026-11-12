@@ -1,0 +1,102 @@
+"""
+Elitest repository interface définissant le contrat pour l'accès aux données elitests.
+"""
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from django.db.models import QuerySet
+from app.metier.models import Elitest
+
+
+class ElitestRepositoryInterface(ABC):
+    """
+    Interface abstraite pour les opérations du repository elitests.
+    """
+
+    @abstractmethod
+    def get_all(self) -> QuerySet:
+        """
+        Obtenir tous les metier.
+
+        Returns:
+            QuerySet: Tous les metier
+        """
+        pass
+
+    @abstractmethod
+    def get_by_id(self, metier_id: int) -> Optional[Elitest]:
+        """
+        Obtenir un metier par ID.
+
+        Args:
+            metier_id (int): L'ID du metier
+
+        Returns:
+            Optional[Elitest]: Le metier si trouvé, None sinon
+        """
+        pass
+
+    @abstractmethod
+    def get_by_uuid(self, uuid: str) -> Optional[Elitest]:
+        """
+        Obtenir un metier par UUID.
+
+        Args:
+            uuid (str): L'UUID du metier
+
+        Returns:
+            Optional[Elitest]: Le metier si trouvé, None sinon
+        """
+        pass
+
+    @abstractmethod
+    def create(self, **kwargs) -> Elitest:
+        """
+        Créer un nouveau metier.
+
+        Args:
+            **kwargs: Données du metier
+
+        Returns:
+            Elitest: Le metier créé
+        """
+        pass
+
+    @abstractmethod
+    def update(self, metier: Elitest, **kwargs) -> Elitest:
+        """
+        Mettre à jour un metier existant.
+
+        Args:
+            metier (Elitest): Le metier à mettre à jour
+            **kwargs: Données mises à jour
+
+        Returns:
+            Elitest: Le metier mis à jour
+        """
+        pass
+
+    @abstractmethod
+    def delete(self, metier: Elitest) -> bool:
+        """
+        Supprimer un metier.
+
+        Args:
+            metier (Elitest): Le metier à supprimer
+
+        Returns:
+            bool: True si supprimé avec succès
+        """
+        pass
+
+    @abstractmethod
+    def exists_by_id(self, metier_id: int) -> bool:
+        """
+        Vérifier si un metier existe par ID.
+
+        Args:
+            metier_id (int): L'ID du metier
+
+        Returns:
+            bool: True si le metier existe, False sinon
+        """
+        pass

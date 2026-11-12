@@ -1,0 +1,228 @@
+name: CI - NON-REGRESSION
+
+# Description du workflow :
+# Signale les fichiers de zones protegees (regression-guard.json) touches par un changement.
+# Il est appele par ci-orchestrateur (pull request, revue, push) comme backend, frontend et securite ; seul le
+# lancement manuel (Actions > CI - NON-REGRESSION > Run workflow) se fait directement ici.
+# - Pull request : commentaire unique mis a jour a chaque push, label "zone-protegee", resume du job.
+#   Le job ECHOUE tant qu'un super responsable n'a pas valide :
+#     - l'auteur de la PR est dans ZONE_PROTEGEE_USERS (git-cli/access_control.conf), ou
+#     - un utilisateur de ZONE_PROTEGEE_USERS a approuve la PR sur son DERNIER commit.
+#   Un nouveau push invalide l'approbation ; l'orchestrateur se relance aussi a chaque revue.
+# - Push vers develop/main/prod et lancement manuel : resume du job seulement (le changement est deja integre,
+#   il n'y a plus rien a bloquer).
+# Les regles (regression-guard.json) et l'outil viennent de la branche CIBLE de la PR : une PR ne peut pas
+# reecrire ses propres regles pour se rendre invisible. Si la branche cible n'a pas encore l'outil
+# (premiere introduction), ceux de la PR sont utilises.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Reference de depart (ex. main)"
+        required: true
+        type: string
+      head:
+        description: "Reference a controler (ex. prod)"
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      base:
+        required: false
+        default: ""
+        type: string
+      head:
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: non-regression-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  non-regression:
+    name: non-regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Recuperer le code a controler
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: repo
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Recuperer les regles de la branche cible
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: trusted
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Installer Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Preparer la comparaison
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+          INPUT_BASE: ${{ inputs.base }}
+          INPUT_HEAD: ${{ inputs.head }}
+        run: |
+          valid_ref='^[A-Za-z0-9_][A-Za-z0-9._/@^~-]*$'
+          tool_root="$GITHUB_WORKSPACE/repo"
+          case "$EVENT" in
+            pull_request|pull_request_review)
+              base="origin/$PR_BASE_REF"; head="$PR_HEAD_SHA"; two_dot=""
+              if [ -d "$GITHUB_WORKSPACE/trusted/backend/scripts/regression_guard" ]; then
+                tool_root="$GITHUB_WORKSPACE/trusted"
+              else
+                echo "::notice::L'outil n'existe pas encore sur la branche cible : celui de la PR est utilise."
+              fi ;;
+            push)
+              base="$PUSH_BEFORE"; head="$PUSH_AFTER"; two_dot="--two-dot" ;;
+            *)
+              base="$INPUT_BASE"; head="$INPUT_HEAD"; two_dot="--two-dot" ;;
+          esac
+          for ref in "$base" "$head"; do
+            if ! [[ "$ref" =~ $valid_ref ]] && ! [[ "$ref" =~ ^0+$ ]]; then
+              echo "::error::Reference Git invalide : $ref"
+              exit 1
+            fi
+          done
+          # Deux points (push, comparaison manuelle) : comparaison directe. Trois points (PR) : depuis l'ancetre commun.
+          # Pour la comparaison manuelle, les branches distantes sont lues sous leur nom origin/.
+          if [ "$EVENT" = "workflow_dispatch" ] || [ "$EVENT" = "workflow_call" ]; then
+            for var in base head; do
+              ref="${!var}"
+              if git -C repo rev-parse --verify --quiet "origin/$ref" > /dev/null; then
+                printf -v "$var" '%s' "origin/$ref"
+              fi
+            done
+          fi
+          {
+            echo "GUARD_DIR=$tool_root/backend"
+            echo "GUARD_CMD=python -m scripts.regression_guard --root $GITHUB_WORKSPACE/repo --config-root $tool_root --base $base --head $head $two_dot"
+          } >> "$GITHUB_ENV"
+
+      - name: Analyser les zones protegees
+        id: guard
+        run: |
+          cd "$GUARD_DIR"
+          set +e
+          $GUARD_CMD --format json --output "$RUNNER_TEMP/report.json"
+          code=$?
+          set -e
+          if [ "$code" -gt 1 ]; then
+            echo "::error::Le controle de non-regression n'a pas pu s'executer (configuration ou git invalide)."
+            exit 1
+          fi
+          if [ "$code" -eq 1 ]; then touched=true; else touched=false; fi
+          echo "touched=$touched" >> "$GITHUB_OUTPUT"
+
+      - name: Verifier la validation d'un super responsable
+        id: approval
+        if: steps.guard.outputs.touched == 'true' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_review')
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          REPORT_FILE: ${{ runner.temp }}/report.json
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const masters = JSON.parse(fs.readFileSync(process.env.REPORT_FILE, 'utf8')).masters.map(m => m.toLowerCase());
+
+            let approvedBy = '';
+            if (masters.includes(pr.user.login.toLowerCase())) {
+              approvedBy = `${pr.user.login} (auteur de la pull request)`;
+            } else {
+              const reviews = await github.paginate(github.rest.pulls.listReviews, { owner, repo, pull_number: pr.number, per_page: 100 });
+              const latest = new Map(); // dernier avis de chaque relecteur, les simples commentaires ne comptent pas
+              for (const review of reviews) {
+                if (review.state !== 'COMMENTED' && review.user) latest.set(review.user.login.toLowerCase(), review);
+              }
+              for (const [login, review] of latest) {
+                if (review.state === 'APPROVED' && review.commit_id === pr.head.sha && masters.includes(login)) {
+                  approvedBy = review.user.login;
+                  break;
+                }
+              }
+            }
+            core.setOutput('approved', approvedBy ? 'true' : 'false');
+            core.setOutput('approved_by', approvedBy);
+
+      - name: Rapport
+        env:
+          APPROVED: ${{ steps.approval.outputs.approved }}
+        run: |
+          cd "$GUARD_DIR"
+          flag=""
+          if [ "$APPROVED" = "true" ]; then flag="--approved"; fi
+          set +e
+          $GUARD_CMD --format markdown $flag --output "$RUNNER_TEMP/comment.md" > /dev/null
+          set -e
+          cat "$RUNNER_TEMP/comment.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commentaire et label sur la pull request
+        if: (github.event_name == 'pull_request' || github.event_name == 'pull_request_review') && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          COMMENT_FILE: ${{ runner.temp }}/comment.md
+          TOUCHED: ${{ steps.guard.outputs.touched }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const marker = '<!-- regression-guard -->';
+            const body = fs.readFileSync(process.env.COMMENT_FILE, 'utf8');
+            const touched = process.env.TOUCHED === 'true';
+            const label = 'zone-protegee';
+
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number, per_page: 100 });
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else if (touched) {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+            if (touched) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [label] });
+            } else {
+              try {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number, name: label });
+              } catch (error) {
+                if (error.status !== 404) throw error; // label absent : rien a retirer
+              }
+            }
+
+      - name: Decision
+        if: steps.guard.outputs.touched == 'true' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_review')
+        env:
+          APPROVED: ${{ steps.approval.outputs.approved }}
+          APPROVED_BY: ${{ steps.approval.outputs.approved_by }}
+        run: |
+          if [ "$APPROVED" = "true" ]; then
+            echo "Zones protegees touchees, validees par $APPROVED_BY."
+            exit 0
+          fi
+          echo "::error::Zones protegees touchees : approbation d'un responsable de zone (ZONE_PROTEGEE_USERS) requise sur le dernier commit de la pull request."
+          exit 1

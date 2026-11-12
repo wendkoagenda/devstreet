@@ -1,0 +1,55 @@
+#!/usr/bin/env sh
+
+set -eu
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ACCESS_CONTROL_FILE="$REPO_ROOT/git-cli/access_control.conf"
+
+if [ ! -f "$ACCESS_CONTROL_FILE" ]; then
+  echo ""
+  echo "Push refuse: configuration manquante: $ACCESS_CONTROL_FILE"
+  exit 1
+fi
+
+. "$ACCESS_CONTROL_FILE"
+
+RESTRICTED_BRANCHES="$(printf '%s' "${IDENTITY_RESTRICTED_BRANCHES:-main,develop,prod}" | tr ',' ' ')"
+GIT_MASTER_EMAILS_LIST="$(printf '%s' "${GIT_MASTER_EMAILS:-}" | tr ',' ' ')"
+
+if [ "${ONEPOURCENT_GITCLI_PUSH:-}" != "1" ]; then
+  echo ""
+  echo "Push refuse: utilisez python git-cli/push.py"
+  echo "Le push direct via git push n'est pas autorise."
+  exit 1
+fi
+
+CURRENT_EMAIL="$(git config --get user.email || true)"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  branch_name="${remote_ref#refs/heads/}"
+  for restricted_branch in $RESTRICTED_BRANCHES; do
+    if [ "$branch_name" = "$restricted_branch" ]; then
+      email_allowed=0
+      for allowed_email in $GIT_MASTER_EMAILS_LIST; do
+        if [ "$CURRENT_EMAIL" = "$allowed_email" ]; then
+          email_allowed=1
+          break
+        fi
+      done
+
+      if [ "$email_allowed" -ne 1 ]; then
+        echo ""
+        echo "Push refuse sur $branch_name."
+        echo "Email non autorise pour les branches protegees."
+        echo "Branches concernees: $RESTRICTED_BRANCHES"
+        echo "GIT_MASTER_EMAILS: $GIT_MASTER_EMAILS_LIST"
+        echo "Email actuel: $CURRENT_EMAIL"
+        exit 1
+      fi
+    fi
+  done
+done
+
+echo ""
+echo "Push autorise."
+exit 0

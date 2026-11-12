@@ -1,0 +1,78 @@
+# Un namespace = une instance de l'application (voir 00readme/PLAN_CD.md).
+# Lance par deploy/vm/deployer.sh :
+#   docker compose -p <namespace> --project-directory /opt/apps/<namespace> --env-file compose.env -f deploy/compose/compose.yml up -d --wait
+# Aucun port n'est publie : seul le proxy partage (deploy/proxy) ecoute sur la VM. Il joint le backend et le frontend
+# par leur nom de conteneur sur le reseau externe « proxy ». La base reste sur le reseau interne du namespace.
+
+x-journaux: &journaux
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  backend:
+    image: ${BACKEND_IMAGE:?BACKEND_IMAGE manquant}
+    container_name: ${DEPLOY_NAMESPACE:?DEPLOY_NAMESPACE manquant}-backend
+    restart: unless-stopped
+    env_file: ./backend.env
+    environment:
+      # Hote presente par le controle de sante : doit etre dans ALLOWED_HOSTS (verifie au rendu des fichiers)
+      HEALTH_HOST: ${DEPLOY_DOMAIN:?DEPLOY_DOMAIN manquant}
+    volumes:
+      - /srv/public/${DEPLOY_NAMESPACE}/static:/app/staticfiles
+      - /srv/public/${DEPLOY_NAMESPACE}/media:/app/media
+    networks: [interne, proxy]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os,sys,urllib.request as u; r=u.Request('http://127.0.0.1:8000/api/health', headers={'Host': os.environ['HEALTH_HOST']}); sys.exit(0 if u.urlopen(r, timeout=3).status == 200 else 1)"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Migrations et collectstatic se font au demarrage (backend/entrypoint.sh)
+      start_period: 120s
+    logging: *journaux
+
+  frontend:
+    image: ${FRONTEND_IMAGE:?FRONTEND_IMAGE manquant}
+    container_name: ${DEPLOY_NAMESPACE}-frontend
+    restart: unless-stopped
+    networks: [proxy]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *journaux
+
+  # Present seulement quand DEPLOY_DB_MODE=interne (deployer.sh active le profil du meme nom)
+  db:
+    profiles: [interne]
+    image: postgres:16
+    container_name: ${DEPLOY_NAMESPACE}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?DB_NAME manquant}
+      POSTGRES_USER: ${DB_USER:?DB_USER manquant}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD manquant}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [interne]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *journaux
+
+networks:
+  interne: {}
+  proxy:
+    external: true
+    name: proxy
+
+volumes:
+  pgdata: {}

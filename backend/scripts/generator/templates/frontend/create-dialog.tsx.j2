@@ -1,0 +1,32 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { use{{ model_name_pascal }}Store } from "../../slice";
+import Create{{ model_name_pascal }}DialogContent from "./create-{{ model_name_lower }}-dialog-content";
+
+export default function Create{{ model_name_pascal }}Dialog() {
+  const { isCreateDialogOpen, closeCreateDialog } = use{{ model_name_pascal }}Store();
+
+  return (
+    <Dialog
+      open={isCreateDialogOpen}
+      onOpenChange={(open) => {
+        if (!open) closeCreateDialog();
+      }}
+    >
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Creer {{ model_name_pascal }}</DialogTitle>
+          <DialogDescription>
+            Formulaire de creation de {{ model_name_pascal | lower }}
+          </DialogDescription>
+        </DialogHeader>
+        <Create{{ model_name_pascal }}DialogContent />
+      </DialogContent>
+    </Dialog>
+  );
+}

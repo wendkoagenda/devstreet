@@ -1,0 +1,71 @@
+#!/usr/bin/env sh
+
+set -eu
+
+MSG_FILE="$1"
+REQUIRED_TRAILER="X-Git-CLI: onepourcent-git-cli/2.0"
+# Transition : les commits en 1.0 restent acceptes
+ACCEPTED_TRAILER_REGEX="X-Git-CLI: onepourcent-git-cli/(1\.0|2\.0)"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ACCESS_CONTROL_FILE="$REPO_ROOT/git-cli/access_control.conf"
+
+if ! grep -Eq "$ACCEPTED_TRAILER_REGEX" "$MSG_FILE"; then
+  echo ""
+  echo "Commit refuse: trailer Git CLI manquant."
+  echo "Trailer attendu: $REQUIRED_TRAILER"
+  echo "Utilisez la commande: python git-cli/commit.py"
+  exit 1
+fi
+
+if [ ! -f "$ACCESS_CONTROL_FILE" ]; then
+  echo ""
+  echo "Commit refuse: configuration manquante: $ACCESS_CONTROL_FILE"
+  exit 1
+fi
+
+. "$ACCESS_CONTROL_FILE"
+
+GIT_MASTER_EMAILS_LIST="$(printf '%s' "${GIT_MASTER_EMAILS:-}" | tr ',' ' ')"
+PROTECTED_PATHS="$(printf '%s' "${PROTECTED_PATHS:-}" | tr ',' ' ')"
+CURRENT_EMAIL="$(git config --get user.email || true)"
+STAGED_FILES="$(git diff --cached --name-only)"
+
+is_email_allowed=0
+for allowed_email in $GIT_MASTER_EMAILS_LIST; do
+  if [ "$CURRENT_EMAIL" = "$allowed_email" ]; then
+    is_email_allowed=1
+    break
+  fi
+done
+
+if [ "$is_email_allowed" -ne 1 ]; then
+  violation_count=0
+  for file_path in $STAGED_FILES; do
+    normalized_path="$(printf '%s' "$file_path" | tr '\\' '/')"
+    for protected_path in $PROTECTED_PATHS; do
+      case "$protected_path" in
+        */)
+          case "$normalized_path" in
+            "$protected_path"*) violation_count=$((violation_count + 1));;
+          esac
+          ;;
+        *)
+          if [ "$normalized_path" = "$protected_path" ]; then
+            violation_count=$((violation_count + 1))
+          fi
+          ;;
+      esac
+    done
+  done
+
+  if [ "$violation_count" -gt 0 ]; then
+    echo ""
+    echo "Commit refuse: modification de chemins proteges."
+    echo "Email actuel: $CURRENT_EMAIL"
+    echo "GIT_MASTER_EMAILS: $GIT_MASTER_EMAILS_LIST"
+    echo "Configuration: $ACCESS_CONTROL_FILE"
+    exit 1
+  fi
+fi
+
+exit 0

@@ -1,0 +1,81 @@
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
+{% set has_file = table_fields | selectattr('is_file') | list | length > 0 %}
+{% if has_file %}
+import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
+{% endif %}
+import { Get{{ model_name_pascal }}Schema } from "../../schema";
+
+export const use{{ model_name_pascal }}Columns = (): ColumnDef<Get{{ model_name_pascal }}Schema>[] => {
+  const { t } = useTranslation();
+
+  return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label={t("actions.select_all")}
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label={t("actions.select_row")}
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+{% for field in table_fields %}
+    {
+      accessorKey: "{{ field.name }}",
+      meta: { label: {{ field.label | tojson }} },
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          {{ field.label }}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+{% if field.is_boolean %}
+        const value = row.getValue("{{ field.name }}") as boolean | undefined;
+        return <div>{value ? t("actions.yes") : t("actions.no")}</div>;
+{% elif field.is_select %}
+        const labels = {{ field.choices_labels_json }} as Record<string, string>;
+        const value = row.getValue("{{ field.name }}");
+        return <div>{labels[String(value ?? "")] ?? String(value ?? "—")}</div>;
+{% elif field.is_file %}
+        const path = row.getValue("{{ field.name }}") as string | null | undefined;
+        if (!path) return <div>—</div>;
+        const fileName = path.split("/").pop() ?? path;
+        return (
+          <a
+            href={buildMediaUrl(path)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline truncate max-w-[200px] inline-block"
+            title={fileName}
+          >
+            {fileName}
+          </a>
+        );
+{% else %}
+        return <div>{String(row.getValue("{{ field.name }}") ?? "—")}</div>;
+{% endif %}
+      },
+    },
+{% endfor %}
+  ];
+};

@@ -1,0 +1,171 @@
+name: CD - BUILD IMAGES
+
+# Description du workflow :
+# - Construit les images backend et frontend d'un commit et les publie sur ghcr.io.
+# - Backend : un tag par commit (l'image est la meme pour tous les environnements).
+# - Frontend : un tag par commit, par environnement et par jeu de VITE_* (ces valeurs sont figees a la construction).
+# - Une image deja publiee n'est pas reconstruite : redeployer un ancien commit (retour arriere) ne reconstruit rien.
+# - Le commit doit appartenir a l'historique de la branche : on ne publie pas pour `prod` un commit absent de `prod`.
+# - L'environnement (et donc les VITE_*) est celui de la branche du run : choisie dans « Use workflow from » pour un
+#   lancement manuel, celle du push pour cd-orchestrateur. Chaque environnement n'est utilisable que depuis sa branche.
+# Lancement : par cd-orchestrateur, ou a la main (Actions > CD - BUILD IMAGES > Run workflow), reserve aux GIT_MASTER_USERS.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit complet (40 caracteres). Vide = dernier commit de la branche
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      sha:
+        required: true
+        type: string
+    outputs:
+      backend_image:
+        description: Reference complete de l'image backend (avec tag)
+        value: ${{ jobs.images.outputs.backend_image }}
+      frontend_image:
+        description: Reference complete de l'image frontend (avec tag)
+        value: ${{ jobs.images.outputs.frontend_image }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-build-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  autorisation:
+    name: autorisation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Branche et auteur
+        run: |
+          set -eu
+          case "$GITHUB_REF_NAME" in
+            develop|main|prod) ;;
+            *) echo "::error::Lancer depuis develop, main ou prod (« Use workflow from ») : $GITHUB_REF_NAME n'a pas d'environnement."; exit 1 ;;
+          esac
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            # Liste lue dans develop : une branche modifiee ne peut pas s'y ajouter
+            masters="$(git show origin/develop:git-cli/access_control.conf | sed -n 's/^GIT_MASTER_USERS="\(.*\)"/\1/p')"
+            case ",$masters," in
+              *",$GITHUB_ACTOR,"*) ;;
+              *) echo "::error::$GITHUB_ACTOR n'est pas dans GIT_MASTER_USERS : lancement manuel refuse."; exit 1 ;;
+            esac
+          fi
+
+  images:
+    name: images
+    needs: autorisation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # VITE_* de l'environnement GitHub de la branche
+    environment: ${{ github.ref_name }}
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      backend_image: ${{ steps.resolution.outputs.backend_image }}
+      frontend_image: ${{ steps.frontend.outputs.frontend_image }}
+    env:
+      BRANCHE: ${{ github.ref_name }}
+      SHA_INPUT: ${{ inputs.sha }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Controler le commit et nommer les images
+        id: resolution
+        run: |
+          set -eu
+          if [ -n "$SHA_INPUT" ] && ! printf '%s' "$SHA_INPUT" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::sha doit etre un commit complet de 40 caracteres hexadecimaux."
+            exit 1
+          fi
+          sha="$(git rev-parse HEAD)"
+          if ! git merge-base --is-ancestor "$sha" "origin/$BRANCHE"; then
+            echo "::error::Le commit $sha n'appartient pas a l'historique de la branche $BRANCHE."
+            exit 1
+          fi
+          base="ghcr.io/${GITHUB_REPOSITORY,,}"
+          {
+            echo "sha=$sha"
+            echo "backend_image=$base-backend:$sha"
+            echo "frontend_base=$base-frontend"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Connexion au registre
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Image backend
+        env:
+          IMAGE: ${{ steps.resolution.outputs.backend_image }}
+          SHA: ${{ steps.resolution.outputs.sha }}
+        run: |
+          set -eu
+          if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+            echo "$IMAGE existe deja : pas de reconstruction." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$SHA" \
+            --tag "$IMAGE" backend
+          docker push "$IMAGE"
+          echo "$IMAGE publiee." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Image frontend
+        id: frontend
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+          FRONTEND_BASE: ${{ steps.resolution.outputs.frontend_base }}
+          SHA: ${{ steps.resolution.outputs.sha }}
+        run: |
+          set -eu
+          api_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_URL" '.[$k] // empty')"
+          api_v1_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_V1_URL" '.[$k] // empty')"
+          gcs_bucket="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_GCS_BUCKET_NAME" '.[$k] // empty')"
+          for pair in "VITE_API_URL=$api_url" "VITE_API_V1_URL=$api_v1_url"; do
+            if [ -z "${pair#*=}" ]; then
+              echo "::error::Variable ${pair%%=*} absente (voir 00readme/README_CD.md)."
+              exit 1
+            fi
+          done
+          # Ces trois valeurs sont publiques (integrees au JavaScript) : leur empreinte distingue deux configurations du meme commit.
+          config="$(printf '%s\n%s\n%s\n' "$api_url" "$api_v1_url" "$gcs_bucket" | sha256sum | cut -c1-8)"
+          image="$FRONTEND_BASE:$BRANCHE-$SHA-$config"
+          echo "frontend_image=$image" >> "$GITHUB_OUTPUT"
+          if docker manifest inspect "$image" > /dev/null 2>&1; then
+            echo "$image existe deja : pas de reconstruction." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          docker build \
+            --build-arg "VITE_API_URL=$api_url" \
+            --build-arg "VITE_API_V1_URL=$api_v1_url" \
+            --build-arg "VITE_GCS_BUCKET_NAME=$gcs_bucket" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$SHA" \
+            --tag "$image" frontend
+          docker push "$image"
+          echo "$image publiee." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deconnexion du registre
+        if: always()
+        run: docker logout ghcr.io

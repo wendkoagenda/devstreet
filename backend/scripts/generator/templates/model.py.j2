@@ -1,0 +1,89 @@
+{% set has_uuid = false %}
+{% set str_field = None %}
+{% set system_fields_set = ['created_by', 'updated_by', 'created_at', 'updated_at'] %}
+{% for field_name, field in model.fields.items() %}
+    {% if field.type == 'UUIDField' %}
+        {% set has_uuid = true %}
+    {% endif %}
+    {% if field.type == 'CharField' and field_name not in system_fields_set and str_field is none %}
+        {% set str_field = field_name %}
+    {% endif %}
+{% endfor %}
+"""
+{{ model.model_name }} model.
+"""
+from django.db import models
+from django.contrib.auth import get_user_model
+{% if has_uuid %}
+import uuid
+{% endif %}
+
+User = get_user_model()
+
+
+class {{ model.model_name }}(models.Model):
+    """
+    {{ model.model_name }} model.
+    """
+    
+{% for field_name, field in model.fields.items() %}
+    {% if field_name != 'id' %}
+    {{ field_name }} = models.{{ model.get_django_field_type(field_name) }}(
+        {% for param_name, param_value in model.get_field_params(field_name).items() %}
+        {% if param_name == 'default' and param_value == 'uuid.uuid4' %}
+        {{ param_name }}={{ param_value }}{% if not loop.last %},{% endif %}
+        {% elif param_value is string %}
+        {{ param_name }}="{{ param_value }}"{% if not loop.last %},{% endif %}
+        {% elif param_value is sequence and param_value|length > 0 and param_value[0] is sequence %}
+        {{ param_name }}={{ param_value }}{% if not loop.last %},{% endif %}
+        {% else %}
+        {{ param_name }}={{ param_value }}{% if not loop.last %},{% endif %}
+        {% endif %}
+        {% endfor %}
+    )
+    {% endif %}
+{% endfor %}
+
+    # Champs système ajoutés automatiquement si absents du JSON
+    {% if 'created_by' not in model.fields %}
+    created_by = models.IntegerField(
+        verbose_name="Créé par",
+        help_text="ID de l'utilisateur créateur"
+    )
+    {% endif %}
+    {% if 'updated_by' not in model.fields %}
+    updated_by = models.IntegerField(
+        verbose_name="Modifié par",
+        help_text="ID du dernier utilisateur ayant modifié"
+    )
+    {% endif %}
+    {% if 'created_at' not in model.fields %}
+    created_at = models.DateTimeField(
+        verbose_name="Date de création",
+        auto_now_add=True,
+        auto_now=False
+    )
+    {% endif %}
+    {% if 'updated_at' not in model.fields %}
+    updated_at = models.DateTimeField(
+        verbose_name="Date de modification",
+        auto_now_add=False,
+        auto_now=True
+    )
+    {% endif %}
+
+    class Meta:
+        db_table = '{{ model.meta.get("db_table") or (model.app_name ~ "_" ~ model.resource_plural) }}'
+        verbose_name = '{{ model.meta.get("verbose_name", model.model_name) }}'
+        verbose_name_plural = '{{ model.meta.get("verbose_name_plural", model.resource_plural.replace("_", " ").title()) }}'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        {% if str_field %}
+        return str(self.{{ str_field }})
+        {% else %}
+        return str(self.id)
+        {% endif %}
+
+    def get_absolute_url(self):
+        return f"/{{ model.app_name }}/{{ model.resource_plural }}/{{self.id}}/"

@@ -1,0 +1,74 @@
+{
+  "exceptions": [
+    {
+      "rule": "DJ-005",
+      "path": "backend/app/core/views/auth_views.py",
+      "reason": "Routes d'authentification (csrf, logout, mot de passe oublie en 3 etapes) : elles servent a obtenir une session, donc elles ne peuvent pas l'exiger. Protegees par limitation de debit et reponses generiques.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "DJ-005",
+      "path": "backend/app/core/views/health_views.py",
+      "reason": "Route de sante (/api/health) : lue par les verifications Docker et le controle de deploiement, donc sans session. Limitation de debit propre, reponse minimale (ok ou error), aucun detail interne.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "FB-003",
+      "path": "backend/app/core/auth.py",
+      "reason": "Un cookie d'acces expire ou invalide laisse la requete anonyme (contrat DRF : authenticate renvoie None), ce qui permet au frontend de renouveler la session puis de rejouer la requete. Le refus est journalise (debug).",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "RT-001",
+      "path": "backend/app/core/urls.py",
+      "reason": "Les routes d'authentification (/api/auth/...) restent volontairement sans version : elles forment un contrat stable utilise par le cookie de refresh (chemin /api/auth) et par le frontend. Les routes metier sont toutes sous /api/v1.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "API-001",
+      "path": "backend/app/core/views/auth_views.py",
+      "reason": "PasswordResetError porte un message redige expres pour l'utilisateur (reponse generique, une seule erreur a l'etape 2 pour ne pas reveler l'existence d'un compte), jamais le texte d'une exception interne.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "API-003",
+      "path": "backend/app/core/views/user_viewset.py",
+      "reason": "Table d'administration bornee (comptes, roles, permissions), lue en entier par les tableaux du frontend (pagination cote client) et par les selecteurs de roles et de permissions. Les modeles metier generes, eux, sont pagines cote serveur.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "API-003",
+      "path": "backend/app/core/views/role_viewset.py",
+      "reason": "Table d'administration bornee (comptes, roles, permissions), lue en entier par les tableaux du frontend (pagination cote client) et par les selecteurs de roles et de permissions. Les modeles metier generes, eux, sont pagines cote serveur.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "API-003",
+      "path": "backend/app/core/views/permission_viewset.py",
+      "reason": "Table d'administration bornee (comptes, roles, permissions), lue en entier par les tableaux du frontend (pagination cote client) et par les selecteurs de roles et de permissions. Les modeles metier generes, eux, sont pagines cote serveur.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "SUP-001",
+      "path": "backend/requirements.txt",
+      "reason": "Audit des dependances retire de la CI pour le moment (decision du projet) : il sera traite plus tard, hors des pull requests. A retirer quand l'audit reviendra.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "SUP-001",
+      "path": "frontend/package.json",
+      "reason": "Audit des dependances retire de la CI pour le moment (decision du projet) : il sera traite plus tard, hors des pull requests. A retirer quand l'audit reviendra.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    }
+  ]
+}

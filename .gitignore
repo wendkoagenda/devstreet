@@ -1,0 +1,126 @@
+# =============================================================================
+# .gitignore classique - Django + React
+# =============================================================================
+
+# =============================================================================
+# Frontend (React / Vite / TypeScript)
+# =============================================================================
+node_modules/
+frontend/node_modules/
+
+dist/
+build/
+coverage/
+frontend/dist/
+frontend/dist-ssr/
+frontend/build/
+frontend/coverage/
+
+.vite/
+frontend/.vite/
+
+*.tsbuildinfo
+frontend/*.tsbuildinfo
+
+# Émis par `tsc -b` (tsconfig.node.json est composite) à chaque build : ne pas versionner
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+.eslintcache
+frontend/.eslintcache
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# =============================================================================
+# Backend (Django / Python)
+# =============================================================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+.venv/
+venv/
+env/
+ENV/
+backend/.venv/
+backend/venv/
+backend/env/
+backend/ENV/
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+
+backend/.pytest_cache/
+backend/.coverage
+backend/.coverage.*
+backend/htmlcov/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/.tox/
+backend/.nox/
+backend/.hypothesis/
+
+# Django runtime files
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+db.sqlite3-journal
+backend/*.sqlite3
+backend/*.sqlite3-journal
+backend/db.sqlite3
+backend/db.sqlite3-journal
+backend/staticfiles/
+backend/media/
+backend/local_settings.py
+
+# =============================================================================
+# Environment files
+# =============================================================================
+.env
+frontend/.env
+backend/.env
+
+# Valeurs de deploiement par branche (git-cli/deploy_env.py) : contiennent des secrets, jamais versionnees
+.env.deploy.*
+.env.vm.*
+!.env.vm.example
+backend.env.*
+frontend.env.*
+
+# =============================================================================
+# IDE / OS files
+# =============================================================================
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# =============================================================================
+# Misc
+# =============================================================================
+*.log
+*.tmp
+*.temp
+*.bak

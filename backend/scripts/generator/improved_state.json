@@ -1,0 +1,247 @@
+{
+  "version": "2.0",
+  "created_at": "2025-08-13T11:13:13.513780",
+  "last_updated": "2026-11-11T14:21:25.409601",
+  "generated_apis": {
+    "Elitest": {
+      "model_name": "Elitest",
+      "zone": "zone_1",
+      "file": "elitest.json",
+      "generated_at": "2026-06-14T21:32:07.703526",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "elitests",
+      "api_endpoints": [
+        "/api/v1/elitests/",
+        "/api/v1/elitests/{id}/"
+      ],
+      "relations": [
+        "Elitest.elitesties -> Elitesty (m2m)"
+      ]
+    },
+    "Elitesty": {
+      "model_name": "Elitesty",
+      "app_name": "metier",
+      "zone": "zone_1",
+      "file": "elitesty.json",
+      "generated_at": "2026-11-11T13:52:42.654168",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "elitesties",
+      "api_endpoints": [
+        "/api/v1/elitesties/",
+        "/api/v1/elitesties/{id}/"
+      ],
+      "relations": [
+        "Elitest.elitesties -> Elitesty (m2m)"
+      ]
+    },
+    "Dragon": {
+      "model_name": "Dragon",
+      "app_name": "metier",
+      "zone": "zone_1",
+      "file": "dragon.json",
+      "generated_at": "2026-11-11T14:11:34.934942",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "dragons",
+      "api_endpoints": [
+        "/api/v1/dragons/",
+        "/api/v1/dragons/{id}/"
+      ],
+      "relations": [
+        "Dragon.fusion -> Fusion (fk)"
+      ]
+    },
+    "Fusion": {
+      "model_name": "Fusion",
+      "app_name": "metier",
+      "zone": "zone_1",
+      "file": "fusion.json",
+      "generated_at": "2026-11-11T14:11:41.344092",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "fusions",
+      "api_endpoints": [
+        "/api/v1/fusions/",
+        "/api/v1/fusions/{id}/"
+      ],
+      "relations": [
+        "Dragon.fusion -> Fusion (fk)"
+      ]
+    },
+    "Gado": {
+      "model_name": "Gado",
+      "app_name": "garoapp",
+      "zone": "zone_1",
+      "file": "gado.json",
+      "generated_at": "2026-11-11T14:13:44.939873",
+      "status": "active",
+      "auto_detected": false,
+      "resource_plural": "gados",
+      "api_endpoints": [
+        "/api/v1/gados/",
+        "/api/v1/gados/{id}/"
+      ],
+      "relations": []
+    }
+  },
+  "generated_frontends": {
+    "Elitest": {
+      "model_name": "Elitest",
+      "zone": "zone_1",
+      "file": "elitest.json",
+      "generated_at": "2026-06-14T21:32:07.703526",
+      "status": "active",
+      "auto_detected": true,
+      "path": "frontend/src/models/elitest/"
+    },
+    "Elitesty": {
+      "model_name": "Elitesty",
+      "zone": "zone_1",
+      "file": "elitesty.json",
+      "generated_at": "2026-11-11T13:53:43.728480",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/elitesty/"
+    },
+    "Dragon": {
+      "model_name": "Dragon",
+      "zone": "zone_1",
+      "file": "dragon.json",
+      "generated_at": "2026-11-11T14:11:35.041616",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/dragon/"
+    },
+    "Fusion": {
+      "model_name": "Fusion",
+      "zone": "zone_1",
+      "file": "fusion.json",
+      "generated_at": "2026-11-11T14:11:41.486266",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/fusion/"
+    },
+    "Gado": {
+      "model_name": "Gado",
+      "zone": "zone_1",
+      "file": "gado.json",
+      "generated_at": "2026-11-11T14:13:45.058764",
+      "status": "active",
+      "auto_detected": false,
+      "path": "frontend/src/models/gado/"
+    }
+  },
+  "available_models": {
+    "zone_1": {
+      "Elitest": {
+        "file": "elitest.json",
+        "uploaded_at": "2026-05-16T05:53:17.587017"
+      },
+      "Elitesty": {
+        "file": "elitesty.json",
+        "uploaded_at": "2026-06-14T20:24:21.973292"
+      },
+      "Dragon": {
+        "file": "dragon.json",
+        "uploaded_at": "2026-11-09T11:02:10.841584"
+      },
+      "Fusion": {
+        "file": "fusion.json",
+        "uploaded_at": "2026-11-09T11:07:24.348297"
+      },
+      "Gado": {
+        "file": "gado.json",
+        "uploaded_at": "2026-11-11T14:13:36.949350"
+      }
+    }
+  },
+  "file_checksums": {
+    "models.py": {
+      "checksum": "abc69ba454c63b4e0cd08c024e4bfe49",
+      "last_updated": "2026-11-11T14:21:25.404376"
+    },
+    "serializers.py": {
+      "checksum": "722583aa1003d533809c8aa28e954199",
+      "last_updated": "2026-11-11T14:21:25.404500"
+    },
+    "urls.py": {
+      "checksum": "0b0c0fc8f8948f8bb6e61008e89e1f2a",
+      "last_updated": "2026-11-11T14:21:25.404589"
+    },
+    "views/elitest_viewset.py": {
+      "checksum": "ba61d872eb57c86188455dd490a49882",
+      "last_updated": "2026-11-11T14:21:25.405333"
+    },
+    "views/elitesty_viewset.py": {
+      "checksum": "89a2d8629b759110b03210e9d0e1c206",
+      "last_updated": "2026-11-11T14:21:25.405203"
+    },
+    "views/dragon_viewset.py": {
+      "checksum": "c6e23e3edae819c1591a0d16df566c19",
+      "last_updated": "2026-11-11T14:21:25.405014"
+    },
+    "views/fusion_viewset.py": {
+      "checksum": "837a9469acad2786178274abae93dd7a",
+      "last_updated": "2026-11-11T14:21:25.405574"
+    },
+    "garoapp::models.py": {
+      "checksum": "84b693b1c3cdaec63a48f40856e8b406",
+      "last_updated": "2026-11-11T14:21:25.405921"
+    },
+    "garoapp::serializers.py": {
+      "checksum": "9d86d26c5d4db15d075c7bda0e793be3",
+      "last_updated": "2026-11-11T14:21:25.406492"
+    },
+    "garoapp::urls.py": {
+      "checksum": "228b250a8036ca3293986ddc8746527a",
+      "last_updated": "2026-11-11T14:21:25.407064"
+    },
+    "garoapp::views/gado_viewset.py": {
+      "checksum": "e0a7de404cb429e86a5637673d781550",
+      "last_updated": "2026-11-11T14:21:25.407449"
+    }
+  },
+  "relations": [
+    {
+      "source": "Dragon",
+      "target": "Fusion",
+      "type": "fk",
+      "field": "fusion",
+      "related_name": "dragons",
+      "on_delete": "models.RESTRICT",
+      "nullable": true,
+      "app_label": "metier",
+      "target_app_label": "metier",
+      "created_at": "2026-11-11T14:15:44.563590"
+    },
+    {
+      "source": "Elitest",
+      "target": "Elitesty",
+      "type": "m2m",
+      "field": "elitesties",
+      "related_name": "elitests",
+      "on_delete": "models.RESTRICT",
+      "nullable": true,
+      "app_label": "metier",
+      "target_app_label": "metier",
+      "created_at": "2026-11-11T14:19:57.940835"
+    }
+  ],
+  "statistics": {
+    "total_models": 5,
+    "total_apis": 5,
+    "total_frontends": 5,
+    "total_relations": 2,
+    "zones_used": [
+      "zone_1"
+    ]
+  },
+  "apps": {
+    "garoapp": {
+      "created_at": "2026-11-11T14:12:37.238194",
+      "dotted_path": "app.garoapp"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "model": "Role",
+  "attributes": [
+    { "name": "name", "type": "string", "required": true, "unique": true },
+    { "name": "description", "type": "string", "required": false },
+    {
+      "name": "permission_codes",
+      "type": "array",
+      "required": false,
+      "items": { "type": "string" }
+    }
+  ]
+}

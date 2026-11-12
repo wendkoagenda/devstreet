@@ -1,0 +1,166 @@
+name: CD - VERIFIER ENVIRONNEMENT
+
+# Description du workflow :
+# - Verifie qu'un environnement de deploiement est pret, sans rien modifier et sans saisir aucune valeur :
+#   variables et secrets presents, bien classes et valides, DNS, puis la VM (Docker, dossiers, ports ouverts) atteinte
+#   selon DEPLOY_ACCES : ssh (empreinte epinglee) ou gcp (tunnel IAP).
+# - L'environnement verifie est celui de la branche choisie dans « Use workflow from » (develop, main ou prod) :
+#   chaque environnement GitHub n'est utilisable que depuis sa propre branche.
+# - Les valeurs se definissent avec `python git-cli/deploy_env.py` (voir 00readme/README_CD.md).
+# Lancement : a la main seulement (Actions > CD - VERIFIER ENVIRONNEMENT > Run workflow).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-verifier-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  branche:
+    name: branche
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Branche deployable
+        run: |
+          case "$GITHUB_REF_NAME" in
+            develop|main|prod) ;;
+            *) echo "::error::Lancer depuis develop, main ou prod (« Use workflow from ») : $GITHUB_REF_NAME n'a pas d'environnement."; exit 1 ;;
+          esac
+
+  verifier:
+    name: verifier
+    needs: branche
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.ref_name }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      BRANCHE: ${{ github.ref_name }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Variables et secrets (presence, classement, forme)
+        working-directory: backend
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: python3 -m scripts.deploy_env.verifier
+
+      - name: Lire la cible
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          lire() { printf '%s' "$VARS_JSON" | jq -r --arg k "$1" '.[$k] // empty'; }
+          # Formes deja validees par l'etape precedente : sans danger dans les commandes qui suivent
+          {
+            echo "ACCES=$(lire DEPLOY_ACCES)"
+            echo "DOMAIN=$(lire DEPLOY_DOMAIN)"
+            echo "GCP_PROJECT_ID=$(lire GCP_PROJECT_ID)"
+            echo "GCP_ZONE=$(lire GCP_ZONE)"
+            echo "GCP_INSTANCE=$(lire GCP_INSTANCE)"
+            echo "GCP_WIF_PROVIDER=$(lire GCP_WIF_PROVIDER)"
+            echo "GCP_SERVICE_ACCOUNT=$(lire GCP_SERVICE_ACCOUNT)"
+          } >> "$GITHUB_ENV"
+
+      # --- Acces SSH direct ---
+
+      - name: Preparer l'acces SSH
+        if: env.ACCES == 'ssh'
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          echo "::add-mask::$user"
+          echo "SSH_HOST=$host" >> "$GITHUB_ENV"
+          echo "SSH_USER=$user" >> "$GITHUB_ENV"
+
+      - name: DNS du domaine (doit pointer vers la VM)
+        if: env.ACCES == 'ssh'
+        run: |
+          set -eu
+          resolved="$(getent ahostsv4 "$DOMAIN" | awk '{print $1}' | sort -u | tr '\n' ' ')"
+          if [ -z "$resolved" ]; then
+            echo "::error::$DOMAIN ne se resout vers aucune adresse."
+            exit 1
+          fi
+          echo "$DOMAIN -> $resolved"
+          # VM_SSH_HOST peut etre une adresse IP ou un nom : on le resout aussi (sans effet sur une adresse IP)
+          vm_addresses="$(getent ahostsv4 "$SSH_HOST" | awk '{print $1}' | sort -u | tr '\n' ' ')"
+          if [ -z "$vm_addresses" ]; then
+            echo "::error::VM_SSH_HOST ne se resout vers aucune adresse."
+            exit 1
+          fi
+          pointe=false
+          for address in $vm_addresses; do
+            case " $resolved " in
+              *" $address "*) pointe=true ;;
+            esac
+          done
+          if [ "$pointe" = "true" ]; then
+            echo "Le domaine pointe vers la VM."
+          else
+            echo "::error::$DOMAIN ne pointe pas vers la VM : certbot ne pourra pas obtenir de certificat."
+            exit 1
+          fi
+
+      - name: VM (SSH, Docker, ports)
+        if: env.ACCES == 'ssh'
+        run: |
+          set -eu
+          ssh -i "$RUNNER_TEMP/ssh/key" \
+            -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" 'sh -s' < deploy/vm/verifier.sh
+
+      # --- Acces GCP sans IP publique ---
+
+      - name: DNS du domaine (doit se resoudre)
+        if: env.ACCES == 'gcp'
+        run: |
+          set -eu
+          resolved="$(getent ahostsv4 "$DOMAIN" | awk '{print $1}' | sort -u | tr '\n' ' ')"
+          if [ -z "$resolved" ]; then
+            echo "::error::$DOMAIN ne se resout vers aucune adresse."
+            exit 1
+          fi
+          echo "$DOMAIN -> $resolved (l'adresse est celle du load balancer ou de la VM : a comparer a la main)"
+
+      - name: VM (IAP, Docker, ports)
+        if: env.ACCES == 'gcp'
+        shell: bash
+        run: |
+          set -eu
+          . deploy/ci/gcp-vm.sh
+          gcp_auth
+          vm_gcp "sh -s" < deploy/vm/verifier.sh
+
+      - name: Supprimer la cle SSH et les identifiants GCP
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/ssh"
+          . deploy/ci/gcp-vm.sh
+          gcp_cleanup

@@ -1,0 +1,134 @@
+{
+  "zones": [
+    {
+      "name": "auth-cookies",
+      "reason": "Connexion, cookies HttpOnly, jetons JWT, protection CSRF, verrouillage par compte et journal d'audit : une régression ouvre une faille d'accès ou efface les traces.",
+      "paths": [
+        "backend/app/core/auth.py",
+        "backend/app/core/cookies.py",
+        "backend/app/core/views/auth_views.py",
+        "frontend/src/helpers/api/**",
+        "frontend/src/models/auth/**",
+        "backend/app/core/services/audit_service.py",
+        "backend/app/core/services/login_lockout.py"
+      ],
+      "tests": [
+        "backend/app/tests/test_audit_log.py",
+        "backend/app/tests/test_cookie_auth.py",
+        "backend/app/tests/test_password_reset.py",
+        "frontend/src/helpers/api/*.test.ts",
+        "frontend/src/models/auth/**/*.test.ts"
+      ],
+      "verify": "Relancer test_cookie_auth, test_password_reset et test_audit_log, puis vitest ; tester à la main connexion, F5 et déconnexion."
+    },
+    {
+      "name": "config-securite",
+      "reason": "Variables obligatoires, secrets et réglages Django sans valeur par défaut : un oubli rend l'application vulnérable ou démarrable à moitié configurée.",
+      "paths": [
+        "backend/config/**",
+        "backend/entrypoint.sh",
+        "backend/.env.example",
+        "frontend/.env.example",
+        "backend/app/core/middleware.py"
+      ],
+      "tests": [
+        "backend/app/tests/test_env_config.py",
+        "backend/app/tests/test_security_settings.py",
+        "backend/app/tests/test_api_throttling.py",
+        "backend/app/tests/test_upload_limits.py"
+      ],
+      "verify": "Relancer test_env_config, test_security_settings, test_api_throttling et test_upload_limits ; vérifier que .env.example liste toutes les variables lues par settings.py."
+    },
+    {
+      "name": "permissions-roles",
+      "reason": "Rôles, permissions, hiérarchie d'accès et contrôle des comptes du core : une régression donne ou retire des droits à tort, ou permet de se promouvoir.",
+      "paths": [
+        "backend/app/core/models.py",
+        "backend/app/core/permissions/**",
+        "backend/app/core/services/**",
+        "backend/app/core/repositories/**",
+        "backend/app/core/interfaces/**",
+        "backend/app/core/views/user_viewset.py",
+        "backend/app/core/views/role_viewset.py",
+        "backend/app/core/views/permission_viewset.py",
+        "backend/app/core/views/mixins.py"
+      ],
+      "tests": [
+        "backend/app/tests/test_access_policy.py",
+        "backend/app/tests/test_cookie_auth.py",
+        "backend/app/tests/test_elitest.py",
+        "backend/app/tests/test_elitest_pagination.py"
+      ],
+      "verify": "Relancer test_access_policy et les tests backend complets ; vérifier qu'un gestionnaire ne peut pas s'attribuer un rôle plus puissant et qu'un visiteur anonyme reçoit 401."
+    },
+    {
+      "name": "migrations",
+      "reason": "Une migration modifiée ou supprimée après son application casse les bases existantes.",
+      "paths": [
+        "backend/app/*/migrations/**"
+      ],
+      "tests": [],
+      "verify": "Ne jamais modifier une migration déjà appliquée ; lancer makemigrations --check et tester migrate sur une base existante."
+    },
+    {
+      "name": "generateur",
+      "reason": "Le code généré dérive des templates : une erreur ici se recopie dans chaque nouveau modèle.",
+      "paths": [
+        "backend/scripts/generator/**",
+        "backend/scripts/generate_api.py"
+      ],
+      "tests": [
+        "backend/app/tests/test_generator_pagination.py",
+        "backend/app/tests/test_generator_serializers.py"
+      ],
+      "verify": "Relancer test_generator_pagination et test_generator_serializers ; régénérer un modèle d'essai et lancer le scanner."
+    },
+    {
+      "name": "scanner-securite",
+      "reason": "Les contrôles de sécurité eux-mêmes (scanner et audit des dépendances) et leurs exceptions : une règle affaiblie ou une exception ajoutée réduit la protection sans bruit.",
+      "paths": [
+        "backend/scripts/security_scan/**",
+        "security-exceptions.json",
+        "backend/scripts/dependency_audit/**",
+        "dependency-audit-exceptions.json"
+      ],
+      "tests": [
+        "backend/app/tests/test_security_scan.py",
+        "backend/app/tests/test_dependency_audit.py"
+      ],
+      "verify": "Relancer test_security_scan et test_dependency_audit ; relire chaque exception ajoutée (raison, auteur, expiration)."
+    },
+    {
+      "name": "deploiement-ci",
+      "reason": "Chaîne de livraison : workflows, hooks Git, outils git-cli, images et serveur web.",
+      "paths": [
+        ".github/**",
+        ".githooks/**",
+        "git-cli/**",
+        "terraform/**",
+        "deploy/**",
+        "backend/scripts/deploy_env/**",
+        "frontend/Dockerfile",
+        "frontend/nginx.conf",
+        "frontend/nginx.main.conf",
+        "frontend/security-headers.conf"
+      ],
+      "tests": [
+        "backend/app/tests/test_deploy_env.py"
+      ],
+      "verify": "Relecture par un responsable ; lancer python git-cli/doctor.py et vérifier les contrôles obligatoires dans les réglages GitHub."
+    },
+    {
+      "name": "regression-guard",
+      "reason": "Le contrôle de non-régression lui-même : retirer une zone ou un motif désactive la protection sans que personne le voie.",
+      "paths": [
+        "regression-guard.json",
+        "backend/scripts/regression_guard/**"
+      ],
+      "tests": [
+        "backend/app/tests/test_regression_guard.py"
+      ],
+      "verify": "Relancer test_regression_guard ; relire chaque zone supprimée ou chaque motif réduit."
+    }
+  ]
+}

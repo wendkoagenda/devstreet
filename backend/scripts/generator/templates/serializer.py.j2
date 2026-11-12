@@ -1,0 +1,68 @@
+{%- set serializer_fields = ['id'] -%}
+{%- for field_name in model.fields -%}{%- if field_name not in serializer_fields -%}{%- set _ = serializer_fields.append(field_name) -%}{%- endif -%}{%- endfor -%}
+{%- for field_name in ['created_by', 'updated_by', 'created_at', 'updated_at'] -%}{%- if field_name not in serializer_fields -%}{%- set _ = serializer_fields.append(field_name) -%}{%- endif -%}{%- endfor -%}
+"""
+Serializers pour les {{ resource_plural }}.
+"""
+from rest_framework import serializers
+from app.{{ model.app_name }}.models import {{ model.model_name }}
+{% if has_file_fields %}
+from app.metier.services.storage_service import get_storage_service
+{% endif %}
+
+
+class {{ model.model_name }}Serializer(serializers.ModelSerializer):
+    """
+    Serializer pour les {{ resource_plural }}.
+    """
+    
+    class Meta:
+        model = {{ model.model_name }}
+        # Champs listés explicitement : un champ ajouté plus tard au modèle n'est jamais exposé automatiquement
+        fields = [{% for field_name in serializer_fields %}'{{ field_name }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+        
+    def create(self, validated_data):
+        """
+        Crée une nouvelle instance avec gestion automatique des relations FK.
+        """
+        return super().create(validated_data)
+        
+    def update(self, instance, validated_data):
+        """
+        Met à jour une instance avec gestion automatique des relations FK.
+        """
+        return super().update(instance, validated_data)
+
+    def get_fields(self):
+        """
+        Marque les champs système en lecture seule s'ils existent.
+        """
+        fields = super().get_fields()
+        for sys_field in ['id', 'created_by', 'updated_by', 'created_at', 'updated_at']:
+            if sys_field in fields:
+                fields[sys_field].read_only = True
+        return fields
+
+    def to_representation(self, instance):
+        """
+        Personnalise la représentation des données.
+        """
+        data = super().to_representation(instance)
+        
+        data['created_at'] = instance.created_at.isoformat() if hasattr(instance, 'created_at') else None
+        data['updated_at'] = instance.updated_at.isoformat() if hasattr(instance, 'updated_at') else None
+{% if has_file_fields %}
+        storage = get_storage_service()
+{% for field in file_fields %}
+        if getattr(instance, '{{ field.name }}', None):
+            data['{{ field.name }}_url'] = storage.url(getattr(instance, '{{ field.name }}'))
+{% endfor %}
+{% endif %}
+        
+        return data
+
+    def validate(self, data):
+        """
+        Validation personnalisée des données.
+        """
+        return data

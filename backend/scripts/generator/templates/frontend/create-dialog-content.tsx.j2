@@ -1,0 +1,212 @@
+import ActionsLayout from "@/components/layouts/actions-layout";
+import { Input } from "@/components/ui/input";
+{% set has_boolean = form_fields | selectattr('is_boolean') | list | length > 0 %}
+{% set has_textarea = form_fields | selectattr('is_textarea') | list | length > 0 %}
+{% set has_select = form_fields | selectattr('is_select') | list | length > 0 %}
+{% set has_file = form_fields | selectattr('is_file') | list | length > 0 %}
+{% if has_boolean %}
+import { Checkbox } from "@/components/ui/checkbox";
+{% endif %}
+{% if has_textarea %}
+import { Textarea } from "@/components/ui/textarea";
+{% endif %}
+{% if has_select %}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+{% endif %}
+import { useForm, type Resolver } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { CreationSuccessSonner } from "@/helpers/api/feed-backs";
+import { renderFetchBaseQueryError } from "@/helpers/api/global-error-catcher";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { useState } from "react";
+import {
+  create{{ model_name_pascal }}Schema,
+  type Create{{ model_name_pascal }}FormValues,
+  type Create{{ model_name_pascal }}Schema,
+} from "../../schema";
+import { useCreate{{ model_name_pascal }}Mutation } from "../../api";
+import { use{{ model_name_pascal }}Store } from "../../slice";
+
+export default function Create{{ model_name_pascal }}DialogContent() {
+  const { t } = useTranslation();
+  const [createItem, { isLoading: isSubmitting }] = useCreate{{ model_name_pascal }}Mutation();
+  const { closeCreateDialog } = use{{ model_name_pascal }}Store();
+  const [globalError, setGlobalError] = useState<React.ReactNode>(null);
+{% if has_file_fields %}
+  const [files, setFiles] = useState<Record<string, File | undefined>>({});
+{% endif %}
+
+  const form = useForm<Create{{ model_name_pascal }}FormValues, unknown, Create{{ model_name_pascal }}Schema>({
+    resolver: zodResolver(create{{ model_name_pascal }}Schema(t)) as Resolver<
+      Create{{ model_name_pascal }}FormValues,
+      unknown,
+      Create{{ model_name_pascal }}Schema
+    >,
+    defaultValues: {
+{% for line in create_default_values_lines %}
+{{ line }}
+{% endfor %}
+    },
+  });
+
+  const onSubmit = async (payload: Create{{ model_name_pascal }}Schema) => {
+    try {
+      setGlobalError(null);
+      await createItem({ ...payload{% if has_file_fields %}, _files: files{% endif %} }).unwrap();
+      form.reset();
+{% if has_file_fields %}
+      setFiles({});
+{% endif %}
+      closeCreateDialog();
+      CreationSuccessSonner("Element cree avec succes");
+    } catch (err) {
+      const error = err as FetchBaseQueryError;
+      if (error.status === 400 && error.data) {
+        const errorData = error.data as Record<string, string[]>;
+        Object.entries(errorData).forEach(([field, messages]) => {
+          if (Array.isArray(messages) && messages.length > 0) {
+            form.setError(field as keyof Create{{ model_name_pascal }}Schema, {
+              message: messages[0],
+            });
+          }
+        });
+      } else {
+        setGlobalError(renderFetchBaseQueryError(error, t));
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4 mx-4">
+      {globalError && <div className="mb-4">{globalError}</div>}
+      <Form {...form}>
+        <div className="max-h-[60vh] overflow-y-auto px-2 py-1">
+          <div className="space-y-4">
+{% for field in form_fields %}
+{% if field.is_file %}
+            <FormItem>
+              <FormLabel className="text-sm font-medium">
+                {{ field.label }}{% if field.is_required %} *{% endif %}
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept="{{ field.accept_attr }}"
+                  className="h-10"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    setFiles((prev) => ({ ...prev, {{ field.name }}: file }));
+                  }}
+                />
+              </FormControl>
+              {files.{{ field.name }} && (
+                <p className="text-sm text-muted-foreground">{files.{{ field.name }}?.name}</p>
+              )}
+            </FormItem>
+{% else %}
+            <FormField
+              control={form.control}
+              name="{{ field.name }}"
+              render={({ field: formField }) => (
+                <FormItem className="{% if field.is_boolean %}flex flex-row items-center justify-between rounded-lg border p-4 bg-muted/50{% endif %}">
+                  <FormLabel className="text-sm font-medium">
+                    {{ field.label }}{% if field.is_required %} *{% endif %}
+                  </FormLabel>
+                  <FormControl>
+{% if field.is_boolean %}
+                    <Checkbox
+                      checked={Boolean(formField.value)}
+                      onCheckedChange={(checked) => formField.onChange(Boolean(checked))}
+                    />
+{% elif field.is_select %}
+                    <Select
+                      value={
+                        formField.value != null && formField.value !== undefined
+                          ? String(formField.value)
+                          : undefined
+                      }
+                      onValueChange={(value) =>
+                        formField.onChange(
+                          {% if field.django_type in ['IntegerField', 'BigIntegerField', 'PositiveIntegerField'] %}
+                          Number(value)
+                          {% else %}
+                          value
+                          {% endif %}
+                        )
+                      }
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Selectionner..." />
+                      </SelectTrigger>
+                      <SelectContent>
+{% for choice in field.choices %}
+                        <SelectItem value="{{ choice.value }}">{{ choice.label }}</SelectItem>
+{% endfor %}
+                      </SelectContent>
+                    </Select>
+{% elif field.is_number %}
+                    <Input
+                      type="number"
+                      value={(formField.value as number | undefined) ?? ""}
+                      onChange={(e) =>
+                        formField.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                      }
+                      className="h-10"
+                    />
+{% elif field.is_date %}
+                    <Input type="{{ field.input_type }}" {...formField} className="h-10" />
+{% elif field.is_textarea %}
+                    <Textarea
+                      {...formField}
+                      value={formField.value ?? ""}
+                      onChange={(e) =>
+                        formField.onChange({% if field.is_nullable %}e.target.value === "" ? null : {% endif %}e.target.value)
+                      }
+                      className="min-h-[100px] resize-y"
+                    />
+{% elif field.is_nullable %}
+                    <Input
+                      {...formField}
+                      value={formField.value ?? ""}
+                      onChange={(e) =>
+                        formField.onChange(e.target.value === "" ? null : e.target.value)
+                      }
+                      className="h-10"
+                    />
+{% else %}
+                    <Input {...formField} className="h-10" />
+{% endif %}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+{% endif %}
+{% endfor %}
+          </div>
+          <ActionsLayout
+            type="create"
+            onSubmit={form.handleSubmit(onSubmit)}
+            onCancel={closeCreateDialog}
+            isSubmitting={isSubmitting}
+          />
+        </div>
+      </Form>
+    </div>
+  );
+}

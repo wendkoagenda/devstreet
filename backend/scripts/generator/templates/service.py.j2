@@ -1,0 +1,139 @@
+"""
+{{ model.model_name }} service layer pour les opérations de logique métier.
+"""
+from typing import List, Optional, Dict, Any
+from django.db.models import QuerySet
+from django.core.exceptions import ValidationError
+from app.{{ model.app_name }}.models import {{ model.model_name }}
+from app.{{ model.app_name }}.repositories.{{ model.model_name|lower }}_repository import {{ model.model_name }}Repository
+{% if model.has_file_fields() %}
+from app.metier.utils.file_field_utils import delete_instance_files, delete_replaced_files
+{% endif %}
+
+
+class {{ model.model_name }}Service:
+    """
+    Classe de service pour la logique métier liée aux {{ model.snake_name }}s.
+    """
+{% if model.has_file_fields() %}
+    FILE_FIELD_NAMES = [{% for name in file_field_names %}"{{ name }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+{% endif %}
+
+    def __init__(self):
+        self.{{ model.model_name|lower }}_repository = {{ model.model_name }}Repository()
+
+    def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
+        """
+        Obtenir les {{ model.snake_name }}s, avec recherche textuelle et tri facultatifs.
+
+        Returns:
+            QuerySet: Les {{ model.snake_name }}s filtrés et triés
+
+        Raises:
+            ValueError: Si le champ de tri n'est pas autorisé
+        """
+        return self.{{ model.model_name|lower }}_repository.get_all(search=search, ordering=ordering)
+
+    def get_by_id(self, {{ model.snake_name }}_id: int) -> Optional[{{ model.model_name }}]:
+        """
+        Obtenir un {{ model.snake_name }} par ID.
+        
+        Args:
+            {{ model.snake_name }}_id (int): L'ID du {{ model.snake_name }}
+            
+        Returns:
+            Optional[{{ model.model_name }}]: Le {{ model.snake_name }} si trouvé, None sinon
+        """
+        return self.{{ model.model_name|lower }}_repository.get_by_id({{ model.snake_name }}_id)
+
+    def create(self, {{ model.snake_name }}_data: Dict[str, Any]) -> {{ model.model_name }}:
+        """
+        Créer un nouveau {{ model.snake_name }} avec validation.
+        
+        Args:
+            {{ model.snake_name }}_data (Dict[str, Any]): Données du {{ model.snake_name }}
+            
+        Returns:
+            {{ model.model_name }}: Le {{ model.snake_name }} créé
+            
+        Raises:
+            ValidationError: Si la validation échoue
+        """
+        # Validation des données
+        self.validate_data({{ model.snake_name }}_data)
+        
+        return self.{{ model.model_name|lower }}_repository.create(**{{ model.snake_name }}_data)
+
+    def update(self, {{ model.snake_name }}_id: int, {{ model.snake_name }}_data: Dict[str, Any], partial: bool = False) -> Optional[{{ model.model_name }}]:
+        """
+        Mettre à jour un {{ model.snake_name }} existant.
+        
+        Args:
+            {{ model.snake_name }}_id (int): L'ID du {{ model.snake_name }}
+            {{ model.snake_name }}_data (Dict[str, Any]): Données mises à jour
+            partial (bool): Si c'est une mise à jour partielle
+            
+        Returns:
+            Optional[{{ model.model_name }}]: Le {{ model.snake_name }} mis à jour si trouvé, None sinon
+            
+        Raises:
+            ValidationError: Si la validation échoue
+        """
+        {{ model.snake_name }} = self.{{ model.model_name|lower }}_repository.get_by_id({{ model.snake_name }}_id)
+        if not {{ model.snake_name }}:
+            return None
+
+{% if model.has_file_fields() %}
+        delete_replaced_files({{ model.snake_name }}, {{ model.snake_name }}_data, self.FILE_FIELD_NAMES)
+{% endif %}
+        # Validation des données
+        if not partial:
+            self.validate_data({{ model.snake_name }}_data)
+
+        return self.{{ model.model_name|lower }}_repository.update({{ model.snake_name }}, **{{ model.snake_name }}_data)
+
+    def delete(self, {{ model.snake_name }}_id: int) -> bool:
+        """
+        Supprimer un {{ model.snake_name }}.
+        
+        Args:
+            {{ model.snake_name }}_id (int): L'ID du {{ model.snake_name }}
+            
+        Returns:
+            bool: True si supprimé avec succès, False si {{ model.snake_name }} non trouvé
+        """
+        {{ model.snake_name }} = self.{{ model.model_name|lower }}_repository.get_by_id({{ model.snake_name }}_id)
+        if not {{ model.snake_name }}:
+            return False
+
+{% if model.has_file_fields() %}
+        delete_instance_files({{ model.snake_name }}, self.FILE_FIELD_NAMES)
+{% endif %}
+        return self.{{ model.model_name|lower }}_repository.delete({{ model.snake_name }})
+
+    def validate_data(self, {{ model.snake_name }}_data: Dict[str, Any]):
+        """
+        Valider les données du {{ model.snake_name }}.
+        
+        Args:
+            {{ model.snake_name }}_data (Dict[str, Any]): Données du {{ model.snake_name }} à valider
+            
+        Raises:
+            ValidationError: Si la validation échoue
+        """
+        # Validation des champs CharField obligatoires
+        {% for field_name, field in model.fields.items() %}
+        {% if field.type == 'CharField' and field.blank == false and not field.is_file_field %}
+        if '{{ field_name }}' in {{ model.snake_name }}_data and not {{ model.snake_name }}_data['{{ field_name }}'].strip():
+            raise ValidationError("Le champ {{ field_name }} ne peut pas être vide")
+        {% endif %}
+        {% endfor %}
+        {% for field_name, field in model.fields.items() %}
+        {% if field.choices %}
+        if '{{ field_name }}' in {{ model.snake_name }}_data:
+            _valid_{{ field_name }} = [{% for choice in field.choices %}{% if choice[0] is string %}'{{ choice[0] }}'{% else %}{{ choice[0] }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}]
+            if {{ model.snake_name }}_data['{{ field_name }}'] not in _valid_{{ field_name }}:
+                raise ValidationError("Valeur invalide pour le champ {{ field_name }}")
+        {% endif %}
+        {% endfor %}
+        # Ajoutez d'autres validations selon vos besoins

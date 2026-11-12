@@ -1,0 +1,149 @@
+name: GIT-CLI - ENFORCEMENT (push non-protege)
+
+# Description du workflow :
+# Ce workflow applique la conformite Git CLI sur les push des branches non protegees.
+# - Verifie que chaque nouveau commit contient le trailer obligatoire
+#   "X-Git-CLI: onepourcent-git-cli/2.0" (1.0 accepte en transition).
+# - Verifie les auteurs sur modifications de chemins proteges.
+# Les branches protegees (main/develop/prod) sont gerees dans
+# `git-cli-enforce-push-protege.yml`.
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - develop
+      - prod
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-commit-trailer:
+    runs-on: ubuntu-latest
+    environment: commun
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify commit trailer on new commits
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          REQUIRED_TRAILER="X-Git-CLI: onepourcent-git-cli/2.0"
+          ACCEPTED_TRAILER_REGEX="X-Git-CLI: onepourcent-git-cli/(1\.0|2\.0)"
+          COMMITS="${{ join(github.event.commits.*.id, ' ') }}"
+
+          if [ -z "$COMMITS" ]; then
+            echo "Aucun commit detecte dans cet evenement push."
+            exit 0
+          fi
+
+          FAILED=0
+          for SHA in $COMMITS; do
+            MESSAGE="$(git log -1 --format=%B "$SHA")"
+            if ! printf '%s\n' "$MESSAGE" | grep -Eq "$ACCEPTED_TRAILER_REGEX"; then
+              echo "Commit non conforme: $SHA"
+              echo "Trailer manquant: $REQUIRED_TRAILER"
+              FAILED=1
+            fi
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "Echec enforcement Git CLI sur les commits."
+            exit 1
+          fi
+
+          echo "Tous les commits contiennent le trailer requis."
+
+  enforce-protected-path-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify protected paths author email
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ACCESS_CONTROL_FILE="git-cli/access_control.conf"
+          if [ ! -f "$ACCESS_CONTROL_FILE" ]; then
+            echo "Config manquante: $ACCESS_CONTROL_FILE"
+            exit 1
+          fi
+
+          source "$ACCESS_CONTROL_FILE"
+          GIT_MASTER_EMAILS_LIST="$(printf '%s' "${GIT_MASTER_EMAILS}" | tr ',' ' ')"
+          PROTECTED_PATHS_LIST="$(printf '%s' "${PROTECTED_PATHS}" | tr ',' ' ')"
+
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ]; then
+            COMMITS="$(git rev-list --max-count=100 "$AFTER")"
+          else
+            COMMITS="$(git rev-list "$BEFORE..$AFTER")"
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            echo "Aucun commit a verifier."
+            exit 0
+          fi
+
+          is_allowed_email() {
+            local email="$1"
+            for allowed in $GIT_MASTER_EMAILS_LIST; do
+              if [ "$email" = "$allowed" ]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          path_is_protected() {
+            local path="$1"
+            for rule in $PROTECTED_PATHS_LIST; do
+              case "$rule" in
+                */)
+                  case "$path" in "$rule"*) return 0 ;; esac
+                  ;;
+                *)
+                  [ "$path" = "$rule" ] && return 0
+                  ;;
+              esac
+            done
+            return 1
+          }
+
+          FAILED=0
+          for SHA in $COMMITS; do
+            AUTHOR_EMAIL="$(git log -1 --format=%ae "$SHA")"
+            if is_allowed_email "$AUTHOR_EMAIL"; then
+              continue
+            fi
+
+            CHANGED_FILES="$(git diff-tree --no-commit-id --name-only -r "$SHA")"
+            for changed_file in $CHANGED_FILES; do
+              if path_is_protected "$changed_file"; then
+                echo "Commit non conforme: $SHA"
+                echo "Auteur non autorise pour chemin protege."
+                echo "Author email: $AUTHOR_EMAIL"
+                echo "File: $changed_file"
+                FAILED=1
+              fi
+            done
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "Controle chemins proteges valide."

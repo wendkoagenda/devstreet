@@ -1,0 +1,33 @@
+import { create } from "zustand";
+import type { Get{{ model_name_pascal }}Schema } from "./schema";
+
+interface {{ model_name_pascal }}State {
+  isCreateDialogOpen: boolean;
+  selected{{ model_name_pascal }}: Get{{ model_name_pascal }}Schema | null;
+  isShowDialogOpen: boolean;
+  isEditMode: boolean;
+  openCreateDialog: () => void;
+  closeCreateDialog: () => void;
+  setSelected{{ model_name_pascal }}: (item: Get{{ model_name_pascal }}Schema) => void;
+  clearSelected{{ model_name_pascal }}: () => void;
+  openShowDialog: () => void;
+  closeShowDialog: () => void;
+  enableEditMode: () => void;
+  disableEditMode: () => void;
+}
+
+export const use{{ model_name_pascal }}Store = create<{{ model_name_pascal }}State>((set) => ({
+  isCreateDialogOpen: false,
+  selected{{ model_name_pascal }}: null,
+  isShowDialogOpen: false,
+  isEditMode: false,
+  openCreateDialog: () => set({ isCreateDialogOpen: true }),
+  closeCreateDialog: () => set({ isCreateDialogOpen: false }),
+  setSelected{{ model_name_pascal }}: (item) => set({ selected{{ model_name_pascal }}: item }),
+  clearSelected{{ model_name_pascal }}: () => set({ selected{{ model_name_pascal }}: null }),
+  openShowDialog: () => set({ isShowDialogOpen: true }),
+  closeShowDialog: () =>
+    set({ isShowDialogOpen: false, isEditMode: false, selected{{ model_name_pascal }}: null }),
+  enableEditMode: () => set({ isEditMode: true }),
+  disableEditMode: () => set({ isEditMode: false }),
+}));

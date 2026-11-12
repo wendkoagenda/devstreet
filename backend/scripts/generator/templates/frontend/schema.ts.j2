@@ -1,0 +1,64 @@
+import { z } from "zod";
+import type { TFunction } from "i18next";
+
+export const {{ model_name_camel }}Schema = z.object({
+{% for field in fields %}
+  {{ field.name }}: {{ field.zod_type }},
+{% endfor %}
+{% for field in file_fields %}
+  {{ field.name }}_url: z.string().optional(),
+{% endfor %}
+});
+
+export type {{ model_name_pascal }}Schema = z.infer<typeof {{ model_name_camel }}Schema>;
+
+export const create{{ model_name_pascal }}Schema = (t: TFunction) =>
+  z.object({
+{% for field in scalar_form_fields %}
+    {{ field.name }}: {{ field.zod_form_expr }},
+{% endfor %}
+  });
+
+export type Create{{ model_name_pascal }}FormValues = {
+{% for field in scalar_form_fields %}
+  {{ field.name }}{% if field.form_ts_optional %}?{% endif %}: {{ field.output_ts_type }};
+{% endfor %}
+};
+
+export type Create{{ model_name_pascal }}Schema = {
+{% for field in scalar_form_fields %}
+  {{ field.name }}{% if field.is_optional %}?{% endif %}: {{ field.output_ts_type }};
+{% endfor %}
+};
+
+export type Get{{ model_name_pascal }}Schema = {
+  id: number;
+{% for field in fields if field.name != 'id' %}
+  {{ field.name }}{% if field.is_optional %}?{% endif %}: {{ field.ts_type | replace(' | undefined', '') }};
+{% endfor %}
+{% for field in file_fields %}
+  {{ field.name }}_url?: string;
+{% endfor %}
+};
+
+export const update{{ model_name_pascal }}Schema = (t: TFunction) =>
+  z.object({
+    id: z.number(),
+{% for field in scalar_form_fields %}
+    {{ field.name }}: {{ field.zod_form_expr }},
+{% endfor %}
+  });
+
+export type Update{{ model_name_pascal }}FormValues = {
+  id: number;
+{% for field in scalar_form_fields %}
+  {{ field.name }}{% if field.form_ts_optional %}?{% endif %}: {{ field.output_ts_type }};
+{% endfor %}
+};
+
+export type Update{{ model_name_pascal }}Schema = {
+  id: number;
+{% for field in scalar_form_fields %}
+  {{ field.name }}{% if field.is_optional %}?{% endif %}: {{ field.output_ts_type }};
+{% endfor %}
+};

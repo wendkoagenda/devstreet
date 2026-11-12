@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "ask": [
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(tsc:*)",
+      "Bash(npx vite build:*)",
+      "Bash(docker build:*)",
+      "Bash(docker compose build:*)",
+      "Bash(docker-compose build:*)",
+      "PowerShell(npm run build:*)",
+      "PowerShell(npx tsc:*)",
+      "PowerShell(tsc:*)",
+      "PowerShell(npx vite build:*)",
+      "PowerShell(docker build:*)",
+      "PowerShell(docker compose build:*)",
+      "PowerShell(docker-compose build:*)",
+      "mcp__claude-in-chrome"
+    ]
+  }
+}

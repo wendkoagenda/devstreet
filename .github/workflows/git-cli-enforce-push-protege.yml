@@ -1,0 +1,68 @@
+name: GIT-CLI - ENFORCEMENT (push protege - identite)
+
+# Description du workflow :
+# Ce workflow s'applique uniquement sur les branches protegees (main/develop/prod).
+# - Verifie que l'acteur GitHub du push/merge (`github.actor`) est autorise.
+# - La liste des utilisateurs autorises vient de `GIT_MASTER_USERS` dans
+#   `git-cli/access_control.conf`.
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - prod
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-protected-branch-identity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify GitHub actor identity on protected branches
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ACCESS_CONTROL_FILE="git-cli/access_control.conf"
+          if [ ! -f "$ACCESS_CONTROL_FILE" ]; then
+            echo "Config manquante: $ACCESS_CONTROL_FILE"
+            exit 1
+          fi
+
+          source "$ACCESS_CONTROL_FILE"
+          GIT_MASTER_USERS_LIST="$(printf '%s' "${GIT_MASTER_USERS}" | tr ',' ' ')"
+
+          if [ -z "$GIT_MASTER_USERS_LIST" ]; then
+            echo "Config invalide: GIT_MASTER_USERS est vide."
+            exit 1
+          fi
+
+          ACTOR="${{ github.actor }}"
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          is_allowed_user() {
+            local user="$1"
+            for allowed in $GIT_MASTER_USERS_LIST; do
+              if [ "$user" = "$allowed" ]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          if ! is_allowed_user "$ACTOR"; then
+            echo "Push/merge non conforme sur branche protegee: $BRANCH_NAME"
+            echo "Utilisateur GitHub non autorise: $ACTOR"
+            echo "Utilisateurs autorises: $GIT_MASTER_USERS_LIST"
+            exit 1
+          fi
+
+          echo "Identite acteur validee pour la branche protegee $BRANCH_NAME: $ACTOR"

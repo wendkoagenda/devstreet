@@ -1,0 +1,133 @@
+name: CD - DEPLOIEMENT SSH
+
+# Description du workflow :
+# - Deploie un commit sur la VM d'une branche, par SSH direct (IP publique et cle privee dediee, empreinte epinglee).
+# - Rend backend.env et compose.env depuis les variables et secrets de l'environnement de la branche, les envoie avec deploy/, puis execute
+#   deploy/vm/deployer.sh (proxy, certificat, conteneurs, controle de sante).
+# - Controle ensuite de bout en bout depuis le runner : https://<domaine>/api/health et https://<domaine>/.
+# Lancement : par cd-orchestrateur (apres la construction des images). Pas de lancement direct.
+
+on:
+  workflow_call:
+    inputs:
+      branche:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+      backend_image:
+        required: true
+        type: string
+      frontend_image:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Deux deploiements d'un meme environnement s'enchainent, sans jamais s'interrompre au milieu d'une migration
+concurrency:
+  group: cd-deploiement-${{ inputs.branche }}
+  cancel-in-progress: false
+
+jobs:
+  deploiement:
+    name: deploiement
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Secrets et variables de l'environnement GitHub de la branche (reserve a cette branche)
+    environment: ${{ inputs.branche }}
+    permissions:
+      contents: read
+      packages: read
+    env:
+      BRANCHE: ${{ inputs.branche }}
+      DEPLOY_SHA: ${{ inputs.sha }}
+      BACKEND_IMAGE: ${{ inputs.backend_image }}
+      FRONTEND_IMAGE: ${{ inputs.frontend_image }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - name: Rendre les fichiers d'environnement
+        working-directory: backend
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          python3 -m scripts.deploy_env.render --sortie "$RUNNER_TEMP/rendu"
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          # Lus depuis le fichier rendu (deja valides : minuscules, chiffres, tirets et points seulement)
+          namespace="$(sed -n "s/^DEPLOY_NAMESPACE='\(.*\)'$/\1/p" "$RUNNER_TEMP/rendu/compose.env")"
+          domain="$(sed -n "s/^DEPLOY_DOMAIN='\(.*\)'$/\1/p" "$RUNNER_TEMP/rendu/compose.env")"
+          echo "::add-mask::$host"
+          echo "::add-mask::$user"
+          {
+            echo "SSH_HOST=$host"
+            echo "SSH_USER=$user"
+            echo "NAMESPACE=$namespace"
+            echo "DOMAIN=$domain"
+          } >> "$GITHUB_ENV"
+
+      - name: Envoyer et deployer
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          ssh_vm() {
+            ssh -i "$RUNNER_TEMP/ssh/key" \
+              -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+              -o StrictHostKeyChecking=yes \
+              -o HostKeyAlgorithms=ssh-ed25519 \
+              -o BatchMode=yes \
+              -o IdentitiesOnly=yes \
+              -o ConnectTimeout=15 \
+              -o ServerAliveInterval=30 \
+              "$SSH_USER@$SSH_HOST" "$@"
+          }
+          app_dir="/opt/apps/$NAMESPACE"
+
+          echo "== Envoi de deploy/"
+          tar -czf - deploy | ssh_vm "set -eu; mkdir -p $app_dir; rm -rf $app_dir/deploy; tar -xzf - -C $app_dir"
+
+          echo "== Envoi de la configuration (droits 600)"
+          tar -czf - -C "$RUNNER_TEMP/rendu" backend.env compose.env | ssh_vm "set -eu; umask 077; tar -xzf - -C $app_dir"
+
+          echo "== Deploiement"
+          printf '%s\n%s\n' "$GITHUB_ACTOR" "$REGISTRY_TOKEN" | ssh_vm "cd $app_dir && sh deploy/vm/deployer.sh"
+
+      - name: Controle de bout en bout
+        run: |
+          set -eu
+          curl -fsS --max-time 15 --retry 6 --retry-delay 10 --retry-all-errors "https://$DOMAIN/api/health"
+          echo
+          curl -fsS --max-time 15 --retry 6 --retry-delay 10 --retry-all-errors -o /dev/null "https://$DOMAIN/"
+          {
+            echo "### Deploiement $BRANCHE"
+            echo "- Domaine : https://$DOMAIN"
+            echo "- Commit : $DEPLOY_SHA"
+            echo "- Backend : $BACKEND_IMAGE"
+            echo "- Frontend : $FRONTEND_IMAGE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer la cle SSH et les fichiers rendus
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh" "$RUNNER_TEMP/rendu"

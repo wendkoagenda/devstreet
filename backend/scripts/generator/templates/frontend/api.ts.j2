@@ -1,0 +1,122 @@
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQuery } from "@/helpers/api/base-query";
+import {
+  toQueryString,
+  type ListParams,
+  type Paginated,
+} from "@/helpers/api/pagination";
+{% if has_file_fields %}
+import {
+  buildModelFormData,
+  hasFilePayload,
+} from "@/helpers/api/form-data-builder";
+{% endif %}
+import type {
+  Create{{ model_name_pascal }}Schema,
+  Get{{ model_name_pascal }}Schema,
+  Update{{ model_name_pascal }}Schema,
+} from "./schema";
+
+{% if has_file_fields %}
+const FILE_FIELDS = {{ file_fields_descriptor_json }} as const;
+
+export type Create{{ model_name_pascal }}MutationArg = Create{{ model_name_pascal }}Schema & {
+  _files?: Record<string, File | undefined>;
+};
+
+export type Update{{ model_name_pascal }}MutationArg = Update{{ model_name_pascal }}Schema & {
+  _files?: Record<string, File | undefined>;
+};
+{% else %}
+export type Create{{ model_name_pascal }}MutationArg = Create{{ model_name_pascal }}Schema;
+export type Update{{ model_name_pascal }}MutationArg = Update{{ model_name_pascal }}Schema;
+{% endif %}
+
+export const {{ model_name_camel }}Api = createApi({
+  reducerPath: "{{ model_name_camel }}Api",
+  baseQuery,
+  tagTypes: ["{{ tag_name }}"],
+  endpoints: (builder) => ({
+    create{{ model_name_pascal }}: builder.mutation<void, Create{{ model_name_pascal }}MutationArg>({
+      query: (payload) => {
+{% if has_file_fields %}
+        const { _files, ...body } = payload;
+        if (hasFilePayload([...FILE_FIELDS], _files)) {
+          return {
+            url: "{{ api_endpoint }}",
+            method: "POST",
+            body: buildModelFormData(body, {
+              fileFields: [...FILE_FIELDS],
+              fileValues: _files,
+            }),
+          };
+        }
+        return {
+          url: "{{ api_endpoint }}",
+          method: "POST",
+          body,
+        };
+{% else %}
+        return {
+          url: "{{ api_endpoint }}",
+          method: "POST",
+          body: payload,
+        };
+{% endif %}
+      },
+      invalidatesTags: ["{{ tag_name }}"],
+    }),
+    get{{ model_name_plural_pascal }}: builder.query<Paginated<Get{{ model_name_pascal }}Schema>, ListParams | void>({
+      query: (params) => `{{ api_endpoint }}${toQueryString(params)}`,
+      providesTags: ["{{ tag_name }}"],
+    }),
+    get{{ model_name_pascal }}: builder.query<Get{{ model_name_pascal }}Schema, number>({
+      query: (id) => `{{ api_endpoint }}/${id}`,
+      providesTags: ["{{ tag_name }}"],
+    }),
+    update{{ model_name_pascal }}: builder.mutation<void, Update{{ model_name_pascal }}MutationArg>({
+      query: (payload) => {
+{% if has_file_fields %}
+        const { _files, ...body } = payload;
+        if (hasFilePayload([...FILE_FIELDS], _files)) {
+          return {
+            url: `{{ api_endpoint }}/${payload.id}`,
+            method: "PUT",
+            body: buildModelFormData(body, {
+              fileFields: [...FILE_FIELDS],
+              fileValues: _files,
+            }),
+          };
+        }
+        return {
+          url: `{{ api_endpoint }}/${payload.id}`,
+          method: "PUT",
+          body,
+        };
+{% else %}
+        return {
+          url: `{{ api_endpoint }}/${payload.id}`,
+          method: "PUT",
+          body: payload,
+        };
+{% endif %}
+      },
+      invalidatesTags: ["{{ tag_name }}"],
+    }),
+    delete{{ model_name_pascal }}: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `{{ api_endpoint }}/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["{{ tag_name }}"],
+    }),
+  }),
+});
+
+export const {
+  useCreate{{ model_name_pascal }}Mutation,
+  useGet{{ model_name_plural_pascal }}Query,
+  useGet{{ model_name_pascal }}Query,
+  useUpdate{{ model_name_pascal }}Mutation,
+  useDelete{{ model_name_pascal }}Mutation,
+} = {{ model_name_camel }}Api;

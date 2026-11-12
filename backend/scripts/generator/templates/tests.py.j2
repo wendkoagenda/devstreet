@@ -1,0 +1,404 @@
+"""
+Tests pour les {{ model.snake_name }}.
+"""
+from django.test import TestCase
+from rest_framework.test import APITestCase
+from rest_framework import status
+from app.{{ model.app_name }}.models import {{ model.model_name }}
+from app.{{ model.app_name }}.services.{{ model.model_name|lower }}_service import {{ model.model_name }}Service
+
+
+class {{ model.model_name }}ModelTests(TestCase):
+    """
+    Tests pour le modèle {{ model.model_name }}.
+    """
+
+    def setUp(self):
+        """Configuration initiale pour les tests."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        try:
+            self.user = User.objects.get(email='admin@example.com')
+        except User.DoesNotExist:
+            self.user = User.objects.create_superuser(
+                username='admin',
+                email='admin@example.com',
+                password='admin123'
+            )
+
+        self.{{ model.snake_name }} = {{ model.model_name }}.objects.create(
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] %}
+{% if field.choices %}
+            {{ field_name }}={% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' or field.type == 'TextField' %}
+            {{ field_name }}="Test {{ field_name }}",
+{% elif field.type == 'DecimalField' %}
+            {{ field_name }}=99.99,
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            {{ field_name }}=100,
+{% elif field.type == 'BooleanField' %}
+            {{ field_name }}=True,
+{% elif field.type == 'EmailField' %}
+            {{ field_name }}="test@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+    def test_{{ model.snake_name }}_creation(self):
+        """Test de création d'un {{ model.snake_name }}."""
+        self.assertIsNotNone(self.{{ model.snake_name }}.id)
+
+    def test_{{ model.snake_name }}_str_representation(self):
+        """Test de la représentation string du {{ model.snake_name }}."""
+        self.assertIsInstance(str(self.{{ model.snake_name }}), str)
+
+
+class {{ model.model_name }}ServiceTests(TestCase):
+    """
+    Tests pour le service {{ model.model_name }}.
+    """
+
+    def setUp(self):
+        """Configuration initiale pour les tests."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        try:
+            self.user = User.objects.get(email='admin@example.com')
+        except User.DoesNotExist:
+            self.user = User.objects.create_superuser(
+                username='admin',
+                email='admin@example.com',
+                password='admin123'
+            )
+
+        self.{{ model.model_name|lower }}_service = {{ model.model_name }}Service()
+
+    def test_get_all_{{ model.snake_name }}(self):
+        """Test de récupération de tous les {{ model.snake_name }}."""
+        {{ model.model_name }}.objects.create(
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] %}
+{% if field.choices %}
+            {{ field_name }}={% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' or field.type == 'TextField' %}
+            {{ field_name }}="Test {{ field_name }} 1",
+{% elif field.type == 'DecimalField' %}
+            {{ field_name }}=99.99,
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            {{ field_name }}=100,
+{% elif field.type == 'BooleanField' %}
+            {{ field_name }}=True,
+{% elif field.type == 'EmailField' %}
+            {{ field_name }}="test1@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+        {{ model.model_name }}.objects.create(
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] %}
+{% if field.choices %}
+            {{ field_name }}={% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' or field.type == 'TextField' %}
+            {{ field_name }}="Test {{ field_name }} 2",
+{% elif field.type == 'DecimalField' %}
+            {{ field_name }}=199.99,
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            {{ field_name }}=200,
+{% elif field.type == 'BooleanField' %}
+            {{ field_name }}=False,
+{% elif field.type == 'EmailField' %}
+            {{ field_name }}="test2@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+        {{ model.snake_name }} = self.{{ model.model_name|lower }}_service.get_all()
+        self.assertEqual({{ model.snake_name }}.count(), 2)
+
+    def test_create_{{ model.snake_name }}(self):
+        """Test de création d'un {{ model.snake_name }}."""
+        data = {
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] %}
+{% if field.choices %}
+            "{{ field_name }}": {% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' or field.type == 'TextField' %}
+            "{{ field_name }}": "Nouveau {{ field_name }}",
+{% elif field.type == 'DecimalField' %}
+            "{{ field_name }}": 299.99,
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            "{{ field_name }}": 300,
+{% elif field.type == 'BooleanField' %}
+            "{{ field_name }}": True,
+{% elif field.type == 'EmailField' %}
+            "{{ field_name }}": "nouveau@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            "created_by": self.user.id,
+            "updated_by": self.user.id,
+        }
+
+        {{ model.snake_name }} = self.{{ model.model_name|lower }}_service.create(data)
+{% set ns = namespace(found_field=false) %}
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] and not ns.found_field %}
+{% if field.type == 'CharField' or field.type == 'TextField' %}
+        self.assertEqual(getattr({{ model.snake_name }}, '{{ field_name }}'), "Nouveau {{ field_name }}")
+{% set ns.found_field = true %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+
+    def test_update_{{ model.snake_name }}(self):
+        """Test de mise à jour d'un {{ model.snake_name }}."""
+        {{ model.snake_name }} = {{ model.model_name }}.objects.create(
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] %}
+{% if field.choices %}
+            {{ field_name }}={% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' or field.type == 'TextField' %}
+            {{ field_name }}="Original {{ field_name }}",
+{% elif field.type == 'DecimalField' %}
+            {{ field_name }}=399.99,
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            {{ field_name }}=400,
+{% elif field.type == 'BooleanField' %}
+            {{ field_name }}=True,
+{% elif field.type == 'EmailField' %}
+            {{ field_name }}="original@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+        updated_data = {
+{% set ns = namespace(has_field=false) %}
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['created_by', 'updated_by', 'created_at', 'updated_at', 'uuid', 'id'] and ns.has_field == false %}
+{% if field.type in ['CharField', 'TextField'] %}
+            "{{ field_name }}": "Mis à jour {{ field_name }}"
+{% endif %}
+{% set ns.has_field = true %}
+{% endif %}
+{% endfor %}
+        }
+        updated_{{ model.snake_name }} = self.{{ model.model_name|lower }}_service.update({{ model.snake_name }}.id, updated_data)
+{% set ns = namespace(found_field=false) %}
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] and not ns.found_field %}
+{% if field.type == 'CharField' or field.type == 'TextField' %}
+        self.assertEqual(getattr(updated_{{ model.snake_name }}, '{{ field_name }}'), "Mis à jour {{ field_name }}")
+{% set ns.found_field = true %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+
+    def test_delete_{{ model.snake_name }}(self):
+        """Test de suppression d'un {{ model.snake_name }}."""
+        {{ model.snake_name }} = {{ model.model_name }}.objects.create(
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] %}
+{% if field.choices %}
+            {{ field_name }}={% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' or field.type == 'TextField' %}
+            {{ field_name }}="À supprimer {{ field_name }}",
+{% elif field.type == 'DecimalField' %}
+            {{ field_name }}=499.99,
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            {{ field_name }}=500,
+{% elif field.type == 'BooleanField' %}
+            {{ field_name }}=False,
+{% elif field.type == 'EmailField' %}
+            {{ field_name }}="delete@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+        success = self.{{ model.model_name|lower }}_service.delete({{ model.snake_name }}.id)
+        self.assertTrue(success)
+        self.assertFalse({{ model.model_name }}.objects.filter(id={{ model.snake_name }}.id).exists())
+
+
+class {{ model.model_name }}APITests(APITestCase):
+    """
+    Tests pour l'API {{ model.model_name }}.
+    """
+
+    def setUp(self):
+        """Configuration initiale pour les tests."""
+        from django.contrib.auth import get_user_model
+        from rest_framework_simplejwt.tokens import RefreshToken
+        User = get_user_model()
+
+        try:
+            self.user = User.objects.get(email='admin@example.com')
+        except User.DoesNotExist:
+            self.user = User.objects.create_superuser(
+                username='admin',
+                email='admin@example.com',
+                password='admin123'
+            )
+
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+
+        self.{{ model.snake_name }} = {{ model.model_name }}.objects.create(
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['id', 'uuid', 'created_at', 'updated_at', 'created_by', 'updated_by'] %}
+{% if field.choices %}
+            {{ field_name }}={% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' or field.type == 'TextField' %}
+            {{ field_name }}="Test API {{ field_name }}",
+{% elif field.type == 'DecimalField' %}
+            {{ field_name }}=599.99,
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            {{ field_name }}=600,
+{% elif field.type == 'BooleanField' %}
+            {{ field_name }}=True,
+{% elif field.type == 'EmailField' %}
+            {{ field_name }}="api@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            created_by=self.user.id,
+            updated_by=self.user.id
+        )
+
+    def test_{{ model.snake_name }}_list(self):
+        """Test de listage des {{ model.snake_name }}."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        response = self.client.get(f'/api/v1/{{ resource_plural }}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+        self.assertIsInstance(response.data['results'], list)
+
+    def test_{{ model.snake_name }}_retrieve(self):
+        """Test de récupération d'un {{ model.snake_name }}."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        response = self.client.get(f'/api/v1/{{ resource_plural }}/{self.{{ model.snake_name }}.id}')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_{{ model.snake_name }}_create(self):
+        """Test de création d'un {{ model.snake_name }}."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        data = {
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['created_by', 'updated_by', 'created_at', 'updated_at', 'uuid', 'id'] %}
+{% if field.choices %}
+            "{{ field_name }}": {% if field.choices[0][0] is string %}"{{ field.choices[0][0] }}"{% else %}{{ field.choices[0][0] }}{% endif %},
+{% elif field.type == 'CharField' %}
+            "{{ field_name }}": "Test {{ field_name }} via API",
+{% elif field.type == 'TextField' %}
+            "{{ field_name }}": "Description créée via API",
+{% elif field.type == 'DecimalField' %}
+            "{{ field_name }}": "99.99",
+{% elif field.type == 'IntegerField' or field.type == 'PositiveIntegerField' %}
+            "{{ field_name }}": 100,
+{% elif field.type == 'BooleanField' %}
+            "{{ field_name }}": True,
+{% elif field.type == 'EmailField' %}
+            "{{ field_name }}": "test@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+        }
+
+        response = self.client.post(f'/api/v1/{{ resource_plural }}', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_{{ model.snake_name }}_partial_update(self):
+        """Test de mise à jour partielle d'un {{ model.snake_name }}."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        data = {
+{% set ns = namespace(has_field=false) %}
+{% for field_name, field in model.fields.items() %}
+{% if field_name not in ['created_by', 'updated_by', 'created_at', 'updated_at', 'uuid', 'id'] and ns.has_field == false %}
+{% if field.type in ['CharField', 'TextField'] and not field.is_file_field %}
+            "{{ field_name }}": "{{ model.snake_name }} mis à jour"
+{% endif %}
+{% set ns.has_field = true %}
+{% endif %}
+{% endfor %}
+        }
+
+        response = self.client.patch(f'/api/v1/{{ resource_plural }}/{self.{{ model.snake_name }}.id}', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_{{ model.snake_name }}_delete(self):
+        """Test de suppression d'un {{ model.snake_name }}."""
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        response = self.client.delete(f'/api/v1/{{ resource_plural }}/{self.{{ model.snake_name }}.id}')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse({{ model.model_name }}.objects.filter(id=self.{{ model.snake_name }}.id).exists())
+
+{% if model.has_file_fields() %}
+{% for field in file_fields %}
+    def test_{{ model.snake_name }}_file_upload_{{ field.name }}(self):
+        """Test de création avec upload fichier ({{ field.name }})."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
+        uploaded = SimpleUploadedFile(
+            "test-upload.pdf",
+            b"%PDF-1.4 test content",
+            content_type="application/pdf",
+        )
+        relative_path = "{{ field.upload_folder }}/test-upload.pdf"
+        data = {
+{% for field_name, f in model.fields.items() %}
+{% if field_name not in ['created_by', 'updated_by', 'created_at', 'updated_at', 'uuid', 'id'] and not f.is_file_field %}
+{% if f.choices %}
+            "{{ field_name }}": {% if f.choices[0][0] is string %}"{{ f.choices[0][0] }}"{% else %}{{ f.choices[0][0] }}{% endif %},
+{% elif f.type == 'CharField' %}
+            "{{ field_name }}": "Test {{ field_name }} upload",
+{% elif f.type == 'TextField' %}
+            "{{ field_name }}": "Description upload",
+{% elif f.type == 'DecimalField' %}
+            "{{ field_name }}": "99.99",
+{% elif f.type == 'IntegerField' or f.type == 'PositiveIntegerField' %}
+            "{{ field_name }}": 100,
+{% elif f.type == 'BooleanField' %}
+            "{{ field_name }}": True,
+{% elif f.type == 'EmailField' %}
+            "{{ field_name }}": "upload@example.com",
+{% endif %}
+{% endif %}
+{% endfor %}
+            "{{ field.name }}": uploaded,
+            "{{ field.name }}_path": relative_path,
+        }
+
+        response = self.client.post(
+            f'/api/v1/{{ resource_plural }}',
+            data,
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('{{ field.name }}', response.data)
+        self.assertTrue(str(response.data['{{ field.name }}']).startswith('{{ field.upload_folder }}/'))
+
+{% endfor %}
+{% endif %}

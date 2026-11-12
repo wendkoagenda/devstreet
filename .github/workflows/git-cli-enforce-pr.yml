@@ -1,0 +1,89 @@
+name: GIT-CLI - ENFORCEMENT (pr)
+
+# Description du workflow :
+# Ce workflow applique la conformite sur les pull requests.
+# - Verifie la presence du marqueur Git CLI dans le body de la PR.
+# - Verifie les regles de flux entre branches:
+#   - base=main    => head doit etre develop
+#   - base=prod    => head doit etre main
+#   - base=develop => head doit etre different de develop, main et prod
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-pr-flow-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify allowed PR branch flow
+        shell: bash
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          BASE="${PR_BASE_REF}"
+          HEAD="${PR_HEAD_REF}"
+
+          if [ -z "$BASE" ] || [ -z "$HEAD" ]; then
+            echo "Impossible de lire base/head de la pull request."
+            exit 1
+          fi
+
+          case "$BASE" in
+            main)
+              if [ "$HEAD" != "develop" ]; then
+                echo "Flux PR invalide: base=main exige head=develop."
+                echo "Valeur recue: head=$HEAD"
+                exit 1
+              fi
+              ;;
+            prod)
+              if [ "$HEAD" != "main" ]; then
+                echo "Flux PR invalide: base=prod exige head=main."
+                echo "Valeur recue: head=$HEAD"
+                exit 1
+              fi
+              ;;
+            develop)
+              if [ "$HEAD" = "develop" ] || [ "$HEAD" = "main" ] || [ "$HEAD" = "prod" ]; then
+                echo "Flux PR invalide: base=develop interdit head=develop/main/prod."
+                echo "Valeur recue: head=$HEAD"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "Aucune regle de flux specifique pour base=$BASE. Verification ignoree."
+              ;;
+          esac
+
+          echo "Regle de flux PR validee: base=$BASE, head=$HEAD"
+
+  enforce-pr-marker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR body marker
+        shell: bash
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+
+          REQUIRED_MARKER="<!-- X-Git-CLI-PR: onepourcent-git-cli/2.0 -->"
+          LEGACY_MARKER="<!-- X-Git-CLI-PR: onepourcent-git-cli/1.0 -->"
+          BODY="${PR_BODY}"
+
+          if [[ "$BODY" != *"$REQUIRED_MARKER"* && "$BODY" != *"$LEGACY_MARKER"* ]]; then
+            echo "Pull Request non conforme: marqueur Git CLI manquant."
+            echo "Marqueur attendu: $REQUIRED_MARKER"
+            exit 1
+          fi
+
+          echo "Marqueur PR Git CLI detecte."

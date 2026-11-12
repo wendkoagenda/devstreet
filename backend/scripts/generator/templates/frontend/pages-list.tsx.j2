@@ -1,0 +1,27 @@
+import PageTitleDisplayer from "@/helpers/displayers/page-title-displayer";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useTranslation } from "react-i18next";
+import Create{{ model_name_pascal }}Dialog from "../components/create-{{ model_name_lower }}/create-{{ model_name_lower }}-dialog";
+import Show{{ model_name_pascal }}Dialog from "../components/show-edit-or-delete-{{ model_name_lower }}/show-{{ model_name_lower }}-dialog";
+import { {{ model_name_pascal }}DataTableRender } from "../components/{{ model_name_lower }}-data/{{ model_name_lower }}-data-table";
+
+export default function {{ model_name_pascal }}List() {
+  const { t } = useTranslation();
+  const { {{ permission_view_var }} } = usePermissions();
+
+  if (!{{ permission_view_var }}) {
+    return <div className="text-center my-32">{t("common.accessDenied")}</div>;
+  }
+
+  return (
+    <>
+      <PageTitleDisplayer
+        title="{{ model_title }}"
+        description="Gestion de {{ model_title | lower }}"
+      />
+      <{{ model_name_pascal }}DataTableRender />
+      <Create{{ model_name_pascal }}Dialog />
+      <Show{{ model_name_pascal }}Dialog />
+    </>
+  );
+}
