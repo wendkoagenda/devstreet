@@ -8,7 +8,7 @@ Un parcours **à un bouton principal** : **Créer mon projet**. Le serveur orche
 
 | Route | Intégration |
 | --- | --- |
-| GET /api/v1/technologies | Sélection des technologies existantes |
+| GET /api/v1/technologies | Filtre explorateur ; plus de sélection manuelle à la création |
 | POST /api/v1/projects | Titre + licence (+ techno, options avancées). **Slug optionnel** (généré côté serveur avec collision). Réponse 201 : projet + `setup` + `forge_access` éventuel |
 | PATCH /api/v1/projects/{id} | Corriger la fiche (slug toujours unique) |
 | POST /api/v1/projects/{id}/setup | Reprise après échec partiel : identité + dépôt, **idempotent**, sans doublon |
@@ -21,7 +21,7 @@ Un parcours **à un bouton principal** : **Créer mon projet**. Le serveur orche
 
 ## UX proposée
 
-Formulaire minimal : **nom**, **licence**, **technologies**. Slug / problème / description / démo dans **options avancées**. Un CTA **Créer mon projet** ; progression lisible (brouillon → accès Git → dépôt → initialisation). En cas d’échec : garder le brouillon, bouton **Reprendre**, aucun second compte / dépôt.
+Formulaire minimal : **nom**, **licence**. Les langages sont **détectés automatiquement** après le premier push (via Gitea `/languages`, synchronisés sur `Project.technologies` à l’appel `code/summary`). Slug / problème / description / démo dans **options avancées**. Un CTA **Créer mon projet** ; progression lisible (brouillon → accès Git → dépôt → initialisation). En cas d’échec : garder le brouillon, bouton **Reprendre**, aucun second compte / dépôt.
 
 Après dépôt prêt et vide : **Initialiser avec un README** (écriture réelle Gitea) ou **Envoyer un projet existant** (commandes clone/push dans le Hub). Afficher le secret forge **une seule fois** ; aucun jeton admin dans le navigateur ; **aucun bouton** qui impose d’ouvrir l’UI Gitea.
 

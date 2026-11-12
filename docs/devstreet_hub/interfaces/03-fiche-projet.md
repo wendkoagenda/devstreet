@@ -25,7 +25,7 @@ En-tête : nom, problème résolu, technologies, étoiles et démo. Puis onglets
 
 ## UX proposée
 
-Le bouton « Préparer une contribution avec l’IA » mène à l’écran 06 ; « Examiner les propositions » à l’écran 05. L’onglet **Code** est **interne à DevStreet** : explorateur de fichiers, sélecteur de branche, fil d’Ariane, lecteur de fichiers (numéros de ligne, HTML affiché comme texte), menu de copie d’URL de clone, README Markdown sécurisé, description et langages. Aucune redirection vers l’UI Gitea, aucun iframe. Les paramètres `tab`, `ref`, `path` et `mode` restent dans l’URL (branches avec slashs via `ref`). Les interfaces PR / diff / merge ne doivent **pas** être annoncées avant leur livraison.
+Le bouton « Préparer une contribution avec l’IA » mène à l’écran 06 ; « Examiner les propositions » à l’écran 05. L’onglet **Code** est **interne à DevStreet** : explorateur de fichiers, sélecteur de branche, fil d’Ariane, lecteur de fichiers (numéros de ligne, HTML affiché comme texte), menu de copie d’URL de clone, README Markdown sécurisé, description et langages. L’en-tête de fiche affiche les **langues détectées** du dépôt (plus les tags manuels type Go/Django choisis à la création). Aucune redirection vers l’UI Gitea, aucun iframe. Les paramètres `tab`, `ref`, `path` et `mode` restent dans l’URL (branches avec slashs via `ref`). Les interfaces PR / diff / merge ne doivent **pas** être annoncées avant leur livraison.
 
 L’ajout d’un membre par nom requiert un sélecteur du compte commun ; `/api/v1/users` est soumis aux permissions IAM et ne doit pas être rendu public par le frontend. Tant qu’un annuaire public n’existe pas, accepter un ID utilisateur communiqué par le membre.
 
