@@ -1,0 +1,9 @@
+{
+  "model": "Swipe",
+  "app": "marketplace",
+  "description": "Action de swipe d'un profil sur un autre : vivier entreprise ou réseau entre devs.",
+  "fields": {
+    "direction": { "type": "CharField", "max_length": 4, "choices": ["like", "pass"], "required": true, "description": "Swipe à droite (like) ou à gauche (pass)" },
+    "context": { "type": "CharField", "max_length": 10, "choices": ["recruit", "network"], "required": true, "description": "Recrutement (entreprise vers dev) ou réseau (dev vers dev)" }
+  }
+}

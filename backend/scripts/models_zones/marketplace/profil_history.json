@@ -1,0 +1,11 @@
+{
+  "model": "ProfilHistory",
+  "app": "marketplace",
+  "description": "Journal des modifications d'un profil. Déclenche le recalcul de l'embedding.",
+  "fields": {
+    "field": { "type": "CharField", "max_length": 100, "required": true, "description": "Nom du champ modifié" },
+    "old_value": { "type": "TextField", "required": false, "description": "Valeur avant modification" },
+    "new_value": { "type": "TextField", "required": false, "description": "Valeur après modification" },
+    "source": { "type": "CharField", "max_length": 10, "choices": ["manual", "ai", "system"], "default": "manual", "description": "Origine de la modification" }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "model": "Review",
+  "app": "marketplace",
+  "description": "Avis laissé sur un profil après une mission, utilisé pour la réputation.",
+  "fields": {
+    "rating": { "type": "PositiveSmallIntegerField", "min": 1, "max": 5, "required": true, "description": "Note de 1 à 5" },
+    "comment": { "type": "TextField", "required": false, "description": "Commentaire" },
+    "is_public": { "type": "BooleanField", "default": true, "description": "Affiché sur le profil et le CV" }
+  }
+}

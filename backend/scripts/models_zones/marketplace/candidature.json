@@ -1,0 +1,12 @@
+{
+  "model": "Candidature",
+  "app": "marketplace",
+  "description": "Table pivot de la relation n-n entre Offer et Profil : une candidature d'un profil à une offre.",
+  "fields": {
+    "message": { "type": "TextField", "required": false, "description": "Message de motivation" },
+    "status": { "type": "CharField", "max_length": 15, "choices": ["sent", "shortlisted", "rejected", "accepted"], "default": "sent", "description": "Statut de la candidature" },
+    "ai_match_score": { "type": "DecimalField", "max_digits": 5, "decimal_places": 2, "required": false, "description": "Score du moteur de recommandation, de 0 à 100" },
+    "cv_snapshot": { "type": "FileField", "required": false, "description": "CV PDF figé au moment de la candidature" },
+    "decided_at": { "type": "DateTimeField", "required": false, "description": "Date de la décision de l'entreprise" }
+  }
+}
