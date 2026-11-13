@@ -2,6 +2,7 @@
 ViewSet pour la gestion des notification_resumes.
 """
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
@@ -31,12 +32,13 @@ class NotificationResumeViewSet(viewsets.ModelViewSet):
         super().__init__(*args, **kwargs)
         self.notificationresume_service = NotificationResumeService()
 
-
     def get_permissions(self):
         """
         Retourne les permissions requises selon l'action.
         """
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action in ('actuel', 'lire'):
+            permission_classes = [IsAuthenticated]
+        elif self.action == 'list' or self.action == 'retrieve':
             permission_classes = [CanViewNotificationResume]
         elif self.action == 'create':
             permission_classes = [CanCreateNotificationResume]
@@ -48,6 +50,47 @@ class NotificationResumeViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated]
 
         return [permission() for permission in permission_classes]
+
+    @swagger_auto_schema(
+        operation_description=(
+            "Résumé quotidien non lu du membre connecté "
+            "(génère celui d'hier si besoin)."
+        ),
+        responses={200: NotificationResumeSerializer, 204: "Aucun résumé"},
+        security=[{'Bearer': []}],
+        tags=['V1 - NotificationResume'],
+    )
+    @action(detail=False, methods=['get'], url_path='actuel')
+    def actuel(self, request):
+        resume = self.notificationresume_service.get_actuel_non_lu(
+            membre=request.user
+        )
+        if resume is None:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(self.get_serializer(resume).data)
+
+    @swagger_auto_schema(
+        operation_description="Marquer un résumé quotidien comme lu.",
+        responses={
+            200: NotificationResumeSerializer,
+            400: "Données invalides",
+            404: "Résumé introuvable",
+        },
+        security=[{'Bearer': []}],
+        tags=['V1 - NotificationResume'],
+    )
+    @action(detail=True, methods=['post'], url_path='lire')
+    def lire(self, request, pk=None):
+        try:
+            resume = self.notificationresume_service.mark_read(
+                resume_id=int(pk), membre=request.user
+            )
+        except ValidationError as exc:
+            return Response(
+                {'error': str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(self.get_serializer(resume).data)
 
     @swagger_auto_schema(
         operation_description="Lister les notification_resumes (paginé : 20 par page, 100 au maximum)",
@@ -121,6 +164,8 @@ class NotificationResumeViewSet(viewsets.ModelViewSet):
             if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
                 data['created_by'] = request.user.id
                 data['updated_by'] = request.user.id
+            if 'destinataire' in data and 'destinataire_id' not in data:
+                data['destinataire_id'] = data.pop('destinataire')
             notification_resume = self.notificationresume_service.create(data)
             serializer = self.get_serializer(notification_resume)
             return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -37,8 +37,15 @@ export default function AppSidebarFooter() {
     }
   };
 
+  const currentUserId = useAuthSlice((state) => state.user?.id);
+
   const handleGoToMyAccount = () => {
     navigate("/my-account");
+  };
+
+  const handleGoToProfile = () => {
+    if (currentUserId) navigate(`/forum/profil/${currentUserId}`);
+    else navigate("/forum/profil/me");
   };
 
   return (
@@ -62,6 +69,9 @@ export default function AppSidebarFooter() {
               side="top"
               className="w-[--radix-popper-anchor-width]"
             >
+              <DropdownMenuItem onClick={handleGoToProfile}>
+                Mon profil
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleGoToMyAccount}>
                 {t("sidebar.my_account")}
               </DropdownMenuItem>

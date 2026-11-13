@@ -72,7 +72,15 @@ class Command(BaseCommand):
         notification_resume_data = []
         
         for i in range(1, 4):  # Créer 3 enregistrements de test
-            data = {                'periode_debut': (datetime.now() - timedelta(days=i)).date(),                'periode_fin': (datetime.now() - timedelta(days=i)).date(),                'nombre_nouveautes': i * 100 + random.randint(1, 99),                'read_at': datetime.now() - timedelta(days=i, hours=random.randint(0, 23)),                'created_by': user.id,
+            jour = (datetime.now() - timedelta(days=i)).date()
+            data = {
+                'destinataire': user,
+                'periode_debut': jour,
+                'periode_fin': jour,
+                'nombre_nouveautes': i * 100 + random.randint(1, 99),
+                'read_at': datetime.now()
+                - timedelta(days=i, hours=random.randint(0, 23)),
+                'created_by': user.id,
                 'updated_by': user.id,
             }
             notification_resume_data.append(data)

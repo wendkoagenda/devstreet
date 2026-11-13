@@ -8,6 +8,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
@@ -15,14 +16,23 @@ import {
 import {
   ChevronDown,
   Layers,
+  Mail,
   MessageSquare,
+  Radio,
   Store,
   UserRound,
+  Users,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/use-permissions";
 import { MARKETPLACE_ADMIN_PAGES } from "@/models/marketplace-space/admin-pages";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
+import { useGetActivityBadgesQuery } from "@/models/forum/api";
+
+function formatBadge(count: number | undefined) {
+  if (!count || count <= 0) return null;
+  return count > 9 ? "9+" : String(count);
+}
 
 export default function PlatformMenu() {
   const navigate = useNavigate();
@@ -31,6 +41,9 @@ export default function PlatformMenu() {
   const permissions = usePermissions();
   const { hasProfil, isRecruiter } = useMySpace();
   const hubActive = location.pathname.startsWith("/hub");
+  const { data: badges } = useGetActivityBadgesQuery(undefined, {
+    pollingInterval: 30000,
+  });
 
   // Écrans de la marketplace : ceux qui supposent un profil n'apparaissent qu'une fois le profil créé,
   // ceux du recruteur qu'une fois l'entreprise créée
@@ -85,6 +98,10 @@ export default function PlatformMenu() {
     navigate(url);
     if (isMobile) setOpenMobile(false);
   };
+
+  const communautesBadge = formatBadge(badges?.communautes);
+  const chainesBadge = formatBadge(badges?.chaines);
+  const messagesBadge = formatBadge(badges?.messages);
 
   return (
     <SidebarMenu>
@@ -165,22 +182,73 @@ export default function PlatformMenu() {
 
         <SidebarMenuItem>
           <SidebarMenuButton
-            disabled
-            tooltip="Forum — bientôt disponible"
-            className="opacity-60"
+            isActive={
+              location.pathname === "/" ||
+              (location.pathname.startsWith("/forum/") &&
+                !location.pathname.startsWith("/forum/profil") &&
+                !location.pathname.startsWith("/forum/communautes") &&
+                !location.pathname.startsWith("/forum/chaines"))
+            }
+            onClick={() => go("/")}
+            tooltip="Forum"
           >
             <MessageSquare />
             <span>Forum</span>
-            <span className="ml-auto text-[10px] text-muted-foreground">
-              bientôt
-            </span>
           </SidebarMenuButton>
         </SidebarMenuItem>
 
         <SidebarMenuItem>
           <SidebarMenuButton
-            isActive={location.pathname === "/my-account"}
-            onClick={() => go("/my-account")}
+            isActive={location.pathname.startsWith("/forum/communautes")}
+            onClick={() => go("/forum/communautes")}
+            tooltip="Communautés"
+          >
+            <Users />
+            <span>Communautés</span>
+          </SidebarMenuButton>
+          {communautesBadge ? (
+            <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+              {communautesBadge}
+            </SidebarMenuBadge>
+          ) : null}
+        </SidebarMenuItem>
+
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={location.pathname.startsWith("/forum/chaines")}
+            onClick={() => go("/forum/chaines")}
+            tooltip="Chaînes"
+          >
+            <Radio />
+            <span>Chaînes</span>
+          </SidebarMenuButton>
+          {chainesBadge ? (
+            <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+              {chainesBadge}
+            </SidebarMenuBadge>
+          ) : null}
+        </SidebarMenuItem>
+
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={location.pathname.startsWith("/messages")}
+            onClick={() => go("/messages")}
+            tooltip="Messages"
+          >
+            <Mail />
+            <span>Messages</span>
+          </SidebarMenuButton>
+          {messagesBadge ? (
+            <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+              {messagesBadge}
+            </SidebarMenuBadge>
+          ) : null}
+        </SidebarMenuItem>
+
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={location.pathname.startsWith("/forum/profil")}
+            onClick={() => go("/forum/profil/me")}
           >
             <UserRound />
             <span>Mon compte</span>

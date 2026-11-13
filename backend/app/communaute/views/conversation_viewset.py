@@ -1,225 +1,137 @@
 """
-ViewSet pour la gestion des conversations.
+ViewSet pour les conversations privées (paire unique entre deux membres).
 """
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
-from drf_yasg.utils import swagger_auto_schema
+from django.http import Http404
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from app.communaute.models import Conversation
 from app.communaute.serializers import ConversationSerializer
 from app.communaute.services.conversation_service import ConversationService
-from app.communaute.permissions.conversation_permissions import (
-    CanViewConversation,
-    CanCreateConversation,
-    CanUpdateConversation,
-    CanDeleteConversation
-)
+from app.core.pagination import StandardPagination
 
 
-class ConversationViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet pour les opérations CRUD sur les conversations.
-    """
+class ConversationViewSet(viewsets.ViewSet):
+    """Liste, ouverture et détail des conversations du membre connecté."""
+
     swagger_tags = ['V1 - Conversation']
-    queryset = Conversation.objects.all()
-    serializer_class = ConversationSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardPagination
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.conversation_service = ConversationService()
+        self._paginator = None
 
+    def get_serializer(self, *args, **kwargs):
+        kwargs.setdefault('context', {'request': self.request})
+        return ConversationSerializer(*args, **kwargs)
 
-    def get_permissions(self):
-        """
-        Retourne les permissions requises selon l'action.
-        """
-        if self.action == 'list' or self.action == 'retrieve':
-            permission_classes = [CanViewConversation]
-        elif self.action == 'create':
-            permission_classes = [CanCreateConversation]
-        elif self.action in ['update', 'partial_update']:
-            permission_classes = [CanUpdateConversation]
-        elif self.action == 'destroy':
-            permission_classes = [CanDeleteConversation]
-        else:
-            permission_classes = [IsAuthenticated]
+    @property
+    def paginator(self):
+        if self._paginator is None:
+            self._paginator = self.pagination_class()
+        return self._paginator
 
-        return [permission() for permission in permission_classes]
+    def paginate_queryset(self, queryset):
+        return self.paginator.paginate_queryset(queryset, self.request, view=self)
+
+    def get_paginated_response(self, data):
+        return self.paginator.get_paginated_response(data)
 
     @swagger_auto_schema(
-        operation_description="Lister les conversations (paginé : 20 par page, 100 au maximum)",
-        manual_parameters=[
-            openapi.Parameter('page', openapi.IN_QUERY, description="Numéro de page", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('page_size', openapi.IN_QUERY, description="Taille de page (100 au maximum)", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('search', openapi.IN_QUERY, description="Recherche textuelle", type=openapi.TYPE_STRING),
-            openapi.Parameter('ordering', openapi.IN_QUERY, description="Champ de tri, préfixé par - pour décroissant", type=openapi.TYPE_STRING),
-        ],
-        responses={200: ConversationSerializer(many=True), 400: "Tri invalide"},
+        operation_description="Lister mes conversations privées",
+        responses={200: ConversationSerializer(many=True)},
         security=[{'Bearer': []}],
-        tags=['V1 - Conversation']
+        tags=['V1 - Conversation'],
     )
     def list(self, request):
-        """
-        Retourne une page de conversations (format : count, next, previous, results).
-        """
-        try:
-            conversations = self.conversation_service.get_all(
-                search=request.query_params.get('search'),
-                ordering=request.query_params.get('ordering'),
-            )
-        except ValueError:
-            return Response({'error': 'Tri invalide'}, status=status.HTTP_400_BAD_REQUEST)
+        conversations = self.conversation_service.list_for_user(request.user)
         page = self.paginate_queryset(conversations)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        if page is not None:
+            return self.get_paginated_response(
+                self.get_serializer(page, many=True).data
+            )
+        return Response(self.get_serializer(conversations, many=True).data)
 
     @swagger_auto_schema(
-        operation_description="Récupérer un conversation par son ID",
+        operation_description="Ouvrir ou retrouver la conversation avec un destinataire",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['destinataire_id'],
+            properties={
+                'destinataire_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+            },
+        ),
         responses={
             200: ConversationSerializer,
-            404: "Conversation non trouvé"
-        },
-        security=[{'Bearer': []}],
-        tags=['V1 - Conversation']
-    )
-    def retrieve(self, request, pk=None):
-        """
-        Retourne les détails d'un conversation spécifique.
-        """
-        conversation = self.conversation_service.get_by_id(pk)
-        if not conversation:
-            return Response(
-                {'error': 'Conversation non trouvé'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        serializer = self.get_serializer(conversation)
-        return Response(serializer.data)
-
-    @swagger_auto_schema(
-        operation_description="Créer un nouveau conversation",
-        request_body=ConversationSerializer,
-        responses={
             201: ConversationSerializer,
-            400: "Données invalides"
+            400: 'Données invalides',
         },
         security=[{'Bearer': []}],
-        tags=['V1 - Conversation']
+        tags=['V1 - Conversation'],
     )
     def create(self, request):
-        """
-        Crée un nouveau conversation.
-        """
+        destinataire_raw = request.data.get('destinataire_id')
         try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('updated_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['created_by'] = request.user.id
-                data['updated_by'] = request.user.id
-            conversation = self.conversation_service.create(data)
-            serializer = self.get_serializer(conversation)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except ValidationError as e:
+            destinataire_id = int(destinataire_raw)
+        except (TypeError, ValueError):
             return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': 'destinataire_id invalide.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @swagger_auto_schema(
-        operation_description="Mettre à jour un conversation",
-        request_body=ConversationSerializer,
-        responses={
-            200: ConversationSerializer,
-            400: "Données invalides",
-            404: "Conversation non trouvé"
-        },
-        security=[{'Bearer': []}],
-        tags=['V1 - Conversation']
-    )
-    def update(self, request, pk=None):
-        """
-        Met à jour un conversation existant.
-        """
         try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['updated_by'] = request.user.id
-            conversation = self.conversation_service.update(pk, data)
-            if conversation is None:
-                return Response(
-                    {'error': 'Conversation non trouvé'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = self.get_serializer(conversation)
-            return Response(serializer.data)
-        except ValidationError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+            id_1, id_2 = min(request.user.id, destinataire_id), max(
+                request.user.id, destinataire_id
             )
-
-    @swagger_auto_schema(
-        operation_description="Mettre à jour partiellement un conversation",
-        request_body=ConversationSerializer,
-        responses={
-            200: ConversationSerializer,
-            400: "Données invalides",
-            404: "Conversation non trouvé"
-        },
-        security=[{'Bearer': []}],
-        tags=['V1 - Conversation']
-    )
-    def partial_update(self, request, pk=None):
-        """
-        Met à jour partiellement un conversation existant.
-        """
-        try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['updated_by'] = request.user.id
-            conversation = self.conversation_service.update(pk, data, partial=True)
-            if conversation is None:
-                return Response(
-                    {'error': 'Conversation non trouvé'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = self.get_serializer(conversation)
-            return Response(serializer.data)
-        except ValidationError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+            existed = Conversation.objects.filter(
+                membre_1_id=id_1, membre_2_id=id_2
+            ).exists()
+            conversation = self.conversation_service.get_or_create_with(
+                initiateur=request.user,
+                destinataire_id=destinataire_id,
             )
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(
-        operation_description="Supprimer un conversation",
-        responses={
-            204: "Conversation supprimé avec succès",
-            404: "Conversation non trouvé"
-        },
-        security=[{'Bearer': []}],
-        tags=['V1 - Conversation']
-    )
-    def destroy(self, request, pk=None):
-        """
-        Supprime un conversation.
-        """
-        # Une vraie erreur (base de données, stockage) remonte : DRF répond 500 sans exposer le détail interne
-        success = self.conversation_service.delete(pk)
-        if success:
-            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'error': 'Conversation non trouvé'},
-            status=status.HTTP_404_NOT_FOUND
+            self.get_serializer(conversation).data,
+            status=status.HTTP_200_OK if existed else status.HTTP_201_CREATED,
         )
+
+    @swagger_auto_schema(
+        operation_description="Détail d'une conversation (participants uniquement)",
+        responses={
+            200: ConversationSerializer,
+            403: 'Accès refusé',
+            404: 'Conversation introuvable',
+        },
+        security=[{'Bearer': []}],
+        tags=['V1 - Conversation'],
+    )
+    def retrieve(self, request, pk=None):
+        try:
+            conversation = self.conversation_service.get_for_user(
+                int(pk), request.user
+            )
+        except Http404:
+            return Response(
+                {'error': 'Conversation introuvable'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except ValidationError:
+            return Response(
+                {'error': "Tu n'as pas accès à cette conversation."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        except (TypeError, ValueError):
+            return Response(
+                {'error': 'Identifiant invalide'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(self.get_serializer(conversation).data)

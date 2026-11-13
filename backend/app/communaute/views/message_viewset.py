@@ -1,225 +1,186 @@
 """
-ViewSet pour la gestion des messages.
+ViewSet pour les messages privés d'une conversation.
 """
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
-from drf_yasg.utils import swagger_auto_schema
+from django.http import Http404
 from drf_yasg import openapi
-from app.communaute.models import Message
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from app.communaute.serializers import MessageSerializer
+from app.communaute.services.conversation_service import ConversationService
 from app.communaute.services.message_service import MessageService
-from app.communaute.permissions.message_permissions import (
-    CanViewMessage,
-    CanCreateMessage,
-    CanUpdateMessage,
-    CanDeleteMessage
-)
+from app.core.pagination import StandardPagination
 
 
-class MessageViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet pour les opérations CRUD sur les messages.
-    """
+class MessageViewSet(viewsets.ViewSet):
+    """Liste et envoi de messages (participants uniquement)."""
+
     swagger_tags = ['V1 - Message']
-    queryset = Message.objects.all()
-    serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardPagination
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.message_service = MessageService()
+        self.conversation_service = ConversationService()
+        self._paginator = None
 
+    def get_serializer(self, *args, **kwargs):
+        kwargs.setdefault('context', {'request': self.request})
+        return MessageSerializer(*args, **kwargs)
 
-    def get_permissions(self):
-        """
-        Retourne les permissions requises selon l'action.
-        """
-        if self.action == 'list' or self.action == 'retrieve':
-            permission_classes = [CanViewMessage]
-        elif self.action == 'create':
-            permission_classes = [CanCreateMessage]
-        elif self.action in ['update', 'partial_update']:
-            permission_classes = [CanUpdateMessage]
-        elif self.action == 'destroy':
-            permission_classes = [CanDeleteMessage]
-        else:
-            permission_classes = [IsAuthenticated]
+    @property
+    def paginator(self):
+        if self._paginator is None:
+            self._paginator = self.pagination_class()
+        return self._paginator
 
-        return [permission() for permission in permission_classes]
+    def paginate_queryset(self, queryset):
+        return self.paginator.paginate_queryset(queryset, self.request, view=self)
+
+    def get_paginated_response(self, data):
+        return self.paginator.get_paginated_response(data)
+
+    def _access_error_response(self, exc):
+        if isinstance(exc, Http404):
+            return Response(
+                {'error': 'Conversation introuvable'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if isinstance(exc, ValidationError):
+            message = str(exc)
+            if 'accès' in message.lower():
+                return Response({'error': message}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
+        raise exc
 
     @swagger_auto_schema(
-        operation_description="Lister les messages (paginé : 20 par page, 100 au maximum)",
+        operation_description="Lister les messages d'une conversation (?conversation=ID)",
         manual_parameters=[
-            openapi.Parameter('page', openapi.IN_QUERY, description="Numéro de page", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('page_size', openapi.IN_QUERY, description="Taille de page (100 au maximum)", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('search', openapi.IN_QUERY, description="Recherche textuelle", type=openapi.TYPE_STRING),
-            openapi.Parameter('ordering', openapi.IN_QUERY, description="Champ de tri, préfixé par - pour décroissant", type=openapi.TYPE_STRING),
+            openapi.Parameter(
+                'conversation',
+                openapi.IN_QUERY,
+                description='ID de la conversation',
+                type=openapi.TYPE_INTEGER,
+                required=True,
+            ),
         ],
-        responses={200: MessageSerializer(many=True), 400: "Tri invalide"},
+        responses={200: MessageSerializer(many=True), 403: 'Accès refusé'},
         security=[{'Bearer': []}],
-        tags=['V1 - Message']
+        tags=['V1 - Message'],
     )
     def list(self, request):
-        """
-        Retourne une page de messages (format : count, next, previous, results).
-        """
+        conversation_raw = request.query_params.get('conversation')
         try:
-            messages = self.message_service.get_all(
-                search=request.query_params.get('search'),
-                ordering=request.query_params.get('ordering'),
-            )
-        except ValueError:
-            return Response({'error': 'Tri invalide'}, status=status.HTTP_400_BAD_REQUEST)
-        page = self.paginate_queryset(messages)
-        serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
-
-    @swagger_auto_schema(
-        operation_description="Récupérer un message par son ID",
-        responses={
-            200: MessageSerializer,
-            404: "Message non trouvé"
-        },
-        security=[{'Bearer': []}],
-        tags=['V1 - Message']
-    )
-    def retrieve(self, request, pk=None):
-        """
-        Retourne les détails d'un message spécifique.
-        """
-        message = self.message_service.get_by_id(pk)
-        if not message:
+            conversation_id = int(conversation_raw)
+        except (TypeError, ValueError):
             return Response(
-                {'error': 'Message non trouvé'},
-                status=status.HTTP_404_NOT_FOUND
+                {'error': 'Paramètre conversation requis.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        serializer = self.get_serializer(message)
-        return Response(serializer.data)
+
+        try:
+            messages = self.message_service.list_for_conversation(
+                conversation_id=conversation_id,
+                membre=request.user,
+            )
+            conversation = self.conversation_service.get_for_user(
+                conversation_id, request.user
+            )
+            from app.communaute.services.activity_service import ActivityService
+
+            ActivityService().mark_conversation_read(
+                conversation=conversation, acteur=request.user
+            )
+        except (Http404, ValidationError) as e:
+            return self._access_error_response(e)
+
+        page = self.paginate_queryset(messages)
+        if page is not None:
+            return self.get_paginated_response(
+                self.get_serializer(page, many=True).data
+            )
+        return Response(self.get_serializer(messages, many=True).data)
 
     @swagger_auto_schema(
-        operation_description="Créer un nouveau message",
-        request_body=MessageSerializer,
+        operation_description="Envoyer un message dans une conversation",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['conversation_id', 'texte'],
+            properties={
+                'conversation_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                'texte': openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
         responses={
             201: MessageSerializer,
-            400: "Données invalides"
+            400: 'Données invalides',
+            403: 'Accès refusé',
         },
         security=[{'Bearer': []}],
-        tags=['V1 - Message']
+        tags=['V1 - Message'],
     )
     def create(self, request):
-        """
-        Crée un nouveau message.
-        """
+        conversation_raw = request.data.get('conversation_id')
+        texte = request.data.get('texte', '')
         try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('updated_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['created_by'] = request.user.id
-                data['updated_by'] = request.user.id
-            message = self.message_service.create(data)
-            serializer = self.get_serializer(message)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except ValidationError as e:
+            conversation_id = int(conversation_raw)
+        except (TypeError, ValueError):
             return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': 'conversation_id invalide.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @swagger_auto_schema(
-        operation_description="Mettre à jour un message",
-        request_body=MessageSerializer,
-        responses={
-            200: MessageSerializer,
-            400: "Données invalides",
-            404: "Message non trouvé"
-        },
-        security=[{'Bearer': []}],
-        tags=['V1 - Message']
-    )
-    def update(self, request, pk=None):
-        """
-        Met à jour un message existant.
-        """
         try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['updated_by'] = request.user.id
-            message = self.message_service.update(pk, data)
-            if message is None:
-                return Response(
-                    {'error': 'Message non trouvé'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = self.get_serializer(message)
-            return Response(serializer.data)
-        except ValidationError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+            message = self.message_service.create_message(
+                conversation_id=conversation_id,
+                auteur=request.user,
+                texte=texte,
             )
+        except (Http404, ValidationError) as e:
+            return self._access_error_response(e)
+
+        payload = self.get_serializer(message).data
+        try:
+            from app.communaute.socketio_app import emit_message_new
+
+            emit_message_new(conversation_id, payload)
+        except Exception:
+            # L'envoi REST reste valide même si le push temps réel échoue
+            pass
+
+        return Response(payload, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="Mettre à jour partiellement un message",
-        request_body=MessageSerializer,
-        responses={
-            200: MessageSerializer,
-            400: "Données invalides",
-            404: "Message non trouvé"
-        },
+        operation_description="Détail d'un message (participants uniquement)",
+        responses={200: MessageSerializer, 403: 'Accès refusé', 404: 'Introuvable'},
         security=[{'Bearer': []}],
-        tags=['V1 - Message']
+        tags=['V1 - Message'],
     )
-    def partial_update(self, request, pk=None):
-        """
-        Met à jour partiellement un message existant.
-        """
+    def retrieve(self, request, pk=None):
         try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['updated_by'] = request.user.id
-            message = self.message_service.update(pk, data, partial=True)
-            if message is None:
-                return Response(
-                    {'error': 'Message non trouvé'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = self.get_serializer(message)
-            return Response(serializer.data)
-        except ValidationError as e:
+            message_id = int(pk)
+        except (TypeError, ValueError):
             return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': 'Identifiant invalide'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @swagger_auto_schema(
-        operation_description="Supprimer un message",
-        responses={
-            204: "Message supprimé avec succès",
-            404: "Message non trouvé"
-        },
-        security=[{'Bearer': []}],
-        tags=['V1 - Message']
-    )
-    def destroy(self, request, pk=None):
-        """
-        Supprime un message.
-        """
-        # Une vraie erreur (base de données, stockage) remonte : DRF répond 500 sans exposer le détail interne
-        success = self.message_service.delete(pk)
-        if success:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'error': 'Message non trouvé'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        message = self.message_service.get_by_id(message_id)
+        if message is None:
+            return Response(
+                {'error': 'Message introuvable'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            self.conversation_service.get_for_user(
+                message.conversation_id, request.user
+            )
+        except (Http404, ValidationError) as e:
+            return self._access_error_response(e)
+
+        return Response(self.get_serializer(message).data)

@@ -19,6 +19,8 @@ export type LoginResponse = {
     email: string;
     username: string;
     full_name: string;
+    photo?: string;
+    banner?: string;
     roles: string[];
   };
 };
@@ -32,6 +34,8 @@ export interface User {
   full_name: string;
   username: string;
   email: string;
+  photo?: string;
+  banner?: string;
   roles?: string[];
   permissions?: string[];
 }

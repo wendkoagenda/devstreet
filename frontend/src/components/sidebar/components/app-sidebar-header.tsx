@@ -21,7 +21,7 @@ export default function AppSidebarHeader() {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" asChild className="hover:bg-transparent active:bg-transparent">
-            <Link to="/hub/projects" onClick={handleGoToHome} aria-label={t("sidebar.brand_home")}>
+            <Link to="/" onClick={handleGoToHome} aria-label={t("sidebar.brand_home")}>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
                 <Terminal aria-hidden className="h-[18px] w-[18px]" />
               </span>

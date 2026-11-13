@@ -2,6 +2,7 @@
 ViewSet pour la gestion des commentaires.
 """
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
@@ -10,12 +11,16 @@ from drf_yasg import openapi
 from app.communaute.models import Commentaire
 from app.communaute.serializers import CommentaireSerializer
 from app.communaute.services.commentaire_service import CommentaireService
+from app.communaute.services.likecommentaire_service import LikeCommentaireService
+from app.communaute.services.confirmationaide_service import ConfirmationAideService
 from app.communaute.permissions.commentaire_permissions import (
     CanViewCommentaire,
     CanCreateCommentaire,
     CanUpdateCommentaire,
     CanDeleteCommentaire
 )
+from app.communaute.permissions.likecommentaire_permissions import CanCreateLikeCommentaire
+from app.communaute.permissions.confirmationaide_permissions import CanCreateConfirmationAide
 
 
 class CommentaireViewSet(viewsets.ModelViewSet):
@@ -30,6 +35,8 @@ class CommentaireViewSet(viewsets.ModelViewSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.commentaire_service = CommentaireService()
+        self.like_commentaire_service = LikeCommentaireService()
+        self.confirmation_aide_service = ConfirmationAideService()
 
 
     def get_permissions(self):
@@ -40,6 +47,10 @@ class CommentaireViewSet(viewsets.ModelViewSet):
             permission_classes = [CanViewCommentaire]
         elif self.action == 'create':
             permission_classes = [CanCreateCommentaire]
+        elif self.action == 'like':
+            permission_classes = [CanCreateLikeCommentaire]
+        elif self.action == 'confirmation_aide':
+            permission_classes = [CanCreateConfirmationAide]
         elif self.action in ['update', 'partial_update']:
             permission_classes = [CanUpdateCommentaire]
         elif self.action == 'destroy':
@@ -113,17 +124,26 @@ class CommentaireViewSet(viewsets.ModelViewSet):
         Crée un nouveau commentaire.
         """
         try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('updated_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['created_by'] = request.user.id
-                data['updated_by'] = request.user.id
-            commentaire = self.commentaire_service.create(data)
-            serializer = self.get_serializer(commentaire)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            validated = serializer.validated_data
+            publication_id = validated.get('publication_id')
+            if publication_id is None:
+                raise ValidationError('publication_id est obligatoire.')
+            commentaire = self.commentaire_service.create_commentaire(
+                publication_id=publication_id,
+                auteur=request.user,
+                texte=validated.get('texte', ''),
+                parent_id=validated.get('parent_id'),
+                nature=validated.get('nature') or CommentaireService.NATURE_COMMENTAIRE,
+                est_anonyme=bool(validated.get('est_anonyme', False)),
+                created_by=request.user.id,
+                updated_by=request.user.id,
+            )
+            return Response(
+                self.get_serializer(commentaire).data,
+                status=status.HTTP_201_CREATED,
+            )
         except ValidationError as e:
             return Response(
                 {'error': str(e)},
@@ -223,3 +243,45 @@ class CommentaireViewSet(viewsets.ModelViewSet):
             {'error': 'Commentaire non trouvé'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+    @swagger_auto_schema(
+        method='post',
+        operation_description="Ajouter ou retirer son like sur le commentaire",
+        responses={200: openapi.Response('État du like'), 400: 'Erreur'},
+        security=[{'Bearer': []}],
+        tags=['V1 - Commentaire'],
+    )
+    @action(detail=True, methods=['post'], url_path='like')
+    def like(self, request, pk=None):
+        """Toggle du like sur un commentaire."""
+        try:
+            result = self.like_commentaire_service.toggle(
+                commentaire_id=int(pk),
+                membre=request.user,
+            )
+            return Response(result)
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError):
+            return Response({'error': 'Identifiant invalide'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        method='post',
+        operation_description="Ajouter ou retirer « Ça m'a aidé aussi » sur une réponse technique",
+        responses={200: openapi.Response('État de la confirmation'), 400: 'Erreur'},
+        security=[{'Bearer': []}],
+        tags=['V1 - Commentaire'],
+    )
+    @action(detail=True, methods=['post'], url_path='confirmation-aide')
+    def confirmation_aide(self, request, pk=None):
+        """Toggle de « Ça m'a aidé aussi »."""
+        try:
+            result = self.confirmation_aide_service.toggle(
+                commentaire_id=int(pk),
+                membre=request.user,
+            )
+            return Response(result)
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError):
+            return Response({'error': 'Identifiant invalide'}, status=status.HTTP_400_BAD_REQUEST)

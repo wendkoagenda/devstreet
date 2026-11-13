@@ -17,6 +17,13 @@ from app.communaute.views.participationespace_viewset import ParticipationEspace
 from app.communaute.views.publication_viewset import PublicationViewSet
 from app.communaute.views.suiviutilisateur_viewset import SuiviUtilisateurViewSet
 from app.communaute.views.votesondage_viewset import VoteSondageViewSet
+from app.communaute.views.activity_view import activity_badges_view
+from app.communaute.views.membre_profile_view import (
+    membre_by_username_view,
+    membre_profile_view,
+    membre_search_view,
+    membre_suivre_view,
+)
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'avis-choix', AvisChoixViewSet, basename='avis-choix')
@@ -37,6 +44,19 @@ router.register(r'suivis-utilisateur', SuiviUtilisateurViewSet, basename='suivis
 router.register(r'votes-sondage', VoteSondageViewSet, basename='votes-sondage')
 
 urlpatterns = [
+    path('v1/membres/search', membre_search_view, name='membre-search'),
+    path(
+        'v1/membres/u/<str:username>',
+        membre_by_username_view,
+        name='membre-by-username',
+    ),
+    path('v1/membres/<int:user_id>', membre_profile_view, name='membre-profile'),
+    path(
+        'v1/membres/<int:user_id>/suivre',
+        membre_suivre_view,
+        name='membre-suivre',
+    ),
+    path('v1/activity/badges', activity_badges_view, name='activity-badges'),
     path('v1/', include(router.urls)),
 ]
 

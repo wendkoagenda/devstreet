@@ -91,13 +91,13 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 'full_name',
-            'is_active', 'is_staff', 'is_superuser', 'roles', 'role_names',
-            'permissions', 'role_count', 'date_joined', 'last_login',
+            'photo', 'banner', 'is_active', 'is_staff', 'is_superuser', 'roles',
+            'role_names', 'permissions', 'role_count', 'date_joined', 'last_login',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
-            'id', 'roles', 'full_name', 'permissions', 'role_count',
-            'date_joined', 'last_login', 'created_at', 'updated_at'
+            'id', 'roles', 'full_name', 'photo', 'banner', 'permissions',
+            'role_count', 'date_joined', 'last_login', 'created_at', 'updated_at'
         ]
 
     def get_permissions(self, obj):
@@ -284,10 +284,20 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "email", "username", "full_name", "roles")
+        fields = ("id", "email", "username", "full_name", "photo", "banner", "roles")
+        read_only_fields = fields
 
     def get_roles(self, obj):
         return obj.get_roles() if hasattr(obj, 'get_roles') else []
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    """Profil public (mur) : identité visible sans e-mail ni rôles."""
+
+    class Meta:
+        model = User
+        fields = ("id", "username", "full_name", "photo", "banner")
+        read_only_fields = fields
 
 
 class ForgotPasswordSerializer(serializers.Serializer):

@@ -1,11 +1,15 @@
 """
 SuiviUtilisateur service layer pour les opérations de logique métier.
 """
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Set
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.core.exceptions import ValidationError
 from app.communaute.models import SuiviUtilisateur
 from app.communaute.repositories.suiviutilisateur_repository import SuiviUtilisateurRepository
+
+User = get_user_model()
 
 
 class SuiviUtilisateurService:
@@ -15,6 +19,49 @@ class SuiviUtilisateurService:
 
     def __init__(self):
         self.suiviutilisateur_repository = SuiviUtilisateurRepository()
+
+    def ids_suivis_par(self, suiveur: User) -> Set[int]:
+        """IDs des membres suivis par cet utilisateur."""
+        if suiveur is None or not getattr(suiveur, 'id', None):
+            return set()
+        return set(
+            SuiviUtilisateur.objects.filter(suiveur_id=suiveur.id).values_list(
+                'suivi_id', flat=True
+            )
+        )
+
+    def est_suivi(self, *, suiveur: User, suivi_id: int) -> bool:
+        return SuiviUtilisateur.objects.filter(
+            suiveur_id=suiveur.id, suivi_id=suivi_id
+        ).exists()
+
+    def toggle_suivi(self, *, suiveur: User, suivi_id: int) -> Dict[str, Any]:
+        """Ajoute ou retire un suivi. Retourne {following, suivi_id}."""
+        if suivi_id == suiveur.id:
+            raise ValidationError('Tu ne peux pas te suivre toi-même.')
+        cible = User.objects.filter(pk=suivi_id, is_active=True).first()
+        if cible is None:
+            raise ValidationError('Profil introuvable.')
+
+        existing = SuiviUtilisateur.objects.filter(
+            suiveur=suiveur, suivi=cible
+        ).first()
+        if existing is not None:
+            existing.delete()
+            return {'following': False, 'suivi_id': cible.id}
+
+        try:
+            with transaction.atomic():
+                SuiviUtilisateur.objects.create(
+                    suiveur=suiveur,
+                    suivi=cible,
+                    created_by=suiveur.id,
+                    updated_by=suiveur.id,
+                )
+        except IntegrityError:
+            # Course double-clic : considéré comme déjà suivi.
+            pass
+        return {'following': True, 'suivi_id': cible.id}
 
     def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
         """

@@ -18,6 +18,7 @@ import { authApi } from "@/models/auth/api";
 import { rolePermissionApi } from "@/models/roles-permissions/Api";
 import { devstreetHubApi } from "@/models/devstreet-hub/api";
 import { aiApi } from "@/models/ai/api";
+import { forumApi } from "@/models/forum/api";
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +41,7 @@ export const store = configureStore({
     [swipeApi.reducerPath]: swipeApi.reducer,
     [connectionApi.reducerPath]: connectionApi.reducer,
     [marketplaceSpaceApi.reducerPath]: marketplaceSpaceApi.reducer,
+    [forumApi.reducerPath]: forumApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -61,9 +63,11 @@ export const store = configureStore({
       reviewApi.middleware,
       swipeApi.middleware,
       connectionApi.middleware,
-      marketplaceSpaceApi.middleware
+      marketplaceSpaceApi.middleware,
+      forumApi.middleware
     ),
 });
+
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

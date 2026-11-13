@@ -13,9 +13,17 @@ class PublicationRepositoryInterface(ABC):
     """
 
     @abstractmethod
-    def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
+    def get_all(
+        self,
+        search: Optional[str] = None,
+        ordering: Optional[str] = None,
+        type_filter: Optional[str] = None,
+        auteur_id: Optional[int] = None,
+        espace_id: Optional[int] = None,
+        general_only: bool = False,
+    ) -> QuerySet:
         """
-        Obtenir les publication, avec recherche textuelle et tri facultatifs.
+        Obtenir les publication, avec recherche textuelle, filtre de type et tri facultatifs.
 
         Returns:
             QuerySet: Les publication filtrés et triés

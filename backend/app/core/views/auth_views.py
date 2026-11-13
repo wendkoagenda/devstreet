@@ -24,6 +24,7 @@ from app.core.serializers import (
     UserSerializer,
     PasswordChangeSerializer,
     UserLoginSerializer,
+    PublicProfileSerializer,
     ForgotPasswordSerializer,
     VerifyResetCodeSerializer,
     ResetPasswordSerializer,
@@ -282,6 +283,155 @@ def profile_view(request):
     """
     serializer = UserSerializer(request.user)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Profil public d'un membre (mur : photo, bannière, nom)",
+    responses={
+        200: PublicProfileSerializer,
+        401: "Non authentifié",
+        404: "Profil introuvable",
+    },
+    tags=['Auth'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def public_profile_view(request, user_id: int):
+    """Retourne le profil public d'un utilisateur actif."""
+    user = User.objects.filter(pk=user_id, is_active=True).first()
+    if user is None:
+        return Response(
+            {'error': 'Profil introuvable'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    return Response(PublicProfileSerializer(user).data, status=status.HTTP_200_OK)
+
+
+def _update_profile_media_field(
+    request,
+    *,
+    field_name: str,
+    upload_folder: str,
+    max_size_mb: int = 5,
+):
+    """
+    Met à jour ou supprime un champ média du profil (photo, bannière).
+    """
+    from django.core.exceptions import ValidationError
+    from app.metier.services.storage_service import get_storage_service
+    from app.metier.utils.file_field_utils import _validate_upload, delete_storage_files
+
+    user = request.user
+
+    if request.method == 'DELETE':
+        old_path = (getattr(user, field_name, '') or '').strip()
+        if old_path:
+            delete_storage_files([old_path])
+            setattr(user, field_name, '')
+            user.save(update_fields=[field_name, 'updated_at'])
+        return Response(UserLoginSerializer(user).data, status=status.HTTP_200_OK)
+
+    uploaded = request.FILES.get(field_name)
+    if uploaded is None:
+        return Response(
+            {'error': f'Fichier image manquant (champ {field_name}).'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    path_key = f'{field_name}_path'
+    relative_path = str(request.data.get(path_key) or '').strip().lstrip('/')
+    expected_prefix = f'{upload_folder}/'
+    if not relative_path.startswith(expected_prefix):
+        return Response(
+            {'error': f'Chemin invalide : doit commencer par {expected_prefix}.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        _validate_upload(
+            uploaded,
+            allowed_extensions=['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+            max_size_mb=max_size_mb,
+        )
+        storage = get_storage_service()
+        old_path = (getattr(user, field_name, '') or '').strip()
+        saved_path = storage.save(relative_path, uploaded)
+        setattr(user, field_name, saved_path)
+        user.save(update_fields=[field_name, 'updated_at'])
+        if old_path and old_path != saved_path:
+            delete_storage_files([old_path])
+        return Response(UserLoginSerializer(user).data, status=status.HTTP_200_OK)
+    except ValidationError as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        logger.exception("Échec de l'enregistrement du média de profil (%s)", field_name)
+        return Response(
+            {'error': "Impossible d'enregistrer l'image de profil."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Mettre à jour la photo de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        400: "Fichier invalide",
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Supprimer la photo de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def profile_photo_view(request):
+    """Met à jour (POST) ou supprime (DELETE) la photo de profil."""
+    return _update_profile_media_field(
+        request,
+        field_name='photo',
+        upload_folder='profile_photos',
+        max_size_mb=5,
+    )
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Mettre à jour la bannière de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        400: "Fichier invalide",
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Supprimer la bannière de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def profile_banner_view(request):
+    """Met à jour (POST) ou supprime (DELETE) la bannière de profil."""
+    return _update_profile_media_field(
+        request,
+        field_name='banner',
+        upload_folder='profile_banners',
+        max_size_mb=8,
+    )
 
 
 @swagger_auto_schema(

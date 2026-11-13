@@ -1,0 +1,847 @@
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  BadgeCheck,
+  Heart,
+  ImageIcon,
+  Loader2,
+  MessageCircle,
+  ThumbsUp,
+  Video,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
+import { cn } from "@/lib/utils";
+import { useAuthSlice } from "@/models/auth/slice";
+import {
+  useAcceptTechnicalReplyMutation,
+  useCreatePublicationCommentMutation,
+  useGetPublicationCommentsQuery,
+  useToggleCommentLikeMutation,
+  useToggleConfirmationAideMutation,
+  useUploadForumMediaMutation,
+} from "../api";
+import {
+  createCommentSchema,
+  type Commentaire,
+  type CreateCommentFormValues,
+  type CreateCommentInput,
+  type MediaCommentaire,
+  type OptionPublication,
+} from "../schema";
+import { ForumAvatar } from "./forum-avatar";
+import { ForumRichText } from "./forum-rich-text";
+import { VoiceRecorderButton } from "./voice-recorder-button";
+
+type PendingMedia = {
+  url: string;
+  kind: "IMAGE" | "VIDEO" | "AUDIO";
+  texte_alternatif: string;
+  position: number;
+};
+
+function CommentMedias({ medias }: { medias?: MediaCommentaire[] }) {
+  if (!medias?.length) return null;
+  return (
+    <div className="mt-2 space-y-2">
+      {medias.map((media) => {
+        const src = buildMediaUrl(media.url);
+        if (media.kind === "VIDEO") {
+          return (
+            <video
+              key={media.id}
+              src={src}
+              controls
+              preload="metadata"
+              className="max-h-56 w-full rounded-xl bg-muted object-cover"
+            />
+          );
+        }
+        if (media.kind === "AUDIO") {
+          return (
+            <div
+              key={media.id}
+              className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2"
+            >
+              <span className="text-xs font-medium text-muted-foreground">
+                Vocal
+              </span>
+              <audio
+                src={src}
+                controls
+                preload="metadata"
+                className="h-8 min-w-0 flex-1"
+              />
+            </div>
+          );
+        }
+        return (
+          <img
+            key={media.id}
+            src={src}
+            alt={media.texte_alternatif || "Image"}
+            className="max-h-56 w-full rounded-xl object-cover"
+            loading="lazy"
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+type CommentsSectionProps = {
+  publicationId: number;
+  publicationType?: string;
+  publicationAuthorId?: number | null;
+  acceptedReplyId?: number | null;
+  allowAnonymousFeedback?: boolean;
+  /** Options du débat (pour lier un commentaire à un choix) */
+  choixOptions?: OptionPublication[];
+  /** Option déjà choisie par l'utilisateur courant */
+  defaultOptionId?: number | null;
+  /** Chaîne avec commentaires fermés : lecture seule */
+  commentsClosed?: boolean;
+};
+
+function CommentComposer({
+  publicationId,
+  parentId = null,
+  placeholder,
+  autoFocus = false,
+  allowAnonymous = false,
+  technicalReply = false,
+  choixOptions = [],
+  defaultOptionId = null,
+  onCancel,
+  onSuccess,
+}: {
+  publicationId: number;
+  parentId?: number | null;
+  placeholder: string;
+  autoFocus?: boolean;
+  allowAnonymous?: boolean;
+  technicalReply?: boolean;
+  choixOptions?: OptionPublication[];
+  defaultOptionId?: number | null;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+}) {
+  const [createComment, { isLoading: posting }] =
+    useCreatePublicationCommentMutation();
+  const [uploadMedia, { isLoading: uploading }] =
+    useUploadForumMediaMutation();
+  const [pendingMedias, setPendingMedias] = useState<PendingMedia[]>([]);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const showChoixSelect = !parentId && choixOptions.length > 0;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<CreateCommentFormValues, unknown, CreateCommentInput>({
+    resolver: zodResolver(createCommentSchema),
+    defaultValues: {
+      texte: "",
+      parent_id: parentId,
+      option_id: showChoixSelect ? defaultOptionId ?? null : null,
+      est_anonyme: false,
+      nature: "COMMENTAIRE",
+      medias_data: [],
+    },
+  });
+
+  const { ref: texteRef, ...texteRegister } = register("texte");
+  const estAnonyme = watch("est_anonyme");
+
+  useEffect(() => {
+    if (autoFocus) {
+      textareaRef.current?.focus();
+    }
+  }, [autoFocus]);
+
+  const uploadKind = async (
+    file: File,
+    kind: "IMAGE" | "VIDEO" | "AUDIO"
+  ) => {
+    if (pendingMedias.length >= 4) {
+      toast.error("Maximum 4 médias par commentaire");
+      return;
+    }
+    const maxBytes =
+      kind === "IMAGE"
+        ? 5 * 1024 * 1024
+        : kind === "VIDEO"
+          ? 50 * 1024 * 1024
+          : 15 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error(
+        kind === "IMAGE"
+          ? "Image trop lourde (max 5 Mo)"
+          : kind === "VIDEO"
+            ? "Vidéo trop lourde (max 50 Mo)"
+            : "Audio trop lourd (max 15 Mo)"
+      );
+      return;
+    }
+    try {
+      const uploaded = await uploadMedia({ file, kind }).unwrap();
+      setPendingMedias((prev) => [
+        ...prev,
+        {
+          url: uploaded.url,
+          kind,
+          texte_alternatif: file.name,
+          position: prev.length,
+        },
+      ]);
+    } catch {
+      toast.error("Impossible de téléverser le média");
+    }
+  };
+
+  const onSubmit = handleSubmit(async (values) => {
+    try {
+      const anonymous = Boolean(allowAnonymous && !parentId && values.est_anonyme);
+      const isAppFeedback = Boolean(allowAnonymous && !parentId);
+      const isTechnical = Boolean(technicalReply && !parentId);
+      const optionId =
+        showChoixSelect && values.option_id ? Number(values.option_id) : null;
+      if (showChoixSelect && !optionId) {
+        toast.error("Indique sur quel choix porte ton commentaire");
+        return;
+      }
+      if (!values.texte?.trim() && pendingMedias.length === 0) {
+        toast.error("Ajoute un texte ou un média");
+        return;
+      }
+      await createComment({
+        publicationId,
+        body: {
+          texte: values.texte || "",
+          parent_id: parentId,
+          option_id: optionId,
+          est_anonyme: anonymous,
+          nature: isTechnical
+            ? "REPONSE_TECHNIQUE"
+            : isAppFeedback
+              ? "RETOUR_APP"
+              : "COMMENTAIRE",
+          medias_data: pendingMedias,
+        },
+      }).unwrap();
+      reset({
+        texte: "",
+        parent_id: parentId,
+        option_id: showChoixSelect ? defaultOptionId ?? null : null,
+        est_anonyme: false,
+        medias_data: [],
+      });
+      setPendingMedias([]);
+      toast.success(
+        parentId
+          ? "Réponse publiée"
+          : anonymous
+            ? "Retour anonyme publié"
+            : isTechnical
+              ? "Réponse technique publiée"
+              : isAppFeedback
+                ? "Retour publié"
+                : "Commentaire publié"
+      );
+      onSuccess?.();
+    } catch {
+      toast.error("Impossible de publier le commentaire");
+    }
+  });
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-2">
+      {showChoixSelect ? (
+        <div className="space-y-1">
+          <label
+            htmlFor={`comment-option-${publicationId}-${parentId ?? "root"}`}
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Ce commentaire porte sur
+          </label>
+          <select
+            id={`comment-option-${publicationId}-${parentId ?? "root"}`}
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            {...register("option_id", {
+              setValueAs: (value) =>
+                value === "" || value == null ? null : Number(value),
+            })}
+          >
+            <option value="">Choisir une option…</option>
+            {choixOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.libelle}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+      <Textarea
+        rows={technicalReply ? 4 : 2}
+        placeholder={placeholder}
+        className={cn(
+          "resize-none",
+          technicalReply ? "min-h-[96px] font-mono text-sm" : "min-h-[72px]"
+        )}
+        {...texteRegister}
+        ref={(element) => {
+          texteRef(element);
+          textareaRef.current = element;
+        }}
+      />
+      {errors.texte ? (
+        <p className="text-xs text-destructive">{errors.texte.message}</p>
+      ) : null}
+
+      {pendingMedias.length > 0 ? (
+        <ul className="flex flex-wrap gap-2">
+          {pendingMedias.map((media, index) => (
+            <li
+              key={`${media.url}-${index}`}
+              className="relative flex h-16 min-w-16 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted px-2"
+            >
+              {media.kind === "IMAGE" ? (
+                <img
+                  src={buildMediaUrl(media.url)}
+                  alt=""
+                  className="h-full w-16 object-cover"
+                />
+              ) : media.kind === "VIDEO" ? (
+                <span className="text-xs font-medium text-muted-foreground">
+                  Vidéo
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-muted-foreground">
+                  Audio
+                </span>
+              )}
+              <button
+                type="button"
+                aria-label="Retirer le média"
+                className="absolute right-1 top-1 rounded bg-background/90 p-0.5"
+                onClick={() =>
+                  setPendingMedias((prev) =>
+                    prev.filter((_, i) => i !== index)
+                  )
+                }
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) void uploadKind(file, "IMAGE");
+        }}
+      />
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/mp4,video/webm,video/quicktime"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) void uploadKind(file, "VIDEO");
+        }}
+      />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-8 gap-1 px-2"
+            disabled={uploading || pendingMedias.length >= 4}
+            onClick={() => imageInputRef.current?.click()}
+          >
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ImageIcon className="h-3.5 w-3.5" />
+            )}
+            Image
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-8 gap-1 px-2"
+            disabled={uploading || pendingMedias.length >= 4}
+            onClick={() => videoInputRef.current?.click()}
+          >
+            <Video className="h-3.5 w-3.5" />
+            Vidéo
+          </Button>
+          <VoiceRecorderButton
+            disabled={uploading || pendingMedias.length >= 4}
+            confirmLabel="Joindre"
+            onRecorded={(payload) => {
+              setPendingMedias((prev) => [
+                ...prev,
+                {
+                  url: payload.url,
+                  kind: "AUDIO",
+                  texte_alternatif: payload.texte_alternatif,
+                  position: prev.length,
+                },
+              ]);
+              toast.success("Vocal joint — publie le commentaire");
+            }}
+          />
+          {allowAnonymous && !parentId ? (
+            <label className="ml-1 inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                className="h-3.5 w-3.5 rounded border-input"
+                {...register("est_anonyme")}
+              />
+              Anonyme
+              {estAnonyme ? (
+                <span className="text-muted-foreground/80">(sans nom)</span>
+              ) : null}
+            </label>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          {onCancel ? (
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              Annuler
+            </Button>
+          ) : null}
+          <Button type="submit" size="sm" disabled={posting || uploading}>
+            {posting ? "Envoi…" : technicalReply ? "Proposer une solution" : "Publier"}
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function CommentItem({
+  comment,
+  publicationId,
+  threadRootId,
+  replyTo,
+  onReply,
+  onCancelReply,
+  isEntraide,
+  isOwner,
+  acceptedReplyId,
+  commentsClosed = false,
+}: {
+  comment: Commentaire;
+  publicationId: number;
+  threadRootId: number;
+  replyTo: number | null;
+  onReply: (uiCommentId: number) => void;
+  onCancelReply: () => void;
+  isEntraide: boolean;
+  isOwner: boolean;
+  acceptedReplyId?: number | null;
+  commentsClosed?: boolean;
+}) {
+  const [toggleLike, { isLoading }] = useToggleCommentLikeMutation();
+  const [toggleAide, { isLoading: confirming }] =
+    useToggleConfirmationAideMutation();
+  const [acceptReply, { isLoading: accepting }] =
+    useAcceptTechnicalReplyMutation();
+
+  const author = comment.est_anonyme
+    ? "Anonyme"
+    : comment.auteur?.full_name || comment.auteur?.username || "Membre";
+  const isReplying = replyTo === comment.id;
+  const isTechnical = comment.nature === "REPONSE_TECHNIQUE";
+  const isAccepted = acceptedReplyId === comment.id;
+
+  const handleLike = async () => {
+    try {
+      await toggleLike({
+        commentaireId: comment.id,
+        publicationId,
+      }).unwrap();
+    } catch {
+      toast.error("Impossible de liker ce commentaire");
+    }
+  };
+
+  const handleToggleAide = async () => {
+    try {
+      await toggleAide({
+        commentaireId: comment.id,
+        publicationId,
+      }).unwrap();
+    } catch {
+      toast.error("Impossible de confirmer l'aide");
+    }
+  };
+
+  const handleAccept = async () => {
+    try {
+      await acceptReply({
+        publicationId,
+        commentaireId: isAccepted ? null : comment.id,
+      }).unwrap();
+      toast.success(
+        isAccepted ? "Réponse acceptée retirée" : "Réponse acceptée"
+      );
+    } catch {
+      toast.error("Impossible de mettre à jour la réponse acceptée");
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-3">
+        <ForumAvatar
+          name={author}
+          photo={comment.est_anonyme ? null : comment.auteur?.photo}
+          size="sm"
+          tone="muted"
+          className="mt-0.5"
+        />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div
+            className={cn(
+              "rounded-xl px-3 py-2",
+              isTechnical
+                ? "border border-border bg-card"
+                : "bg-muted/50",
+              isAccepted && "border-brand-soft-border bg-brand-soft/40"
+            )}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold text-foreground">{author}</p>
+              {isTechnical ? (
+                <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  Réponse technique
+                </span>
+              ) : null}
+              {comment.est_anonyme || comment.nature === "RETOUR_APP" ? (
+                <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  {comment.est_anonyme ? "Retour anonyme" : "Retour app"}
+                </span>
+              ) : null}
+              {isAccepted ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-brand-soft-border bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand-strong">
+                  <BadgeCheck className="h-3 w-3" />
+                  Acceptée
+                </span>
+              ) : null}
+              {comment.option_libelle ? (
+                <span className="rounded-full border border-brand-soft-border bg-brand-soft/50 px-2 py-0.5 text-[10px] font-medium text-brand-strong">
+                  Sur : {comment.option_libelle}
+                </span>
+              ) : null}
+            </div>
+            {comment.texte?.trim() ? (
+              <ForumRichText
+                text={comment.texte}
+                compact
+                className={cn(
+                  "mt-1 text-foreground/90",
+                  isTechnical && "text-[13px]"
+                )}
+              />
+            ) : null}
+            <CommentMedias medias={comment.medias} />
+          </div>
+          <div className="flex flex-wrap items-center gap-3 pl-1 text-xs text-muted-foreground">
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={handleLike}
+              aria-label={comment.liked_by_me ? "Retirer le like" : "Liker"}
+              aria-pressed={comment.liked_by_me}
+              className={cn(
+                "inline-flex items-center gap-1 hover:text-foreground",
+                comment.liked_by_me && "text-destructive"
+              )}
+            >
+              <Heart
+                className={cn(
+                  "h-3.5 w-3.5",
+                  comment.liked_by_me && "fill-current"
+                )}
+              />
+              {comment.likes_count}
+            </button>
+            {!commentsClosed ? (
+              <button
+                type="button"
+                onClick={() => onReply(comment.id)}
+                aria-label={`Répondre à ${author}`}
+                aria-expanded={isReplying}
+                className={cn(
+                  "hover:text-foreground",
+                  isReplying && "font-medium text-foreground"
+                )}
+              >
+                Répondre
+              </button>
+            ) : null}
+            {isEntraide && isTechnical ? (
+              <button
+                type="button"
+                disabled={confirming}
+                onClick={handleToggleAide}
+                aria-label={
+                  comment.confirmed_by_me
+                    ? "Retirer « Ça m'a aidé aussi »"
+                    : "Ça m'a aidé aussi"
+                }
+                aria-pressed={comment.confirmed_by_me}
+                className={cn(
+                  "inline-flex items-center gap-1 hover:text-foreground",
+                  comment.confirmed_by_me && "font-medium text-foreground"
+                )}
+              >
+                <ThumbsUp
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    comment.confirmed_by_me && "fill-current"
+                  )}
+                />
+                Ça m&apos;a aidé aussi
+                {(comment.confirmations_count ?? 0) > 0
+                  ? ` · ${comment.confirmations_count}`
+                  : ""}
+              </button>
+            ) : null}
+            {isEntraide && isTechnical && isOwner ? (
+              <button
+                type="button"
+                disabled={accepting}
+                onClick={handleAccept}
+                className="hover:text-foreground"
+              >
+                {isAccepted ? "Retirer l'acceptation" : "Accepter"}
+              </button>
+            ) : null}
+          </div>
+
+          {isReplying && !commentsClosed ? (
+            <div className="pt-1">
+              <CommentComposer
+                publicationId={publicationId}
+                parentId={threadRootId}
+                placeholder={`Répondre à ${author}…`}
+                autoFocus
+                onCancel={onCancelReply}
+                onSuccess={onCancelReply}
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {comment.reponses?.length ? (
+        <div className="ml-8 space-y-3 border-l border-border pl-4">
+          {comment.reponses.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={{ ...reply, reponses: [] }}
+              publicationId={publicationId}
+              threadRootId={threadRootId}
+              replyTo={replyTo}
+              onReply={onReply}
+              onCancelReply={onCancelReply}
+              isEntraide={isEntraide}
+              isOwner={isOwner}
+              acceptedReplyId={acceptedReplyId}
+              commentsClosed={commentsClosed}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function CommentsSection({
+  publicationId,
+  publicationType,
+  publicationAuthorId,
+  acceptedReplyId = null,
+  allowAnonymousFeedback = false,
+  choixOptions = [],
+  defaultOptionId = null,
+  commentsClosed = false,
+}: CommentsSectionProps) {
+  const currentUserId = useAuthSlice((state) => state.user?.id);
+  const { data, isLoading, isError, refetch } =
+    useGetPublicationCommentsQuery(publicationId);
+  const [replyTo, setReplyTo] = useState<number | null>(null);
+
+  const isEntraide = publicationType === "ENTRAIDE";
+  const isChoix = publicationType === "CHOIX";
+  const isOwner = Boolean(
+    currentUserId && publicationAuthorId && currentUserId === publicationAuthorId
+  );
+
+  const technicalReplies =
+    data?.filter((comment) => comment.nature === "REPONSE_TECHNIQUE") ?? [];
+  const otherComments =
+    data?.filter((comment) => comment.nature !== "REPONSE_TECHNIQUE") ?? [];
+
+  return (
+    <div className="space-y-4">
+      {isEntraide ? (
+        <section className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+          <div className="flex items-center gap-2">
+            <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-foreground">
+              Réponses techniques
+            </h2>
+          </div>
+
+          {commentsClosed ? (
+            <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              Les commentaires sont fermés sur cette chaîne.
+            </p>
+          ) : (
+            <CommentComposer
+              publicationId={publicationId}
+              placeholder="Propose une solution (texte ou code)…"
+              technicalReply
+            />
+          )}
+
+          {isLoading ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Chargement…
+            </p>
+          ) : null}
+
+          {!isLoading && technicalReplies.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Aucune réponse technique pour le moment.
+            </p>
+          ) : null}
+
+          <div className="space-y-5">
+            {technicalReplies.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                publicationId={publicationId}
+                threadRootId={comment.id}
+                replyTo={replyTo}
+                onReply={setReplyTo}
+                onCancelReply={() => setReplyTo(null)}
+                isEntraide={isEntraide}
+                isOwner={isOwner}
+                acceptedReplyId={acceptedReplyId}
+                commentsClosed={commentsClosed}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-base font-semibold text-foreground">
+            {allowAnonymousFeedback
+              ? "Retours"
+              : isEntraide
+                ? "Commentaires"
+                : "Commentaires"}
+          </h2>
+        </div>
+
+        {commentsClosed ? (
+          <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            Les commentaires sont fermés sur cette chaîne. Tu peux toujours liker.
+          </p>
+        ) : !isEntraide ? (
+          <CommentComposer
+            publicationId={publicationId}
+            placeholder={
+              allowAnonymousFeedback
+                ? "Laisser un retour sur l'application…"
+                : isChoix
+                  ? "Commenter un choix…"
+                  : "Ajouter un commentaire…"
+            }
+            allowAnonymous={allowAnonymousFeedback}
+            choixOptions={isChoix ? choixOptions : []}
+            defaultOptionId={isChoix ? defaultOptionId : null}
+          />
+        ) : (
+          <CommentComposer
+            publicationId={publicationId}
+            placeholder="Ajouter un commentaire…"
+          />
+        )}
+
+        {isLoading ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Chargement des commentaires…
+          </p>
+        ) : null}
+
+        {isError ? (
+          <div className="space-y-2 py-6 text-center">
+            <p className="text-sm text-destructive">
+              Impossible de charger les commentaires.
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
+              Réessayer
+            </Button>
+          </div>
+        ) : null}
+
+        {!isLoading &&
+        !isError &&
+        (isEntraide ? otherComments : data ?? []).length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            {allowAnonymousFeedback
+              ? "Aucun retour pour le moment."
+              : "Aucun commentaire pour le moment."}
+          </p>
+        ) : null}
+
+        <div className="space-y-5">
+          {(isEntraide ? otherComments : data ?? []).map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              publicationId={publicationId}
+              threadRootId={comment.id}
+              replyTo={replyTo}
+              onReply={setReplyTo}
+              onCancelReply={() => setReplyTo(null)}
+              isEntraide={isEntraide}
+              isOwner={isOwner}
+              acceptedReplyId={acceptedReplyId}
+              commentsClosed={commentsClosed}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}

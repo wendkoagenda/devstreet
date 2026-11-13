@@ -72,7 +72,19 @@ class Command(BaseCommand):
         publication_data = []
         
         for i in range(1, 4):  # Créer 3 enregistrements de test
-            data = {                'type': ['DISCUSSION', 'APPLICATION', 'ENTRAIDE', 'CHOIX', 'SONDAGE'][(i - 1) % 5],                'titre': generate_unique_string('titre', i, 8),                'description': f'Contenu de test unique pour description #{i} - {generate_unique_string("content", i, 12)}',                'lien_app': generate_unique_url(i),                'plateforme_app': ['WEB', 'MOBILE', 'LES_DEUX'][(i - 1) % 3],                'contraintes': f'Contenu de test unique pour contraintes #{i} - {generate_unique_string("content", i, 12)}',                'justification_finale': f'Contenu de test unique pour justification_finale #{i} - {generate_unique_string("content", i, 12)}',                'decided_at': datetime.now() - timedelta(days=i, hours=random.randint(0, 23)),                'mode_vote': ['UNIQUE', 'MULTIPLE'][(i - 1) % 2],                'votes_fermes_at': datetime.now() - timedelta(days=i, hours=random.randint(0, 23)),                'created_by': user.id,
+            data = {
+                'auteur': user,
+                'type': ['DISCUSSION', 'APPLICATION', 'ENTRAIDE', 'CHOIX', 'SONDAGE'][(i - 1) % 5],
+                'titre': generate_unique_string('titre', i, 8),
+                'description': f'Contenu de test unique pour description #{i} - {generate_unique_string("content", i, 12)}',
+                'lien_app': generate_unique_url(i),
+                'plateforme_app': ['WEB', 'MOBILE', 'LES_DEUX'][(i - 1) % 3],
+                'contraintes': f'Contenu de test unique pour contraintes #{i} - {generate_unique_string("content", i, 12)}',
+                'justification_finale': f'Contenu de test unique pour justification_finale #{i} - {generate_unique_string("content", i, 12)}',
+                'decided_at': datetime.now() - timedelta(days=i, hours=random.randint(0, 23)),
+                'mode_vote': ['UNIQUE', 'MULTIPLE'][(i - 1) % 2],
+                'votes_fermes_at': datetime.now() - timedelta(days=i, hours=random.randint(0, 23)),
+                'created_by': user.id,
                 'updated_by': user.id,
             }
             publication_data.append(data)

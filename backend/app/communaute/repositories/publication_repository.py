@@ -16,13 +16,25 @@ class PublicationRepository(PublicationRepositoryInterface):
     SEARCH_FIELDS = ('type', 'titre', 'description', 'lien_app', 'plateforme_app', 'contraintes', 'justification_finale', 'mode_vote',)
     ORDERING_FIELDS = ('id', 'type', 'titre', 'description', 'lien_app', 'plateforme_app', 'contraintes', 'justification_finale', 'decided_at', 'mode_vote', 'votes_fermes_at', 'created_at', 'updated_at',)
 
-    def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
+    def get_all(
+        self,
+        search: Optional[str] = None,
+        ordering: Optional[str] = None,
+        type_filter: Optional[str] = None,
+        auteur_id: Optional[int] = None,
+        espace_id: Optional[int] = None,
+        general_only: bool = False,
+    ) -> QuerySet:
         """
-        Obtenir les publication, avec recherche textuelle et tri facultatifs.
+        Obtenir les publication, avec recherche textuelle, filtre de type et tri facultatifs.
 
         Args:
             search (Optional[str]): Texte recherché (insensible à la casse) dans les champs texte
             ordering (Optional[str]): Champ de tri, préfixé par « - » pour l'ordre décroissant
+            type_filter (Optional[str]): Type exact de publication (DISCUSSION, APPLICATION, …)
+            auteur_id (Optional[int]): Limiter aux publications d'un auteur
+            espace_id (Optional[int]): Limiter aux publications d'un espace
+            general_only (bool): Si True, uniquement le fil général (espace NULL)
 
         Returns:
             QuerySet: Les publication filtrés et triés (tri stable : l'ID départage les égalités)
@@ -30,7 +42,15 @@ class PublicationRepository(PublicationRepositoryInterface):
         Raises:
             ValueError: Si le champ de tri n'est pas autorisé
         """
-        queryset = Publication.objects.all()
+        queryset = Publication.objects.select_related('espace').all()
+        if auteur_id is not None:
+            queryset = queryset.filter(auteur_id=auteur_id)
+        if espace_id is not None:
+            queryset = queryset.filter(espace_id=espace_id)
+        elif general_only:
+            queryset = queryset.filter(espace__isnull=True)
+        if type_filter:
+            queryset = queryset.filter(type=type_filter)
         if search:
             condition = Q()
             for field_name in self.SEARCH_FIELDS:
@@ -40,7 +60,8 @@ class PublicationRepository(PublicationRepositoryInterface):
             if ordering.lstrip('-') not in self.ORDERING_FIELDS:
                 raise ValueError(f'Tri non autorisé : {ordering}')
             return queryset.order_by(ordering, 'id')
-        return queryset.order_by('id')
+        # Fil d'actualité : plus récentes en premier (tri stable sur l'id)
+        return queryset.order_by('-created_at', '-id')
 
     def get_by_id(self, publication_id: int) -> Optional[Publication]:
         """

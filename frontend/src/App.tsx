@@ -16,7 +16,6 @@ import PrivateRoute from "./components/layouts/private-route";
 import PublicRoute from "./components/layouts/public-route";
 import LoginPage from "./models/auth/pages/login-page";
 import ForgotPasswordPage from "./models/auth/pages/forgot-password-page";
-import HomePage from "./models/common/home-page";
 import AppLayout from "./components/layouts/app-layout";
 import UsersList from "./models/user/pages/users-list";
 import MyAccount from "./models/auth/pages/my-account";
@@ -45,6 +44,15 @@ import MyCvPage from "./models/marketplace-profile/pages/my-cv-page";
 import DashboardPage from "./models/marketplace-dashboard/pages/dashboard-page";
 import MyProfilePage from "./models/marketplace-space/pages/my-profile-page";
 import MarketplaceAdminPage from "./models/marketplace-space/pages/marketplace-admin-page";
+import ChannelsPage from "./models/forum/pages/channels-page";
+import CommunitiesPage from "./models/forum/pages/communities-page";
+import CommunityDetailPage from "./models/forum/pages/community-detail-page";
+import CommunityInvitePage from "./models/forum/pages/community-invite-page";
+import FeedPage from "./models/forum/pages/feed-page";
+import MemberProfilePage from "./models/forum/pages/member-profile-page";
+import UsernameProfileRedirectPage from "./models/forum/pages/username-profile-redirect-page";
+import MessagesPage from "./models/forum/pages/messages-page";
+import PublicationDetailPage from "./models/forum/pages/publication-detail-page";
 import { useAuthSlice } from "./models/auth/slice";
 import { useEffect } from "react";
 
@@ -81,7 +89,38 @@ function App() {
           />
 
           <Route element={<PrivateRoute />}>
-            <Route element={<HomePage />} path="/" />
+            <Route element={<FeedPage />} path="/" />
+            <Route
+              element={<PublicationDetailPage />}
+              path="/forum/publications/:id"
+            />
+            <Route
+              element={<MemberProfilePage />}
+              path="/forum/profil/:userId"
+            />
+            <Route
+              element={<UsernameProfileRedirectPage />}
+              path="/forum/u/:username"
+            />
+            <Route element={<MessagesPage />} path="/messages" />
+            <Route
+              element={<MessagesPage />}
+              path="/messages/:conversationId"
+            />
+            <Route element={<CommunitiesPage />} path="/forum/communautes" />
+            <Route
+              element={<CommunityDetailPage />}
+              path="/forum/communautes/:id"
+            />
+            <Route element={<ChannelsPage />} path="/forum/chaines" />
+            <Route
+              element={<CommunityDetailPage />}
+              path="/forum/chaines/:id"
+            />
+            <Route
+              element={<CommunityInvitePage />}
+              path="/forum/invitation/:code"
+            />
             <Route element={<UsersList />} path="/users" />
             <Route element={<RolePermissionManagement />} path="/roles" />
                       <Route element={<CompanyList />} path="/admin/marketplace/companies" />

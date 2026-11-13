@@ -197,7 +197,11 @@ class PublicationAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
+        self.assertIn('next', response.data)
+        self.assertIn('previous', response.data)
         self.assertIsInstance(response.data['results'], list)
+        # Scroll infini : pas de count (CursorPagination)
+        self.assertNotIn('count', response.data)
 
     def test_publication_retrieve(self):
         """Test de récupération d'un publication."""

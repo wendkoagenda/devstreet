@@ -110,25 +110,17 @@ class ConfirmationAideViewSet(viewsets.ModelViewSet):
     )
     def create(self, request):
         """
-        Crée un nouveau confirmation_aide.
+        Création CRUD désactivée : passer par le toggle métier.
         """
-        try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('updated_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['created_by'] = request.user.id
-                data['updated_by'] = request.user.id
-            confirmation_aide = self.confirmationaide_service.create(data)
-            serializer = self.get_serializer(confirmation_aide)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except ValidationError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(
+            {
+                'error': (
+                    'Utilisez POST /api/v1/commentaires/{id}/confirmation-aide '
+                    'pour confirmer ou retirer une aide.'
+                )
+            },
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
 
     @swagger_auto_schema(
         operation_description="Mettre à jour un confirmation_aide",
@@ -142,29 +134,16 @@ class ConfirmationAideViewSet(viewsets.ModelViewSet):
         tags=['V1 - ConfirmationAide']
     )
     def update(self, request, pk=None):
-        """
-        Met à jour un confirmation_aide existant.
-        """
-        try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['updated_by'] = request.user.id
-            confirmation_aide = self.confirmationaide_service.update(pk, data)
-            if confirmation_aide is None:
-                return Response(
-                    {'error': 'ConfirmationAide non trouvé'},
-                    status=status.HTTP_404_NOT_FOUND
+        """Mise à jour CRUD désactivée : passer par le toggle métier."""
+        return Response(
+            {
+                'error': (
+                    'Utilisez POST /api/v1/commentaires/{id}/confirmation-aide '
+                    'pour confirmer ou retirer une aide.'
                 )
-            serializer = self.get_serializer(confirmation_aide)
-            return Response(serializer.data)
-        except ValidationError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            },
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
 
     @swagger_auto_schema(
         operation_description="Mettre à jour partiellement un confirmation_aide",
@@ -178,29 +157,8 @@ class ConfirmationAideViewSet(viewsets.ModelViewSet):
         tags=['V1 - ConfirmationAide']
     )
     def partial_update(self, request, pk=None):
-        """
-        Met à jour partiellement un confirmation_aide existant.
-        """
-        try:
-            data = request.data.copy()
-            data.pop('created_by', None)
-            data.pop('created_at', None)
-            data.pop('updated_at', None)
-            if hasattr(request, 'user') and request.user and getattr(request.user, 'id', None) is not None:
-                data['updated_by'] = request.user.id
-            confirmation_aide = self.confirmationaide_service.update(pk, data, partial=True)
-            if confirmation_aide is None:
-                return Response(
-                    {'error': 'ConfirmationAide non trouvé'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = self.get_serializer(confirmation_aide)
-            return Response(serializer.data)
-        except ValidationError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        """Mise à jour partielle CRUD désactivée : passer par le toggle métier."""
+        return self.update(request, pk=pk)
 
     @swagger_auto_schema(
         operation_description="Supprimer un confirmation_aide",
@@ -212,14 +170,13 @@ class ConfirmationAideViewSet(viewsets.ModelViewSet):
         tags=['V1 - ConfirmationAide']
     )
     def destroy(self, request, pk=None):
-        """
-        Supprime un confirmation_aide.
-        """
-        # Une vraie erreur (base de données, stockage) remonte : DRF répond 500 sans exposer le détail interne
-        success = self.confirmationaide_service.delete(pk)
-        if success:
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        """Suppression CRUD désactivée : passer par le toggle métier."""
         return Response(
-            {'error': 'ConfirmationAide non trouvé'},
-            status=status.HTTP_404_NOT_FOUND
+            {
+                'error': (
+                    'Utilisez POST /api/v1/commentaires/{id}/confirmation-aide '
+                    'pour retirer une confirmation d\'aide.'
+                )
+            },
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
         )

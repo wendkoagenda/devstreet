@@ -1,7 +1,7 @@
 """Fichier de seeds pour ImagePublication."""
 from django.core.management.base import BaseCommand
 from app.core.models import Permission
-from app.communaute.models import ImagePublication
+from app.communaute.models import ImagePublication, Publication
 from app.core.models import User, Role
 from django.conf import settings
 from datetime import datetime, timedelta
@@ -46,6 +46,15 @@ class Command(BaseCommand):
                 )
             )
             return
+
+        publication = Publication.objects.order_by('id').first()
+        if publication is None:
+            self.stdout.write(
+                self.style.WARNING(
+                    'Aucune publication disponible : seeds ImagePublication ignores.'
+                )
+            )
+            return
         
         # Fonction pour générer des valeurs uniques
         def generate_unique_string(base_name, index, length=10):
@@ -72,7 +81,12 @@ class Command(BaseCommand):
         image_publication_data = []
         
         for i in range(1, 4):  # Créer 3 enregistrements de test
-            data = {                'url': generate_unique_url(i),                'texte_alternatif': generate_unique_string('texte_alternatif', i, 8),                'position': i * 100 + random.randint(1, 99),                'created_by': user.id,
+            data = {
+                'publication': publication,
+                'url': generate_unique_url(i),
+                'texte_alternatif': generate_unique_string('texte_alternatif', i, 8),
+                'position': i * 100 + random.randint(1, 99),
+                'created_by': user.id,
                 'updated_by': user.id,
             }
             image_publication_data.append(data)
