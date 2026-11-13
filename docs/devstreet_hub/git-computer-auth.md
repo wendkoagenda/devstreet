@@ -4,6 +4,8 @@
 
 **PAT HTTPS Gitea** créé pour le compte lié (`ForgeIdentity`), remis au CLI après confirmation navigateur **DevStreet**, stocké dans le coffre OS (keyring) et servi à Git via un credential helper.
 
+> **Déprécié** pour les nouveaux postes : préférer [git-https-browser.md](git-https-browser.md) (GCM + OAuth DevStreet, sans CLI Python).
+
 Pourquoi pas `gt auth login --oauth` ? Le CLI officiel Gitea ouvre l’autorisation **Gitea**, pas DevStreet ([docs](https://docs.gitea.com/cli/authentication/)).  
 Pourquoi pas JWT Django ? Gitea ne l’accepte pas pour `git push` / `git fetch`.  
 Pourquoi pas device-flow OAuth Gitea ? Non requis ici : Django orchestre la confirmation, puis appelle l’API Gitea (BasicAuth temporaire → PAT utilisateur → invalidation du mot de passe).

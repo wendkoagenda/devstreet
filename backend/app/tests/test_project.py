@@ -164,10 +164,12 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
             self.client.post(f"/api/v1/projects/{project.pk}/publish").status_code, 200
         )
         self.forge.set_public.assert_called_with(project.repository, True)
+        self.forge.set_public.reset_mock()
         self.assertEqual(
             self.client.post(f"/api/v1/projects/{project.pk}/archive").status_code, 200
         )
-        self.forge.set_public.assert_called_with(project.repository, False)
+        # Archivage Hub : la forge reste publique (clone anonyme).
+        self.forge.set_public.assert_not_called()
         self.assertEqual(
             self.client.patch(
                 f"/api/v1/projects/{project.pk}", {"title": "Nouvelle"}, format="json"
@@ -241,6 +243,26 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
         self.assertEqual(result.status_code, 200, result.data)
         add_args = self.forge.add_collaborator.call_args[0]
         self.assertEqual(add_args[2], "read")
+
+    def test_member_invite_by_email_or_username(self):
+        project = self.project()
+        path = f"/api/v1/projects/{project.pk}/members"
+        by_email = self.client.post(
+            path,
+            {"identifier": self.moussa.email, "role": "maintainer"},
+            format="json",
+        )
+        self.assertEqual(by_email.status_code, 200, by_email.data)
+        self.assertEqual(by_email.data["user_id"], self.moussa.pk)
+        self.assertIn("display_name", by_email.data)
+        self.client.delete(f"{path}/{self.moussa.pk}")
+        by_username = self.client.post(
+            path,
+            {"identifier": self.moussa.username, "role": "contributor"},
+            format="json",
+        )
+        self.assertEqual(by_username.status_code, 200, by_username.data)
+        self.assertEqual(by_username.data["user_id"], self.moussa.pk)
 
     def test_owner_cannot_be_removed_as_member(self):
         project = self.project()

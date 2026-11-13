@@ -64,6 +64,8 @@ Avant l’ajout, le membre reçoit une `ForgeIdentity` liée si besoin (`provisi
 
 À la création d’un projet, `Repository.name` reprend le **slug** Hub (déjà unique). En cas de collision locale rare, fallback `slug-{pk}`. Les dépôts historiques `project-N` ne sont pas renommés. Le provisionnement Gitea utilise toujours `repository.name`.
 
+Les dépôts Gitea sont **publics** dès la création (clone anonyme). La publication Hub reste une action métier séparée. Auth push : voir [`git-https-browser.md`](git-https-browser.md).
+
 ## Provisionnement d’identité Gitea
 
 Gitea ne fournit ni clé d’idempotence ni champ personnalisé à la création d’utilisateur (`POST /admin/users`). Le login dérivé de l’ID Django (`devstreet-user-{pk}`) est abandonné : il collisionne dès qu’une forge est partagée ou qu’un compte historique réutilise le même motif.

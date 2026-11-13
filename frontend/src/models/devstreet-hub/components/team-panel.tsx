@@ -1,14 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  BookOpen,
-  Globe,
-  Lock,
-  Search,
-  Trash2,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { Globe, Lock, Search, Trash2, UserPlus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,6 +47,14 @@ function avatarTone(userId: number): string {
   return tones[Math.abs(userId) % tones.length];
 }
 
+function initialsOf(label: string): string {
+  const parts = label.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+  }
+  return label.slice(0, 2).toUpperCase() || "?";
+}
+
 function MemberAvatar({ userId, label }: { userId: number; label: string }) {
   return (
     <span
@@ -64,9 +64,16 @@ function MemberAvatar({ userId, label }: { userId: number; label: string }) {
       )}
       aria-hidden
     >
-      {label}
+      {initialsOf(label)}
     </span>
   );
+}
+
+function memberLabel(
+  member: ProjectMember,
+  fallback: (id: number) => string
+): string {
+  return member.display_name || member.username || fallback(member.user_id);
 }
 
 export function TeamPanel({
@@ -84,23 +91,28 @@ export function TeamPanel({
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [userId, setUserId] = useState("");
-  const [role, setRole] = useState<"maintainer" | "contributor">("contributor");
+  const [identifier, setIdentifier] = useState("");
+  const [role, setRole] = useState<"maintainer" | "contributor">("maintainer");
 
   const memberCount = members?.count ?? 0;
   const pageCount = pageCountOf(memberCount, PAGE_SIZE);
-  const directAccessCount = memberCount + 1;
+  const ownerLabel =
+    project.owner_display_name?.trim() ||
+    t("hub.detail.team.user", { id: project.owner_id });
 
   const filteredMembers = useMemo(() => {
     const rows = members?.results ?? [];
     const needle = query.trim().toLowerCase();
     if (!needle) return rows;
     return rows.filter((member) => {
-      const label = t("hub.detail.team.user", { id: member.user_id }).toLowerCase();
+      const label = memberLabel(member, (id) =>
+        t("hub.detail.team.user", { id })
+      ).toLowerCase();
       const roleLabel = t(`hub.detail.team.roles.${member.role}`).toLowerCase();
       return (
         String(member.user_id).includes(needle) ||
         label.includes(needle) ||
+        (member.username ?? "").toLowerCase().includes(needle) ||
         roleLabel.includes(needle)
       );
     });
@@ -114,121 +126,69 @@ export function TeamPanel({
         : "draft";
 
   const handleInvite = async () => {
-    const id = Number(userId);
-    if (!Number.isFinite(id) || id <= 0) return;
-    const ok = await onInvite({ user_id: id, role });
+    const value = identifier.trim();
+    if (!value) return;
+    const ok = await onInvite({ identifier: value, role });
     if (ok) {
-      setUserId("");
-      setRole("contributor");
+      setIdentifier("");
+      setRole("maintainer");
       setInviteOpen(false);
     }
   };
 
   return (
     <section className="flex flex-col gap-5">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
-          {t("hub.detail.team.title")}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("hub.detail.team.subtitle")}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            {t("hub.detail.team.title")}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("hub.detail.team.subtitle")}
+          </p>
+        </div>
+        {canManage ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 gap-1.5 rounded-md text-xs font-medium"
+            onClick={() => setInviteOpen(true)}
+          >
+            <UserPlus aria-hidden className="size-3.5" />
+            {t("hub.detail.team.add_people")}
+          </Button>
+        ) : null}
       </div>
 
-      {/* Bandeau visibilité */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
-        <div className="flex min-w-0 items-start gap-3">
-          {project.status === "published" ? (
-            <Globe aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          ) : (
-            <Lock aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          )}
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground">
-              {t(`hub.detail.team.visibility.${visibilityKey}.title`)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {t(`hub.detail.team.visibility.${visibilityKey}.hint`)}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Cartes résumé */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs font-medium text-muted-foreground">
-            {t("hub.detail.team.summary.base_role")}
+      <div className="flex flex-wrap items-start gap-3 rounded-lg border border-border bg-card px-4 py-3">
+        {project.status === "published" ? (
+          <Globe
+            aria-hidden
+            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+          />
+        ) : (
+          <Lock
+            aria-hidden
+            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+          />
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground">
+            {t(`hub.detail.team.visibility.${visibilityKey}.title`)}
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="inline-flex rounded-full border border-border bg-secondary px-2.5 py-0.5 text-xs font-semibold text-foreground">
-              {t("hub.detail.team.roles.owner")}
-            </span>
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            {t("hub.detail.team.summary.base_role_hint")}
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs font-medium text-muted-foreground">
-            {t("hub.detail.team.summary.direct")}
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <Users aria-hidden className="size-4 text-muted-foreground" />
-            <p className="text-sm text-foreground">
-              {t("hub.detail.team.summary.direct_count", {
-                count: directAccessCount,
-              })}
-            </p>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("hub.detail.team.summary.direct_members", { count: memberCount })}
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-xs font-medium text-muted-foreground">
-            {t("hub.detail.team.summary.org")}
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <BookOpen aria-hidden className="size-4 text-muted-foreground" />
-            <p className="text-sm text-foreground">
-              {t("hub.detail.team.summary.org_count")}
-            </p>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("hub.detail.team.summary.org_hint")}
+          <p className="text-xs text-muted-foreground">
+            {t(`hub.detail.team.visibility.${visibilityKey}.hint`)}
           </p>
         </div>
       </div>
 
-      {/* Manage access */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-base font-semibold text-foreground">
-            {t("hub.detail.team.manage_title")}
-          </h3>
-          {canManage ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-8 gap-1.5 rounded-md text-xs font-medium"
-              onClick={() => setInviteOpen(true)}
-            >
-              <UserPlus aria-hidden className="size-3.5" />
-              {t("hub.detail.team.add_people")}
-            </Button>
-          ) : null}
-        </div>
-
-        <p className="text-xs text-muted-foreground">{t("hub.detail.team.hint")}</p>
-
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-3 py-2.5">
-            <p className="text-xs font-medium text-muted-foreground">
-              {t("hub.detail.team.direct_access_tab")}
-            </p>
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-3 py-2.5">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Users aria-hidden className="size-3.5" />
+            {t("hub.detail.team.list_title")}
+          </p>
+          {memberCount > 0 ? (
             <div className="relative w-full max-w-xs">
               <Search
                 aria-hidden
@@ -241,56 +201,67 @@ export function TeamPanel({
                 className="h-8 rounded-md bg-secondary pl-8 text-xs"
               />
             </div>
-          </div>
+          ) : null}
+        </div>
 
-          {/* Propriétaire */}
-          <div className="flex items-center gap-3 border-b border-border px-3 py-3">
-            <MemberAvatar
-              userId={project.owner_id}
-              label={String(project.owner_id).slice(-2)}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
-                {t("hub.detail.team.user", { id: project.owner_id })}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("hub.detail.team.owner_subtitle")}
-              </p>
-            </div>
-            <span className="inline-flex rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground">
-              {t("hub.detail.team.role_label", {
-                role: t("hub.detail.team.roles.owner"),
-              })}
-            </span>
+        <div className="flex items-center gap-3 border-b border-border px-3 py-3">
+          <MemberAvatar userId={project.owner_id} label={ownerLabel} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-foreground">
+              {ownerLabel}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("hub.detail.team.owner_subtitle")}
+            </p>
           </div>
+          <span className="inline-flex rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground">
+            {t("hub.detail.team.roles.owner")}
+          </span>
+        </div>
 
-          {loading ? (
-            <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-              {t("common.loading")}
+        {loading ? (
+          <p className="px-3 py-8 text-center text-sm text-muted-foreground">
+            {t("common.loading")}
+          </p>
+        ) : memberCount === 0 ? (
+          <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+            <p className="max-w-sm text-sm text-muted-foreground">
+              {t("hub.detail.team.empty")}
             </p>
-          ) : filteredMembers.length === 0 ? (
-            <p className="px-3 py-10 text-center text-sm text-muted-foreground">
-              {memberCount === 0
-                ? t("hub.detail.team.empty")
-                : t("hub.detail.team.search_empty")}
-            </p>
-          ) : (
-            <ul>
-              {filteredMembers.map((member) => (
+            {canManage ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 gap-1.5 rounded-md text-xs font-medium"
+                onClick={() => setInviteOpen(true)}
+              >
+                <UserPlus aria-hidden className="size-3.5" />
+                {t("hub.detail.team.add_people")}
+              </Button>
+            ) : null}
+          </div>
+        ) : filteredMembers.length === 0 ? (
+          <p className="px-3 py-10 text-center text-sm text-muted-foreground">
+            {t("hub.detail.team.search_empty")}
+          </p>
+        ) : (
+          <ul>
+            {filteredMembers.map((member) => {
+              const label = memberLabel(member, (id) =>
+                t("hub.detail.team.user", { id })
+              );
+              return (
                 <li
                   key={member.id}
                   className="flex items-center gap-3 border-b border-border px-3 py-3 last:border-b-0"
                 >
-                  <MemberAvatar
-                    userId={member.user_id}
-                    label={String(member.user_id).slice(-2)}
-                  />
+                  <MemberAvatar userId={member.user_id} label={label} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
-                      {t("hub.detail.team.user", { id: member.user_id })}
+                      {label}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {t(`hub.detail.team.roles.${member.role}`)}
+                      {t(`hub.detail.team.role_hints.${member.role}`)}
                     </p>
                   </div>
 
@@ -305,27 +276,21 @@ export function TeamPanel({
                         });
                       }}
                     >
-                      <SelectTrigger className="h-8 w-[150px] rounded-md bg-secondary text-xs">
+                      <SelectTrigger className="h-8 w-[200px] rounded-md bg-secondary text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="contributor">
-                          {t("hub.detail.team.role_label", {
-                            role: t("hub.detail.team.roles.contributor"),
-                          })}
-                        </SelectItem>
                         <SelectItem value="maintainer">
-                          {t("hub.detail.team.role_label", {
-                            role: t("hub.detail.team.roles.maintainer"),
-                          })}
+                          {t("hub.detail.team.roles.maintainer")}
+                        </SelectItem>
+                        <SelectItem value="contributor">
+                          {t("hub.detail.team.roles.contributor")}
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
                     <span className="inline-flex rounded-md border border-border bg-secondary px-2 py-1 text-[11px] font-semibold text-foreground">
-                      {t("hub.detail.team.role_label", {
-                        role: t(`hub.detail.team.roles.${member.role}`),
-                      })}
+                      {t(`hub.detail.team.roles.${member.role}`)}
                     </span>
                   )}
 
@@ -343,37 +308,37 @@ export function TeamPanel({
                     </Button>
                   ) : null}
                 </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {pageCount > 1 ? (
-          <div className="flex items-center justify-between gap-2 text-xs">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
-              className="h-8 rounded-md"
-            >
-              {t("pagination.previous")}
-            </Button>
-            <span className="text-muted-foreground">
-              {t("hub.detail.page_of", { page, pageCount })}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page >= pageCount}
-              onClick={() => onPageChange(page + 1)}
-              className="h-8 rounded-md"
-            >
-              {t("pagination.next")}
-            </Button>
-          </div>
-        ) : null}
+              );
+            })}
+          </ul>
+        )}
       </div>
+
+      {pageCount > 1 ? (
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            className="h-8 rounded-md"
+          >
+            {t("pagination.previous")}
+          </Button>
+          <span className="text-muted-foreground">
+            {t("hub.detail.page_of", { page, pageCount })}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+            className="h-8 rounded-md"
+          >
+            {t("pagination.next")}
+          </Button>
+        </div>
+      ) : null}
 
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent className="sm:max-w-md">
@@ -385,15 +350,16 @@ export function TeamPanel({
           </DialogHeader>
           <div className="flex flex-col gap-3 py-1">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="member-user-id">{t("hub.detail.team.user_id")}</Label>
+              <Label htmlFor="member-identifier">
+                {t("hub.detail.team.identifier")}
+              </Label>
               <Input
-                id="member-user-id"
-                type="number"
-                min={1}
-                value={userId}
-                onChange={(event) => setUserId(event.target.value)}
+                id="member-identifier"
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
                 className="h-9 bg-secondary"
-                placeholder="42"
+                placeholder={t("hub.detail.team.identifier_placeholder")}
+                autoComplete="off"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -408,14 +374,17 @@ export function TeamPanel({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="contributor">
-                    {t("hub.detail.team.roles.contributor")}
-                  </SelectItem>
                   <SelectItem value="maintainer">
                     {t("hub.detail.team.roles.maintainer")}
                   </SelectItem>
+                  <SelectItem value="contributor">
+                    {t("hub.detail.team.roles.contributor")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">
+                {t(`hub.detail.team.role_hints.${role}`)}
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -425,11 +394,11 @@ export function TeamPanel({
               className="h-9 text-xs"
               onClick={() => setInviteOpen(false)}
             >
-              {t("common.cancel")}
+              {t("cancel")}
             </Button>
             <Button
               type="button"
-              disabled={isBusy || !userId}
+              disabled={isBusy || !identifier.trim()}
               className="h-9 text-xs font-semibold"
               onClick={() => void handleInvite()}
             >

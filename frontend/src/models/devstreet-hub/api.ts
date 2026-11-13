@@ -54,6 +54,7 @@ export const devstreetHubApi = createApi({
     "ProjectProfile",
     "GitComputers",
     "GitDeviceAuth",
+    "GitOAuth",
   ],
   endpoints: (builder) => ({
     getProjects: builder.query<Paginated<Project>, ProjectListParams | void>({
@@ -245,6 +246,52 @@ export const devstreetHubApi = createApi({
         method: "POST",
         body: {},
       }),
+    }),
+
+    getGitOAuthClientConfig: builder.query<
+      import("./schema").GitOAuthClientConfig,
+      void
+    >({
+      query: () => "/git-oauth/client-config",
+    }),
+
+    getGitOAuthRequest: builder.query<
+      import("./schema").GitOAuthRequest,
+      string
+    >({
+      query: (requestId) => `/git-oauth/${requestId}`,
+      providesTags: (_result, _error, requestId) => [
+        { type: "GitOAuth", id: requestId },
+      ],
+    }),
+
+    approveGitOAuth: builder.mutation<
+      { status: string; redirect_uri: string },
+      string
+    >({
+      query: (requestId) => ({
+        url: `/git-oauth/${requestId}/approve`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: (_result, _error, requestId) => [
+        { type: "GitOAuth", id: requestId },
+        { type: "GitComputers", id: "LIST" },
+      ],
+    }),
+
+    denyGitOAuth: builder.mutation<
+      { status: string; redirect_uri: string },
+      string
+    >({
+      query: (requestId) => ({
+        url: `/git-oauth/${requestId}/deny`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: (_result, _error, requestId) => [
+        { type: "GitOAuth", id: requestId },
+      ],
     }),
 
     getGitDeviceAuthRequest: builder.query<GitDeviceAuthRequest, string>({
@@ -522,6 +569,10 @@ export const {
   useUpdateProjectMutation,
   useProvisionForgeAccessMutation,
   useResetForgePasswordMutation,
+  useGetGitOAuthClientConfigQuery,
+  useGetGitOAuthRequestQuery,
+  useApproveGitOAuthMutation,
+  useDenyGitOAuthMutation,
   useGetGitDeviceAuthRequestQuery,
   useAuthorizeGitDeviceMutation,
   useDenyGitDeviceMutation,

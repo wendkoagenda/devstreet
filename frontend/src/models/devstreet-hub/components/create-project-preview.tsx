@@ -94,7 +94,7 @@ export function CreateProjectPreview({
           <div className="flex items-center justify-between border-b border-border py-1.5">
             <dt className="text-muted-foreground">{t("hub.create.preview.visibility")}</dt>
             <dd className="rounded bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-              {t("hub.create.preview.visibility_private")}
+              {t("hub.create.preview.visibility_public")}
             </dd>
           </div>
           <div className="flex items-center justify-between border-b border-border py-1.5">

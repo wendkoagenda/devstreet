@@ -463,3 +463,64 @@ class GitConnectedComputer(models.Model):
                 name="unique_user_gitea_token",
             )
         ]
+
+
+class GitOAuthAuthorization(models.Model):
+    """Demande OAuth2 (GCM) : confirmation navigateur DevStreet → code → PAT Gitea."""
+
+    STATUS_PENDING = "pending"
+    STATUS_AUTHORIZED = "authorized"
+    STATUS_DENIED = "denied"
+    STATUS_EXPIRED = "expired"
+    STATUS_CONSUMED = "consumed"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "En attente"),
+        (STATUS_AUTHORIZED, "Autorisée"),
+        (STATUS_DENIED, "Refusée"),
+        (STATUS_EXPIRED, "Expirée"),
+        (STATUS_CONSUMED, "Consommée"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="git_oauth_authorizations",
+    )
+    client_id = models.CharField(max_length=80)
+    redirect_uri = models.CharField(max_length=400)
+    state = models.CharField(max_length=200, blank=True, default="")
+    code_challenge = models.CharField(max_length=128)
+    code_challenge_method = models.CharField(max_length=10, default="S256")
+    scope = models.CharField(max_length=200, blank=True, default="")
+    computer_name = models.CharField(max_length=120, default="Git Credential Manager")
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    authorization_code = models.CharField(max_length=64, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    decided_at = models.DateTimeField(null=True, blank=True)
+    code_expires_at = models.DateTimeField(null=True, blank=True)
+    connected_computer = models.ForeignKey(
+        "GitConnectedComputer",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="oauth_authorizations",
+    )
+
+    class Meta:
+        db_table = "projects_git_oauth_authorization"
+        indexes = [
+            models.Index(
+                fields=["status", "expires_at"],
+                name="projects_gi_oauth_st_idx",
+            ),
+            models.Index(
+                fields=["authorization_code"],
+                name="projects_gi_oauth_code_idx",
+            ),
+        ]

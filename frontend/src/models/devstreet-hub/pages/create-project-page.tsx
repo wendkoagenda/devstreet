@@ -1,10 +1,9 @@
 import { AlertTriangle, LogIn, Sparkles, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { CreateProjectFormSection } from "../components/create-project-form-section";
 import { CreateProjectPreview } from "../components/create-project-preview";
-import { CreateProjectPublishSection } from "../components/create-project-publish-section";
 import { CreateProjectRepoSection } from "../components/create-project-repo-section";
 import { CreateProjectStepper } from "../components/create-project-stepper";
 import { useCreateProject } from "../hooks/use-create-project";
@@ -21,6 +20,7 @@ function initialsOf(name: string | undefined | null): string {
 
 export default function CreateProjectPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const wizard = useCreateProject();
 
   if (!wizard.isInitialized || wizard.isHydratingDraft) {
@@ -231,22 +231,16 @@ export default function CreateProjectPage() {
               onResetPassword={() => {
                 void wizard.resetGitPassword();
               }}
+              onFinalize={({ publishAutomatically }) => {
+                if (!wizard.project?.id) return;
+                if (publishAutomatically) {
+                  void wizard.publish();
+                  return;
+                }
+                navigate(`/hub/projects/${wizard.project.id}?tab=code`);
+              }}
             />
           ) : null}
-
-          <CreateProjectPublishSection
-            integrityConfirmed={wizard.form.integrityConfirmed}
-            canPublish={wizard.canPublish}
-            repoReady={wizard.repoReady}
-            isBusy={wizard.isBusy}
-            projectSlug={wizard.project?.slug || wizard.form.slug}
-            onIntegrityChange={(value) =>
-              wizard.patchForm({ integrityConfirmed: value })
-            }
-            onPublish={() => {
-              void wizard.publish();
-            }}
-          />
         </div>
 
         <CreateProjectPreview

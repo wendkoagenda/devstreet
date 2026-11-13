@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useAuthSlice } from "@/models/auth/slice";
 import { MARKETPLACE_ADMIN_PAGES } from "@/models/marketplace-space/admin-pages";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 
@@ -30,7 +31,18 @@ export default function PlatformMenu() {
   const { isMobile, setOpenMobile } = useSidebar();
   const permissions = usePermissions();
   const { hasProfil, isRecruiter } = useMySpace();
+  const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
+  const userId = useAuthSlice((state) => state.user?.id ?? null);
   const hubActive = location.pathname.startsWith("/hub");
+  const myProjectsUrl =
+    userId != null ? `/hub/projects?owner=${userId}` : "/hub/projects";
+  const isExploreActive =
+    location.pathname.startsWith("/hub/projects") &&
+    !new URLSearchParams(location.search).get("owner");
+  const isMyProjectsActive =
+    location.pathname.startsWith("/hub/projects") &&
+    userId != null &&
+    new URLSearchParams(location.search).get("owner") === String(userId);
 
   // Écrans de la marketplace : ceux qui supposent un profil n'apparaissent qu'une fois le profil créé,
   // ceux du recruteur qu'une fois l'entreprise créée
@@ -151,13 +163,27 @@ export default function PlatformMenu() {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    isActive={location.pathname.startsWith("/hub/projects")}
+                    isActive={isExploreActive}
                     onClick={() => go("/hub/projects")}
                   >
                     <span className="size-1.5 rounded-full bg-accent" aria-hidden />
                     <span>Explorer les projets</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {isAuthenticated && userId != null ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isMyProjectsActive}
+                      onClick={() => go(myProjectsUrl)}
+                    >
+                      <span
+                        className="size-1.5 rounded-full bg-accent"
+                        aria-hidden
+                      />
+                      <span>Mes projets</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : null}
               </SidebarMenu>
             </SidebarContent>
           </CollapsibleContent>

@@ -329,14 +329,36 @@ class ConsentSerializer(serializers.Serializer):
 
 
 class MemberWriteSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField(min_value=1)
+    """Invitation : user_id OU identifiant (email / pseudo / id en texte)."""
+
+    user_id = serializers.IntegerField(min_value=1, required=False, allow_null=True)
+    identifier = serializers.CharField(
+        required=False, allow_blank=True, max_length=255, trim_whitespace=True
+    )
     role = serializers.ChoiceField(choices=("maintainer", "contributor"))
+
+    def validate(self, attrs):
+        user_id = attrs.get("user_id")
+        identifier = (attrs.get("identifier") or "").strip()
+        if user_id is None and not identifier:
+            raise serializers.ValidationError(
+                "Indique un utilisateur (email, pseudo) ou un user_id."
+            )
+        attrs["identifier"] = identifier or None
+        return attrs
 
 
 class MemberSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+    username = serializers.CharField(source="user.username", read_only=True)
+
     class Meta:
         model = ProjectMember
-        fields = ("id", "user_id", "role")
+        fields = ("id", "user_id", "role", "display_name", "username")
+
+    def get_display_name(self, obj) -> str:
+        full = (obj.user.get_full_name() or "").strip()
+        return full or obj.user.username
 
 
 class AnalysisRequestSerializer(serializers.Serializer):

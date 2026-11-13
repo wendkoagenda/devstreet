@@ -163,18 +163,59 @@ export function CodeBrowser({
   }
 
   if (code.isEmpty) {
+    const branch = code.summary?.default_branch || "main";
+    const pushCommands = cloneUrl
+      ? [
+          "git init",
+          "git add .",
+          'git commit -m "Premier commit"',
+          `git branch -M ${branch}`,
+          `git remote add origin ${cloneUrl}`,
+          `git push -u origin ${branch}`,
+        ].join("\n")
+      : null;
+
     return (
       <div className="flex flex-col gap-4 border border-dashed border-border bg-card p-6">
-        <h3 className="text-sm font-bold text-foreground">{t("hub.detail.code.empty_title")}</h3>
-        <p className="text-sm text-muted-foreground">{t("hub.detail.code.empty_text")}</p>
-        {cloneUrl ? (
-          <p className="break-all border border-border bg-muted/40 px-3 py-2 font-mono text-xs">
-            {cloneUrl}
+        <div>
+          <h3 className="text-sm font-bold text-foreground">
+            {t("hub.detail.code.empty_title")}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("hub.detail.code.empty_push_hint")}
           </p>
+        </div>
+        {pushCommands ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-foreground">
+                {t("hub.detail.code.first_push_commands")}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-brand"
+                onClick={async () => {
+                  const ok = await copyText(pushCommands);
+                  if (ok) {
+                    setCopiedClone(true);
+                    window.setTimeout(() => setCopiedClone(false), 1600);
+                  }
+                }}
+              >
+                {copiedClone ? t("hub.detail.code.copied") : t("hub.detail.code.copy")}
+              </Button>
+            </div>
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border border-border bg-primary px-3 py-3 font-sans text-[11px] leading-relaxed text-primary-foreground">
+              {pushCommands}
+            </pre>
+          </div>
         ) : null}
         {code.canInitialize ? (
           <Button
             type="button"
+            variant="outline"
             className="h-9 w-fit text-xs font-semibold"
             disabled={code.isInitializing}
             onClick={() => {
@@ -225,16 +266,11 @@ export function CodeBrowser({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-5">
       <div className="min-w-0 flex-1 space-y-3">
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <BookMarked aria-hidden className="size-4 text-muted-foreground" />
-            <span className="text-muted-foreground">@{repoLabel.ns}</span>
-            <span className="text-muted-foreground">/</span>
-            <span className="font-semibold text-foreground">{repoLabel.name}</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground">
-            {t("hub.detail.code.forge_path_hint")}
-          </p>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <BookMarked aria-hidden className="size-4 text-muted-foreground" />
+          <span className="text-muted-foreground">@{repoLabel.ns}</span>
+          <span className="text-muted-foreground">/</span>
+          <span className="font-semibold text-foreground">{repoLabel.name}</span>
         </div>
 
         {code.metadataError ? <p role="status" className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">{t("hub.detail.code.metadata_unavailable")}</p> : null}

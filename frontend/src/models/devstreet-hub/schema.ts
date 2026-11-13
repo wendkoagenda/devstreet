@@ -88,7 +88,7 @@ export const forgeAccessSchema = z.object({
 export const gitDeviceAuthRequestSchema = z.object({
   id: z.string(),
   computer_name: z.string(),
-  hub_base_url: z.string(),
+  hub_base_url: z.string().optional(),
   status: z.enum([
     "pending",
     "authorized",
@@ -102,7 +102,22 @@ export const gitDeviceAuthRequestSchema = z.object({
   scopes: z.array(z.string()),
   scope_labels: z.array(z.string()),
   gitea_host: z.string(),
+  client_id: z.string().optional(),
 });
+
+export const gitOAuthClientConfigSchema = z.object({
+  client_id: z.string(),
+  gitea_origin: z.string(),
+  authorize_endpoint: z.string(),
+  token_endpoint: z.string(),
+  redirect_uri: z.string(),
+  oauth_default_username: z.string(),
+  scopes: z.string(),
+  git_config_commands: z.array(z.string()),
+});
+
+export type GitOAuthClientConfig = z.infer<typeof gitOAuthClientConfigSchema>;
+export type GitOAuthRequest = z.infer<typeof gitDeviceAuthRequestSchema>;
 
 export const gitConnectedComputerSchema = z.object({
   id: z.number(),
@@ -217,12 +232,19 @@ export const projectMemberSchema = z.object({
   id: z.number(),
   user_id: z.number(),
   role: z.enum(["maintainer", "contributor"]),
+  display_name: z.string().optional(),
+  username: z.string().optional(),
 });
 
-export const projectMemberWriteSchema = z.object({
-  user_id: z.number().int().positive(),
-  role: z.enum(["maintainer", "contributor"]),
-});
+export const projectMemberWriteSchema = z
+  .object({
+    user_id: z.number().int().positive().optional(),
+    identifier: z.string().trim().min(1).optional(),
+    role: z.enum(["maintainer", "contributor"]),
+  })
+  .refine((value) => value.user_id != null || Boolean(value.identifier), {
+    message: "user_id_or_identifier_required",
+  });
 
 export type TaskStatus = z.infer<typeof taskStatusSchema>;
 export type ContributionTask = z.infer<typeof contributionTaskSchema>;

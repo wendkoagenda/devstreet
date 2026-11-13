@@ -12,6 +12,7 @@ from app.devstreet_hub.views.git_auth_viewsets import (
     GitAuthViewSet,
     GitConnectedComputerViewSet,
 )
+from app.devstreet_hub.views.git_oauth_viewsets import GitOAuthViewSet
 from app.devstreet_hub.views.integration_views import (
     webhook,
     profile_projects,
@@ -27,6 +28,7 @@ router.register(r"contributions", ContributionViewSet, basename="contributions")
 router.register(r"analyses", AnalysisViewSet, basename="analyses")
 router.register(r"forge-access", ForgeAccessViewSet, basename="forge-access")
 router.register(r"git-auth", GitAuthViewSet, basename="git-auth")
+router.register(r"git-oauth", GitOAuthViewSet, basename="git-oauth")
 router.register(
     r"git-computers", GitConnectedComputerViewSet, basename="git-computers"
 )

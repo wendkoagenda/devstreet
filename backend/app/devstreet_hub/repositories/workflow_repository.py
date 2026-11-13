@@ -113,7 +113,11 @@ class WorkflowRepository(ProjectRepository):
         )[0]
 
     def members(self, project):
-        return ProjectMember.objects.filter(project=project).order_by("id")
+        return (
+            ProjectMember.objects.filter(project=project)
+            .select_related("user")
+            .order_by("id")
+        )
 
     def remove_member(self, project, user_id):
         ProjectMember.objects.filter(project=project, user_id=user_id).delete()
