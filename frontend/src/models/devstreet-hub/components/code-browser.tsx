@@ -225,11 +225,16 @@ export function CodeBrowser({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-5">
       <div className="min-w-0 flex-1 space-y-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <BookMarked aria-hidden className="size-4 text-muted-foreground" />
-          <span className="text-muted-foreground">{repoLabel.ns}</span>
-          <span className="text-muted-foreground">/</span>
-          <span className="font-semibold text-foreground">{repoLabel.name}</span>
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <BookMarked aria-hidden className="size-4 text-muted-foreground" />
+            <span className="text-muted-foreground">@{repoLabel.ns}</span>
+            <span className="text-muted-foreground">/</span>
+            <span className="font-semibold text-foreground">{repoLabel.name}</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {t("hub.detail.code.forge_path_hint")}
+          </p>
         </div>
 
         {code.metadataError ? <p role="status" className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">{t("hub.detail.code.metadata_unavailable")}</p> : null}

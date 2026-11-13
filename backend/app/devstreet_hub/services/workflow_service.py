@@ -875,10 +875,55 @@ class WorkflowService:
         require_owner(actor, project)
         if user_id == project.owner_id:
             raise Conflict("Le propriétaire ne se modifie pas par les membres.")
+        from django.contrib.auth import get_user_model
+
+        member_user = get_user_model().objects.filter(pk=user_id, is_active=True).first()
+        if member_user is None:
+            raise NotFound("Utilisateur introuvable.")
         if role is None:
+            self._sync_forge_collaborator(project, member_user, permission=None)
             self.repo.remove_member(project, user_id)
             return None
+        permission = "write" if role == "maintainer" else "read"
+        self._sync_forge_collaborator(project, member_user, permission=permission)
         return self.repo.set_member(project, user_id, role)
+
+    def _sync_forge_collaborator(self, project, member_user, *, permission):
+        """Aligne le collaborateur Gitea sur le rôle Hub (idempotent)."""
+        repository = getattr(project, "repository", None)
+        if (
+            repository is None
+            or repository.status != "ready"
+            or not repository.namespace
+            or not repository.name
+        ):
+            return
+        from app.devstreet_hub.models import ForgeIdentity
+
+        if permission is None:
+            identity = self.repo.identity(member_user)
+            if (
+                identity
+                and identity.status == ForgeIdentity.STATUS_LINKED
+                and identity.login
+                and identity.login != repository.namespace
+            ):
+                self.forge.remove_collaborator(repository, identity.login)
+            return
+
+        self.provision_identity(member_user)
+        identity = self.repo.identity(member_user)
+        if (
+            not identity
+            or identity.status != ForgeIdentity.STATUS_LINKED
+            or not identity.login
+        ):
+            raise Conflict(
+                "Impossible de lier l’accès Git du membre avant de l’ajouter au dépôt."
+            )
+        if identity.login == repository.namespace:
+            return
+        self.forge.add_collaborator(repository, identity.login, permission)
 
     def create_task(self, actor, project, data):
         require_permission(actor, "contribution-tasks.create")

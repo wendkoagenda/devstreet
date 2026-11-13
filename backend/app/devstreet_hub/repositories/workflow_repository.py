@@ -78,12 +78,26 @@ class WorkflowRepository(ProjectRepository):
             qs = qs.exclude(pk=exclude_pk)
         return qs.exists()
 
+    def allocate_repository_name(self, project) -> str:
+        """Nom du dépôt forge = slug Hub ; fallback slug-{pk} si collision locale."""
+        base = (project.slug or f"project-{project.pk}")[:100]
+        taken = (
+            Repository.objects.filter(name=base)
+            .exclude(project_id=project.pk)
+            .exists()
+        )
+        if not taken:
+            return base
+        return f"{project.slug}-{project.pk}"[:100]
+
     def create_project(self, actor, data, technologies):
         project = self.create(
             owner=actor, created_by=actor.pk, updated_by=actor.pk, **data
         )
         project.technologies.set(technologies)
-        Repository.objects.create(project=project, name=f"project-{project.pk}")
+        Repository.objects.create(
+            project=project, name=self.allocate_repository_name(project)
+        )
         return project
 
     def set_technologies(self, project, technologies):

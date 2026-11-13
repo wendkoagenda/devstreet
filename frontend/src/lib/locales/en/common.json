@@ -685,7 +685,8 @@
         "too_large": "File too large to display here.",
         "binary": "Binary file — content not shown.",
         "language_label": "Language: {{language}}",
-        "metadata_unavailable": "Repository statistics are temporarily unavailable. You can still browse files."
+        "metadata_unavailable": "Repository statistics are temporarily unavailable. You can still browse files.",
+        "forge_path_hint": "Forge path: account linked to your DevStreet profile (distinct login) / repository name."
       },
       "contribute": {
         "title": "Contribution tasks",
@@ -883,6 +884,10 @@
         "copy_url": "Copy URL",
         "copy_cli": "Copy commands",
         "copied": "Copied!",
+        "forge_path_label": "Git repository",
+        "forge_path_hint": "The repository uses the same identifier (slug) as your Hub project.",
+        "forge_path_collision": "A name collision forced a suffix (slug-id): the Hub title and Git repository differ only in that case.",
+        "forge_linked_text": "Your DevStreet account is linked to a distinct forge account (shared email, different forge login). This is not a single SSO.",
         "cli_title": "Commands to push your code",
         "cli_waiting": "Commands appear once the real repository URL is ready.",
         "security_title": "Never commit secrets",

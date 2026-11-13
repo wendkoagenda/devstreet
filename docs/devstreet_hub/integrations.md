@@ -46,9 +46,23 @@ Pour un client HTTP, `GET /api/v1/project-evidence/{id}` réalise la vérificati
 
 `GET /api/v1/project-profiles/{user_id}` retourne les 20 derniers projets publiés et les 20 dernières contributions acceptées publiques. `limit: 20` est explicite. Utiliser les listes paginées `/projects?owner={id}` et `/contributions?author_id={id}` pour les listes longues ; ces routes continuent d’appliquer les droits de visibilité de la personne qui consulte.
 
-## Droits Git distincts des rôles métier
+## Droits Git et rôles métier (sync membres)
 
-`ForgeIdentity` est un pointeur technique vers le compte de forge. Les droits de push sont ceux de Gitea. Ajouter un mainteneur dans Django permet la gestion de contenu et la revue, sans lui accorder silencieusement un accès Git. L’ouverture d’une PR et l’attribution de droits Git avancés passent par la forge pour ce MVP.
+`ForgeIdentity` est un pointeur technique vers le compte de forge (login opaque `ds-…`, e-mail partagé avec Django — ce n’est pas un SSO unique). Les droits de push restent ceux de Gitea.
+
+Lorsqu’un propriétaire ajoute ou retire un membre Hub sur un dépôt **prêt**, DevStreet synchronise le collaborateur Gitea de façon idempotente :
+
+| Rôle Hub | Permission Gitea |
+|---|---|
+| `maintainer` | `write` |
+| `contributor` | `read` |
+| retrait membre | `DELETE` collaborator |
+
+Avant l’ajout, le membre reçoit une `ForgeIdentity` liée si besoin (`provision_identity`). Le propriétaire du dépôt (owner Gitea / `repository.namespace`) n’est pas re-ajouté comme collaborateur. Un échec forge remonte en erreur API (pas de demi-état silencieux côté Hub). Pas de sync rétroactive massive des membres déjà en base dans ce lot.
+
+## Nom de dépôt = slug Hub
+
+À la création d’un projet, `Repository.name` reprend le **slug** Hub (déjà unique). En cas de collision locale rare, fallback `slug-{pk}`. Les dépôts historiques `project-N` ne sont pas renommés. Le provisionnement Gitea utilise toujours `repository.name`.
 
 ## Provisionnement d’identité Gitea
 

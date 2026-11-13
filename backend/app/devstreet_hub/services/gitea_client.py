@@ -335,6 +335,28 @@ class GiteaClient:
         if result.get("private") != (not public):
             raise ExternalUnavailable("La visibilité Git n’a pas été confirmée.")
 
+    def add_collaborator(self, repository, login: str, permission: str):
+        """Ajoute ou met à jour un collaborateur (permission : read | write | admin)."""
+        if permission not in ("read", "write", "admin"):
+            raise Conflict("Permission forge invalide.")
+        self.request(
+            "PUT",
+            self.repo_path(repository)
+            + "/collaborators/"
+            + quote(login, safe=""),
+            {"permission": permission},
+        )
+
+    def remove_collaborator(self, repository, login: str):
+        """Retire un collaborateur ; idempotent si déjà absent (404)."""
+        self.request(
+            "DELETE",
+            self.repo_path(repository)
+            + "/collaborators/"
+            + quote(login, safe=""),
+            missing_ok=True,
+        )
+
     def repo_is_empty(self, repository) -> bool:
         """True si la branche par défaut n'existe pas encore (dépôt sans commit)."""
         branch = self.request(

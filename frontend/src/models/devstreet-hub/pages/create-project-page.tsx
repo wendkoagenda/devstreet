@@ -211,6 +211,8 @@ export default function CreateProjectPage() {
               gitCommands={wizard.gitCommands}
               forgeAccess={wizard.forgeAccess}
               forgeLogin={wizard.forgeLogin}
+              repoName={wizard.repoName}
+              projectSlug={wizard.project?.slug ?? null}
               hasInitialPassword={wizard.hasInitialPassword}
               isBusy={wizard.isBusy}
               isResettingPassword={wizard.isResettingPassword}
