@@ -1,4 +1,5 @@
 import uuid
+from app.devstreet_hub.image_storage import ProjectImageStorage
 
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -247,6 +248,16 @@ class RepositorySnapshot(models.Model):
                 fields=["repository", "commit_sha"], name="unique_repository_sha"
             )
         ]
+
+
+class ProjectImage(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='images')
+    file = models.FileField(storage=ProjectImageStorage(), upload_to='')
+    display_name = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
 
 
 class AIAnalysis(models.Model):

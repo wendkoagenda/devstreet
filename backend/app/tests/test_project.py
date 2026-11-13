@@ -35,6 +35,7 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
         self.assertEqual(project.owner, self.aicha)
         self.assertEqual(project.status, "draft")
         self.assertEqual(project.repository.status, "ready")
+        self.assertEqual(project.repository.name, project.slug)
         self.assertEqual(response.data["setup"]["identity"], "ok")
         self.assertEqual(response.data["setup"]["repository"], "ok")
         self.assertIn("forge_access", response.data)
@@ -209,6 +210,10 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
         self.assertEqual(
             self.client.get(path).data["results"][0]["user_id"], self.moussa.pk
         )
+        self.forge.add_collaborator.assert_called()
+        add_args = self.forge.add_collaborator.call_args[0]
+        self.assertEqual(add_args[0], project.repository)
+        self.assertEqual(add_args[2], "write")
         self.login(self.moussa)
         self.assertEqual(
             self.client.patch(
@@ -224,6 +229,18 @@ class ProjectRoutesTests(DevStreetHubAPITestCase):
             self.client.delete(path + f"/{self.moussa.pk}").status_code, 204
         )
         self.assertFalse(ProjectMember.objects.exists())
+        self.forge.remove_collaborator.assert_called()
+
+    def test_member_contributor_syncs_read_permission(self):
+        project = self.project()
+        result = self.client.post(
+            f"/api/v1/projects/{project.pk}/members",
+            {"user_id": self.moussa.pk, "role": "contributor"},
+            format="json",
+        )
+        self.assertEqual(result.status_code, 200, result.data)
+        add_args = self.forge.add_collaborator.call_args[0]
+        self.assertEqual(add_args[2], "read")
 
     def test_owner_cannot_be_removed_as_member(self):
         project = self.project()

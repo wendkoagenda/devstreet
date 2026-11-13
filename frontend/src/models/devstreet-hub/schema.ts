@@ -17,6 +17,8 @@ export const projectStatusSchema = z.enum(["draft", "published", "archived"]);
 export const projectSchema = z.object({
   id: z.number(),
   owner_id: z.number(),
+  owner_display_name: z.string().optional(),
+  images: z.array(z.object({ id: z.number(), url: z.string(), display_name: z.string() })).optional(),
   title: z.string(),
   slug: z.string(),
   problem: z.string(),
@@ -454,7 +456,11 @@ export const analysisSchema = z.object({
   status: analysisStatusSchema,
   model: z.string(),
   prompt_version: z.string().optional(),
-  result: analysisResultSchema.or(z.record(z.string(), z.unknown())).optional(),
+  result: z.object({
+    description: z.string().min(1).max(10000),
+    references: z.array(analysisCitationSchema),
+    unknowns: z.array(z.string()),
+  }).or(analysisResultSchema).or(z.record(z.string(), z.unknown())).optional(),
   error_code: z.string().optional(),
   input_tokens: z.number().optional(),
   output_tokens: z.number().optional(),

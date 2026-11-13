@@ -77,6 +77,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <ProjectDetailHeader
+        technologies={project.technologies.flatMap(id => { const tech = detail.technologiesById.get(id); return tech ? [tech] : []; })}
         project={project}
         star={detail.star}
         isOwner={detail.isOwner}
@@ -109,6 +110,10 @@ export default function ProjectDetailPage() {
 
       {detail.tab === "presentation" ? (
         <PresentationPanel
+          key={project.id}
+          canAnalyze={detail.access.canAnalyze}
+          onNavigate={detail.setTab}
+          technologies={project.technologies.flatMap(id => { const tech = detail.technologiesById.get(id); return tech ? [tech] : []; })}
           project={project}
           canEdit={detail.isOwner && detail.access.canUpdateProject}
         />

@@ -15,6 +15,8 @@ interface CreateProjectRepoSectionProps {
   gitCommands: string | null;
   forgeAccess: ForgeAccess | null;
   forgeLogin: string | null;
+  repoName: string | null;
+  projectSlug: string | null;
   hasInitialPassword: boolean;
   isBusy: boolean;
   isResettingPassword: boolean;
@@ -44,6 +46,8 @@ export function CreateProjectRepoSection({
   gitCommands,
   forgeAccess,
   forgeLogin,
+  repoName,
+  projectSlug,
   hasInitialPassword,
   isBusy,
   isResettingPassword,
@@ -203,6 +207,25 @@ export function CreateProjectRepoSection({
         <p className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-xs text-success">
           {t("hub.create.init.readme_done")}
         </p>
+      ) : null}
+
+      {forgeLogin && repoName ? (
+        <div className="flex flex-col gap-1.5 rounded-xl border border-border bg-card px-4 py-3">
+          <span className="text-xs font-semibold text-foreground">
+            {t("hub.create.repo.forge_path_label")}
+          </span>
+          <code className="break-all font-sans text-sm font-semibold text-foreground">
+            @{forgeLogin}/{repoName}
+          </code>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            {projectSlug && repoName !== projectSlug
+              ? t("hub.create.repo.forge_path_collision")
+              : t("hub.create.repo.forge_path_hint")}
+          </p>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            {t("hub.create.repo.forge_linked_text")}
+          </p>
+        </div>
       ) : null}
 
       <div className="flex flex-col gap-2">

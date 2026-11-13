@@ -160,23 +160,22 @@ export function useProjectCode(
     breadcrumbs,
     summary: summaryQuery.data,
     branches: branchesQuery.data ?? [],
-    tree: treeQuery.data,
-    blob: blobQuery.data,
-    isEmpty: Boolean(summaryQuery.data?.is_empty),
+    tree: treeQuery.currentData,
+    blob: blobQuery.currentData,
+    isEmpty: Boolean(summaryQuery.data?.is_empty || treeQuery.currentData?.is_empty),
     isLoading:
-      summaryQuery.isLoading ||
-      (mode === "tree" && treeQuery.isLoading) ||
-      (mode === "blob" && blobQuery.isLoading),
+      (mode === "tree" && treeQuery.isFetching && !treeQuery.currentData) ||
+      (mode === "blob" && blobQuery.isFetching && !blobQuery.currentData),
     isFetching:
       summaryQuery.isFetching ||
       treeQuery.isFetching ||
       blobQuery.isFetching ||
       branchesQuery.isFetching,
     isError: Boolean(
-      summaryQuery.isError ||
-        (mode === "tree" && treeQuery.isError) ||
+      (mode === "tree" && treeQuery.isError) ||
         (mode === "blob" && blobQuery.isError)
     ),
+    metadataError: summaryQuery.isError,
     errorStatus,
     setBranch,
     openPath,

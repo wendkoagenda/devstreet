@@ -12,6 +12,7 @@ from app.devstreet_hub.models import (
     AIAnalysis,
     ProjectMember,
     ProjectDiscussionLink,
+    ProjectImage,
 )
 from app.devstreet_hub.repositories.workflow_repository import WorkflowRepository
 
@@ -161,7 +162,21 @@ class CodeArchiveQuerySerializer(serializers.Serializer):
     )
 
 
+class ProjectImageSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectImage
+        fields = ('id', 'url', 'display_name')
+        read_only_fields = fields
+
+    def get_url(self, obj) -> str:
+        return f'/api/v1/projects/{obj.project_id}/presentation/images/{obj.pk}'
+
+
 class ProjectSerializer(serializers.ModelSerializer):
+    owner_display_name = serializers.SerializerMethodField()
+    images = ProjectImageSerializer(many=True, read_only=True)
     repository = RepositorySerializer(read_only=True)
     star_count = serializers.SerializerMethodField()
     technologies = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -171,6 +186,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "owner_id",
+            "owner_display_name",
+            "images",
             "title",
             "slug",
             "problem",
@@ -192,10 +209,16 @@ class ProjectSerializer(serializers.ModelSerializer):
             return obj.star_count
         return WorkflowRepository().star_count(obj)
 
+    def get_owner_display_name(self, obj) -> str:
+        return obj.owner.get_full_name().strip() or obj.owner.username
 
 class ProjectCreateResponseSerializer(ProjectSerializer):
     forge_access = serializers.DictField(required=False, allow_null=True)
     setup = ProjectSetupSerializer()
+
+    class Meta(ProjectSerializer.Meta):
+        fields = ProjectSerializer.Meta.fields + ('forge_access', 'setup')
+        read_only_fields = fields
 
 
 class TaskWriteSerializer(serializers.ModelSerializer):
@@ -294,6 +317,9 @@ class ContributionSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.Serializer):
+    class Meta:
+        ref_name = 'HubContributionReview'
+
     status = serializers.ChoiceField(choices=("accepted", "rejected"))
     note = serializers.CharField(max_length=3000)
 

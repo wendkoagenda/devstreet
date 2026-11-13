@@ -1,14 +1,15 @@
 """Routes de workflows. Les règles sont dans WorkflowService, l'auth reste celle du core."""
 
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse, Http404
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from app.devstreet_hub.throttles import PublicProjectThrottle
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema, no_body
 from drf_yasg import openapi
 from app.devstreet_hub.api_serializers import (
     ProjectSerializer,
@@ -36,6 +37,8 @@ from app.devstreet_hub.api_serializers import (
     AssistantChatSerializer,
 )
 from app.ai.serializers import AiChatResponseSerializer
+from app.devstreet_hub.presentation_serializers import PresentationWriteSerializer, PresentationSuggestionSerializer
+from app.devstreet_hub.services.presentation_service import PresentationService
 from app.devstreet_hub.services.workflow_service import WorkflowService
 from app.devstreet_hub.api_serializers import (
     ProjectQuerySerializer,
@@ -105,6 +108,40 @@ class ProjectViewSet(
             request.user, obj, serializer.validated_data
         )
         return Response(ProjectSerializer(obj).data)
+
+    @swagger_auto_schema(
+        method='put', request_body=no_body, responses={200: ProjectSerializer}, tags=['V1 - Project'],
+        manual_parameters=[
+            openapi.Parameter('description', openapi.IN_FORM, type=openapi.TYPE_STRING, required=True),
+            openapi.Parameter('problem', openapi.IN_FORM, type=openapi.TYPE_STRING, required=True),
+            openapi.Parameter('base_updated_at', openapi.IN_FORM, type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, required=True),
+            openapi.Parameter('images', openapi.IN_FORM, type=openapi.TYPE_FILE, description='Facultatif ; repeter ce champ pour joindre jusqu a quatre images.'),
+            openapi.Parameter('remove_image_ids', openapi.IN_FORM, type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER), collectionFormat='multi'),
+        ],
+    )
+    @action(detail=True, methods=['put'], url_path='presentation', parser_classes=[MultiPartParser, FormParser])
+    def presentation(self, request, pk=None):
+        obj = self.get_object()
+        obj = PresentationService().save(request.user, obj, validated(PresentationWriteSerializer, request.data))
+        return Response(ProjectSerializer(obj).data)
+
+    @swagger_auto_schema(method='post', request_body=PresentationSuggestionSerializer, responses={202: AnalysisSerializer}, tags=['V1 - Project'])
+    @action(detail=True, methods=['post'], url_path='presentation/suggestions')
+    def presentation_suggestion(self, request, pk=None):
+        obj = PresentationService().suggest(request.user, self.get_object(), **validated(PresentationSuggestionSerializer, request.data))
+        return Response(AnalysisSerializer(obj).data, status=202 if obj.status in ('queued', 'running') else 200)
+
+    @swagger_auto_schema(method='get', responses={200: openapi.Response('Image JPEG protegee', schema=openapi.Schema(type=openapi.TYPE_FILE))}, tags=['V1 - Project'])
+    @action(detail=True, methods=['get'], url_path=r'presentation/images/(?P<image_id>[0-9]+)')
+    def presentation_image(self, request, pk=None, image_id=None):
+        image = WorkflowService().repo.project_image(self.get_object(), image_id)
+        try:
+            response = FileResponse(image.file.open('rb'), content_type='image/jpeg')
+        except FileNotFoundError:
+            raise Http404('Image indisponible.')
+        response['Cache-Control'] = 'private, no-store'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
     @swagger_auto_schema(
         method="post",

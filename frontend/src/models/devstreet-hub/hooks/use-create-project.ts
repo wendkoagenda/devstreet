@@ -228,6 +228,7 @@ export function useCreateProject() {
     repoReady &&
     (project?.repository?.is_empty ?? !project?.repository?.current_sha);
   const cloneUrl = project?.repository?.clone_url ?? null;
+  const repoName = project?.repository?.name ?? null;
   const defaultBranch = project?.repository?.default_branch || "main";
   const forgeLogin = forgeAccess?.login ?? project?.repository?.namespace ?? null;
   const hasInitialPassword = Boolean(forgeAccess?.initial_password);
@@ -537,6 +538,7 @@ export function useCreateProject() {
     repoReady,
     repoEmpty,
     cloneUrl,
+    repoName,
     defaultBranch,
     gitCommands,
     initMode,

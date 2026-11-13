@@ -6,7 +6,10 @@ import base64
 import logging
 import secrets
 import re
+import ssl
+from functools import lru_cache
 from urllib.parse import quote, urlsplit
+import certifi
 
 import httpx
 from django.conf import settings
@@ -17,6 +20,12 @@ from app.devstreet_hub.services.forge_identity_tokens import (
     description_with_marker,
     has_correlation,
 )
+
+
+@lru_cache(maxsize=1)
+def _gitea_tls_context():
+    """Charger une fois les autorites de confiance, sans desactiver la verification TLS."""
+    return ssl.create_default_context(cafile=certifi.where())
 
 
 class GiteaClient:
@@ -43,7 +52,7 @@ class GiteaClient:
     def request(self, method, path, data=None, *, missing_ok=False, raw=False):
         try:
             with httpx.Client(
-                timeout=15, follow_redirects=False, trust_env=False
+                timeout=15, follow_redirects=False, trust_env=False, verify=_gitea_tls_context()
             ) as client:
                 response = client.request(
                     method,
@@ -210,7 +219,7 @@ class GiteaClient:
         )
         try:
             with httpx.Client(
-                timeout=20, follow_redirects=False, trust_env=False
+                timeout=20, follow_redirects=False, trust_env=False, verify=_gitea_tls_context()
             ) as client:
                 response = client.request(
                     "POST",
@@ -251,7 +260,7 @@ class GiteaClient:
         )
         try:
             with httpx.Client(
-                timeout=20, follow_redirects=False, trust_env=False
+                timeout=20, follow_redirects=False, trust_env=False, verify=_gitea_tls_context()
             ) as client:
                 response = client.request(
                     "DELETE",
@@ -325,6 +334,28 @@ class GiteaClient:
         )
         if result.get("private") != (not public):
             raise ExternalUnavailable("La visibilité Git n’a pas été confirmée.")
+
+    def add_collaborator(self, repository, login: str, permission: str):
+        """Ajoute ou met à jour un collaborateur (permission : read | write | admin)."""
+        if permission not in ("read", "write", "admin"):
+            raise Conflict("Permission forge invalide.")
+        self.request(
+            "PUT",
+            self.repo_path(repository)
+            + "/collaborators/"
+            + quote(login, safe=""),
+            {"permission": permission},
+        )
+
+    def remove_collaborator(self, repository, login: str):
+        """Retire un collaborateur ; idempotent si déjà absent (404)."""
+        self.request(
+            "DELETE",
+            self.repo_path(repository)
+            + "/collaborators/"
+            + quote(login, safe=""),
+            missing_ok=True,
+        )
 
     def repo_is_empty(self, repository) -> bool:
         """True si la branche par défaut n'existe pas encore (dépôt sans commit)."""
@@ -408,6 +439,8 @@ class GiteaClient:
         if tree.get("truncated"):
             raise Conflict("Arborescence trop grande pour une analyse bornée.")
         suffixes = (
+            ".html",
+            ".css",
             ".py",
             ".md",
             ".toml",
@@ -531,7 +564,7 @@ class GiteaClient:
         """Compte approximatif via en-tête ; None si la forge ne le fournit pas."""
         try:
             with httpx.Client(
-                timeout=15, follow_redirects=False, trust_env=False
+                timeout=15, follow_redirects=False, trust_env=False, verify=_gitea_tls_context()
             ) as client:
                 response = client.request(
                     "GET",
@@ -590,7 +623,7 @@ class GiteaClient:
             return None
         try:
             with httpx.Client(
-                timeout=15, follow_redirects=False, trust_env=False
+                timeout=15, follow_redirects=False, trust_env=False, verify=_gitea_tls_context()
             ) as client:
                 response = client.request(
                     "GET",
@@ -620,7 +653,7 @@ class GiteaClient:
         archive = f"{quote(ref, safe='')}.{fmt}"
         try:
             with httpx.Client(
-                timeout=60, follow_redirects=True, trust_env=False
+                timeout=60, follow_redirects=True, trust_env=False, verify=_gitea_tls_context()
             ) as client:
                 response = client.request(
                     "GET",

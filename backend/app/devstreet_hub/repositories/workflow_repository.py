@@ -17,6 +17,7 @@ from app.devstreet_hub.models import (
     Contribution,
     ProjectDiscussionLink,
     WebhookDelivery,
+    ProjectImage,
 )
 from app.devstreet_hub.repositories.project_repository import ProjectRepository
 
@@ -35,7 +36,7 @@ class WorkflowRepository(ProjectRepository):
         qs = (
             Project.objects.filter(visible)
             .select_related("owner", "repository")
-            .prefetch_related("technologies")
+            .prefetch_related("technologies", "images")
             .annotate(star_count=Count("stars", distinct=True))
             .distinct()
         )
@@ -77,12 +78,26 @@ class WorkflowRepository(ProjectRepository):
             qs = qs.exclude(pk=exclude_pk)
         return qs.exists()
 
+    def allocate_repository_name(self, project) -> str:
+        """Nom du dépôt forge = slug Hub ; fallback slug-{pk} si collision locale."""
+        base = (project.slug or f"project-{project.pk}")[:100]
+        taken = (
+            Repository.objects.filter(name=base)
+            .exclude(project_id=project.pk)
+            .exists()
+        )
+        if not taken:
+            return base
+        return f"{project.slug}-{project.pk}"[:100]
+
     def create_project(self, actor, data, technologies):
         project = self.create(
             owner=actor, created_by=actor.pk, updated_by=actor.pk, **data
         )
         project.technologies.set(technologies)
-        Repository.objects.create(project=project, name=f"project-{project.pk}")
+        Repository.objects.create(
+            project=project, name=self.allocate_repository_name(project)
+        )
         return project
 
     def set_technologies(self, project, technologies):
@@ -112,6 +127,26 @@ class WorkflowRepository(ProjectRepository):
 
     def star_count(self, project):
         return Star.objects.filter(project=project).count()
+
+    def project_images(self, project):
+        return list(ProjectImage.objects.filter(project=project))
+
+    def project_image(self, project, image_id):
+        return get_object_or_404(ProjectImage, project=project, pk=image_id)
+
+    def create_project_image(self, project, file, display_name):
+        image = ProjectImage(project=project, display_name=display_name)
+        try:
+            image.file.save(file.name, file, save=False)
+            image.save()
+        except Exception:
+            if image.file.name:
+                image.file.storage.delete(image.file.name)
+            raise
+        return image
+
+    def delete_project_image(self, image):
+        image.delete()
 
     def public_evidence(self, user_id=None):
         qs = (
@@ -270,13 +305,11 @@ class WorkflowRepository(ProjectRepository):
             raise NotFound()
         return obj
 
-    def claim_job(self):
-        obj = (
-            AIAnalysis.objects.select_for_update(skip_locked=True)
-            .filter(status="queued")
-            .order_by("id")
-            .first()
-        )
+    def claim_job(self, job_id=None):
+        jobs = AIAnalysis.objects.select_for_update(skip_locked=True).filter(status="queued")
+        if job_id is not None:
+            jobs = jobs.filter(pk=job_id)
+        obj = jobs.order_by("id").first()
         if obj:
             self.save(obj, status="running", started_at=timezone.now())
         return obj

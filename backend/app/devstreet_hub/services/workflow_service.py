@@ -131,7 +131,7 @@ class WorkflowService:
         """Statistiques et métadonnées d'exploration ; pas de compteur d'étoiles Gitea."""
         project, repository = self._ready_repository(actor, project)
         meta = self.forge.get_repository_meta(repository)
-        is_empty = bool(meta.get("empty")) or self.forge.repo_is_empty(repository)
+        is_empty = bool(meta["empty"]) if "empty" in meta else self.forge.repo_is_empty(repository)
         default_branch = (
             meta.get("default_branch")
             or repository.default_branch
@@ -875,10 +875,55 @@ class WorkflowService:
         require_owner(actor, project)
         if user_id == project.owner_id:
             raise Conflict("Le propriétaire ne se modifie pas par les membres.")
+        from django.contrib.auth import get_user_model
+
+        member_user = get_user_model().objects.filter(pk=user_id, is_active=True).first()
+        if member_user is None:
+            raise NotFound("Utilisateur introuvable.")
         if role is None:
+            self._sync_forge_collaborator(project, member_user, permission=None)
             self.repo.remove_member(project, user_id)
             return None
+        permission = "write" if role == "maintainer" else "read"
+        self._sync_forge_collaborator(project, member_user, permission=permission)
         return self.repo.set_member(project, user_id, role)
+
+    def _sync_forge_collaborator(self, project, member_user, *, permission):
+        """Aligne le collaborateur Gitea sur le rôle Hub (idempotent)."""
+        repository = getattr(project, "repository", None)
+        if (
+            repository is None
+            or repository.status != "ready"
+            or not repository.namespace
+            or not repository.name
+        ):
+            return
+        from app.devstreet_hub.models import ForgeIdentity
+
+        if permission is None:
+            identity = self.repo.identity(member_user)
+            if (
+                identity
+                and identity.status == ForgeIdentity.STATUS_LINKED
+                and identity.login
+                and identity.login != repository.namespace
+            ):
+                self.forge.remove_collaborator(repository, identity.login)
+            return
+
+        self.provision_identity(member_user)
+        identity = self.repo.identity(member_user)
+        if (
+            not identity
+            or identity.status != ForgeIdentity.STATUS_LINKED
+            or not identity.login
+        ):
+            raise Conflict(
+                "Impossible de lier l’accès Git du membre avant de l’ajouter au dépôt."
+            )
+        if identity.login == repository.namespace:
+            return
+        self.forge.add_collaborator(repository, identity.login, permission)
 
     def create_task(self, actor, project, data):
         require_permission(actor, "contribution-tasks.create")
@@ -891,7 +936,8 @@ class WorkflowService:
         require_permission(actor, "contribution-tasks.create")
         require_maintainer(actor, project, self.repo)
         analysis = self.repo.analysis(actor, analysis_id)
-        if analysis.project_id != project.pk or analysis.status != "succeeded":
+        if (analysis.project_id != project.pk or analysis.status != "succeeded"
+                or analysis.prompt_version != "contribution-v1"):
             raise ValidationError("Analyse incompatible avec ce projet.")
         suggestions = analysis.result["suggested_tasks"]
         if suggestion_index >= len(suggestions):
@@ -959,7 +1005,7 @@ class WorkflowService:
             )
         return contribution
 
-    def request_analysis(self, actor, project, objective, language):
+    def request_analysis(self, actor, project, objective, language, *, prompt_version="contribution-v1"):
         require_permission(actor, "projects.analyze")
         require_maintainer(actor, project, self.repo)
         if not project.ai_consent_at:
@@ -976,7 +1022,7 @@ class WorkflowService:
         sha = self.forge.head(project.repository)
         key = hashlib.sha256(
             json.dumps(
-                [project.pk, sha, objective, language, model, "contribution-v1"]
+                [project.pk, sha, objective, language, model, prompt_version]
             ).encode()
         ).hexdigest()
         daily_limit = int(config("AI_DAILY_LIMIT", 20) or 20)
@@ -987,7 +1033,9 @@ class WorkflowService:
             "yes",
         )
         with transaction.atomic():
-            self.repo.locked_project(project.pk)
+            current = self.repo.locked_project(project.pk)
+            if not current.ai_consent_at or current.status == "archived":
+                raise Conflict("Le consentement IA a change ; rechargez le projet.")
             daily, project_daily = self.repo.reserve_analysis(actor, project, {})
             cached = self.repo.cached_analysis(key)
             if cached:
@@ -1002,12 +1050,13 @@ class WorkflowService:
                 model=model,
                 cache_key=key,
                 commit_sha=sha,
+                prompt_version=prompt_version,
             )
         # Local : traiter immédiatement sans cron (flag explicite ; les tests ne l'activent pas).
         if inline_worker and analysis.status == "queued":
             from app.devstreet_hub.services.analysis_worker import process_next
 
-            process_next()
+            process_next(job_id=analysis.pk)
             analysis.refresh_from_db()
         return analysis
 

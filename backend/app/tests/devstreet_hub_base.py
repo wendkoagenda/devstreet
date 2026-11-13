@@ -109,6 +109,8 @@ class DevStreetHubAPITestCase(APITestCase):
             }
 
         self.forge.provision_repository.side_effect = provision_repository
+        self.forge.add_collaborator.return_value = None
+        self.forge.remove_collaborator.return_value = None
         self.forge.repo_is_empty.return_value = True
         self.forge.initialize_scaffold.side_effect = lambda repository, files: {
             "sha": "b" * 40,
