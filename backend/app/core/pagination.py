@@ -29,3 +29,11 @@ class PourVousCursorPagination(FeedCursorPagination):
     """
 
     ordering = ('-prioritaire', '-created_at', '-id')
+
+
+class PopulairesCursorPagination(FeedCursorPagination):
+    """
+    Fil « Populaires » : engagement (likes + commentaires) puis chronologie.
+    """
+
+    ordering = ('-likes_count', '-comments_count', '-created_at', '-id')

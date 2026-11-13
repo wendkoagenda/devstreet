@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateEspaceMutation, useGetEspacesQuery } from "../api";
+import { PAGE_SIZE } from "@/helpers/api/pagination";
+import {
+  useCreateEspaceMutation,
+  useGetEspacesInfiniteQuery,
+} from "../api";
 import {
   EspaceDirectory,
   useDebouncedValue,
@@ -15,9 +19,17 @@ export default function CommunitiesPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
-  const { data, isLoading, isError, refetch } = useGetEspacesQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useGetEspacesInfiniteQuery({
     type: "COMMUNAUTE",
-    page_size: 100,
+    page_size: PAGE_SIZE,
     ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
   });
   const [createEspace, { isLoading: creating }] = useCreateEspaceMutation();
@@ -25,6 +37,11 @@ export default function CommunitiesPage() {
   const [nom, setNom] = useState("");
   const [description, setDescription] = useState("");
   const [acces, setAcces] = useState<"PUBLIC" | "LIEN">("PUBLIC");
+
+  const espaces = useMemo(
+    () => data?.pages.flatMap((page) => page.results) ?? [],
+    [data?.pages]
+  );
 
   const handleCreate = async () => {
     const trimmed = nom.trim();
@@ -58,7 +75,7 @@ export default function CommunitiesPage() {
             Communautés
           </h1>
           <p className="text-sm text-muted-foreground">
-            Discute en groupe — comme une conversation collective.
+            Chat de groupe entre membres — pas un fil de publications.
           </p>
         </div>
         <Button
@@ -120,19 +137,27 @@ export default function CommunitiesPage() {
       ) : null}
 
       <EspaceDirectory
-        espaces={isLoading || isError ? [] : (data?.results ?? [])}
-        hrefFor={(espace) => `/forum/communautes/${espace.id}`}
+        espaces={isError ? [] : espaces}
+        hrefFor={(espace) =>
+          espace.mon_role
+            ? `/messages?groupe=${espace.id}`
+            : `/forum/communautes/${espace.id}`
+        }
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Rechercher une communauté…"
         mineTitle="Mes communautés"
         otherTitle="À découvrir"
+        isLoading={isLoading}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={Boolean(hasNextPage)}
+        onLoadMore={() => {
+          void fetchNextPage();
+        }}
         emptyLabel={
-          isLoading
-            ? "Chargement…"
-            : isError
-              ? "Impossible de charger les communautés."
-              : "Aucune communauté pour l’instant."
+          isError
+            ? "Impossible de charger les communautés."
+            : "Aucune communauté pour l’instant."
         }
         emptySearchLabel="Aucune communauté ne correspond à ta recherche."
       />

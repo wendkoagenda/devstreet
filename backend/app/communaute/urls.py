@@ -23,6 +23,7 @@ from app.communaute.views.membre_profile_view import (
     membre_profile_view,
     membre_search_view,
     membre_suivre_view,
+    membre_suivis_view,
 )
 
 router = DefaultRouter(trailing_slash=False)
@@ -45,6 +46,7 @@ router.register(r'votes-sondage', VoteSondageViewSet, basename='votes-sondage')
 
 urlpatterns = [
     path('v1/membres/search', membre_search_view, name='membre-search'),
+    path('v1/membres/suivis', membre_suivis_view, name='membre-suivis'),
     path(
         'v1/membres/u/<str:username>',
         membre_by_username_view,

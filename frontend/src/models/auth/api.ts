@@ -3,6 +3,7 @@ import { authBaseQuery } from "@/helpers/api/base-query";
 import {
   LoginResponse,
   LoginSchema,
+  RegisterSchema,
   ChangePasswordSchema,
   ChangePasswordResponse,
   ForgotPasswordRequest,
@@ -32,6 +33,13 @@ export const authApi = createApi({
         url: "/auth/login",
         method: "POST",
         body: loginData,
+      }),
+    }),
+    register: builder.mutation<LoginResponse, RegisterSchema>({
+      query: (registerData) => ({
+        url: "/auth/register",
+        method: "POST",
+        body: registerData,
       }),
     }),
     getPublicProfile: builder.query<PublicProfile, number>({
@@ -120,6 +128,7 @@ export const authApi = createApi({
 
 export const {
   useLoginMutation,
+  useRegisterMutation,
   useGetPublicProfileQuery,
   useChangePasswordMutation,
   useUploadProfilePhotoMutation,

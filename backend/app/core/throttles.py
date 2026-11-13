@@ -28,6 +28,11 @@ class LoginThrottle(AnonRateThrottle):
     scope = 'login'
 
 
+class RegisterThrottle(AnonRateThrottle):
+    """Inscription publique : limite la création de comptes en masse."""
+    scope = 'register'
+
+
 class TokenRefreshThrottle(AnonRateThrottle):
     """Rafraîchissement du token d'accès."""
     scope = 'token_refresh'

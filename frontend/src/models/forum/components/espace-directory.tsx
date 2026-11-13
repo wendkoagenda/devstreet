@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Espace } from "../schema";
 import { EspaceListItem } from "./espace-list-item";
@@ -14,8 +15,10 @@ type EspaceDirectoryProps = {
   otherTitle: string;
   emptyLabel: string;
   emptySearchLabel: string;
-  /** Limite « À découvrir » hors recherche (défaut 10). */
-  discoverLimit?: number;
+  isLoading?: boolean;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  onLoadMore?: () => void;
 };
 
 export function useDebouncedValue(value: string, delayMs = 300) {
@@ -37,8 +40,13 @@ export function EspaceDirectory({
   otherTitle,
   emptyLabel,
   emptySearchLabel,
-  discoverLimit = 10,
+  isLoading = false,
+  isFetchingNextPage = false,
+  hasNextPage = false,
+  onLoadMore,
 }: EspaceDirectoryProps) {
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
   const { mine, others } = useMemo(() => {
     const mineList: Espace[] = [];
     const otherList: Espace[] = [];
@@ -49,12 +57,26 @@ export function EspaceDirectory({
     otherList.sort(
       (a, b) => (b.membres_count ?? 0) - (a.membres_count ?? 0)
     );
-    const hasQuery = search.trim().length > 0;
-    return {
-      mine: mineList,
-      others: hasQuery ? otherList : otherList.slice(0, discoverLimit),
-    };
-  }, [espaces, search, discoverLimit]);
+    return { mine: mineList, others: otherList };
+  }, [espaces]);
+
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || !onLoadMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: "240px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, onLoadMore]);
 
   const hasAny = espaces.length > 0;
   const hasQuery = search.trim().length > 0;
@@ -75,18 +97,27 @@ export function EspaceDirectory({
         />
       </div>
 
-      {!hasAny ? (
+      {isLoading && !hasAny ? (
+        <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+          Chargement…
+        </p>
+      ) : null}
+
+      {!isLoading && !hasAny ? (
         <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
           {hasQuery ? emptySearchLabel : emptyLabel}
         </p>
-      ) : (
+      ) : null}
+
+      {hasAny ? (
         <>
           {mine.length > 0 ? (
             <section className="space-y-3">
               <h2 className="px-1 text-sm font-semibold text-foreground">
                 {mineTitle}
                 <span className="ml-1 font-normal text-muted-foreground">
-                  ({mine.length})
+                  ({mine.length}
+                  {hasNextPage ? "+" : ""})
                 </span>
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -106,11 +137,8 @@ export function EspaceDirectory({
               <h2 className="px-1 text-sm font-semibold text-foreground">
                 {otherTitle}
                 <span className="ml-1 font-normal text-muted-foreground">
-                  (
-                  {hasQuery
-                    ? others.length
-                    : `top ${others.length}`}
-                  )
+                  ({others.length}
+                  {hasNextPage ? "+" : ""})
                 </span>
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -125,7 +153,24 @@ export function EspaceDirectory({
             </section>
           ) : null}
         </>
-      )}
+      ) : null}
+
+      <div ref={loadMoreRef} className="h-6 w-full" aria-hidden />
+
+      {isFetchingNextPage ? (
+        <p className="flex items-center justify-center gap-2 pb-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          Chargement…
+        </p>
+      ) : null}
+
+      {!isFetchingNextPage && hasNextPage && onLoadMore ? (
+        <div className="flex justify-center pb-2">
+          <Button type="button" variant="outline" size="sm" onClick={onLoadMore}>
+            Voir plus
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

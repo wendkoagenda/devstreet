@@ -11,7 +11,7 @@ export type FeedTabId =
 const TABS: Array<{ id: FeedTabId; label: string; enabled: boolean }> = [
   { id: "pour-vous", label: "Pour vous", enabled: true },
   { id: "abonnements", label: "Abonnements", enabled: true },
-  { id: "populaires", label: "Populaires", enabled: false },
+  { id: "populaires", label: "Populaires", enabled: true },
   { id: "discussions", label: "Discussions", enabled: true },
   { id: "showcase", label: "Showcase Projets", enabled: true },
   { id: "derniers", label: "Derniers posts", enabled: true },
@@ -24,7 +24,7 @@ type FeedTabsProps = {
 
 export function FeedTabs({ value, onChange }: FeedTabsProps) {
   return (
-    <div className="overflow-x-auto border-b border-border">
+    <div className="overflow-x-auto overflow-y-hidden border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div role="tablist" aria-label="Filtres du fil" className="flex min-w-max gap-1">
         {TABS.map((tab) => {
           const active = value === tab.id;
@@ -47,7 +47,7 @@ export function FeedTabs({ value, onChange }: FeedTabsProps) {
             >
               {tab.label}
               {active ? (
-                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand" />
+                <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand" />
               ) : null}
             </button>
           );

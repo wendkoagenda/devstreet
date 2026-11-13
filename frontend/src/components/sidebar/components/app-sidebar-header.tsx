@@ -17,19 +17,30 @@ export default function AppSidebarHeader() {
   };
 
   return (
-    <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
+    <SidebarHeader className="rounded-t-2xl border-b border-sidebar-border/70 px-3 pb-3 pt-4">
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="lg" asChild className="hover:bg-transparent active:bg-transparent">
-            <Link to="/" onClick={handleGoToHome} aria-label={t("sidebar.brand_home")}>
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                <Terminal aria-hidden className="h-[18px] w-[18px]" />
+          <SidebarMenuButton
+            size="lg"
+            asChild
+            className="h-11 rounded-xl px-2.5 hover:bg-sidebar-accent/60 active:bg-sidebar-accent/60"
+          >
+            <Link
+              to="/"
+              onClick={handleGoToHome}
+              aria-label={t("sidebar.brand_home")}
+              className="gap-2.5"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm ring-1 ring-black/5">
+                <Terminal aria-hidden className="h-4 w-4" />
               </span>
-              <span className="text-lg font-bold tracking-tight text-foreground">
-                {t("sidebar.brand")}
-              </span>
-              <span className="rounded border border-brand-soft-border bg-brand-soft px-2 py-1 text-[10px] font-bold leading-none tracking-wide text-brand-strong">
-                {t("sidebar.brand_badge")}
+              <span className="flex min-w-0 flex-col leading-none">
+                <span className="truncate text-[15px] font-bold tracking-tight text-foreground">
+                  {t("sidebar.brand")}
+                </span>
+                <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {t("sidebar.brand_badge")}
+                </span>
               </span>
             </Link>
           </SidebarMenuButton>

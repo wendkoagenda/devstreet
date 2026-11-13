@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUploadForumMediaMutation } from "../api";
+import { ForumAudioPlayer } from "./forum-audio-player";
 
 type VoiceRecorderButtonProps = {
   disabled?: boolean;
@@ -166,18 +167,13 @@ export function VoiceRecorderButton({
 
   if (previewUrl && previewBlob) {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-2 py-1.5",
-          className
-        )}
-      >
-        <audio src={previewUrl} controls className="h-8 max-w-[180px]" />
+      <div className={cn("flex min-w-0 flex-wrap items-center gap-2", className)}>
+        <ForumAudioPlayer compact src={previewUrl} className="min-w-[12rem] flex-1" />
         <Button
           type="button"
           size="sm"
           variant="ghost"
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 shrink-0 p-0"
           aria-label="Supprimer le vocal"
           onClick={clearPreview}
         >
@@ -186,7 +182,7 @@ export function VoiceRecorderButton({
         <Button
           type="button"
           size="sm"
-          className="h-8"
+          className="h-8 shrink-0"
           disabled={uploading}
           onClick={() => void sendRecording()}
         >

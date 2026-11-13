@@ -4,7 +4,7 @@ SuiviUtilisateur service layer pour les opérations de logique métier.
 from typing import List, Optional, Dict, Any, Set
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.core.exceptions import ValidationError
 from app.communaute.models import SuiviUtilisateur
 from app.communaute.repositories.suiviutilisateur_repository import SuiviUtilisateurRepository
@@ -29,6 +29,32 @@ class SuiviUtilisateurService:
                 'suivi_id', flat=True
             )
         )
+
+    def list_membres_suivis(
+        self,
+        suiveur: User,
+        *,
+        search: Optional[str] = None,
+        limit: int = 50,
+    ) -> List[User]:
+        """Membres actifs suivis par l'utilisateur (pour Messages / DM)."""
+        if suiveur is None or not getattr(suiveur, 'id', None):
+            return []
+        qs = User.objects.filter(
+            is_active=True,
+            id__in=SuiviUtilisateur.objects.filter(
+                suiveur_id=suiveur.id
+            ).values('suivi_id'),
+        ).order_by('username')
+        cleaned = (search or '').strip()
+        if cleaned:
+            qs = qs.filter(
+                Q(username__icontains=cleaned)
+                | Q(first_name__icontains=cleaned)
+                | Q(last_name__icontains=cleaned)
+            )
+        safe_limit = max(1, min(int(limit or 50), 100))
+        return list(qs[:safe_limit])
 
     def est_suivi(self, *, suiveur: User, suivi_id: int) -> bool:
         return SuiviUtilisateur.objects.filter(

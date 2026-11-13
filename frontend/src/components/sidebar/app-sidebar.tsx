@@ -6,24 +6,40 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useAuthSlice } from "@/models/auth/slice";
 import AppSidebarFooter from "./components/app-sidebar-footer";
 import AppSidebarMainMenu from "./components/app-sidebar-main-menu";
 import AppSidebarHeader from "./components/app-sidebar-header";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
+  const loadSession = useAuthSlice((state) => state.loadSession);
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+    void loadSession();
+    const handleFocus = () => {
+      void loadSession();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [isAuthenticated, loadSession]);
+
   return (
-    <Sidebar {...props}>
-      {/* Header */}
-      <SidebarHeader>
+    <Sidebar
+      variant="floating"
+      collapsible="offcanvas"
+      {...props}
+      className="text-sidebar-foreground"
+    >
+      <SidebarHeader className="p-0">
         <AppSidebarHeader />
       </SidebarHeader>
-      {/* Content */}
-      <SidebarContent>
+      <SidebarContent className="gap-0 overflow-x-hidden overflow-y-auto px-2 py-2">
         <AppSidebarMainMenu />
       </SidebarContent>
       <SidebarRail />
-      {/* Footer */}
-      <SidebarFooter>
+      <SidebarFooter className="p-2 pt-0">
         <AppSidebarFooter />
       </SidebarFooter>
     </Sidebar>

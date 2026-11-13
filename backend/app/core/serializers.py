@@ -203,6 +203,42 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
+class PublicRegisterSerializer(serializers.Serializer):
+    """Inscription publique (sans attribution de rôles admin)."""
+
+    email = serializers.EmailField()
+    username = serializers.CharField(min_length=3, max_length=150)
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True, min_length=8, trim_whitespace=False)
+    password_confirm = serializers.CharField(write_only=True, trim_whitespace=False)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError(
+                {'password_confirm': 'Les mots de passe ne correspondent pas.'}
+            )
+        return attrs
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError('Un compte existe déjà avec cet e-mail.')
+        return email
+
+    def validate_username(self, value):
+        username = (value or '').strip()
+        if not username:
+            raise serializers.ValidationError("Le nom d'utilisateur est obligatoire.")
+        if len(username) < 3:
+            raise serializers.ValidationError(
+                "Le nom d'utilisateur doit contenir au moins 3 caractères."
+            )
+        if User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError("Ce nom d'utilisateur est déjà pris.")
+        return username
+
+
 class PasswordChangeSerializer(serializers.Serializer):
     """
     Serializer for changing user password.

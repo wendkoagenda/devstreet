@@ -34,7 +34,11 @@ from app.communaute.permissions.avischoix_permissions import (
     CanCreateAvisChoix,
     CanViewAvisChoix,
 )
-from app.core.pagination import FeedCursorPagination, PourVousCursorPagination
+from app.core.pagination import (
+    FeedCursorPagination,
+    PopulairesCursorPagination,
+    PourVousCursorPagination,
+)
 
 
 class PublicationViewSet(viewsets.ModelViewSet):
@@ -48,11 +52,15 @@ class PublicationViewSet(viewsets.ModelViewSet):
     pagination_class = FeedCursorPagination
 
     def get_paginator(self):
-        """Pagination adaptée au fil « Pour vous » (prioritaire + date)."""
+        """Pagination adaptée au mode de fil (Pour vous / Populaires)."""
         if getattr(self, '_use_pour_vous_pagination', False):
             if not hasattr(self, '_pour_vous_paginator'):
                 self._pour_vous_paginator = PourVousCursorPagination()
             return self._pour_vous_paginator
+        if getattr(self, '_use_populaires_pagination', False):
+            if not hasattr(self, '_populaires_paginator'):
+                self._populaires_paginator = PopulairesCursorPagination()
+            return self._populaires_paginator
         return super().paginator
 
     @property
@@ -164,7 +172,10 @@ class PublicationViewSet(viewsets.ModelViewSet):
             'following',
             'subscriptions',
         )
+        favoris = feed_mode in ('favoris', 'favorites', 'bookmarks')
+        populaires = feed_mode in ('populaires', 'popular', 'trending')
         self._use_pour_vous_pagination = pour_vous
+        self._use_populaires_pagination = populaires
         if espace_raw not in (None, ''):
             try:
                 espace_id = int(espace_raw)
@@ -178,7 +189,13 @@ class PublicationViewSet(viewsets.ModelViewSet):
                     {'error': 'Paramètre espace invalide'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        elif auteur_id is None and not pour_vous and not abonnements:
+        elif (
+            auteur_id is None
+            and not pour_vous
+            and not abonnements
+            and not favoris
+            and not populaires
+        ):
             # Fil général : hors publications rattachées à un espace
             general_only = True
         if espace_id is not None:
@@ -215,7 +232,7 @@ class PublicationViewSet(viewsets.ModelViewSet):
         try:
             publications = self.publication_service.get_all(
                 search=request.query_params.get('search'),
-                # Le tri est imposé par FeedCursorPagination / PourVousCursorPagination
+                # Le tri est imposé par la pagination curseur du mode de fil
                 ordering=None,
                 type_filter=request.query_params.get('type'),
                 auteur_id=auteur_id,
@@ -223,6 +240,8 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 general_only=general_only,
                 pour_vous=pour_vous,
                 abonnements=abonnements,
+                favoris=favoris,
+                populaires=populaires,
                 membre=request.user,
             )
         except ValueError:

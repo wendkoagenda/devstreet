@@ -1,11 +1,12 @@
-import { useMemo, useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Camera,
   Copy,
   Loader2,
   Link2,
+  MessageSquare,
   Settings,
   UserMinus,
   Users,
@@ -43,6 +44,7 @@ import { ForumAvatar } from "../components/forum-avatar";
 import { PublicationCard } from "../components/publication-card";
 
 export default function CommunityDetailPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get("invite") || undefined;
@@ -121,6 +123,26 @@ export default function CommunityDetailPage() {
   const canPublish = Boolean(espace?.can_publish);
   const canRead = espace?.can_read !== false || isMember;
   const canLeave = isMember && !isSuperAdmin;
+  const manageMode = searchParams.get("manage") === "1";
+
+  // Membre d'une communauté : le chat vit dans Messages (sauf panneau Infos).
+  useEffect(() => {
+    if (!espace || skip) return;
+    if (espace.type !== "COMMUNAUTE") return;
+    if (!espace.mon_role) return;
+    if (manageMode) {
+      setSettingsOpen(true);
+      return;
+    }
+    navigate(`/messages?groupe=${espace.id}`, { replace: true });
+  }, [espace, skip, manageMode, navigate]);
+
+  // Chaîne : ?manage=1 ouvre aussi le panneau Infos.
+  useEffect(() => {
+    if (!espace || skip) return;
+    if (espace.type !== "CHAINE") return;
+    if (manageMode) setSettingsOpen(true);
+  }, [espace, skip, manageMode]);
 
   const inviteUrl = useMemo(() => {
     if (!freshCode) return null;
@@ -137,7 +159,7 @@ export default function CommunityDetailPage() {
       toast.success(
         isChannel ? "Tu es abonné à la chaîne" : "Tu as rejoint la communauté"
       );
-      void refetch();
+      navigate(`/messages?groupe=${espaceId}`, { replace: true });
     } catch {
       toast.error(
         isChannel
@@ -319,18 +341,18 @@ export default function CommunityDetailPage() {
             {isChannel ? "Chaînes" : "Communautés"}
           </Link>
         </Button>
-        {isAdmin ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Réglages de la ${spaceLabel}`}
-            title="Réglages"
-            onClick={openSettings}
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-        ) : null}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={
+            isAdmin ? `Réglages de la ${spaceLabel}` : `Infos de la ${spaceLabel}`
+          }
+          title={isAdmin ? "Réglages" : "Infos"}
+          onClick={openSettings}
+        >
+          <Settings className="h-5 w-5" />
+        </Button>
       </div>
 
       <header className="rounded-2xl border border-border bg-card p-5">
@@ -360,6 +382,12 @@ export default function CommunityDetailPage() {
                 <span>
                   · {espace.acces === "LIEN" ? "par lien" : "public"}
                 </span>
+                <span>
+                  ·{" "}
+                  {isChannel
+                    ? "fil d'annonces"
+                    : "chat de groupe"}
+                </span>
                 {espace.mon_role ? (
                   <span className="text-brand">
                     ·{" "}
@@ -377,6 +405,14 @@ export default function CommunityDetailPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            {isChannel && isMember ? (
+              <Button asChild>
+                <Link to={`/messages?groupe=${espace.id}`}>
+                  <MessageSquare className="h-4 w-4" />
+                  Ouvrir le chat
+                </Link>
+              </Button>
+            ) : null}
             {!isMember ? (
               <Button
                 type="button"
@@ -500,10 +536,15 @@ export default function CommunityDetailPage() {
           className="w-full overflow-y-auto sm:max-w-md"
         >
           <SheetHeader>
-            <SheetTitle>Infos du groupe</SheetTitle>
+            <SheetTitle>
+              {isAdmin ? "Réglages du groupe" : "Infos du groupe"}
+            </SheetTitle>
             <SheetDescription>
-              Photo, détails, droits et{" "}
-              {isChannel ? "abonnés" : "membres"}.
+              {isAdmin
+                ? `Photo, détails, droits et ${isChannel ? "abonnés" : "membres"}.`
+                : isChannel
+                  ? "Fil d'annonces — le chat se trouve dans Messages."
+                  : "Chat de groupe — discussion entre membres."}
             </SheetDescription>
           </SheetHeader>
 
@@ -517,58 +558,77 @@ export default function CommunityDetailPage() {
                   tone="soft"
                   className="h-24 w-24 text-xl"
                 />
-                <Button
-                  type="button"
-                  size="icon"
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-                  disabled={uploadingPhoto || updating}
-                  aria-label="Changer la photo"
-                  onClick={() => photoInputRef.current?.click()}
-                >
-                  {uploadingPhoto ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Camera className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-                <input
-                  ref={photoInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  className="hidden"
-                  onChange={handlePhotoSelected}
-                />
+                {isAdmin ? (
+                  <>
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
+                      disabled={uploadingPhoto || updating}
+                      aria-label="Changer la photo"
+                      onClick={() => photoInputRef.current?.click()}
+                    >
+                      {uploadingPhoto ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Camera className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      className="hidden"
+                      onChange={handlePhotoSelected}
+                    />
+                  </>
+                ) : null}
               </div>
-              <p className="text-center text-sm text-muted-foreground">
-                Appuie sur l&apos;appareil photo pour changer l&apos;image
-              </p>
+              {isAdmin ? (
+                <p className="text-center text-sm text-muted-foreground">
+                  Appuie sur l&apos;appareil photo pour changer l&apos;image
+                </p>
+              ) : (
+                <div className="space-y-1 text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    {espace.nom}
+                  </p>
+                  {espace.description ? (
+                    <p className="text-sm text-muted-foreground">
+                      {espace.description}
+                    </p>
+                  ) : null}
+                </div>
+              )}
             </section>
 
-            <section className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">
-                Nom et description
-              </h3>
-              <Input
-                value={editNom}
-                onChange={(event) => setEditNom(event.target.value)}
-                maxLength={120}
-                placeholder="Nom"
-              />
-              <Textarea
-                value={editDescription}
-                onChange={(event) => setEditDescription(event.target.value)}
-                placeholder="Description"
-                className="min-h-[72px]"
-              />
-              <Button
-                type="button"
-                size="sm"
-                disabled={updating}
-                onClick={handleSaveInfos}
-              >
-                Enregistrer
-              </Button>
-            </section>
+            {isAdmin ? (
+              <section className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Nom et description
+                </h3>
+                <Input
+                  value={editNom}
+                  onChange={(event) => setEditNom(event.target.value)}
+                  maxLength={120}
+                  placeholder="Nom"
+                />
+                <Textarea
+                  value={editDescription}
+                  onChange={(event) => setEditDescription(event.target.value)}
+                  placeholder="Description"
+                  className="min-h-[72px]"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={updating}
+                  onClick={handleSaveInfos}
+                >
+                  Enregistrer
+                </Button>
+              </section>
+            ) : null}
 
             {isSuperAdmin ? (
               <section className="space-y-3">

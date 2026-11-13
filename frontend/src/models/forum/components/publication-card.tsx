@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Bookmark,
+  ChevronLeft,
+  ChevronRight,
   Code2,
+  Expand,
   ExternalLink,
   FolderKanban,
   Heart,
@@ -14,9 +17,16 @@ import {
   UserPlus,
   Users,
   Vote,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
 import { cn } from "@/lib/utils";
 import { useAuthSlice } from "@/models/auth/slice";
@@ -36,6 +46,8 @@ import { ForumRichText } from "./forum-rich-text";
 type PublicationCardProps = {
   publication: Publication;
   showFullBody?: boolean;
+  /** Désactive la navigation au clic (page détail). */
+  disableCardNav?: boolean;
 };
 
 const TYPE_META: Record<
@@ -102,13 +114,16 @@ function MediaTile({
   media,
   titre,
   className,
+  fit = "cover",
   autoplay = false,
 }: {
   media: PublicationImage;
   titre: string;
   className?: string;
+  fit?: "cover" | "contain";
   autoplay?: boolean;
 }) {
+  const objectClass = fit === "contain" ? "object-contain" : "object-cover";
   if (media.kind === "VIDEO") {
     if (autoplay) {
       return (
@@ -125,7 +140,7 @@ function MediaTile({
         muted
         playsInline
         preload="metadata"
-        className={cn("bg-muted object-cover", className)}
+        className={cn("bg-muted", objectClass, className)}
         aria-label={media.texte_alternatif || titre}
       />
     );
@@ -134,22 +149,140 @@ function MediaTile({
     <img
       src={buildMediaUrl(media.url)}
       alt={media.texte_alternatif || titre}
-      className={cn("object-cover", className)}
+      className={cn(objectClass, className)}
       loading="lazy"
     />
+  );
+}
+
+function MediaLightbox({
+  images,
+  titre,
+  index,
+  open,
+  onOpenChange,
+}: {
+  images: PublicationImage[];
+  titre: string;
+  index: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [current, setCurrent] = useState(index);
+  const media = images[current];
+
+  useEffect(() => {
+    if (open) setCurrent(index);
+  }, [open, index]);
+
+  useEffect(() => {
+    if (!open || images.length < 2) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight") {
+        setCurrent((value) => (value + 1) % images.length);
+      } else if (event.key === "ArrowLeft") {
+        setCurrent((value) => (value - 1 + images.length) % images.length);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, images.length]);
+
+  if (!media) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-h-[95dvh] w-[min(100vw-1rem,72rem)] max-w-none border-none bg-transparent p-0 shadow-none sm:rounded-none [&>button:last-child]:hidden"
+        aria-describedby={undefined}
+      >
+        <DialogTitle className="sr-only">{titre || "Média"}</DialogTitle>
+        <div className="relative flex min-h-[50dvh] items-center justify-center">
+          <DialogClose asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className="absolute right-2 top-2 z-10 size-9 rounded-full bg-background/90"
+              aria-label="Fermer"
+            >
+              <X className="size-4" />
+            </Button>
+          </DialogClose>
+
+          {images.length > 1 ? (
+            <>
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                className="absolute left-2 z-10 size-9 rounded-full bg-background/90"
+                aria-label="Média précédent"
+                onClick={() =>
+                  setCurrent((value) => (value - 1 + images.length) % images.length)
+                }
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                className="absolute right-12 top-2 z-10 size-9 rounded-full bg-background/90 sm:right-14"
+                aria-label="Média suivant"
+                onClick={() =>
+                  setCurrent((value) => (value + 1) % images.length)
+                }
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </>
+          ) : null}
+
+          <div className="flex max-h-[90dvh] w-full items-center justify-center rounded-xl bg-black/40 p-2 sm:p-4">
+            {media.kind === "VIDEO" ? (
+              <video
+                key={media.id}
+                src={buildMediaUrl(media.url)}
+                controls
+                autoPlay
+                playsInline
+                className="max-h-[85dvh] max-w-full rounded-lg object-contain"
+                aria-label={media.texte_alternatif || titre}
+              />
+            ) : (
+              <img
+                key={media.id}
+                src={buildMediaUrl(media.url)}
+                alt={media.texte_alternatif || titre}
+                className="max-h-[85dvh] max-w-full rounded-lg object-contain"
+              />
+            )}
+          </div>
+
+          {images.length > 1 ? (
+            <p className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-background/90 px-3 py-1 text-xs text-muted-foreground">
+              {current + 1} / {images.length}
+            </p>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function MediaMosaic({
   images,
   titre,
-  href,
 }: {
   images: PublicationImage[];
   titre: string;
-  href: string;
 }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
   if (images.length === 0) return null;
+
+  const openAt = (index: number) => setLightboxIndex(index);
 
   if (images.length === 1) {
     const cover = images[0];
@@ -162,63 +295,126 @@ function MediaMosaic({
       );
     }
     return (
-      <Link
-        to={href}
-        className="group/media relative block overflow-hidden rounded-xl bg-muted"
-      >
-        <MediaTile
-          media={cover}
+      <>
+        <button
+          type="button"
+          onClick={() => openAt(0)}
+          className="group/media relative block w-full overflow-hidden rounded-xl bg-muted text-left"
+          aria-label="Agrandir l'image"
+        >
+          <MediaTile
+            media={cover}
+            titre={titre}
+            fit="contain"
+            className="max-h-[28rem] w-full transition duration-500 ease-out group-hover/media:scale-[1.01]"
+          />
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[11px] font-medium text-muted-foreground opacity-0 shadow-sm transition group-hover/media:opacity-100 group-focus-visible/media:opacity-100">
+            <Expand className="size-3" aria-hidden />
+            Voir en grand
+          </span>
+        </button>
+        <MediaLightbox
+          images={images}
           titre={titre}
-          className="max-h-80 w-full transition duration-500 ease-out group-hover/media:scale-[1.02]"
+          index={0}
+          open={lightboxIndex != null}
+          onOpenChange={(open) => setLightboxIndex(open ? 0 : null)}
         />
-      </Link>
+      </>
     );
   }
 
   if (images.length === 2) {
     return (
-      <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-xl">
-        {images.slice(0, 2).map((image) => (
-          <MediaTile
-            key={image.id}
-            media={image}
-            titre={titre}
-            className="h-44 w-full sm:h-52"
-          />
-        ))}
-      </div>
+      <>
+        <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-xl">
+          {images.slice(0, 2).map((image, index) => (
+            <button
+              key={image.id}
+              type="button"
+              onClick={() => openAt(index)}
+              className="relative block overflow-hidden bg-muted text-left"
+              aria-label={`Agrandir le média ${index + 1}`}
+            >
+              <MediaTile
+                media={image}
+                titre={titre}
+                className="h-44 w-full sm:h-52"
+              />
+            </button>
+          ))}
+        </div>
+        <MediaLightbox
+          images={images}
+          titre={titre}
+          index={lightboxIndex ?? 0}
+          open={lightboxIndex != null}
+          onOpenChange={(open) =>
+            setLightboxIndex(open ? lightboxIndex ?? 0 : null)
+          }
+        />
+      </>
     );
   }
 
   const rest = images.length - 3;
   return (
-    <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-xl">
-      <MediaTile
-        media={images[0]}
-        titre={titre}
-        className="row-span-2 h-full min-h-[11rem] w-full sm:min-h-[14rem]"
-      />
-      <MediaTile
-        media={images[1]}
-        titre={titre}
-        className="h-[5.5rem] w-full sm:h-28"
-      />
-      <div className="relative">
-        <MediaTile
-          media={images[2]}
-          titre={titre}
-          className="h-[5.5rem] w-full sm:h-28"
-        />
-        {rest > 0 ? (
-          <Link
-            to={href}
-            className="absolute inset-0 flex items-center justify-center bg-foreground/55 text-sm font-semibold text-background"
-          >
-            +{rest}
-          </Link>
-        ) : null}
+    <>
+      <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-xl">
+        <button
+          type="button"
+          onClick={() => openAt(0)}
+          className="relative block overflow-hidden bg-muted text-left"
+          aria-label="Agrandir le média 1"
+        >
+          <MediaTile
+            media={images[0]}
+            titre={titre}
+            className="row-span-2 h-full min-h-[11rem] w-full sm:min-h-[14rem]"
+          />
+        </button>
+        <button
+          type="button"
+          onClick={() => openAt(1)}
+          className="relative block overflow-hidden bg-muted text-left"
+          aria-label="Agrandir le média 2"
+        >
+          <MediaTile
+            media={images[1]}
+            titre={titre}
+            className="h-[5.5rem] w-full sm:h-28"
+          />
+        </button>
+        <button
+          type="button"
+          onClick={() => openAt(2)}
+          className="relative block overflow-hidden bg-muted text-left"
+          aria-label={
+            rest > 0 ? `Voir ${rest + 1} médias de plus` : "Agrandir le média 3"
+          }
+        >
+          <MediaTile
+            media={images[2]}
+            titre={titre}
+            className="h-[5.5rem] w-full sm:h-28"
+          />
+          {rest > 0 ? (
+            <span className="absolute inset-0 flex items-center justify-center bg-foreground/55 text-sm font-semibold text-background">
+              +{rest}
+            </span>
+          ) : null}
+        </button>
       </div>
-    </div>
+      <MediaLightbox
+        images={images}
+        titre={titre}
+        index={lightboxIndex ?? 0}
+        open={lightboxIndex != null}
+        onOpenChange={(open) =>
+          setLightboxIndex(open ? lightboxIndex ?? 0 : null)
+        }
+      />
+    </>
   );
 }
 
@@ -330,10 +526,21 @@ function FollowPublicationTarget({
   return null;
 }
 
+function isInteractiveTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  return Boolean(
+    target.closest(
+      "a, button, input, textarea, select, label, [role='button'], [data-no-card-nav]"
+    )
+  );
+}
+
 export function PublicationCard({
   publication,
   showFullBody = false,
+  disableCardNav = false,
 }: PublicationCardProps) {
+  const navigate = useNavigate();
   const [toggleLike] = useTogglePublicationLikeMutation();
   const [toggleFavori] = useTogglePublicationFavoriMutation();
   const [liked, setLiked] = useState(Boolean(publication.liked_by_me));
@@ -375,6 +582,26 @@ export function PublicationCard({
   const detailHref = `/forum/publications/${publication.id}`;
   const publicationUrl = `${window.location.origin}${detailHref}`;
   const commentsCount = publication.comments_count ?? 0;
+
+  const openPublication = () => {
+    navigate(detailHref);
+  };
+
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (disableCardNav) return;
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (isInteractiveTarget(event.target)) return;
+    openPublication();
+  };
+
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (disableCardNav) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (isInteractiveTarget(event.target)) return;
+    event.preventDefault();
+    openPublication();
+  };
 
   const handleToggleLike = () => {
     if (likeBusy) return;
@@ -531,17 +758,27 @@ export function PublicationCard({
 
   return (
     <article
+      role={disableCardNav ? undefined : "link"}
+      tabIndex={disableCardNav ? undefined : 0}
+      aria-label={
+        disableCardNav
+          ? undefined
+          : `Ouvrir la publication : ${publication.titre}`
+      }
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
       className={cn(
         "group relative overflow-hidden rounded-2xl border border-border bg-card transition duration-300",
-        "hover:border-border/80 hover:shadow-[0_12px_40px_-24px_hsl(var(--foreground)/0.35)]"
+        "hover:border-border/80 hover:shadow-[0_12px_40px_-24px_hsl(var(--foreground)/0.35)]",
+        !disableCardNav &&
+          "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
       )}
     >
       {isApplication && publication.images.length > 0 ? (
-        <div className="relative">
+        <div className="relative" data-no-card-nav>
           <MediaMosaic
             images={publication.images}
             titre={publication.titre}
-            href={detailHref}
           />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-card via-card/70 to-transparent" />
         </div>
@@ -579,11 +816,12 @@ export function PublicationCard({
         </div>
 
         {!isApplication ? (
-          <MediaMosaic
-            images={publication.images}
-            titre={publication.titre}
-            href={detailHref}
-          />
+          <div data-no-card-nav>
+            <MediaMosaic
+              images={publication.images}
+              titre={publication.titre}
+            />
+          </div>
         ) : null}
 
         {isApplication ? (

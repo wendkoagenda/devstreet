@@ -60,10 +60,12 @@ class EspaceService:
         type_filter: Optional[str] = None,
         acces_filter: Optional[str] = None,
         visible_for: Optional[User] = None,
+        mine_only: bool = False,
     ) -> QuerySet:
         """
         Liste des espaces. Par défaut : publics découvrables.
         Les espaces LIEN n'apparaissent que si l'acteur en est membre.
+        Avec mine_only=True : uniquement les espaces dont l'acteur est membre.
         Les espaces de l'acteur sont remontés en premier.
         """
         from django.db.models import BooleanField, Case, Exists, OuterRef, Q, Value, When
@@ -71,7 +73,11 @@ class EspaceService:
         qs = self.espace_repository.get_all(search=search, ordering=None)
         if type_filter:
             qs = qs.filter(type=type_filter)
-        if acces_filter:
+        if mine_only:
+            if visible_for is None or not getattr(visible_for, 'id', None):
+                return qs.none()
+            qs = qs.filter(participations__membre_id=visible_for.id).distinct()
+        elif acces_filter:
             qs = qs.filter(acces=acces_filter)
         elif visible_for is not None:
             qs = qs.filter(
@@ -616,11 +622,12 @@ class EspaceService:
     def list_messages_groupe(
         self, *, espace: Espace, acteur: User
     ) -> QuerySet:
-        """Messages du chat de communauté — réservé aux membres."""
-        if espace.type != self.TYPE_COMMUNAUTE:
-            raise ValidationError(
-                'Le chat de groupe est réservé aux communautés.'
-            )
+        """
+        Messages du chat de groupe — communautés et chaînes.
+        Sur une chaîne : les membres lisent / réagissent ; seuls les admins publient.
+        """
+        if espace.type not in (self.TYPE_COMMUNAUTE, self.TYPE_CHAINE):
+            raise ValidationError('Espace invalide pour le chat de groupe.')
         self.assert_can_interact(espace=espace, acteur=acteur)
         return (
             MessageGroupe.objects.filter(espace=espace)
@@ -637,16 +644,19 @@ class EspaceService:
         texte: str,
         reply_to_id: Optional[int] = None,
     ) -> MessageGroupe:
-        if espace.type != self.TYPE_COMMUNAUTE:
-            raise ValidationError(
-                'Le chat de groupe est réservé aux communautés.'
-            )
+        if espace.type not in (self.TYPE_COMMUNAUTE, self.TYPE_CHAINE):
+            raise ValidationError('Espace invalide pour le chat de groupe.')
         access = self.resolve_access(espace=espace, acteur=auteur)
         if not access.can_interact or access.participation is None:
             raise ValidationError(
-                'Tu dois rejoindre cette communauté pour y écrire.'
+                'Tu dois être membre pour écrire dans cet espace.'
             )
         if not access.can_publish:
+            if espace.type == self.TYPE_CHAINE:
+                raise ValidationError(
+                    'Sur une chaîne, seuls les administrateurs peuvent publier. '
+                    'Tu peux liker / réagir aux messages.'
+                )
             raise ValidationError(
                 'Seuls les administrateurs peuvent écrire dans cette communauté.'
             )

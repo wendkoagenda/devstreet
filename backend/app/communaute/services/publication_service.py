@@ -141,11 +141,15 @@ class PublicationService:
         general_only: bool = False,
         pour_vous: bool = False,
         abonnements: bool = False,
+        favoris: bool = False,
+        populaires: bool = False,
     ) -> QuerySet:
         """
         Fil d'actualité : publications chronologiques avec auteur, images et engagement.
         Mode pour_vous : priorise amis suivis + chaînes abonnées.
         Mode abonnements : uniquement suivis + chaînes (hors contenus hors abonnement).
+        Mode favoris : bookmarks de l'utilisateur.
+        Mode populaires : tri par likes puis commentaires.
         """
         if type_filter:
             type_filter = type_filter.strip().upper()
@@ -157,6 +161,18 @@ class PublicationService:
                 'SONDAGE',
             ):
                 raise ValueError(f'Type invalide : {type_filter}')
+        if favoris:
+            return self.get_feed_favoris(
+                membre=membre,
+                search=search,
+                type_filter=type_filter or None,
+            )
+        if populaires:
+            return self.get_feed_populaires(
+                membre=membre,
+                search=search,
+                type_filter=type_filter or None,
+            )
         if abonnements:
             return self.get_feed_abonnements(
                 membre=membre,
@@ -308,6 +324,49 @@ class PublicationService:
         )
         return self._with_engagement(
             queryset.order_by('-created_at', '-id'), membre=membre
+        )
+
+    def get_feed_favoris(
+        self,
+        *,
+        membre: Optional[User],
+        search: Optional[str] = None,
+        type_filter: Optional[str] = None,
+    ) -> QuerySet:
+        """Publications mises en favori par l'utilisateur connecté."""
+        if membre is None or not getattr(membre, 'id', None):
+            return self._with_engagement(
+                Publication.objects.none(), membre=membre
+            )
+        queryset = (
+            Publication.objects.filter(favoris__membre_id=membre.id)
+            .select_related('espace', 'auteur')
+            .distinct()
+        )
+        queryset = self._apply_text_filters(
+            queryset, search=search, type_filter=type_filter
+        )
+        return self._with_engagement(
+            queryset.order_by('-created_at', '-id'), membre=membre
+        )
+
+    def get_feed_populaires(
+        self,
+        *,
+        membre: Optional[User],
+        search: Optional[str] = None,
+        type_filter: Optional[str] = None,
+    ) -> QuerySet:
+        """Fil général trié par engagement (likes, commentaires)."""
+        queryset = Publication.objects.filter(espace__isnull=True).select_related(
+            'espace', 'auteur'
+        )
+        queryset = self._apply_text_filters(
+            queryset, search=search, type_filter=type_filter
+        )
+        queryset = self._with_engagement(queryset, membre=membre)
+        return queryset.order_by(
+            '-likes_count', '-comments_count', '-created_at', '-id'
         )
 
     def get_by_id(

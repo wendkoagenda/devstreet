@@ -108,7 +108,8 @@ const imagesDataSchema = z
 const mediasCommentDataSchema = z
   .array(
     z.object({
-      url: z.string().url("URL de média invalide"),
+      // Chemins relatifs (/media/…) ou URLs absolues acceptés.
+      url: z.string().trim().min(1, "URL de média invalide"),
       kind: z.enum(["IMAGE", "VIDEO", "AUDIO"]).default("IMAGE"),
       texte_alternatif: z.string().max(200).optional().default(""),
       position: z.number().int().min(0).optional().default(0),

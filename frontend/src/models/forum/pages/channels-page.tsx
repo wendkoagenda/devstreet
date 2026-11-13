@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateEspaceMutation, useGetEspacesQuery } from "../api";
+import { PAGE_SIZE } from "@/helpers/api/pagination";
+import {
+  useCreateEspaceMutation,
+  useGetEspacesInfiniteQuery,
+} from "../api";
 import {
   EspaceDirectory,
   useDebouncedValue,
@@ -15,9 +19,17 @@ export default function ChannelsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
-  const { data, isLoading, isError, refetch } = useGetEspacesQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useGetEspacesInfiniteQuery({
     type: "CHAINE",
-    page_size: 100,
+    page_size: PAGE_SIZE,
     ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
   });
   const [createEspace, { isLoading: creating }] = useCreateEspaceMutation();
@@ -26,6 +38,11 @@ export default function ChannelsPage() {
   const [description, setDescription] = useState("");
   const [acces, setAcces] = useState<"PUBLIC" | "LIEN">("PUBLIC");
   const [commentairesOuverts, setCommentairesOuverts] = useState(true);
+
+  const espaces = useMemo(
+    () => data?.pages.flatMap((page) => page.results) ?? [],
+    [data?.pages]
+  );
 
   const handleCreate = async () => {
     const trimmed = nom.trim();
@@ -62,7 +79,8 @@ export default function ChannelsPage() {
             Chaînes
           </h1>
           <p className="text-sm text-muted-foreground">
-            Nouveautés — seuls les admins publient.
+            Fil d&apos;annonces (admins publient) + chat lecture/réactions dans
+            Messages.
           </p>
         </div>
         <Button
@@ -132,19 +150,27 @@ export default function ChannelsPage() {
       ) : null}
 
       <EspaceDirectory
-        espaces={isLoading || isError ? [] : (data?.results ?? [])}
-        hrefFor={(espace) => `/forum/chaines/${espace.id}`}
+        espaces={isError ? [] : espaces}
+        hrefFor={(espace) =>
+          espace.mon_role
+            ? `/messages?groupe=${espace.id}`
+            : `/forum/chaines/${espace.id}`
+        }
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Rechercher une chaîne…"
         mineTitle="Mes chaînes"
         otherTitle="À découvrir"
+        isLoading={isLoading}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={Boolean(hasNextPage)}
+        onLoadMore={() => {
+          void fetchNextPage();
+        }}
         emptyLabel={
-          isLoading
-            ? "Chargement…"
-            : isError
-              ? "Impossible de charger les chaînes."
-              : "Aucune chaîne pour l’instant."
+          isError
+            ? "Impossible de charger les chaînes."
+            : "Aucune chaîne pour l’instant."
         }
         emptySearchLabel="Aucune chaîne ne correspond à ta recherche."
       />

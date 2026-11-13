@@ -21,6 +21,15 @@ def _err(exc: ValidationError) -> str:
     return str(exc)
 
 
+def _membre_brief(user) -> dict:
+    return {
+        'id': user.id,
+        'username': user.username,
+        'full_name': user.full_name,
+        'photo': (getattr(user, 'photo', None) or '') or '',
+    }
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def membre_search_view(request):
@@ -38,16 +47,22 @@ def membre_search_view(request):
         .exclude(pk=request.user.id)
         .order_by('username')[:8]
     )
-    results = [
-        {
-            'id': user.id,
-            'username': user.username,
-            'full_name': user.full_name,
-            'photo': (getattr(user, 'photo', None) or '') or '',
-        }
-        for user in qs
-    ]
-    return Response(results)
+    return Response([_membre_brief(user) for user in qs])
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def membre_suivis_view(request):
+    """Liste les membres suivis par l'utilisateur connecté (DM / Messages)."""
+    search = (request.query_params.get('q') or '').strip() or None
+    try:
+        limit = int(request.query_params.get('limit') or 50)
+    except (TypeError, ValueError):
+        limit = 50
+    membres = SuiviUtilisateurService().list_membres_suivis(
+        request.user, search=search, limit=limit
+    )
+    return Response([_membre_brief(user) for user in membres])
 
 
 def _profile_payload(request, user):

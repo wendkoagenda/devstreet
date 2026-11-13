@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetPublicationQuery } from "../api";
@@ -7,12 +7,36 @@ import { CommentsSection } from "../components/comments-section";
 import { PublicationCard } from "../components/publication-card";
 
 export default function PublicationDetailPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const publicationId = Number(id);
   const { data, isLoading, isError, refetch } = useGetPublicationQuery(
     publicationId,
     { skip: !Number.isFinite(publicationId) || publicationId <= 0 }
   );
+
+  const fallbackHref = (() => {
+    if (!data?.espace?.id) return "/";
+    if (data.espace.type === "CHAINE") {
+      return `/forum/chaines/${data.espace.id}`;
+    }
+    return `/forum/communautes/${data.espace.id}`;
+  })();
+
+  const backLabel = (() => {
+    if (data?.espace?.type === "CHAINE") return "Retour à la chaîne";
+    if (data?.espace?.type === "COMMUNAUTE") return "Retour à la communauté";
+    if (data?.auteur?.id) return "Retour";
+    return "Fil d'actualité";
+  })();
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(fallbackHref);
+  };
 
   if (!Number.isFinite(publicationId) || publicationId <= 0) {
     return (
@@ -53,13 +77,16 @@ export default function PublicationDetailPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4">
-      <Button asChild variant="ghost" className="-ml-2 gap-2">
-        <Link to="/">
-          <ArrowLeft className="h-4 w-4" />
-          Fil d&apos;actualité
-        </Link>
+      <Button
+        type="button"
+        variant="ghost"
+        className="-ml-2 gap-2"
+        onClick={handleBack}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {backLabel}
       </Button>
-      <PublicationCard publication={data} showFullBody />
+      <PublicationCard publication={data} showFullBody disableCardNav />
       {data.type === "CHOIX" ? <ChoixSection publication={data} /> : null}
       <CommentsSection
         publicationId={data.id}

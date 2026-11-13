@@ -25,10 +25,15 @@ import {
   useReactEspaceMessageMutation,
   useSendEspaceMessageMutation,
 } from "../api";
+import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
+import {
+  encodeVocalMessage,
+  parseVocalUrl,
+} from "../lib/vocal-message";
+import { ForumAudioPlayer } from "./forum-audio-player";
 import { ForumAvatar } from "./forum-avatar";
 import { ForumRichText } from "./forum-rich-text";
 import { VoiceRecorderButton } from "./voice-recorder-button";
-import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"] as const;
 
@@ -38,6 +43,8 @@ type EspaceChatProps = {
   canReact?: boolean;
   canModerate?: boolean;
   readOnlyHint?: string;
+  /** Mode Messages : remplit le parent, sans chrome dupliqué. */
+  embedded?: boolean;
 };
 
 function formatTime(value: string | null | undefined) {
@@ -91,35 +98,28 @@ function truncate(text: string, max = 90) {
   return `${cleaned.slice(0, max).trimEnd()}…`;
 }
 
-const VOCAL_RE = /^\[\[vocal:(https?:\/\/[^\]]+)\]\]$/;
-
-function parseVocalUrl(texte: string): string | null {
-  const match = texte.trim().match(VOCAL_RE);
-  return match?.[1] ?? null;
-}
-
-function encodeVocalMessage(url: string) {
-  return `[[vocal:${url}]]`;
-}
-
 export function EspaceChat({
   espaceId,
   canWrite,
   canReact,
   canModerate = false,
   readOnlyHint,
+  embedded = false,
 }: EspaceChatProps) {
   const allowReact = canReact ?? canWrite;
   const currentUserId = useAuthSlice((state) => state.user?.id ?? null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const [texte, setTexte] = useState("");
   const [replyTo, setReplyTo] = useState<EspaceMessage | null>(null);
   const [highlightId, setHighlightId] = useState<number | null>(null);
-  const { data, isLoading, isError, refetch } = useGetEspaceMessagesQuery({
-    espaceId,
-    page_size: 100,
-  });
+  const { data, isLoading, isError, refetch } = useGetEspaceMessagesQuery(
+    {
+      espaceId,
+      page_size: 100,
+    },
+    { pollingInterval: 4000 }
+  );
   const [sendMessage, { isLoading: sending }] = useSendEspaceMessageMutation();
   const [deleteMessage] = useDeleteEspaceMessageMutation();
   const [reactMessage] = useReactEspaceMessageMutation();
@@ -164,7 +164,9 @@ export function EspaceChat({
   }, [messages]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const list = listRef.current;
+    if (!list) return;
+    list.scrollTop = list.scrollHeight;
   }, [messages.length]);
 
   useEffect(() => {
@@ -174,9 +176,17 @@ export function EspaceChat({
   }, [highlightId]);
 
   const scrollToMessage = (messageId: number) => {
+    const list = listRef.current;
     const node = document.getElementById(`espace-msg-${messageId}`);
-    if (!node) return;
-    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!list || !node) return;
+    const listRect = list.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    const nextTop =
+      list.scrollTop +
+      (nodeRect.top - listRect.top) -
+      list.clientHeight / 2 +
+      nodeRect.height / 2;
+    list.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
     setHighlightId(messageId);
   };
 
@@ -231,7 +241,14 @@ export function EspaceChat({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-border bg-card">
+      <div
+        className={cn(
+          "flex items-center justify-center bg-card",
+          embedded
+            ? "h-full min-h-0"
+            : "min-h-[420px] rounded-2xl border border-border"
+        )}
+      >
         <p className="text-sm text-muted-foreground">
           Chargement de la discussion…
         </p>
@@ -241,7 +258,14 @@ export function EspaceChat({
 
   if (isError) {
     return (
-      <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card">
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center gap-3 bg-card",
+          embedded
+            ? "h-full min-h-0"
+            : "min-h-[420px] rounded-2xl border border-border"
+        )}
+      >
         <p className="text-sm text-destructive">
           Impossible de charger la discussion.
         </p>
@@ -253,24 +277,34 @@ export function EspaceChat({
   }
 
   return (
-    <section className="flex min-h-[480px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft text-brand-strong">
-          <MessageCircle className="h-4 w-4" aria-hidden />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-foreground">Discussion</h2>
-          <p className="text-xs text-muted-foreground">
-            {messages.length === 0
-              ? "Le fil est encore vide"
-              : `${messages.length} message${messages.length > 1 ? "s" : ""}`}
-          </p>
-        </div>
-      </header>
+    <section
+      className={cn(
+        "flex min-h-0 flex-col overflow-hidden bg-card",
+        embedded
+          ? "h-full"
+          : "min-h-[480px] rounded-2xl border border-border shadow-sm"
+      )}
+    >
+      {!embedded ? (
+        <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-soft text-brand-strong">
+            <MessageCircle className="h-4 w-4" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-semibold text-foreground">Discussion</h2>
+            <p className="text-xs text-muted-foreground">
+              {messages.length === 0
+                ? "Le fil est encore vide"
+                : `${messages.length} message${messages.length > 1 ? "s" : ""}`}
+            </p>
+          </div>
+        </header>
+      ) : null}
 
       <div
+        ref={listRef}
         className={cn(
-          "relative flex-1 space-y-1 overflow-y-auto px-3 py-4 sm:px-4",
+          "relative min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-4",
           "bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:18px_18px]",
           "bg-muted/30"
         )}
@@ -376,24 +410,15 @@ export function EspaceChat({
                   {message.supprime ? (
                     <p className="italic opacity-80">Message supprimé</p>
                   ) : parseVocalUrl(message.texte) ? (
-                    <div className="space-y-1">
-                      <p
-                        className={cn(
-                          "text-[11px] font-medium",
-                          mine
-                            ? "text-brand-foreground/80"
-                            : "text-muted-foreground"
-                        )}
-                      >
-                        Message vocal
-                      </p>
-                      <audio
-                        src={buildMediaUrl(parseVocalUrl(message.texte)!)}
-                        controls
-                        preload="metadata"
-                        className="h-8 max-w-full"
-                      />
-                    </div>
+                    <ForumAudioPlayer
+                      compact
+                      src={buildMediaUrl(parseVocalUrl(message.texte)!)}
+                      className={
+                        mine
+                          ? "border-brand-foreground/20 bg-brand-foreground/10"
+                          : undefined
+                      }
+                    />
                   ) : (
                     <ForumRichText
                       text={message.texte}
@@ -517,11 +542,10 @@ export function EspaceChat({
             );
           })
         )}
-        <div ref={bottomRef} />
       </div>
 
       {canWrite ? (
-        <div className="border-t border-border bg-card p-3">
+        <div className="shrink-0 border-t border-border bg-card p-3">
           {replyTo ? (
             <div className="mb-2 flex items-start gap-2 rounded-xl border border-brand-soft-border bg-brand-soft/40 px-3 py-2">
               <div className="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-brand" />
@@ -609,7 +633,7 @@ export function EspaceChat({
           </div>
         </div>
       ) : (
-        <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
+        <p className="shrink-0 border-t border-border px-4 py-3 text-sm text-muted-foreground">
           {readOnlyHint ??
             "Rejoins la communauté pour participer à la discussion."}
         </p>

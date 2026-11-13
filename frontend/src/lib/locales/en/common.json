@@ -54,7 +54,8 @@
       "not_match": "Passwords do not match"
     },
     "password_confirm": {
-      "required": "Password confirm is required"
+      "required": "Password confirm is required",
+      "mismatch": "Passwords do not match"
     }
   },
   "error": {
@@ -986,7 +987,31 @@
     "login_title": "Login",
     "login_success": "You have been logged in successfully",
     "login_error": "An error occurred while logging in",
-    "logging_in": "Logging in..."
+    "logging_in": "Logging in...",
+    "login_description": "Enter your email and password to continue.",
+    "register_title": "Create an account",
+    "register_description": "Join DevStreet in a few seconds.",
+    "register_submit": "Sign up",
+    "registering": "Creating account...",
+    "register_success": "Account created, welcome",
+    "switch_to_register": "Create an account",
+    "switch_to_login": "Sign in",
+    "have_account": "Already have an account?",
+    "already_have_account": "Already have an account?",
+    "no_account": "Don't have an account yet?",
+    "username_placeholder": "e.g. askia.dev",
+    "panel_login_kicker": "Welcome back",
+    "panel_login_title": "Good to see you again",
+    "panel_login_description": "Sign in to access the forum, marketplace and your projects.",
+    "panel_login_point_1": "Feed and communities",
+    "panel_login_point_2": "Talent & offers marketplace",
+    "panel_login_point_3": "Collaborative project hub",
+    "panel_register_kicker": "Welcome",
+    "panel_register_title": "Join DevStreet",
+    "panel_register_description": "Create your account to publish, apply and collaborate.",
+    "panel_register_point_1": "Pro profile and skills",
+    "panel_register_point_2": "Messaging and communities",
+    "panel_register_point_3": "Marketplace & hub access"
   },
   "my_account": {
     "title": "My Account",

@@ -16,9 +16,10 @@ function typeForTab(tab: FeedTabId): string | undefined {
 
 function feedForTab(
   tab: FeedTabId
-): "pour-vous" | "abonnements" | undefined {
+): "pour-vous" | "abonnements" | "populaires" | undefined {
   if (tab === "pour-vous") return "pour-vous";
   if (tab === "abonnements") return "abonnements";
+  if (tab === "populaires") return "populaires";
   return undefined;
 }
 
@@ -80,14 +81,18 @@ export default function FeedPage() {
             ? "Projets"
             : tab === "abonnements"
               ? "Suivis"
-              : "Accueil"}
+              : tab === "populaires"
+                ? "Tendances"
+                : "Accueil"}
         </p>
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           {tab === "showcase"
             ? "Showcase & dépôts"
             : tab === "abonnements"
               ? "Abonnements"
-              : "Fil d'actualité"}
+              : tab === "populaires"
+                ? "Populaires"
+                : "Fil d'actualité"}
         </h1>
         {tab === "showcase" ? (
           <p className="text-sm text-muted-foreground">
@@ -98,6 +103,11 @@ export default function FeedPage() {
           <p className="text-sm text-muted-foreground">
             Publications des membres que tu suis et des chaînes auxquelles tu
             es abonné.
+          </p>
+        ) : null}
+        {tab === "populaires" ? (
+          <p className="text-sm text-muted-foreground">
+            Les publications les plus likées et commentées du fil général.
           </p>
         ) : null}
       </header>
@@ -134,7 +144,9 @@ export default function FeedPage() {
           <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
             {tab === "abonnements"
               ? "Rien ici pour l’instant. Suis des membres ou abonne-toi à des chaînes."
-              : "Aucune publication ici pour le moment. Lance la première discussion."}
+              : tab === "populaires"
+                ? "Pas encore assez d’engagement pour un classement."
+                : "Aucune publication ici pour le moment. Lance la première discussion."}
           </div>
         ) : null}
 

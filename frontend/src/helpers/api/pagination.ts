@@ -27,9 +27,14 @@ export type ListParams = {
   search?: string;
   ordering?: string;
   type?: string;
+  acces?: string;
+  mine?: number | string | boolean;
   auteur?: number | string;
   conversation?: number | string;
   cursor?: string | null;
+  feed?: string;
+  espace?: number | string;
+  invite?: string;
 };
 
 /** Extrait le paramètre `cursor` d'une URL `next` / `previous` DRF. */

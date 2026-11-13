@@ -46,6 +46,8 @@ class EspaceViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def list(self, request):
+        mine_raw = (request.query_params.get('mine') or '').strip().lower()
+        mine_only = mine_raw in ('1', 'true', 'yes', 'moi')
         try:
             espaces = self.espace_service.get_all(
                 search=request.query_params.get('search'),
@@ -53,6 +55,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
                 type_filter=request.query_params.get('type') or 'COMMUNAUTE',
                 acces_filter=request.query_params.get('acces'),
                 visible_for=request.user,
+                mine_only=mine_only,
             ).annotate(membres_count=Count('participations'))
         except ValueError:
             return Response({'error': 'Tri invalide'}, status=status.HTTP_400_BAD_REQUEST)

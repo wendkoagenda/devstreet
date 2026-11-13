@@ -25,10 +25,13 @@ from app.core.serializers import (
     PasswordChangeSerializer,
     UserLoginSerializer,
     PublicProfileSerializer,
+    PublicRegisterSerializer,
     ForgotPasswordSerializer,
     VerifyResetCodeSerializer,
     ResetPasswordSerializer,
 )
+from app.core.services.user_service import UserService
+from app.core.models import Role
 from app.core.services.forgot_password_service import (
     ForgotPasswordService,
     PasswordResetError,
@@ -39,6 +42,7 @@ from app.core.services.forgot_password_service import (
 from app.core.throttles import (
     CsrfThrottle,
     LoginThrottle,
+    RegisterThrottle,
     LogoutThrottle,
     TokenRefreshThrottle,
     TokenVerifyThrottle,
@@ -595,6 +599,98 @@ def user_roles_view(request):
     return Response({
         'roles': roles
     }, status=status.HTTP_200_OK)
+
+
+def _ensure_default_member_role() -> str:
+    """Garantit l'existence du rôle membre public avec ses droits forum, projets et IA (sans droits d'administration)."""
+    from app.communaute.permission_codes import COMMUNAUTE_PERMISSION_CODES
+    from app.core.models import Permission
+    from app.devstreet_hub.management.commands.init_devstreet_hub import DEVELOPER_CODES
+
+    role_name = 'DevStreet Hub Developer'
+    role, _ = Role.objects.get_or_create(
+        name=role_name,
+        defaults={'description': 'Membre DevStreet (forum, projets collaboratifs et marketplace)'},
+    )
+    needed_codes = set(COMMUNAUTE_PERMISSION_CODES) | set(DEVELOPER_CODES)
+    existing_codes = set(role.permissions.values_list('code', flat=True))
+    missing_codes = needed_codes - existing_codes
+    if missing_codes:
+        perms = [
+            Permission.objects.get_or_create(
+                code=code,
+                defaults={'description': f'Permission {code}'},
+            )[0]
+            for code in sorted(missing_codes)
+        ]
+        role.permissions.add(*perms)
+    return role_name
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Inscription publique : crée le compte membre, pose les cookies JWT",
+    request_body=PublicRegisterSerializer,
+    responses={
+        201: "Compte créé et session ouverte",
+        400: "Données invalides",
+        429: "Trop de demandes",
+    },
+    tags=['Auth'],
+)
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@throttle_classes([RegisterThrottle])
+def register_view(request):
+    """
+    Crée un compte public puis ouvre une session (cookies HttpOnly), comme après un login.
+    """
+    serializer = PublicRegisterSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    data = serializer.validated_data
+    role_names = [_ensure_default_member_role()]
+
+    try:
+        user = UserService().create_user(
+            {
+                'email': data['email'],
+                'username': data['username'],
+                'first_name': data['first_name'],
+                'last_name': data['last_name'],
+                'password': data['password'],
+                'role_names': role_names,
+                'is_active': True,
+            }
+        )
+    except Exception as exc:
+        message = str(exc)
+        return Response({'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+
+    refresh = RefreshToken.for_user(user)
+    refresh['user_id'] = user.id
+    refresh['email'] = user.email
+    refresh['full_name'] = user.full_name
+    access = refresh.access_token
+    access['user_id'] = user.id
+    access['email'] = user.email
+    access['full_name'] = user.full_name
+
+    audit_service.record(
+        Actions.USER_CREATED,
+        actor=user,
+        target=user,
+        subject=audit_service.account_key(user.email),
+        request=request,
+    )
+
+    response = Response(
+        {'user': UserLoginSerializer(user).data},
+        status=status.HTTP_201_CREATED,
+    )
+    return set_auth_cookies(response, str(access), str(refresh))
 
 
 # === MOT DE PASSE OUBLIÉ (challenge e-mail) ===

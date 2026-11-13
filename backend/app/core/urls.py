@@ -14,6 +14,7 @@ from app.core.views.auth_views import (
     profile_photo_view,
     profile_banner_view,
     change_password_view,
+    register_view,
     forgot_password_view,
     verify_reset_code_view,
     reset_password_view,
@@ -43,6 +44,9 @@ urlpatterns = [
     # === AUTHENTIFICATION JWT ===
     # Obtenir un token d'accès et de rafraîchissement
     path('auth/login', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+
+    # Inscription publique (crée le compte + cookies de session)
+    path('auth/register', register_view, name='register'),
     
     # Rafraîchir le token d'accès
     path('auth/token/refresh', CustomTokenRefreshView.as_view(), name='token_refresh'),

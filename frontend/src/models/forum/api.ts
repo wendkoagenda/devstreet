@@ -35,7 +35,7 @@ export type FeedListArg = {
   auteur?: number;
   espace?: number;
   invite?: string;
-  feed?: "pour-vous" | "abonnements" | "derniers";
+  feed?: "pour-vous" | "abonnements" | "derniers" | "populaires" | "favoris";
 };
 
 export type ConversationMember = {
@@ -106,6 +106,7 @@ export const forumApi = createApi({
     "Comments",
     "Avis",
     "PublicProfile",
+    "MembresSuivis",
     "Conversations",
     "Messages",
     "Espaces",
@@ -213,6 +214,23 @@ export const forumApi = createApi({
       query: (q) => `/membres/search${toQueryString({ q })}`,
     }),
 
+    getMembresSuivis: builder.query<
+      Array<{
+        id: number;
+        username: string;
+        full_name: string;
+        photo?: string;
+      }>,
+      { q?: string; limit?: number } | void
+    >({
+      query: (params) =>
+        `/membres/suivis${toQueryString({
+          q: params?.q || undefined,
+          limit: params?.limit ?? 50,
+        })}`,
+      providesTags: ["MembresSuivis"],
+    }),
+
     toggleSuivreMembre: builder.mutation<
       { following: boolean; suivi_id: number },
       number
@@ -223,6 +241,7 @@ export const forumApi = createApi({
       }),
       invalidatesTags: (_result, _error, userId) => [
         "Publications",
+        "MembresSuivis",
         { type: "PublicProfile", id: userId },
         { type: "Publications", id: "LIST" },
       ],
@@ -381,32 +400,47 @@ export const forumApi = createApi({
       },
     }),
 
-    getEspaces: builder.query<
+    getEspaces: builder.infiniteQuery<
       Paginated<Espace>,
       {
         type?: string;
         acces?: string;
         search?: string;
-        page?: number;
+        mine?: boolean;
         page_size?: number;
-      } | void
+      } | void,
+      number
     >({
-      query: (params) =>
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+          lastPage.next ? lastPageParam + 1 : undefined,
+        getPreviousPageParam: (firstPage, _allPages, firstPageParam) =>
+          firstPage.previous && firstPageParam > 1
+            ? firstPageParam - 1
+            : undefined,
+      },
+      query: ({ queryArg, pageParam }) =>
         `/espaces${toQueryString({
-          page_size: params?.page_size ?? 20,
-          type: "COMMUNAUTE",
-          ...(params ?? {}),
+          page: pageParam,
+          page_size: queryArg?.page_size ?? PAGE_SIZE,
+          type: queryArg?.type ?? "COMMUNAUTE",
+          ...(queryArg?.acces ? { acces: queryArg.acces } : {}),
+          ...(queryArg?.search ? { search: queryArg.search } : {}),
+          ...(queryArg?.mine ? { mine: 1 } : {}),
         })}`,
-      providesTags: (result) =>
-        result?.results?.length
+      providesTags: (result) => {
+        const items = result?.pages.flatMap((page) => page.results) ?? [];
+        return items.length
           ? [
-              ...result.results.map((espace) => ({
+              ...items.map((espace) => ({
                 type: "Espace" as const,
                 id: espace.id,
               })),
               { type: "Espaces", id: "LIST" },
             ]
-          : [{ type: "Espaces", id: "LIST" }],
+          : [{ type: "Espaces", id: "LIST" }];
+      },
     }),
 
     getEspace: builder.query<Espace, { id: number; invite?: string } | number>({
@@ -477,6 +511,7 @@ export const forumApi = createApi({
         { type: "Espace", id },
         { type: "Espaces", id: "LIST" },
         "Publications",
+        "ActivityBadges",
       ],
     }),
 
@@ -489,6 +524,7 @@ export const forumApi = createApi({
         { type: "Espace", id },
         { type: "Espaces", id: "LIST" },
         "Publications",
+        "ActivityBadges",
       ],
     }),
 
@@ -627,7 +663,10 @@ export const forumApi = createApi({
         url: `/espaces/invitation/${encodeURIComponent(code)}/rejoindre`,
         method: "POST",
       }),
-      invalidatesTags: [{ type: "Espaces", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Espaces", id: "LIST" },
+        "ActivityBadges",
+      ],
     }),
 
     createDiscussion: builder.mutation<Publication, CreateDiscussionInput>({
@@ -796,13 +835,10 @@ export const forumApi = createApi({
         method: "POST",
       }),
       async onQueryStarted(id, { dispatch, queryFulfilled, getState }) {
-        const patchPublication = (draft: Publication) => {
-          draft.saved_by_me = !draft.saved_by_me;
-        };
         const patches = [
           dispatch(
             forumApi.util.updateQueryData("getPublication", id, (draft) => {
-              patchPublication(draft);
+              draft.saved_by_me = !draft.saved_by_me;
             })
           ),
           ...forumApi.util
@@ -813,9 +849,23 @@ export const forumApi = createApi({
                   "getPublications",
                   arg,
                   (draft) => {
+                    const isFavorisFeed = arg?.feed === "favoris";
                     for (const page of draft.pages) {
+                      if (isFavorisFeed) {
+                        const next = page.results.filter((pub) => pub.id !== id);
+                        if (next.length !== page.results.length) {
+                          // Retrait du favori : sortir de la liste « Mes favoris ».
+                          const wasSaved = page.results.find(
+                            (pub) => pub.id === id
+                          )?.saved_by_me;
+                          if (wasSaved) {
+                            page.results = next;
+                            continue;
+                          }
+                        }
+                      }
                       for (const pub of page.results) {
-                        if (pub.id === id) patchPublication(pub);
+                        if (pub.id === id) pub.saved_by_me = !pub.saved_by_me;
                       }
                     }
                   }
@@ -887,6 +937,7 @@ export const {
   useGetPublicProfileQuery,
   useGetPublicProfileByUsernameQuery,
   useLazySearchMembresQuery,
+  useGetMembresSuivisQuery,
   useToggleSuivreMembreMutation,
   useGetConversationsQuery,
   useOpenConversationMutation,
@@ -897,7 +948,7 @@ export const {
   useGetPublicationQuery,
   useUploadForumImageMutation,
   useUploadForumMediaMutation,
-  useGetEspacesQuery,
+  useGetEspacesInfiniteQuery,
   useGetEspaceQuery,
   useCreateEspaceMutation,
   useUpdateEspaceMutation,
