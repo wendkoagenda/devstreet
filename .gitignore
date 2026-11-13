@@ -106,6 +106,14 @@ backend/scripts/generator/backups/*.backup
 !.env.vm.example
 backend.env.*
 frontend.env.*
+minio.env.*
+!minio.env.example
+observabilite.env.*
+!observabilite.env.example
+
+# Cles SSH admin : tout le dossier est ignore sauf le guide de creation
+.ssh/*
+!.ssh/CREER_SSH.md
 
 # =============================================================================
 # IDE / OS files

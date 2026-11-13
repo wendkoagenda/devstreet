@@ -390,8 +390,9 @@ def cmd_preparer_vm(args):
     resolve_vm_options(args)
     if not HOST_PATTERN.match(args.hote):
         raise Failure("Hote invalide (adresse IP ou nom de domaine).")
-    if not USER_PATTERN.match(args.admin_user) or args.admin_user == "root":
-        raise Failure("--admin-user doit etre un utilisateur avec sudo sans mot de passe, pas root (ex. ubuntu).")
+    if not USER_PATTERN.match(args.admin_user):
+        raise Failure("--admin-user doit etre root ou un utilisateur avec sudo sans mot de passe (ex. ubuntu).")
+    sudo = "" if args.admin_user == "root" else "sudo -n "
     admin_key = resolve_cle_admin(args.cle_admin)
     if admin_key and not admin_key.is_file():
         raise Failure(f"Cle d'administration introuvable : {admin_key}")
@@ -413,7 +414,7 @@ def cmd_preparer_vm(args):
         known_hosts_line = pin_host_key(args.hote, known_hosts)
 
         admin = ssh_command(args.hote, args.admin_user, known_hosts, admin_key)
-        if run_remote(admin, "sudo -n true") != 0:
+        if run_remote(admin, f"{sudo}true") != 0:
             raise Failure("Connexion admin refusee, ou sudo demande un mot de passe (cle chargee dans l'agent ? --cle-admin ?).")
 
         key_file = workdir / "deploy_key"
@@ -426,7 +427,7 @@ def cmd_preparer_vm(args):
         pubkey = Path(f"{key_file}.pub").read_text(encoding="utf-8").strip()
 
         git_utils.print_step("Phase a : installation et pare-feu")
-        remote = f"sudo -n env DEPLOY_PUBKEY={shlex.quote(pubkey)} bash -s -- a"
+        remote = f"{sudo}env DEPLOY_PUBKEY={shlex.quote(pubkey)} bash -s -- a"
         if run_remote(admin, remote, REPO_ROOT / "deploy/vm/preparer.sh") != 0:
             raise Failure("La phase a a echoue (voir ci-dessus). Rien n'a ete ecrit sur GitHub.")
 
@@ -444,7 +445,7 @@ def cmd_preparer_vm(args):
             set_value(repo, args.branche, reference.gh_name(name, args.branche), value, secret)
 
         git_utils.print_step("Phase b : durcissement SSH")
-        if run_remote(admin, "sudo -n bash -s -- b", REPO_ROOT / "deploy/vm/preparer.sh") != 0:
+        if run_remote(admin, f"{sudo}bash -s -- b", REPO_ROOT / "deploy/vm/preparer.sh") != 0:
             raise Failure("La phase b a echoue. Les acces SSH sont deja sur GitHub ; corrigez puis relancez.")
         if run_remote(deploy, "true") != 0:
             raise Failure("Apres durcissement, la connexion deploy echoue : verifiez la VM depuis la console du fournisseur.")
@@ -603,7 +604,7 @@ def build_parser():
     vm = commands.add_parser("preparer-vm", help="prepare une VM Ubuntu LTS et ecrit les acces SSH sur GitHub")
     branch_option(vm)
     vm.add_argument("--hote", help="adresse IP ou nom de la VM (sinon : VM_HOTE de .env.vm.<branche>)")
-    vm.add_argument("--admin-user", help="utilisateur avec sudo sans mot de passe, pas root (sinon : VM_ADMIN_USER)")
+    vm.add_argument("--admin-user", help="root, ou utilisateur avec sudo sans mot de passe (sinon : VM_ADMIN_USER) ; root : aucun sudo n'est ajoute")
     vm.add_argument(
         "--cle-admin",
         help="chemin de la cle privee SSH admin (sinon : VM_CLE_ADMIN dans .env.vm.<branche>, puis agent SSH) ; relatif = racine du depot",
