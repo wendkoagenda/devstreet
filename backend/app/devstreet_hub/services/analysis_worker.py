@@ -8,14 +8,14 @@ from rest_framework.exceptions import APIException
 from pydantic import ValidationError
 from app.devstreet_hub.repositories.workflow_repository import WorkflowRepository
 from app.devstreet_hub.services.gitea_client import GiteaClient
-from app.devstreet_hub.services.openai_client import OpenAIClient, validate_brief
+from app.devstreet_hub.services.openai_client import OpenAIClient, validate_brief, validate_presentation
 
 
-def process_next(*, repository=None, forge=None, ai=None):
+def process_next(*, repository=None, forge=None, ai=None, job_id=None):
     repo = repository or WorkflowRepository()
     with transaction.atomic():
         repo.expire_jobs()
-        job = repo.claim_job()
+        job = repo.claim_job(job_id) if job_id is not None else repo.claim_job()
     if job is None:
         return None
     try:
@@ -29,10 +29,13 @@ def process_next(*, repository=None, forge=None, ai=None):
         snapshot = repo.snapshot(
             job.project.repository, job.commit_sha, sources, digest
         )
-        result, input_tokens, output_tokens = (ai or OpenAIClient()).generate(
+        presentation = job.prompt_version == 'presentation-v1'
+        client = ai or OpenAIClient()
+        generate = client.improve_presentation if presentation else client.generate
+        result, input_tokens, output_tokens = generate(
             job.objective, job.language, snapshot.sources, job.model
         )
-        result = validate_brief(result, snapshot.sources)
+        result = (validate_presentation if presentation else validate_brief)(result, snapshot.sources)
         with transaction.atomic():
             # Un consentement révoqué pendant l'appel empêche aussi la conservation du résultat.
             current = repo.locked_project(job.project_id)

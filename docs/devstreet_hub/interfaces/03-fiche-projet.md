@@ -4,6 +4,46 @@
 
 ## À regrouper
 
+### Présentation en texte libre (interface intégrée)
+
+La présentation utilise une carte de lecture avec les initiales et le nom public du propriétaire,
+des paragraphes libres, puis les images facultatives. Aucun titre de section, liste, citation ou
+diagramme n'est imposé au rédacteur. Le style vient des composants, de Poppins et des tokens
+Graphite (actions anthracite, accent violet), en clair et en sombre.
+
+La colonne « À propos » reprend uniquement les données existantes : propriétaire, licence,
+visibilité et technologies. Les raccourcis et l'invitation à contribuer sélectionnent les onglets
+internes. Les actions de gestion sont regroupées dans une barre distincte, selon les droits.
+
+« Modifier » ouvre un champ de texte libre. Le résumé court reste facultatif dans une section
+repliable. L'auteur peut joindre quatre images JPEG/PNG/WebP de 4 Mo maximum chacune, ou
+ne joindre aucune image. Les ajouts/retraits sont appliqués avec le texte au clic « Enregistrer
+les modifications ». Annuler abandonne le brouillon. Une édition concurrente est refusée (409).
+
+« Améliorer la description avec l'IA » analyse le texte du brouillon et des extraits du dépôt à
+un SHA précis, après consentement du propriétaire. Le résultat apparaît séparément avec les
+sources, inconnues et version. « Utiliser cette proposition » modifie le champ du brouillon ;
+il faut encore enregistrer. Une génération n'écrit jamais la présentation du projet.
+
+| Route | Contrat |
+| --- | --- |
+| PUT /api/v1/projects/{id}/presentation | Multipart : description, problem, base_updated_at ; images et remove_image_ids répétables, facultatifs |
+| GET /api/v1/projects/{id}/presentation/images/{image_id} | Lecture avec les mêmes droits de visibilité que le projet ; aucune URL de fichier public pour les brouillons |
+| POST /api/v1/projects/{id}/presentation/suggestions | description et language (fr/en), retourne une analyse presentation-v1, 202 ou 200 |
+| GET /api/v1/analyses/{id} | Lecture bornée jusqu'au résultat ; quotas partagés avec l'atelier IA |
+
+Les images sont vérifiées puis réencodées en JPEG sans métadonnées. Leur stockage est séparé
+de MEDIA_ROOT, dans `backend/private_uploads/project_images` (setting Django
+`DEVSTREET_HUB_PRIVATE_IMAGE_ROOT`). Prévoir un volume persistant et sa sauvegarde en production,
+sans publication directe de ce répertoire par le serveur web.
+
+L'amélioration réutilise le worker d'analyses et la configuration OpenAI existants. En local,
+`DEVSTREET_HUB_AI_INLINE_WORKER=true` permet le traitement immédiat ; sinon lancer
+`python manage.py process_devstreet_hub_analyses`. Une clé absente, un quota atteint ou un dépôt
+sans extraits exploitables donne un état explicite ; la rédaction manuelle reste disponible.
+
+Le schéma de réponse est validé côté serveur : [Structured Outputs OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs).
+
 En-tête : nom, problème résolu, technologies, étoiles et démo. Puis onglets **Présentation · Code · Contribuer · Équipe**. Le visiteur comprend d’abord l’utilité ; le contributeur trouve ensuite une tâche. Le propriétaire dispose d’un menu de gestion discret.
 
 | Route | Intégration |

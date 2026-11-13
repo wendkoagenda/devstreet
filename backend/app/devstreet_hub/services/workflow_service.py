@@ -891,7 +891,8 @@ class WorkflowService:
         require_permission(actor, "contribution-tasks.create")
         require_maintainer(actor, project, self.repo)
         analysis = self.repo.analysis(actor, analysis_id)
-        if analysis.project_id != project.pk or analysis.status != "succeeded":
+        if (analysis.project_id != project.pk or analysis.status != "succeeded"
+                or analysis.prompt_version != "contribution-v1"):
             raise ValidationError("Analyse incompatible avec ce projet.")
         suggestions = analysis.result["suggested_tasks"]
         if suggestion_index >= len(suggestions):
@@ -959,7 +960,7 @@ class WorkflowService:
             )
         return contribution
 
-    def request_analysis(self, actor, project, objective, language):
+    def request_analysis(self, actor, project, objective, language, *, prompt_version="contribution-v1"):
         require_permission(actor, "projects.analyze")
         require_maintainer(actor, project, self.repo)
         if not project.ai_consent_at:
@@ -976,7 +977,7 @@ class WorkflowService:
         sha = self.forge.head(project.repository)
         key = hashlib.sha256(
             json.dumps(
-                [project.pk, sha, objective, language, model, "contribution-v1"]
+                [project.pk, sha, objective, language, model, prompt_version]
             ).encode()
         ).hexdigest()
         daily_limit = int(config("AI_DAILY_LIMIT", 20) or 20)
@@ -987,7 +988,9 @@ class WorkflowService:
             "yes",
         )
         with transaction.atomic():
-            self.repo.locked_project(project.pk)
+            current = self.repo.locked_project(project.pk)
+            if not current.ai_consent_at or current.status == "archived":
+                raise Conflict("Le consentement IA a change ; rechargez le projet.")
             daily, project_daily = self.repo.reserve_analysis(actor, project, {})
             cached = self.repo.cached_analysis(key)
             if cached:
@@ -1002,12 +1005,13 @@ class WorkflowService:
                 model=model,
                 cache_key=key,
                 commit_sha=sha,
+                prompt_version=prompt_version,
             )
         # Local : traiter immédiatement sans cron (flag explicite ; les tests ne l'activent pas).
         if inline_worker and analysis.status == "queued":
             from app.devstreet_hub.services.analysis_worker import process_next
 
-            process_next()
+            process_next(job_id=analysis.pk)
             analysis.refresh_from_db()
         return analysis
 

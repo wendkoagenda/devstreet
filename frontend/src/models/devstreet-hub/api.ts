@@ -221,6 +221,17 @@ export const devstreetHubApi = createApi({
       ],
     }),
 
+    savePresentation: builder.mutation<Project, { projectId: number; body: FormData }>({
+      query: ({ projectId, body }) => ({ url: `/projects/${projectId}/presentation`, method: "PUT", body }),
+      invalidatesTags: (_result, error, { projectId }) => error ? [] : [
+        { type: "Project", id: projectId }, { type: "Projects", id: projectId },
+        { type: "Projects", id: "LIST" },
+      ],
+    }),
+    suggestPresentation: builder.mutation<Analysis, { projectId: number; description: string; language: "fr" | "en" }>({
+      query: ({ projectId, ...body }) => ({ url: `/projects/${projectId}/presentation/suggestions`, method: "POST", body }),
+    }),
+
     provisionForgeAccess: builder.mutation<ForgeAccess, void>({
       query: () => ({
         url: "/forge-access",
@@ -491,6 +502,8 @@ export const devstreetHubApi = createApi({
 });
 
 export const {
+  useSavePresentationMutation,
+  useSuggestPresentationMutation,
   useGetProjectsQuery,
   useGetProjectQuery,
   useLazyGetProjectQuery,

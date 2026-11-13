@@ -408,6 +408,8 @@ class GiteaClient:
         if tree.get("truncated"):
             raise Conflict("Arborescence trop grande pour une analyse bornée.")
         suffixes = (
+            ".html",
+            ".css",
             ".py",
             ".md",
             ".toml",

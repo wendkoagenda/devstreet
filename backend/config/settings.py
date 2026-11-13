@@ -138,6 +138,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+DEVSTREET_HUB_PRIVATE_IMAGE_ROOT = BASE_DIR / 'private_uploads' / 'project_images'
 
 # Google Cloud Storage : USE_GCS est obligatoire ; les réglages GCS ne sont exigés que s'il est actif
 USE_GCS = required_bool('USE_GCS')
