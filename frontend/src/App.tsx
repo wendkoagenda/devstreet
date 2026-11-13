@@ -11,7 +11,7 @@ import OfferList from "./models/offer/pages/offer-list";
 import ProfilList from "./models/profil/pages/profil-list";
 import SkillList from "./models/skill/pages/skill-list";
 import CompanyList from "./models/company/pages/company-list";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import PrivateRoute from "./components/layouts/private-route";
 import PublicRoute from "./components/layouts/public-route";
 import LoginPage from "./models/auth/pages/login-page";
@@ -60,6 +60,10 @@ function App() {
     <>
       <Routes>
         <Route element={<AppLayout />}>
+          <Route
+            element={<Navigate to="/hub/projects" replace />}
+            path="/hub"
+          />
           <Route element={<ExploreProjectsPage />} path="/hub/projects" />
           <Route element={<CreateProjectPage />} path="/hub/projects/new" />
           <Route element={<ProjectDetailPage />} path="/hub/projects/:id" />
