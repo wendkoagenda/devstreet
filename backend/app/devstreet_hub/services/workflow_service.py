@@ -131,7 +131,7 @@ class WorkflowService:
         """Statistiques et métadonnées d'exploration ; pas de compteur d'étoiles Gitea."""
         project, repository = self._ready_repository(actor, project)
         meta = self.forge.get_repository_meta(repository)
-        is_empty = bool(meta.get("empty")) or self.forge.repo_is_empty(repository)
+        is_empty = bool(meta["empty"]) if "empty" in meta else self.forge.repo_is_empty(repository)
         default_branch = (
             meta.get("default_branch")
             or repository.default_branch

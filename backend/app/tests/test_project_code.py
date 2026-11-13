@@ -3,6 +3,10 @@
 from app.devstreet_hub.models import Technology
 from app.devstreet_hub.services.errors import ExternalUnavailable
 from app.tests.devstreet_hub_base import DevStreetHubAPITestCase
+from django.test import SimpleTestCase
+from unittest.mock import patch
+import ssl
+from app.devstreet_hub.services.gitea_client import _gitea_tls_context
 
 
 class ProjectCodeBrowseTests(DevStreetHubAPITestCase):
@@ -63,6 +67,8 @@ class ProjectCodeBrowseTests(DevStreetHubAPITestCase):
         self.assertEqual(summary.status_code, 200, summary.data)
         self.assertEqual(summary.data["default_branch"], "main")
         self.assertFalse(summary.data["is_empty"])
+        # Le champ empty des metadonnees suffit ; pas de second appel identique.
+        self.forge.repo_is_empty.assert_not_called()
         self.assertEqual(summary.data["stats"]["branches"], 1)
         self.assertEqual(summary.data["languages"][0]["name"], "HTML")
         self.assertNotIn("stars_count", summary.data)
@@ -194,3 +200,16 @@ class ProjectCodeBrowseTests(DevStreetHubAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data["is_empty"])
         self.assertEqual(response.data["stats"]["branches"], 0)
+
+
+class GiteaTransportPerformanceTests(SimpleTestCase):
+    def test_certificate_context_is_reused_and_still_verifies_https(self):
+        _gitea_tls_context.cache_clear()
+        self.addCleanup(_gitea_tls_context.cache_clear)
+        with patch('app.devstreet_hub.services.gitea_client.ssl.create_default_context', wraps=ssl.create_default_context) as create:
+            first = _gitea_tls_context()
+            second = _gitea_tls_context()
+        self.assertIs(first, second)
+        create.assert_called_once()
+        self.assertEqual(first.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(first.check_hostname)

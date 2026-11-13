@@ -65,6 +65,24 @@ En-tête : nom, problème résolu, technologies, étoiles et démo. Puis onglets
 
 ## UX proposée
 
+### Chargement du code
+
+Le skeleton reprend la structure des fichiers au chargement initial et les lignes lors d'un
+changement de dossier. Les fichiers sont affichés sans attendre les statistiques ; une panne
+de ces dernières ne masque pas le code. RTK Query utilise `currentData` pour ne pas afficher
+le contenu d'une ancienne branche ou d'un ancien chemin sous la nouvelle sélection.
+
+L'adaptateur réutilise le contexte TLS et son bundle certifi, sans désactiver la vérification
+des certificats ([configuration HTTPX](https://www.python-httpx.org/advanced/ssl/)). Le champ
+`empty` des métadonnées évite aussi une requête identique supplémentaire. Aucun contenu ni
+permission de dépôt n'est mis en cache par ce mécanisme.
+
+Mesures locales sur le dépôt de test : résumé ~4–5 s avant, ~0,22 s après échauffement ;
+arborescence ~2,7 s avant, ~0,25 s après. Premier résumé après redémarrage : ~1,2 s.
+Ces durées dépendent de la machine et du réseau et ne constituent pas un SLA.
+
+### Navigation et droits
+
 Le bouton « Préparer une contribution avec l’IA » mène à l’écran 06 ; « Examiner les propositions » à l’écran 05. L’onglet **Code** est **interne à DevStreet** : explorateur de fichiers, sélecteur de branche, fil d’Ariane, lecteur de fichiers (numéros de ligne, HTML affiché comme texte), menu de copie d’URL de clone, README Markdown sécurisé, description et langages. L’en-tête de fiche affiche les **langues détectées** du dépôt (plus les tags manuels type Go/Django choisis à la création). Aucune redirection vers l’UI Gitea, aucun iframe. Les paramètres `tab`, `ref`, `path` et `mode` restent dans l’URL (branches avec slashs via `ref`). Les interfaces PR / diff / merge ne doivent **pas** être annoncées avant leur livraison.
 
 L’ajout d’un membre par nom requiert un sélecteur du compte commun ; `/api/v1/users` est soumis aux permissions IAM et ne doit pas être rendu public par le frontend. Tant qu’un annuaire public n’existe pas, accepter un ID utilisateur communiqué par le membre.

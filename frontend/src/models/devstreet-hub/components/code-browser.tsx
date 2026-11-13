@@ -35,6 +35,7 @@ import { languageColor } from "../functions/language-colors";
 import { SafeMarkdown } from "../functions/safe-markdown";
 import { useProjectCode } from "../hooks/use-project-code";
 import { CodeFileViewer } from "./code-file-viewer";
+import { CodeBrowserSkeleton, CodeRowsSkeleton } from "./code-browser-skeleton";
 
 interface CodeBrowserProps {
   projectId: number;
@@ -140,15 +141,11 @@ export function CodeBrowser({
     }
   };
 
-  if (code.isLoading && !code.summary) {
-    return (
-      <p className="border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
-        {t("common.loading")}
-      </p>
-    );
+  if (code.isLoading && !code.summary && !code.tree && !code.blob && !code.isError) {
+    return <CodeBrowserSkeleton />;
   }
 
-  if (code.isError && !code.summary) {
+  if (code.isError && !code.summary && !code.tree && !code.blob) {
     return (
       <div className="flex flex-col items-center gap-3 border border-destructive/30 bg-destructive/5 px-4 py-10 text-center">
         <p className="text-sm text-destructive">
@@ -195,11 +192,7 @@ export function CodeBrowser({
 
   if (code.mode === "blob") {
     if (code.isLoading || (code.isFetching && !code.blob && !code.isError)) {
-      return (
-        <p className="border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
-          {t("common.loading")}
-        </p>
-      );
+      return <CodeBrowserSkeleton />;
     }
     if (code.blob) {
       return (
@@ -239,6 +232,7 @@ export function CodeBrowser({
           <span className="font-semibold text-foreground">{repoLabel.name}</span>
         </div>
 
+        {code.metadataError ? <p role="status" className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">{t("hub.detail.code.metadata_unavailable")}</p> : null}
         <div className="grid grid-cols-3 overflow-hidden border border-border bg-muted/30 text-xs">
           <div className="flex items-center justify-center gap-1.5 border-r border-border px-2 py-2 text-muted-foreground">
             <GitCommitHorizontal aria-hidden className="size-3.5 shrink-0" />
@@ -409,7 +403,9 @@ export function CodeBrowser({
             </div>
           ) : null}
 
-          {code.isError ? (
+          {code.isLoading ? (
+            <div role="status" aria-busy="true"><span className="sr-only">{t("common.loading")}</span><CodeRowsSkeleton /></div>
+          ) : code.isError ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
               <p className="text-sm text-muted-foreground">
                 {code.errorStatus === 404

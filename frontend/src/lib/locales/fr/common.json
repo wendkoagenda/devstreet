@@ -737,7 +737,8 @@
         "download": "Télécharger",
         "too_large": "Fichier trop volumineux pour être affiché ici.",
         "binary": "Fichier binaire — contenu non affiché.",
-        "language_label": "Langage : {{language}}"
+        "language_label": "Langage : {{language}}",
+        "metadata_unavailable": "Les statistiques du dépôt sont temporairement indisponibles. Les fichiers restent consultables."
       },
       "contribute": {
         "title": "Tâches de contribution",

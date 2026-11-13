@@ -684,7 +684,8 @@
         "download": "Download",
         "too_large": "File too large to display here.",
         "binary": "Binary file — content not shown.",
-        "language_label": "Language: {{language}}"
+        "language_label": "Language: {{language}}",
+        "metadata_unavailable": "Repository statistics are temporarily unavailable. You can still browse files."
       },
       "contribute": {
         "title": "Contribution tasks",
