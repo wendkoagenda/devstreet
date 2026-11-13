@@ -1,6 +1,7 @@
 {
   "welcome": "Welcome",
   "logout": "Logout",
+  "copy_failed": "Unable to copy to the clipboard.",
   "no_results": "No results.",
   "email": "Email",
   "first_name": "First Name",
@@ -677,6 +678,7 @@
         "empty_push_hint": "Push your local code with the commands below. On the first push, confirm access in the DevStreet browser.",
         "first_push_commands": "First push",
         "init_readme": "Create an initial README",
+        "init_readme_error": "Unable to create the initial README.",
         "initializing": "Initializing…",
         "stat_commits": "{{count}} commit(s)",
         "stat_commits_unknown": "Commits",

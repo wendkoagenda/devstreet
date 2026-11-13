@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Check, Copy, Terminal } from "lucide-react";
+import { copyText } from "@/helpers/clipboard";
 import { cn } from "@/lib/utils";
 import {
   parseMixedContent,
@@ -28,12 +29,9 @@ function CodeBlock({
   const language = segment.language?.trim();
 
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(segment.value);
+    if (await copyText(segment.value)) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      // ignore
     }
   };
 

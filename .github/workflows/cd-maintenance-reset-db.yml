@@ -1,0 +1,25 @@
+name: CD - MAINTENANCE reset-db
+
+# Efface le volume Postgres interne (pgdata). Pas de redeploiement auto.
+# Suite : relancer CD - ORCHESTRATEUR. Confirmation : RESET-DB-<branche>.
+# Use workflow from = sandbox | main. Masters only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Exactement RESET-DB-<branche> (ex. RESET-DB-sandbox)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance:
+    name: maintenance
+    uses: ./.github/workflows/cd-maintenance.yml
+    with:
+      action: reset-db
+      confirmation: ${{ inputs.confirmation }}
+    secrets: inherit

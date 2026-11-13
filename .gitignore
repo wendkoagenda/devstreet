@@ -101,6 +101,7 @@ backend/scripts/generator/backups/*.backup
 
 # Valeurs de deploiement par branche (git-cli/deploy_env.py) : contiennent des secrets, jamais versionnees
 .env.deploy.*
+!.env.deploy.example
 .env.vm.*
 !.env.vm.example
 backend.env.*

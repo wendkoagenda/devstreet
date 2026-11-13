@@ -35,8 +35,9 @@ export function ResumeQuotidienBanner({
   const handleOpen = async () => {
     try {
       await markLire(resume.id).unwrap();
-    } catch {
+    } catch (error) {
       // Naviguer quand même : le contenu reste dans le fil Abonnements.
+      console.warn("Résumé quotidien non marqué comme lu :", error);
     }
     onOpenAbonnements();
   };
@@ -44,8 +45,8 @@ export function ResumeQuotidienBanner({
   const handleDismiss = async () => {
     try {
       await markLire(resume.id).unwrap();
-    } catch {
-      // ignore
+    } catch (error) {
+      console.warn("Résumé quotidien non marqué comme lu :", error);
     }
   };
 

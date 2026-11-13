@@ -222,8 +222,8 @@ class GitDeviceAuthTests(DevStreetHubAPITestCase):
         self.login(self.aicha)
         listing = self.client.get("/api/v1/git-computers")
         self.assertEqual(listing.status_code, 200)
-        self.assertEqual(len(listing.data), 2)
-        names = {c["name"] for c in listing.data}
+        self.assertEqual(listing.data["count"], 2)
+        names = {c["name"] for c in listing.data["results"]}
         self.assertEqual(names, {"Maison", "Bureau"})
 
     def test_revoke_deletes_gitea_token_only(self):

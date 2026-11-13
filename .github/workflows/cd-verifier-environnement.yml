@@ -4,9 +4,9 @@ name: CD - VERIFIER ENVIRONNEMENT
 # - Verifie qu'un environnement de deploiement est pret, sans rien modifier et sans saisir aucune valeur :
 #   variables et secrets presents, bien classes et valides, DNS, puis la VM (Docker, dossiers, ports ouverts) atteinte
 #   selon DEPLOY_ACCES : ssh (empreinte epinglee) ou gcp (tunnel IAP).
-# - L'environnement verifie est celui de la branche choisie dans « Use workflow from » (develop, main ou prod) :
+# - L'environnement verifie est celui de la branche choisie dans « Use workflow from » (sandbox, main ou prod) :
 #   chaque environnement GitHub n'est utilisable que depuis sa propre branche.
-# - Les valeurs se definissent avec `python git-cli/deploy_env.py` (voir 00readme/README_CD.md).
+# - Les valeurs se definissent avec `python git-cli/deploy_env.py` (voir deploy/README.md).
 # Lancement : a la main seulement (Actions > CD - VERIFIER ENVIRONNEMENT > Run workflow).
 
 on:
@@ -28,8 +28,8 @@ jobs:
       - name: Branche deployable
         run: |
           case "$GITHUB_REF_NAME" in
-            develop|main|prod) ;;
-            *) echo "::error::Lancer depuis develop, main ou prod (« Use workflow from ») : $GITHUB_REF_NAME n'a pas d'environnement."; exit 1 ;;
+            sandbox|main|prod) ;;
+            *) echo "::error::Lancer depuis sandbox, main ou prod (« Use workflow from ») : $GITHUB_REF_NAME n'a pas d'environnement."; exit 1 ;;
           esac
 
   verifier:
@@ -89,7 +89,6 @@ jobs:
           host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
           user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
           echo "::add-mask::$host"
-          echo "::add-mask::$user"
           echo "SSH_HOST=$host" >> "$GITHUB_ENV"
           echo "SSH_USER=$user" >> "$GITHUB_ENV"
 

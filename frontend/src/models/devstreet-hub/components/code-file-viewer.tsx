@@ -4,19 +4,11 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { highlightLine } from "../functions/simple-highlight";
 import type { CodeBlob } from "../schema";
+import { copyText } from "@/helpers/clipboard";
 
 interface CodeFileViewerProps {
   blob: CodeBlob;
   onBack: () => void;
-}
-
-async function copyText(value: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(value);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function downloadText(filename: string, content: string) {

@@ -10,10 +10,8 @@ import {
   useCreateEspaceMutation,
   useGetEspacesInfiniteQuery,
 } from "../api";
-import {
-  EspaceDirectory,
-  useDebouncedValue,
-} from "../components/espace-directory";
+import { EspaceDirectory } from "../components/espace-directory";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function ChannelsPage() {
   const navigate = useNavigate();

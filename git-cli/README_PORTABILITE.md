@@ -54,7 +54,7 @@ Exemple:
 GIT_MASTER_EMAILS="lead@company.com,devops@company.com"
 GIT_MASTER_USERS="lead-user,devops-user"
 IDENTITY_RESTRICTED_BRANCHES="main,develop,prod"
-PROTECTED_PATHS="terraform/,.github/workflows/,.githooks/,git-cli/"
+PROTECTED_PATHS=".github/workflows/,.githooks/,git-cli/"
 ```
 
 ## 5) Verifier l'identite Git locale

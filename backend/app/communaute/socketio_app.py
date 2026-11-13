@@ -12,9 +12,11 @@ from http.cookies import SimpleCookie
 from typing import Any, Optional
 
 import socketio
+from socketio.exceptions import ConnectionRefusedError as SocketConnectionRefused
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken
 
 logger = logging.getLogger(__name__)
@@ -44,10 +46,26 @@ def conversation_room(conversation_id: int) -> str:
 
 
 def _parse_cookies(environ: dict) -> dict[str, str]:
-    raw = environ.get('HTTP_COOKIE') or ''
+    raw = environ.get('HTTP_COOKIE')
+    if not raw:
+        return {}
     cookie = SimpleCookie()
     cookie.load(raw)
     return {key: morsel.value for key, morsel in cookie.items()}
+
+
+def _refus(message: str) -> dict:
+    """Accusé de réception d'échec d'un événement Socket.IO."""
+    return {'ok': False, 'error': message}
+
+
+def _conversation_id(data: Any) -> Optional[int]:
+    """Identifiant de conversation d'un événement, ou None s'il est absent ou invalide."""
+    value = data.get('conversation_id') if isinstance(data, dict) else None
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        return None
+    text = str(value).strip()
+    return int(text) if text.isdigit() else None
 
 
 def _user_from_access_token(token: str):
@@ -60,26 +78,30 @@ def _user_from_access_token(token: str):
 
 
 def authenticate_socket(environ: dict, auth: Any = None):
-    """Résout l'utilisateur depuis le cookie access_token ou auth.token."""
+    """
+    Résout l'utilisateur depuis le cookie access_token ou auth.token.
+
+    Renvoie None si aucun jeton n'est fourni ; lève TokenError si le jeton est invalide ou expiré.
+    """
     cookies = _parse_cookies(environ)
     token = cookies.get(settings.AUTH_COOKIE_ACCESS) or ''
     if not token and isinstance(auth, dict):
         token = str(auth.get('token') or '')
     if not token:
         return None
-    try:
-        return _user_from_access_token(token)
-    except Exception:
-        logger.info('Socket.IO : jeton d\'accès invalide')
-        return None
+    return _user_from_access_token(token)
 
 
 @sio.event
 async def connect(sid, environ, auth=None):
     bind_event_loop(asyncio.get_running_loop())
-    user = await sync_to_async(authenticate_socket, thread_sensitive=True)(
-        environ, auth
-    )
+    try:
+        user = await sync_to_async(authenticate_socket, thread_sensitive=True)(
+            environ, auth
+        )
+    except TokenError as error:
+        logger.info('Socket.IO connect refusé (jeton invalide) sid=%s', sid)
+        raise SocketConnectionRefused('Jeton invalide') from error
     if user is None:
         logger.info('Socket.IO connect refusé (non authentifié) sid=%s', sid)
         return False
@@ -99,10 +121,9 @@ async def join_conversation(sid, data):
     """Rejoint la room d'une conversation si le membre y participe."""
     session = await sio.get_session(sid)
     user_id = session.get('user_id')
-    try:
-        conversation_id = int((data or {}).get('conversation_id'))
-    except (TypeError, ValueError):
-        return {'ok': False, 'error': 'conversation_id invalide'}
+    conversation_id = _conversation_id(data)
+    if conversation_id is None:
+        return _refus('conversation_id invalide')
 
     from app.communaute.services.conversation_service import ConversationService
     from django.contrib.auth import get_user_model
@@ -120,9 +141,9 @@ async def join_conversation(sid, data):
     try:
         await sync_to_async(_check, thread_sensitive=True)()
     except Http404:
-        return {'ok': False, 'error': 'Conversation introuvable'}
+        return _refus('Conversation introuvable')
     except ValidationError as e:
-        return {'ok': False, 'error': str(e)}
+        return _refus(str(e))
 
     room = conversation_room(conversation_id)
     await sio.enter_room(sid, room)
@@ -131,10 +152,9 @@ async def join_conversation(sid, data):
 
 @sio.event
 async def leave_conversation(sid, data):
-    try:
-        conversation_id = int((data or {}).get('conversation_id'))
-    except (TypeError, ValueError):
-        return {'ok': False, 'error': 'conversation_id invalide'}
+    conversation_id = _conversation_id(data)
+    if conversation_id is None:
+        return _refus('conversation_id invalide')
     await sio.leave_room(sid, conversation_room(conversation_id))
     return {'ok': True}
 
@@ -155,16 +175,19 @@ def emit_message_new(conversation_id: int, payload: dict) -> None:
     coro = _emit_message_new(conversation_id, payload)
     try:
         loop = asyncio.get_running_loop()
-        loop.create_task(coro)
-        return
     except RuntimeError:
-        pass
+        # Appel depuis un thread synchrone (vue DRF) : on passe par la boucle du worker.
+        _schedule_on_main_loop(coro)
+        return
+    loop.create_task(coro)
 
+
+def _schedule_on_main_loop(coro) -> None:
     if _main_loop is not None and _main_loop.is_running():
         asyncio.run_coroutine_threadsafe(coro, _main_loop)
         return
-
+    coro.close()  # évite l'avertissement « coroutine never awaited »
     logger.warning(
-        'Socket.IO : impossible d\'émettre message:new (pas de boucle asyncio). '
+        "Socket.IO : impossible d'émettre message:new (pas de boucle asyncio). "
         'Lance le backend avec uvicorn, pas runserver.'
     )

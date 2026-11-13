@@ -53,11 +53,11 @@ jobs:
         run: |
           set -eu
           case "$GITHUB_REF_NAME" in
-            develop|main|prod) ;;
-            *) echo "::error::Lancer depuis develop, main ou prod (« Use workflow from ») : $GITHUB_REF_NAME n'a pas d'environnement."; exit 1 ;;
+            sandbox|main|prod) ;;
+            *) echo "::error::Lancer depuis sandbox, main ou prod (« Use workflow from ») : $GITHUB_REF_NAME n'a pas d'environnement."; exit 1 ;;
           esac
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            # Liste lue dans develop : une branche modifiee ne peut pas s'y ajouter
+            # Liste lue dans develop : une branche feature ne peut pas s'y ajouter
             masters="$(git show origin/develop:git-cli/access_control.conf | sed -n 's/^GIT_MASTER_USERS="\(.*\)"/\1/p')"
             case ",$masters," in
               *",$GITHUB_ACTOR,"*) ;;
@@ -124,7 +124,10 @@ jobs:
             echo "$IMAGE existe deja : pas de reconstruction." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # Sans attestation : GHCR refuse souvent le manifeste final (denied) apres des calques deja pousses.
           docker build \
+            --provenance=false \
+            --sbom=false \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$SHA" \
             --tag "$IMAGE" backend
@@ -142,14 +145,15 @@ jobs:
           api_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_URL" '.[$k] // empty')"
           api_v1_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_V1_URL" '.[$k] // empty')"
           gcs_bucket="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_GCS_BUCKET_NAME" '.[$k] // empty')"
+          s3_bucket_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_S3_BUCKET_URL" '.[$k] // empty')"
           for pair in "VITE_API_URL=$api_url" "VITE_API_V1_URL=$api_v1_url"; do
             if [ -z "${pair#*=}" ]; then
-              echo "::error::Variable ${pair%%=*} absente (voir 00readme/README_CD.md)."
+              echo "::error::Variable ${pair%%=*} absente (voir deploy/README.md)."
               exit 1
             fi
           done
-          # Ces trois valeurs sont publiques (integrees au JavaScript) : leur empreinte distingue deux configurations du meme commit.
-          config="$(printf '%s\n%s\n%s\n' "$api_url" "$api_v1_url" "$gcs_bucket" | sha256sum | cut -c1-8)"
+          # Valeurs publiques (integrees au JavaScript) : leur empreinte distingue deux configurations du meme commit.
+          config="$(printf '%s\n%s\n%s\n%s\n' "$api_url" "$api_v1_url" "$gcs_bucket" "$s3_bucket_url" | sha256sum | cut -c1-8)"
           image="$FRONTEND_BASE:$BRANCHE-$SHA-$config"
           echo "frontend_image=$image" >> "$GITHUB_OUTPUT"
           if docker manifest inspect "$image" > /dev/null 2>&1; then
@@ -157,9 +161,12 @@ jobs:
             exit 0
           fi
           docker build \
+            --provenance=false \
+            --sbom=false \
             --build-arg "VITE_API_URL=$api_url" \
             --build-arg "VITE_API_V1_URL=$api_v1_url" \
             --build-arg "VITE_GCS_BUCKET_NAME=$gcs_bucket" \
+            --build-arg "VITE_S3_BUCKET_URL=$s3_bucket_url" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$SHA" \
             --tag "$image" frontend

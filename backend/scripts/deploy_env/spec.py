@@ -6,7 +6,7 @@ Sources :
   marqueur `# @secret` = secret GitHub (sinon variable). Les valeurs de ces fichiers ne sont jamais déployées ;
 - les noms de déploiement (`DEPLOY_*`, `VM_SSH_*`) définis ci-dessous.
 
-Variables et secrets sont stockés dans l'environnement GitHub qui porte le nom de la branche (`develop`, `main`, `prod`),
+Variables et secrets sont stockés dans l'environnement GitHub qui porte le nom de la branche (`sandbox`, `main`, `prod`),
 sous leur nom simple : `SECRET_KEY` de l'environnement `prod`. Voir 00readme/PLAN_CD.md.
 """
 import json
@@ -14,10 +14,10 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-BRANCHES = ('develop', 'main', 'prod')
+BRANCHES = ('sandbox', 'main', 'prod')
 
-# Origine d'une valeur : fichier .env du backend, du frontend, fichier de déploiement, ou généré par `preparer-vm`
-SOURCES = ('backend', 'frontend', 'deploy', 'vm')
+# Origine d'une valeur : backend, frontend, déploiement, observabilité, ou généré par `preparer-vm`
+SOURCES = ('backend', 'frontend', 'deploy', 'observabilite', 'minio', 'vm')
 
 _LINE = re.compile(r'^(?P<commented>#\s*)?(?P<name>[A-Z][A-Z0-9_]*)=(?P<rest>.*)$')
 _SECRET_MARKER = re.compile(r'#\s*@secret\b')
@@ -40,12 +40,22 @@ class Var:
         return not self.acces or acces in self.acces
 
 
+# Secrets de notification CD : lus par l'orchestrateur uniquement, jamais rendus sur la VM
+NOTIF_WEBHOOKS = frozenset({'SLACK_NOTIF_WEBHOOK', 'TEAMS_NOTIF_WEBHOOK'})
+# Webhooks d'alertes Grafana : facultatifs ; rendus uniquement dans alerting-contacts.yml
+ALERT_WEBHOOKS = frozenset({'SLACK_ALERT_WEBHOOK', 'TEAMS_ALERT_WEBHOOK'})
+
 DEPLOY_VARS = (
     Var('DEPLOY_NAMESPACE', secret=False, required=True, source='deploy'),
     Var('DEPLOY_DOMAIN', secret=False, required=True, source='deploy'),
     Var('DEPLOY_LETSENCRYPT_EMAIL', secret=False, required=True, source='deploy'),
     Var('DEPLOY_ACCES', secret=False, required=True, source='deploy'),
     Var('DEPLOY_DB_MODE', secret=False, required=True, source='deploy'),
+    # Taille disque VM attendue (Go) : documentation + controle deployer ; le resize cloud reste manuel/GCP
+    Var('DEPLOY_DISK_GB', secret=False, required=True, source='deploy'),
+    # Webhooks Slack / Teams (facultatifs) : notifications post-déploiement dans CD - ORCHESTRATEUR
+    Var('SLACK_NOTIF_WEBHOOK', secret=True, required=False, source='deploy'),
+    Var('TEAMS_NOTIF_WEBHOOK', secret=True, required=False, source='deploy'),
     # Accès SSH direct (IP publique et clé privée) : écrits par `preparer-vm`
     Var('VM_SSH_HOST', secret=True, required=True, source='vm', acces=('ssh',)),
     Var('VM_SSH_USER', secret=True, required=True, source='vm', acces=('ssh',)),
@@ -59,12 +69,33 @@ DEPLOY_VARS = (
     Var('GCP_SERVICE_ACCOUNT', secret=False, required=True, source='deploy', acces=('gcp',)),
 )
 
+# Fichier local observabilite.env.<branche> : console Grafana (CD - OBSERVABILITE SSH)
+OBSERVABILITE_VARS = (
+    Var('GRAFANA_ADMIN_USER', secret=False, required=True, source='observabilite'),
+    Var('GRAFANA_ADMIN_PASSWORD', secret=True, required=True, source='observabilite'),
+    Var('SLACK_ALERT_WEBHOOK', secret=True, required=False, source='observabilite'),
+    Var('TEAMS_ALERT_WEBHOOK', secret=True, required=False, source='observabilite'),
+)
+
+# Fichier local minio.env.<branche> : compte root MinIO (CD - MINIO SSH)
+MINIO_VARS = (
+    Var('MINIO_ROOT_USER', secret=False, required=True, source='minio'),
+    Var('MINIO_ROOT_PASSWORD', secret=True, required=True, source='minio'),
+)
+
 ACCES_MODES = ('ssh', 'gcp')
 
 _ENUMS = {
     'DEPLOY_ACCES': ACCES_MODES,
     'DEPLOY_DB_MODE': ('interne', 'externe'),
 }
+_GRAFANA_PASSWORD_MIN = 16
+_MINIO_PASSWORD_MIN = 16
+_MINIO_KEY_MIN = 16
+_MINIO_KEY_MAX = 40
+_GRAFANA_USER = re.compile(r'^[A-Za-z0-9._-]{1,64}$')
+_MINIO_USER = re.compile(r'^[A-Za-z0-9._-]{3,64}$')
+_S3_BUCKET = re.compile(r'^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$')
 _PATTERNS = {
     'GCP_PROJECT_ID': (re.compile(r'^[a-z][a-z0-9-]{4,28}[a-z0-9]$'), "identifiant de projet GCP (ex. mon-projet-123)"),
     'GCP_ZONE': (re.compile(r'^[a-z]+-[a-z]+[0-9]+-[a-z]$'), "zone GCP (ex. europe-west1-b)"),
@@ -81,6 +112,8 @@ _PATTERNS = {
 _NAMESPACE = re.compile(r'^[a-z0-9][a-z0-9-]{1,40}$')
 _DOMAIN = re.compile(r'^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$')
 _EMAIL = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+_HTTPS_URL = re.compile(r'^https://\S+$')
+_DISK_GB = re.compile(r'^[1-9][0-9]{1,2}$')
 
 
 def parse_example(text, source):
@@ -112,6 +145,8 @@ def load_spec(repo_root):
             raise SpecError(f"Fichier introuvable : {path}")
         spec.extend(parse_example(path.read_text(encoding='utf-8'), source))
     spec.extend(DEPLOY_VARS)
+    spec.extend(OBSERVABILITE_VARS)
+    spec.extend(MINIO_VARS)
     seen = set()
     for var in spec:
         if var.name in seen:
@@ -160,11 +195,31 @@ def validate_value(name, value):
     if name in _ENUMS and value not in _ENUMS[name]:
         return f"{name} : valeur attendue parmi {', '.join(_ENUMS[name])}."
     if name == 'DEPLOY_NAMESPACE' and not _NAMESPACE.match(value):
-        return f"{name} : 2 à 41 caractères, minuscules, chiffres et tirets (ex. devstreet-develop)."
+        return f"{name} : 2 à 41 caractères, minuscules, chiffres et tirets (ex. boilerplate-develop)."
     if name == 'DEPLOY_DOMAIN' and not _DOMAIN.match(value):
         return f"{name} : nom de domaine attendu en minuscules, sans schéma ni chemin (ex. develop.monapp.com)."
     if name == 'DEPLOY_LETSENCRYPT_EMAIL' and not _EMAIL.match(value):
         return f"{name} : adresse e-mail attendue."
+    if name == 'DEPLOY_DISK_GB':
+        if not _DISK_GB.match(value) or not (20 <= int(value) <= 500):
+            return f"{name} : entier entre 20 et 500 (Go), ex. 100."
+    if name in NOTIF_WEBHOOKS and not _HTTPS_URL.match(value):
+        return f"{name} : URL https attendue (Incoming Webhook Slack ou Teams)."
+    if name in ALERT_WEBHOOKS and not _HTTPS_URL.match(value):
+        return f"{name} : URL https attendue (Incoming Webhook Slack ou Teams)."
+    if name == 'GRAFANA_ADMIN_USER' and not _GRAFANA_USER.match(value):
+        return f"{name} : 1 à 64 caractères (lettres, chiffres, point, tiret, underscore)."
+    if name == 'GRAFANA_ADMIN_PASSWORD' and len(value) < _GRAFANA_PASSWORD_MIN:
+        return f"{name} : au moins {_GRAFANA_PASSWORD_MIN} caractères."
+    if name == 'MINIO_ROOT_USER' and not _MINIO_USER.match(value):
+        return f"{name} : 3 à 64 caractères (lettres, chiffres, point, tiret, underscore)."
+    if name == 'MINIO_ROOT_PASSWORD' and len(value) < _MINIO_PASSWORD_MIN:
+        return f"{name} : au moins {_MINIO_PASSWORD_MIN} caractères."
+    if name == 'S3_BUCKET_NAME' and not _S3_BUCKET.match(value):
+        return f"{name} : nom de bucket S3 (minuscules, 3–63, ex. boilerplate-sandbox)."
+    if name in ('S3_ACCESS_KEY', 'S3_SECRET_KEY'):
+        if not (_MINIO_KEY_MIN <= len(value) <= _MINIO_KEY_MAX):
+            return f"{name} : {_MINIO_KEY_MIN} à {_MINIO_KEY_MAX} caractères (limite MinIO)."
     if name in _PATTERNS and not _PATTERNS[name][0].match(value):
         return f"{name} : {_PATTERNS[name][1]} attendu."
     return None

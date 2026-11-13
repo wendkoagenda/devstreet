@@ -1,0 +1,59 @@
+# Stack stockage objet S3 partagee d'une VM (comme deploy/proxy et deploy/observabilite).
+# Installee dans /opt/apps/_minio par deploy/vm/minio.sh (job CD - MINIO SSH).
+# Images : forks communautaires pgsty (Silo / mc) — minio/minio et minio/mc ont ete retires de Docker Hub
+# (et quay.io/minio exige souvent un compte). API S3 compatible ; memes variables MINIO_ROOT_*.
+# API S3 : minio-serveur:9000 sur le reseau proxy (pas de port public).
+# Console : 127.0.0.1:9001 (tunnel SSH requis, comme Grafana).
+
+x-journaux: &journaux
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  minio:
+    image: pgsty/silo:RELEASE.2026-11-12T00-00-00Z
+    container_name: minio-serveur
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    env_file: ./minio.env
+    environment:
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:19001
+    volumes:
+      - minio-data:/data
+    ports:
+      - "127.0.0.1:9001:9001"
+    networks: [proxy]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 512m
+    logging: *journaux
+
+  provision:
+    profiles: [provision]
+    image: pgsty/mc:RELEASE.2026-11-12T00-00-00Z
+    container_name: minio-provision
+    env_file:
+      - ./minio.env
+      - ./minio-app.env
+    volumes:
+      - ./provisionner.sh:/provisionner.sh:ro
+    entrypoint: ["/bin/sh", "/provisionner.sh"]
+    networks: [proxy]
+    depends_on:
+      minio:
+        condition: service_healthy
+    logging: *journaux
+
+networks:
+  proxy:
+    external: true
+    name: proxy
+
+volumes:
+  minio-data: {}

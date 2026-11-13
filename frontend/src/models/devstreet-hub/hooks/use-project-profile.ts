@@ -106,8 +106,9 @@ export function useProjectProfile(userId: number) {
           try {
             const project = await fetchProject(id).unwrap();
             next[id] = project;
-          } catch {
+          } catch (error) {
             // Projet inaccessible : la carte affichera « réalisation indisponible ».
+            console.warn(`Projet ${id} indisponible pour le profil :`, error);
           }
         })
       );

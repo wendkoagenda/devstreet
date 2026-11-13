@@ -1,0 +1,135 @@
+# Stack d'observabilite partagee d'une VM (comme deploy/proxy).
+# Installee dans /opt/apps/_observabilite par deploy/vm/observabilite.sh (job CD - OBSERVABILITE SSH).
+# Grafana n'ecoute que sur 127.0.0.1:3000 (acces via tunnel SSH, jamais expose sur Internet).
+
+x-journaux: &journaux
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    container_name: observabilite-socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: "1"
+      INFO: "1"
+      VERSION: "1"
+      POST: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [observabilite]
+    mem_limit: 64m
+    logging: *journaux
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    container_name: observabilite-node-exporter
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    networks: [observabilite]
+    mem_limit: 64m
+    logging: *journaux
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.2
+    container_name: observabilite-cadvisor
+    restart: unless-stopped
+    command:
+      - -docker=tcp://socket-proxy:2375
+      - -docker_only=true
+      - -housekeeping_interval=30s
+      - -store_container_labels=false
+    depends_on: [socket-proxy]
+    networks: [observabilite]
+    mem_limit: 192m
+    logging: *journaux
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: observabilite-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.retention.size=2GB
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on: [node-exporter, cadvisor]
+    networks: [observabilite]
+    mem_limit: 512m
+    logging: *journaux
+
+  loki:
+    image: grafana/loki:3.5.5
+    container_name: observabilite-loki
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+    networks: [observabilite]
+    mem_limit: 384m
+    logging: *journaux
+
+  alloy:
+    image: grafana/alloy:v1.10.2
+    container_name: observabilite-alloy
+    restart: unless-stopped
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+    depends_on: [socket-proxy, loki]
+    networks: [observabilite]
+    mem_limit: 256m
+    logging: *journaux
+
+  grafana:
+    image: grafana/grafana:12.4.15
+    container_name: observabilite-grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file: ./observabilite.env
+    environment:
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SERVER_ROOT_URL: http://localhost:13000/
+      GF_SERVER_HTTP_PORT: "3000"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      # Dashboards hors de /var/lib/grafana : sinon le volume grafana-data masque le bind mount
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on: [prometheus, loki]
+    networks: [observabilite]
+    mem_limit: 256m
+    logging: *journaux
+
+networks:
+  observabilite:
+    name: observabilite
+
+volumes:
+  prometheus-data: {}
+  loki-data: {}
+  alloy-data: {}
+  grafana-data: {}

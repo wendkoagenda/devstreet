@@ -12,8 +12,8 @@ Direct `git commit` / `git push` are **blocked** by hooks (`.githooks/`) and CI 
 
 ```powershell
 python git-cli/install-hooks.py   # one-time setup (sets core.hooksPath=.githooks)
-python git-cli/commit.py          # commit (adds required trailer X-Git-CLI: onepourcent-git-cli/2.0)
-python git-cli/push.py            # push (sets ONEPOURCENT_GITCLI_PUSH=1; the frontend build is checked by CI, not at push)
+python git-cli/commit.py          # commit (adds required trailer X-Git-CLI: doonya-git-cli/2.0)
+python git-cli/push.py            # push (sets DOONYA_GITCLI_PUSH=1; the frontend build is checked by CI, not at push)
 python git-cli/pr.py              # create PR (title format: pr-<type>(<scope>): <titre>)
 python git-cli/pull.py            # strict pull --rebase of current branch
 python git-cli/merge.py --from <branch>   # merge feature into develop

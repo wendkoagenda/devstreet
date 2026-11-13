@@ -69,6 +69,34 @@
       "reason": "Audit des dependances retire de la CI pour le moment (decision du projet) : il sera traite plus tard, hors des pull requests. A retirer quand l'audit reviendra.",
       "author": "wendkoagenda",
       "expires": "2027-04-01"
+    },
+    {
+      "rule": "DJ-011",
+      "path": "backend/app/metier/migrations/0005_delete_dragon_delete_elitesty_delete_fusion.py",
+      "reason": "Suppression de modeles de demonstration (dragons, fusions, elitests, gados) deja retires du code et sans donnees metier ; migration conservee dans l'historique pour les bases qui les ont creees. Aucune version du code encore en ligne ne les utilise.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "DJ-011",
+      "path": "backend/app/metier/migrations/0010_remove_demo_models.py",
+      "reason": "Suppression de modeles de demonstration (dragons, fusions, elitests, gados) deja retires du code et sans donnees metier ; migration conservee dans l'historique pour les bases qui les ont creees. Aucune version du code encore en ligne ne les utilise.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "DJ-011",
+      "path": "backend/app/metier/legacy_garoapp/migrations/0002_remove_demo_models.py",
+      "reason": "Suppression de modeles de demonstration (dragons, fusions, elitests, gados) deja retires du code et sans donnees metier ; migration conservee dans l'historique pour les bases qui les ont creees. Aucune version du code encore en ligne ne les utilise.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
+      "rule": "SUP-001",
+      "path": "tools/devstreet/requirements.txt",
+      "reason": "Audit des dependances retire de la CI pour le moment (decision du projet) : il sera traite plus tard, hors des pull requests. A retirer quand l'audit reviendra.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
     }
   ]
 }

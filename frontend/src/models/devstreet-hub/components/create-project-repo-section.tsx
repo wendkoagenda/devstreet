@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { ForgeAccess } from "../schema";
 import type { ProgressStep } from "../hooks/use-create-project";
+import { copyText } from "@/helpers/clipboard";
 
 interface CreateProjectRepoSectionProps {
   progressStep: ProgressStep;
@@ -29,15 +30,6 @@ interface CreateProjectRepoSectionProps {
   onDismissPassword: () => void;
   onResetPassword: () => void;
   onFinalize: (options: { publishAutomatically: boolean }) => void;
-}
-
-async function copyText(value: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(value);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function CreateProjectRepoSection({

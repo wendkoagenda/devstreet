@@ -243,7 +243,7 @@ class ProjectViewSet(
     def repository(self, request, pk=None):
         return Response(RepositorySerializer(self.get_object().repository).data)
 
-    @swagger_auto_schema(tags=["V1 - Project Code"], methods=["get"])
+    @swagger_auto_schema(tags=["V1 - Project"], methods=["get"])
     @action(detail=True, methods=["get"], url_path="code/summary")
     def code_summary(self, request, pk=None):
         result = WorkflowService().code_summary(request.user, self.get_object())
@@ -251,7 +251,7 @@ class ProjectViewSet(
         result["repository"] = RepositorySerializer(repository).data
         return Response(result)
 
-    @swagger_auto_schema(tags=["V1 - Project Code"], methods=["get"])
+    @swagger_auto_schema(tags=["V1 - Project"], methods=["get"])
     @action(detail=True, methods=["get"], url_path="code/branches")
     def code_branches(self, request, pk=None):
         return Response(
@@ -260,7 +260,7 @@ class ProjectViewSet(
 
     @swagger_auto_schema(
         query_serializer=CodeQuerySerializer,
-        tags=["V1 - Project Code"],
+        tags=["V1 - Project"],
         methods=["get"],
     )
     @action(detail=True, methods=["get"], url_path="code/tree")
@@ -277,7 +277,7 @@ class ProjectViewSet(
 
     @swagger_auto_schema(
         query_serializer=CodeQuerySerializer,
-        tags=["V1 - Project Code"],
+        tags=["V1 - Project"],
         methods=["get"],
     )
     @action(detail=True, methods=["get"], url_path="code/blob")
@@ -294,7 +294,7 @@ class ProjectViewSet(
 
     @swagger_auto_schema(
         query_serializer=CodeArchiveQuerySerializer,
-        tags=["V1 - Project Code"],
+        tags=["V1 - Project"],
         methods=["get"],
     )
     @action(detail=True, methods=["get"], url_path="code/archive")

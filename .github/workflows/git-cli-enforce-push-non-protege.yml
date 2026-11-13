@@ -3,7 +3,7 @@ name: GIT-CLI - ENFORCEMENT (push non-protege)
 # Description du workflow :
 # Ce workflow applique la conformite Git CLI sur les push des branches non protegees.
 # - Verifie que chaque nouveau commit contient le trailer obligatoire
-#   "X-Git-CLI: onepourcent-git-cli/2.0" (1.0 accepte en transition).
+#   "X-Git-CLI: doonya-git-cli/2.0" (1.0 accepte en transition).
 # - Verifie les auteurs sur modifications de chemins proteges.
 # Les branches protegees (main/develop/prod) sont gerees dans
 # `git-cli-enforce-push-protege.yml`.
@@ -34,8 +34,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          REQUIRED_TRAILER="X-Git-CLI: onepourcent-git-cli/2.0"
-          ACCEPTED_TRAILER_REGEX="X-Git-CLI: onepourcent-git-cli/(1\.0|2\.0)"
+          REQUIRED_TRAILER="X-Git-CLI: doonya-git-cli/2.0"
+          ACCEPTED_TRAILER_REGEX="X-Git-CLI: doonya-git-cli/(1\.0|2\.0)"
           COMMITS="${{ join(github.event.commits.*.id, ' ') }}"
 
           if [ -z "$COMMITS" ]; then

@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import i18n from "i18next";
 import {
   useGetProjectCodeBlobQuery,
   useGetProjectCodeBranchesQuery,
@@ -142,7 +144,9 @@ export function useProjectCode(
       await summaryQuery.refetch();
       await treeQuery.refetch();
       return true;
-    } catch {
+    } catch (error) {
+      console.error("Création du README initial impossible :", error);
+      toast.error(i18n.t("hub.detail.code.init_readme_error"));
       return false;
     }
   }, [initializeRepository, isOwner, projectId, summaryQuery, treeQuery]);

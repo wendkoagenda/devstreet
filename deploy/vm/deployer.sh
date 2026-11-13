@@ -79,6 +79,34 @@ IFS= read -r registry_token
 printf '%s' "$registry_token" | docker login ghcr.io -u "$registry_user" --password-stdin
 registry_token=""
 
+# Avant le pull : etendre / si le disque a ete agrandi (ex. GCP 100 Go, partition encore a 9 Go),
+# puis liberer les images inutilisees. Sans cela : « no space left on device » a l'extraction.
+echo "== Place disque"
+df -h / | tail -n 1 || true
+# Etend / si le disque a ete agrandi cote fournisseur (sudoers installe par preparer-vm).
+if [ -x /usr/local/sbin/doonya-grow-rootfs ]; then
+  sudo -n /usr/local/sbin/doonya-grow-rootfs || echo "AVERTISSEMENT : doonya-grow-rootfs a echoue (poursuivre)."
+elif [ -f "$APP_DIR/deploy/vm/grow-rootfs.sh" ]; then
+  echo "AVERTISSEMENT : /usr/local/sbin/doonya-grow-rootfs absent — relancer preparer-vm, ou en admin :"
+  echo "  sudo sh $APP_DIR/deploy/vm/grow-rootfs.sh"
+else
+  echo "AVERTISSEMENT : script grow-rootfs absent."
+fi
+df -h / | tail -n 1 || true
+# Nettoyage avant pull : anciennes images / cache (volumes nommes conserves)
+if [ -f "$APP_DIR/deploy/vm/cleanup-docker.sh" ]; then
+  sh "$APP_DIR/deploy/vm/cleanup-docker.sh" || true
+else
+  docker container prune -f >/dev/null 2>&1 || true
+  docker image prune -af >/dev/null 2>&1 || true
+  docker builder prune -af >/dev/null 2>&1 || true
+fi
+# Au moins 2 Go libres avant pull (DEPLOY_DISK_GB = taille cible, definie via CD - MAINTENANCE / disk-set)
+avail_kb="$(df -Pk / | awk 'NR==2 {print $4}')"
+if [ -n "$avail_kb" ] && [ "$avail_kb" -lt 2097152 ]; then
+  fail "moins de 2 Go libres sur / (${avail_kb} Ko). Agrandir le disque cloud a DEPLOY_DISK_GB=${DEPLOY_DISK_GB} Go, puis partition (disk-set / growpart)."
+fi
+
 echo "== Images"
 compose_app pull
 
@@ -118,5 +146,10 @@ echo "== Site HTTPS"
 installer_site site-https.conf.tpl
 
 echo "$DEPLOY_SHA" > deploiement-actuel
-docker image prune -f > /dev/null
+# Apres bascule : enlever les tags devenus inutiles (l'ancienne image n'est plus referencee)
+if [ -f "$APP_DIR/deploy/vm/cleanup-docker.sh" ]; then
+  sh "$APP_DIR/deploy/vm/cleanup-docker.sh" || true
+else
+  docker image prune -af >/dev/null 2>&1 || true
+fi
 echo "Deploiement termine : $DEPLOY_NAMESPACE sur $DEPLOY_SHA"

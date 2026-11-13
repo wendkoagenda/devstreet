@@ -65,16 +65,21 @@ class ConfirmationAideService:
                 confirmed = False
             else:
                 try:
-                    ConfirmationAide.objects.create(
-                        commentaire=commentaire,
-                        membre=membre,
-                        created_by=membre.id,
-                        updated_by=membre.id,
-                    )
-                    confirmed = True
+                    # Savepoint : un conflit d'unicité ne doit pas casser la transaction englobante.
+                    with transaction.atomic():
+                        ConfirmationAide.objects.create(
+                            commentaire=commentaire,
+                            membre=membre,
+                            created_by=membre.id,
+                            updated_by=membre.id,
+                        )
                 except IntegrityError:
-                    # Course concurrente : l'autre requête a déjà créé la confirmation
-                    confirmed = True
+                    # Course concurrente : valide seulement si l'autre requête a bien créé la confirmation.
+                    if not ConfirmationAide.objects.filter(
+                        commentaire_id=commentaire_id, membre_id=membre.id
+                    ).exists():
+                        raise
+                confirmed = True
 
             confirmations_count = ConfirmationAide.objects.filter(
                 commentaire_id=commentaire_id

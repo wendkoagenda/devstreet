@@ -274,6 +274,8 @@ export type OptionPublication = z.infer<typeof optionPublicationSchema>;
 export type Publication = z.infer<typeof publicationSchema>;
 export type Espace = z.infer<typeof espaceSchema>;
 export type CreateEspaceInput = z.infer<typeof createEspaceSchema>;
+/** Corps envoyé à l'API : les champs à valeur par défaut sont facultatifs (le serveur les complète). */
+export type CreateEspaceBody = z.input<typeof createEspaceSchema>;
 export type LienInvitation = z.infer<typeof lienInvitationSchema>;
 export type EspaceMembre = z.infer<typeof espaceMembreSchema>;
 export type CreateDiscussionInput = z.infer<typeof createDiscussionSchema>;

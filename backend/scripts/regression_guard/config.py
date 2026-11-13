@@ -85,6 +85,26 @@ def check_patterns_exist(zones: Iterable[Zone], tracked_files: Iterable[str]) ->
                     raise ConfigError(f'zone « {zone.name} » : le motif « {pattern} » ({kind}) ne correspond à aucun fichier')
 
 
+def protected_paths(path: Path) -> List[str]:
+    """Lit PROTECTED_PATHS dans git-cli/access_control.conf (chemins protégés au commit)."""
+    if not path.exists():
+        raise ConfigError(f'{ACCESS_CONTROL_FILE} introuvable : impossible de lire PROTECTED_PATHS')
+    match = re.search(r'^\s*PROTECTED_PATHS\s*=\s*"([^"]*)"', path.read_text(encoding='utf-8'), re.MULTILINE)
+    if not match:
+        raise ConfigError(f'{ACCESS_CONTROL_FILE} : PROTECTED_PATHS est absent')
+    values = [item.strip() for item in match.group(1).split(',') if item.strip()]
+    if not values:
+        raise ConfigError(f'{ACCESS_CONTROL_FILE} : PROTECTED_PATHS est vide')
+    return values
+
+
+def check_protected_paths_exist(prefixes: Iterable[str], tracked_files: Iterable[str]) -> None:
+    """Un chemin PROTECTED_PATHS sans fichier protège le vide : on le refuse."""
+    from .audit import orphan_protected_paths
+    for prefix in orphan_protected_paths(list(prefixes), tracked_files):
+        raise ConfigError(f'PROTECTED_PATHS : « {prefix} » ne correspond à aucun fichier')
+
+
 def master_users(path: Path) -> List[str]:
     """Responsables des zones protégées par défaut : ZONE_PROTEGEE_USERS de git-cli/access_control.conf."""
     if not path.exists():

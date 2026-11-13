@@ -1,0 +1,14 @@
+apiVersion: 1
+
+providers:
+  - name: doonya
+    orgId: 1
+    folder: Doonya
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 60
+    allowUiUpdates: false
+    options:
+      # Hors du volume grafana-data (voir compose.yml) pour que le provisioning voie les JSON
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

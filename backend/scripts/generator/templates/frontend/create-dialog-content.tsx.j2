@@ -169,7 +169,7 @@ export default function Create{{ model_name_pascal }}DialogContent() {
                       className="h-10"
                     />
 {% elif field.is_date %}
-                    <Input type="{{ field.input_type }}" {...formField} className="h-10" />
+                    <Input type="{{ field.input_type }}" {...formField} value={formField.value ?? ""} className="h-10" />
 {% elif field.is_textarea %}
                     <Textarea
                       {...formField}

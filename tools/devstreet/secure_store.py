@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import warnings
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -22,8 +23,11 @@ def load_config() -> dict:
         return {"accounts": {}}
     try:
         return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {"accounts": {}}
+    except json.JSONDecodeError as error:
+        # Ne jamais repartir d'une configuration vide : la prochaine sauvegarde effacerait les comptes.
+        raise RuntimeError(
+            f"Fichier de configuration illisible : {CONFIG_FILE} (corrigez-le ou supprimez-le)."
+        ) from error
 
 
 def save_config(data: dict) -> None:
@@ -34,8 +38,8 @@ def save_config(data: dict) -> None:
     )
     try:
         os.chmod(CONFIG_FILE, 0o600)
-    except OSError:
-        pass
+    except OSError as error:
+        warnings.warn(f"Permissions du fichier {CONFIG_FILE} non restreintes : {error}")
 
 
 def store_account(
@@ -89,8 +93,8 @@ def remove_account(hub: str, login: str) -> bool:
     key = _account_key(hub, login)
     try:
         keyring.delete_password(SERVICE, key)
-    except Exception:
-        pass
+    except keyring.errors.PasswordDeleteError:
+        warnings.warn("Aucun secret à supprimer dans le trousseau pour ce compte.")
     cfg = load_config()
     accounts = cfg.get("accounts") or {}
     existed = key in accounts
