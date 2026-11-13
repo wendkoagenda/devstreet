@@ -13,7 +13,16 @@ i18n
       en: { translation: en },
       fr: { translation: fr },
     },
+    // Produit FR d'abord : on n'impose pas la langue du navigateur.
+    // Seul un choix explicite (localStorage) ou le fallback FR s'appliquent.
     fallbackLng: "fr",
+    supportedLngs: ["fr", "en"],
+    nonExplicitSupportedLngs: true,
+    detection: {
+      order: ["localStorage"],
+      caches: ["localStorage"],
+      lookupLocalStorage: "i18nextLng",
+    },
     interpolation: {
       escapeValue: false,
     },

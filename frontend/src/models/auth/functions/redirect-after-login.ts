@@ -12,7 +12,7 @@ export const REDIRECT_STORAGE_KEY = "auth.redirect_after_login";
 export const DEFAULT_REDIRECT_PATH = "/";
 
 /** Pages publiques d'authentification : jamais mémorisées (on n'y revient pas après connexion). */
-export const PUBLIC_AUTH_PATHS = ["/login", "/forgot-password"];
+export const PUBLIC_AUTH_PATHS = ["/login", "/forgot-password", "/welcome"];
 
 /**
  * N'accepte que des chemins internes : commence par "/" (mais pas "//" ni "/\"),

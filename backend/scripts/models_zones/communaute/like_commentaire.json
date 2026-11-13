@@ -1,0 +1,11 @@
+{
+  "model_name": "LikeCommentaire",
+  "app_name": "communaute",
+  "fields": [],
+  "meta": {
+    "db_table": "communaute_like_commentaire",
+    "resource_plural": "likes-commentaire",
+    "verbose_name": "Like de commentaire",
+    "verbose_name_plural": "Likes de commentaire"
+  }
+}

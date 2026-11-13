@@ -68,16 +68,17 @@ export default function AppLayout() {
   // Générer les breadcrumbs
   const breadcrumbs = generateBreadcrumbs(location.pathname, breadcrumbTitles);
   return (
-    <SidebarProvider style={{ "--sidebar-width": "16.5rem" } as React.CSSProperties}>
-      {/* Sidebar */}
+    <SidebarProvider
+      defaultOpen
+      style={{ "--sidebar-width": "17rem" } as React.CSSProperties}
+    >
       <AppSidebar />
 
-      {/* Contenu principal */}
       <div className="min-w-0 flex-1 overflow-auto">
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border bg-card transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <SidebarInset className="bg-background">
+          <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border/70 bg-background/85 backdrop-blur-md transition-[width,height] ease-linear supports-[backdrop-filter]:bg-background/70">
             <div className="flex items-center gap-2 px-4">
-              <SidebarTrigger className="-ml-1" />
+              <SidebarTrigger className="-ml-1 rounded-xl" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
                 <BreadcrumbList>

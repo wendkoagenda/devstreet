@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   useCreateProjectDiscussionMutation,
@@ -35,6 +36,7 @@ function newRequestKey(): string {
  */
 export function useTaskContribution(projectId: number, taskId: number) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const access = useHubAccess();
   const helpRequestKey = useRef(newRequestKey());
   const [helpDraft, setHelpDraft] = useState<{ title: string; body: string } | null>(
@@ -133,8 +135,20 @@ export function useTaskContribution(projectId: number, taskId: number) {
     };
 
     try {
-      await createDiscussion({ projectId: project.id, body }).unwrap();
-      toast.success(t("hub.task.toasts.help_sent"));
+      const created = await createDiscussion({
+        projectId: project.id,
+        body,
+      }).unwrap();
+      const topicId = Number(created.forum_topic_id);
+      toast.success(t("hub.task.toasts.help_sent"), {
+        action:
+          Number.isFinite(topicId) && topicId > 0
+            ? {
+                label: t("hub.task.toasts.open_forum"),
+                onClick: () => navigate(`/forum/publications/${topicId}`),
+              }
+            : undefined,
+      });
       setHelpDraft(null);
       setForumUnavailable(false);
       helpRequestKey.current = newRequestKey();
@@ -154,6 +168,7 @@ export function useTaskContribution(projectId: number, taskId: number) {
     createDiscussion,
     helpDraft,
     mapError,
+    navigate,
     project,
     t,
     task,
@@ -208,6 +223,12 @@ export function useTaskContribution(projectId: number, taskId: number) {
     [mapError, t, task, updateTask]
   );
 
+  const refetch = useCallback(() => {
+    void taskQuery.refetch();
+    void projectQuery.refetch();
+    void contributionsQuery.refetch();
+  }, [contributionsQuery, projectQuery, taskQuery]);
+
   return {
     access,
     task,
@@ -218,11 +239,7 @@ export function useTaskContribution(projectId: number, taskId: number) {
     isLoading: taskQuery.isLoading || projectQuery.isLoading,
     isError: taskQuery.isError || projectQuery.isError,
     errorStatus: httpStatusOf(taskQuery.error) ?? httpStatusOf(projectQuery.error),
-    refetch: () => {
-      void taskQuery.refetch();
-      void projectQuery.refetch();
-      void contributionsQuery.refetch();
-    },
+    refetch,
     canMaintain,
     canSubmit,
     showProposeCta,

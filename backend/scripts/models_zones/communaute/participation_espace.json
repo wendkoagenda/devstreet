@@ -1,0 +1,27 @@
+{
+  "model_name": "ParticipationEspace",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "role",
+      "type": "CharField",
+      "max_length": 20,
+      "choices": [
+        ["SUPER_ADMIN", "Super administrateur"],
+        ["ADMIN", "Administrateur"],
+        ["MEMBRE", "Membre"]
+      ]
+    },
+    {
+      "name": "joined_at",
+      "type": "DateTimeField",
+      "auto_now_add": true
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_participation_espace",
+    "resource_plural": "participations-espace",
+    "verbose_name": "Participation à un espace",
+    "verbose_name_plural": "Participations aux espaces"
+  }
+}

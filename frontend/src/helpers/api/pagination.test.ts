@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { PAGE_SIZE, orderingOf, pageCountOf, toQueryString } from "./pagination";
+import {
+  PAGE_SIZE,
+  cursorFromUrl,
+  orderingOf,
+  pageCountOf,
+  toQueryString,
+} from "./pagination";
 
 describe("toQueryString", () => {
   it("retourne une chaîne vide sans paramètre", () => {
@@ -40,6 +46,24 @@ describe("pageCountOf", () => {
   it("utilise la taille de page par défaut", () => {
     expect(PAGE_SIZE).toBe(20);
     expect(pageCountOf(PAGE_SIZE + 1)).toBe(2);
+  });
+});
+
+describe("cursorFromUrl", () => {
+  it("retourne undefined sans URL", () => {
+    expect(cursorFromUrl(null)).toBeUndefined();
+    expect(cursorFromUrl(undefined)).toBeUndefined();
+    expect(cursorFromUrl("")).toBeUndefined();
+  });
+
+  it("extrait le curseur d'une URL absolue", () => {
+    expect(
+      cursorFromUrl("http://127.0.0.1:8000/api/v1/publications?cursor=abc%3D&page_size=20")
+    ).toBe("abc=");
+  });
+
+  it("extrait le curseur d'une URL relative", () => {
+    expect(cursorFromUrl("/api/v1/publications?cursor=xyz")).toBe("xyz");
   });
 });
 

@@ -58,7 +58,8 @@
       "not_match": "Les mots de passe ne correspondent pas"
     },
     "password_confirm": {
-      "required": "La confirmation du mot de passe est requise"
+      "required": "La confirmation du mot de passe est requise",
+      "mismatch": "Les mots de passe ne correspondent pas"
     }
   },
   "error": {
@@ -642,6 +643,7 @@
       },
       "toasts": {
         "help_sent": "Demande d'aide publiée.",
+        "open_forum": "Voir sur le forum",
         "submitted": "Proposition envoyée pour revue.",
         "updated": "Tâche mise à jour."
       },
@@ -1102,7 +1104,31 @@
     "login_title": "Connexion",
     "login_success": "Vous avez été connecté avec succès",
     "login_error": "Une erreur est survenue lors de la connexion",
-    "logging_in": "Connexion en cours..."
+    "logging_in": "Connexion en cours...",
+    "login_description": "Entrez votre e-mail et votre mot de passe pour continuer.",
+    "register_title": "Créer un compte",
+    "register_description": "Rejoignez DevStreet en quelques secondes.",
+    "register_submit": "S'inscrire",
+    "registering": "Inscription en cours...",
+    "register_success": "Compte créé, bienvenue",
+    "switch_to_register": "Créer un compte",
+    "switch_to_login": "Se connecter",
+    "have_account": "Déjà un compte ?",
+    "already_have_account": "Déjà un compte ?",
+    "no_account": "Pas encore de compte ?",
+    "username_placeholder": "ex. askia.dev",
+    "panel_login_kicker": "Bon retour",
+    "panel_login_title": "Content de vous revoir",
+    "panel_login_description": "Connectez-vous pour retrouver le forum, la marketplace et vos projets.",
+    "panel_login_point_1": "Fil d'actualité et communautés",
+    "panel_login_point_2": "Marketplace talents & offres",
+    "panel_login_point_3": "Hub projets collaboratifs",
+    "panel_register_kicker": "Bienvenue",
+    "panel_register_title": "Rejoignez DevStreet",
+    "panel_register_description": "Créez votre compte pour publier, postuler et collaborer.",
+    "panel_register_point_1": "Profil pro et compétences",
+    "panel_register_point_2": "Messagerie et communautés",
+    "panel_register_point_3": "Accès marketplace & hub"
   },
   "my_account": {
     "title": "Mon compte",
@@ -1115,7 +1141,30 @@
     "roles": "Rôles",
     "security": "Sécurité",
     "password": "Mot de passe",
-    "password_description": "Changez votre mot de passe pour sécuriser votre compte"
+    "password_description": "Changez votre mot de passe pour sécuriser votre compte",
+    "profile_media_title": "Apparence du profil",
+    "photo_title": "Photo de profil",
+    "photo_description": "JPG, PNG, GIF ou WebP — 5 Mo maximum.",
+    "photo_alt": "Photo de profil",
+    "photo_add": "Ajouter une photo",
+    "photo_change": "Changer la photo",
+    "photo_remove": "Supprimer",
+    "photo_updated": "Photo de profil mise à jour",
+    "photo_removed": "Photo de profil supprimée",
+    "photo_update_error": "Impossible de mettre à jour la photo de profil",
+    "photo_remove_error": "Impossible de supprimer la photo de profil",
+    "photo_invalid_type": "Format d'image non supporté",
+    "photo_too_large": "Image trop volumineuse (max {{size}} Mo)",
+    "banner_title": "Bannière",
+    "banner_description": "JPG, PNG, GIF ou WebP — 8 Mo maximum.",
+    "banner_alt": "Bannière de profil",
+    "banner_add": "Ajouter une bannière",
+    "banner_change": "Changer la bannière",
+    "banner_remove": "Supprimer",
+    "banner_updated": "Bannière mise à jour",
+    "banner_removed": "Bannière supprimée",
+    "banner_update_error": "Impossible de mettre à jour la bannière",
+    "banner_remove_error": "Impossible de supprimer la bannière"
   },
   "change_password": {
     "title": "Changer le mot de passe",

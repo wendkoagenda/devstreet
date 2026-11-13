@@ -63,6 +63,18 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, help_text="User's email address")
     first_name = models.CharField(max_length=150, help_text="User's first name")
     last_name = models.CharField(max_length=150, help_text="User's last name")
+    photo = models.CharField(
+        max_length=512,
+        blank=True,
+        default='',
+        help_text="Chemin relatif de la photo de profil dans le stockage média",
+    )
+    banner = models.CharField(
+        max_length=512,
+        blank=True,
+        default='',
+        help_text="Chemin relatif de la bannière de profil dans le stockage média",
+    )
     roles = models.ManyToManyField(
         Role, 
         related_name='users',

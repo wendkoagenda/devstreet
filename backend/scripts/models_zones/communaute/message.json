@@ -1,0 +1,21 @@
+{
+  "model_name": "Message",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "texte",
+      "type": "TextField"
+    },
+    {
+      "name": "sent_at",
+      "type": "DateTimeField",
+      "auto_now_add": true
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_message",
+    "resource_plural": "messages",
+    "verbose_name": "Message",
+    "verbose_name_plural": "Messages"
+  }
+}

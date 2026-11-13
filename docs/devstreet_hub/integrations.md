@@ -11,7 +11,7 @@ Source de vérité : `app.core.User`, `Role`, `Permission`, `user.has_permission
 Déclarer le chemin importable de sa fonction :
 
 ```dotenv
-DEVSTREET_HUB_FORUM_ADAPTER=app.forum.services.project_topics.create_linked_topic
+DEVSTREET_HUB_FORUM_ADAPTER=app.communaute.services.project_topics.create_linked_topic
 ```
 
 Signature à implémenter dans l’app forum :

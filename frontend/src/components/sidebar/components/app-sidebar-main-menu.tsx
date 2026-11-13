@@ -4,10 +4,10 @@ import UsersMenu from "./menu-groups/users-menu";
 
 export default function AppSidebarMainMenu() {
   return (
-    <>
+    <div className="flex flex-col gap-2.5">
       <PlatformMenu />
       <GeneralMenu />
       <UsersMenu />
-    </>
+    </div>
   );
 }

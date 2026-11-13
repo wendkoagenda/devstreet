@@ -1,0 +1,31 @@
+{
+  "model_name": "NotificationResume",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "periode_debut",
+      "type": "DateField"
+    },
+    {
+      "name": "periode_fin",
+      "type": "DateField"
+    },
+    {
+      "name": "nombre_nouveautes",
+      "type": "PositiveIntegerField",
+      "default": 0
+    },
+    {
+      "name": "read_at",
+      "type": "DateTimeField",
+      "blank": true,
+      "null": true
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_notification_resume",
+    "resource_plural": "notifications-resume",
+    "verbose_name": "Résumé de notification",
+    "verbose_name_plural": "Résumés de notification"
+  }
+}

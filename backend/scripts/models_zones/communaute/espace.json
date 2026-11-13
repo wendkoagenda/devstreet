@@ -1,0 +1,51 @@
+{
+  "model_name": "Espace",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "type",
+      "type": "CharField",
+      "max_length": 20,
+      "choices": [
+        ["COMMUNAUTE", "Communauté"],
+        ["CHAINE", "Chaîne"]
+      ]
+    },
+    {
+      "name": "nom",
+      "type": "CharField",
+      "max_length": 120
+    },
+    {
+      "name": "description",
+      "type": "TextField",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "acces",
+      "type": "CharField",
+      "max_length": 20,
+      "choices": [
+        ["PUBLIC", "Public"],
+        ["LIEN", "Par lien"]
+      ]
+    },
+    {
+      "name": "membres_peuvent_publier",
+      "type": "BooleanField",
+      "default": true
+    },
+    {
+      "name": "commentaires_ouverts",
+      "type": "BooleanField",
+      "default": true
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_espace",
+    "resource_plural": "espaces",
+    "verbose_name": "Espace",
+    "verbose_name_plural": "Espaces"
+  }
+}

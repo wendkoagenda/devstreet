@@ -10,7 +10,11 @@ from app.core.views.auth_views import (
     csrf_view,
     me_view,
     profile_view,
+    public_profile_view,
+    profile_photo_view,
+    profile_banner_view,
     change_password_view,
+    register_view,
     forgot_password_view,
     verify_reset_code_view,
     reset_password_view,
@@ -40,6 +44,9 @@ urlpatterns = [
     # === AUTHENTIFICATION JWT ===
     # Obtenir un token d'accès et de rafraîchissement
     path('auth/login', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+
+    # Inscription publique (crée le compte + cookies de session)
+    path('auth/register', register_view, name='register'),
     
     # Rafraîchir le token d'accès
     path('auth/token/refresh', CustomTokenRefreshView.as_view(), name='token_refresh'),
@@ -59,6 +66,17 @@ urlpatterns = [
     # === PROFIL UTILISATEUR ===
     # Obtenir le profil de l'utilisateur connecté
     path('auth/profile', profile_view, name='profile'),
+
+    # Profil public d'un membre (mur Facebook-like)
+    path('auth/public-profile/<int:user_id>', public_profile_view, name='public_profile'),
+    # Alias conservé
+    path('auth/profiles/<int:user_id>', public_profile_view, name='public_profile_alias'),
+
+    # Photo de profil (upload / suppression)
+    path('auth/profile/photo', profile_photo_view, name='profile_photo'),
+
+    # Bannière de profil (upload / suppression)
+    path('auth/profile/banner', profile_banner_view, name='profile_banner'),
     
     # Changer le mot de passe
     path('auth/change-password', change_password_view, name='change_password'),

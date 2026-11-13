@@ -54,7 +54,8 @@
       "not_match": "Passwords do not match"
     },
     "password_confirm": {
-      "required": "Password confirm is required"
+      "required": "Password confirm is required",
+      "mismatch": "Passwords do not match"
     }
   },
   "error": {
@@ -589,6 +590,7 @@
       },
       "toasts": {
         "help_sent": "Help request published.",
+        "open_forum": "Open on the forum",
         "submitted": "Proposal sent for review.",
         "updated": "Task updated."
       },
@@ -1049,14 +1051,61 @@
     "login_title": "Login",
     "login_success": "You have been logged in successfully",
     "login_error": "An error occurred while logging in",
-    "logging_in": "Logging in..."
+    "logging_in": "Logging in...",
+    "login_description": "Enter your email and password to continue.",
+    "register_title": "Create an account",
+    "register_description": "Join DevStreet in a few seconds.",
+    "register_submit": "Sign up",
+    "registering": "Creating account...",
+    "register_success": "Account created, welcome",
+    "switch_to_register": "Create an account",
+    "switch_to_login": "Sign in",
+    "have_account": "Already have an account?",
+    "already_have_account": "Already have an account?",
+    "no_account": "Don't have an account yet?",
+    "username_placeholder": "e.g. askia.dev",
+    "panel_login_kicker": "Welcome back",
+    "panel_login_title": "Good to see you again",
+    "panel_login_description": "Sign in to access the forum, marketplace and your projects.",
+    "panel_login_point_1": "Feed and communities",
+    "panel_login_point_2": "Talent & offers marketplace",
+    "panel_login_point_3": "Collaborative project hub",
+    "panel_register_kicker": "Welcome",
+    "panel_register_title": "Join DevStreet",
+    "panel_register_description": "Create your account to publish, apply and collaborate.",
+    "panel_register_point_1": "Pro profile and skills",
+    "panel_register_point_2": "Messaging and communities",
+    "panel_register_point_3": "Marketplace & hub access"
   },
   "my_account": {
     "title": "My Account",
     "description": "Manage your personal information and preferences",
     "personal_info": "Personal Information",
     "roles_and_permissions": "Roles and Permissions",
-    "full_name": "Full Name"
+    "full_name": "Full Name",
+    "profile_media_title": "Profile appearance",
+    "photo_title": "Profile photo",
+    "photo_description": "JPG, PNG, GIF or WebP — 5 MB max.",
+    "photo_alt": "Profile photo",
+    "photo_add": "Add a photo",
+    "photo_change": "Change photo",
+    "photo_remove": "Remove",
+    "photo_updated": "Profile photo updated",
+    "photo_removed": "Profile photo removed",
+    "photo_update_error": "Could not update profile photo",
+    "photo_remove_error": "Could not remove profile photo",
+    "photo_invalid_type": "Unsupported image format",
+    "photo_too_large": "Image too large (max {{size}} MB)",
+    "banner_title": "Banner",
+    "banner_description": "JPG, PNG, GIF or WebP — 8 MB max.",
+    "banner_alt": "Profile banner",
+    "banner_add": "Add a banner",
+    "banner_change": "Change banner",
+    "banner_remove": "Remove",
+    "banner_updated": "Banner updated",
+    "banner_removed": "Banner removed",
+    "banner_update_error": "Could not update banner",
+    "banner_remove_error": "Could not remove banner"
   },
   "users": {
     "name": "Users",
@@ -1206,7 +1255,7 @@
     "createRole": "Create Role",
     "deleteRole": "Delete Role",
     "roleName": "Name",
-    "nameLabel": "Nom",
+    "nameLabel": "Name",
     "namePlaceholder": "",
     "descriptionLabel": "",
     "descriptionPlaceholder": "",

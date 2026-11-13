@@ -3,6 +3,7 @@ import { authBaseQuery } from "@/helpers/api/base-query";
 import {
   LoginResponse,
   LoginSchema,
+  RegisterSchema,
   ChangePasswordSchema,
   ChangePasswordResponse,
   ForgotPasswordRequest,
@@ -11,11 +12,21 @@ import {
   VerifyResetCodeResponse,
   ConfirmPasswordResetRequest,
   ConfirmPasswordResetResponse,
+  User,
 } from "./schema";
+
+export type PublicProfile = {
+  id: number;
+  username: string;
+  full_name: string;
+  photo?: string;
+  banner?: string;
+};
 
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: authBaseQuery,
+  tagTypes: ["PublicProfile"],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginSchema>({
       query: (loginData) => ({
@@ -23,6 +34,19 @@ export const authApi = createApi({
         method: "POST",
         body: loginData,
       }),
+    }),
+    register: builder.mutation<LoginResponse, RegisterSchema>({
+      query: (registerData) => ({
+        url: "/auth/register",
+        method: "POST",
+        body: registerData,
+      }),
+    }),
+    getPublicProfile: builder.query<PublicProfile, number>({
+      query: (userId) => `/auth/public-profile/${userId}`,
+      providesTags: (_result, _error, userId) => [
+        { type: "PublicProfile", id: userId },
+      ],
     }),
     changePassword: builder.mutation<
       ChangePasswordResponse,
@@ -32,6 +56,46 @@ export const authApi = createApi({
         url: "/auth/change-password",
         method: "POST",
         body: passwordData,
+      }),
+    }),
+    uploadProfilePhoto: builder.mutation<User, File>({
+      query: (file) => {
+        const formData = new FormData();
+        const safeName = file.name.replace(/[^\w.\-]+/g, "-").toLowerCase();
+        const stamp = Date.now();
+        formData.append("photo", file);
+        formData.append("photo_path", `profile_photos/${stamp}-${safeName}`);
+        return {
+          url: "/auth/profile/photo",
+          method: "POST",
+          body: formData,
+        };
+      },
+    }),
+    deleteProfilePhoto: builder.mutation<User, void>({
+      query: () => ({
+        url: "/auth/profile/photo",
+        method: "DELETE",
+      }),
+    }),
+    uploadProfileBanner: builder.mutation<User, File>({
+      query: (file) => {
+        const formData = new FormData();
+        const safeName = file.name.replace(/[^\w.\-]+/g, "-").toLowerCase();
+        const stamp = Date.now();
+        formData.append("banner", file);
+        formData.append("banner_path", `profile_banners/${stamp}-${safeName}`);
+        return {
+          url: "/auth/profile/banner",
+          method: "POST",
+          body: formData,
+        };
+      },
+    }),
+    deleteProfileBanner: builder.mutation<User, void>({
+      query: () => ({
+        url: "/auth/profile/banner",
+        method: "DELETE",
       }),
     }),
     // Mot de passe oublié (routes publiques) : étape 1, 2 et 3
@@ -64,7 +128,13 @@ export const authApi = createApi({
 
 export const {
   useLoginMutation,
+  useRegisterMutation,
+  useGetPublicProfileQuery,
   useChangePasswordMutation,
+  useUploadProfilePhotoMutation,
+  useDeleteProfilePhotoMutation,
+  useUploadProfileBannerMutation,
+  useDeleteProfileBannerMutation,
   useForgotPasswordMutation,
   useVerifyResetCodeMutation,
   useConfirmPasswordResetMutation,

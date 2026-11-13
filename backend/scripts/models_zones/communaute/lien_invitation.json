@@ -1,0 +1,29 @@
+{
+  "model_name": "LienInvitation",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "code_hash",
+      "type": "CharField",
+      "max_length": 128,
+      "unique": true
+    },
+    {
+      "name": "previsualisation_autorisee",
+      "type": "BooleanField",
+      "default": false
+    },
+    {
+      "name": "revoked_at",
+      "type": "DateTimeField",
+      "blank": true,
+      "null": true
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_lien_invitation",
+    "resource_plural": "liens-invitation",
+    "verbose_name": "Lien d'invitation",
+    "verbose_name_plural": "Liens d'invitation"
+  }
+}

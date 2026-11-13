@@ -13,12 +13,40 @@ export type Paginated<T> = {
   results: T[];
 };
 
+/** Réponse paginée par curseur (FeedCursorPagination / scroll infini). */
+export type CursorPaginated<T> = {
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};
+
 /** Paramètres de liste acceptés par le backend. */
 export type ListParams = {
   page?: number;
   page_size?: number;
   search?: string;
   ordering?: string;
+  type?: string;
+  acces?: string;
+  mine?: number | string | boolean;
+  auteur?: number | string;
+  conversation?: number | string;
+  cursor?: string | null;
+  feed?: string;
+  espace?: number | string;
+  invite?: string;
+};
+
+/** Extrait le paramètre `cursor` d'une URL `next` / `previous` DRF. */
+export const cursorFromUrl = (url: string | null | undefined): string | undefined => {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url, "http://localhost");
+    return parsed.searchParams.get("cursor") ?? undefined;
+  } catch {
+    const match = /(?:\?|&)cursor=([^&]+)/.exec(url);
+    return match ? decodeURIComponent(match[1]) : undefined;
+  }
 };
 
 /** Chaîne de requête (« ?page=2&search=abc ») sans les paramètres vides ; chaîne vide s'il n'y en a aucun. */

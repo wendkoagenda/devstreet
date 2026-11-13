@@ -1,0 +1,16 @@
+{
+  "model_name": "AvisChoix",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "explication",
+      "type": "TextField"
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_avis_choix",
+    "resource_plural": "avis-choix",
+    "verbose_name": "Avis de choix",
+    "verbose_name_plural": "Avis de choix"
+  }
+}

@@ -5,6 +5,7 @@ import PageTitleDisplayer from "@/helpers/displayers/page-title-displayer";
 import { Icons } from "@/lib/constants/icons";
 import { useTranslation } from "react-i18next";
 import ChangePasswordDialog from "../components/change-password/change-password-dialog";
+import { ProfilePhotoCard } from "../components/profile-photo-card";
 import { useChangePasswordDialogStore } from "../slice";
 import { useEffect, useState } from "react";
 
@@ -84,6 +85,10 @@ export default function MyAccount() {
         title={t("my_account.title")}
         description={t("my_account.description")}
       />
+      <div className="mb-6">
+        <ProfilePhotoCard user={user} onUserUpdated={setUser} />
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2">
         {/* Informations personnelles */}
         <Card>
