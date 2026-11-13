@@ -107,6 +107,20 @@ class GiteaClient:
                 "login_name": login,
                 "email": email,
                 "description": description_with_marker(provisioning_key),
+                "visibility": "public",
+            },
+        )
+
+    def ensure_user_public_visibility(self, login: str, *, email: str) -> None:
+        """Force la visibilité publique du compte forge (clone anonyme des dépôts publics)."""
+        self.request(
+            "PATCH",
+            "/admin/users/" + quote(login, safe=""),
+            {
+                "source_id": 0,
+                "login_name": login,
+                "email": email,
+                "visibility": "public",
             },
         )
 
@@ -145,7 +159,8 @@ class GiteaClient:
                     "full_name": "DevStreet Hub",
                     "must_change_password": True,
                     "send_notify": False,
-                    "visibility": "limited",
+                    # public : les dépôts publics du compte sont clonables anonymement.
+                    "visibility": "public",
                 },
             )
         except Conflict:
@@ -306,21 +321,30 @@ class GiteaClient:
             + quote(repository.name, safe="")
         )
         result = self.request("GET", path, missing_ok=True)
+        # Compte limited → les dépôts « publics » restent invisibles aux anonymes.
+        email = ""
+        if getattr(identity, "user_id", None):
+            email = getattr(getattr(identity, "user", None), "email", "") or ""
+        if not email:
+            remote = self.get_user_by_login(identity.login) or {}
+            email = str(remote.get("email") or "")
+        self.ensure_user_public_visibility(identity.login, email=email)
         if result is None:
             result = self.request(
                 "POST",
                 "/admin/users/" + quote(identity.login, safe="") + "/repos",
                 {
                     "name": repository.name,
-                    "private": True,
+                    "private": False,
                     "auto_init": False,
                     "default_branch": "main",
                 },
             )
-        if not result.get("private"):
-            result = self.request("PATCH", path, {"private": True})
+        # Dépôts Hub : publics dès la création (clone anonyme). L'écriture reste RBAC.
+        if result.get("private"):
+            result = self.request("PATCH", path, {"private": False})
         if (
-            not result.get("private")
+            result.get("private")
             or result.get("owner", {}).get("id") != identity.gitea_user_id
         ):
             raise ExternalUnavailable(

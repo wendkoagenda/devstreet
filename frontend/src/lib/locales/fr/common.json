@@ -251,7 +251,7 @@
     "status": {
       "archived": "Archivé",
       "published": "Public",
-      "draft": "Brouillon — visible uniquement par vous"
+      "draft": "Brouillon"
     },
     "explorer": {
       "catalog_loading": "Chargement du catalogue...",
@@ -405,6 +405,24 @@
       "done_expired": "Cette demande n'est plus valide.",
       "action_error": "L'action a échoué. Réessaie ou refuse puis relance le CLI.",
       "manage_computers": "Gérer les ordinateurs connectés"
+    },
+    "git_oauth": {
+      "title": "Autoriser Git sur cet ordinateur",
+      "subtitle": "Git Credential Manager demande un accès d'écriture sur tes dépôts. Confirme dans DevStreet — pas dans Gitea.",
+      "missing_request": "Lien d'autorisation incomplet. Relance git push.",
+      "login_required": "Connecte-toi à DevStreet pour examiner et confirmer cette demande.",
+      "login_cta": "Se connecter",
+      "not_found": "Demande introuvable ou déjà expirée.",
+      "load_error": "Impossible de charger la demande d'autorisation.",
+      "host": "Hôte Git : {{host}}",
+      "expires": "Expire le {{when}}",
+      "approve": "Autoriser",
+      "approving": "Autorisation…",
+      "deny": "Refuser",
+      "done_authorized": "Autorisé. Git Credential Manager peut terminer.",
+      "done_denied": "Demande refusée.",
+      "done_other": "Statut : {{status}}",
+      "action_error": "L'action a échoué. Réessaie ou refuse puis relance git push."
     },
     "git_computers": {
       "title": "Ordinateurs connectés",
@@ -682,7 +700,8 @@
         "continue_setup": "Continuer la préparation",
         "manage": "Gestion du projet",
         "publish": "Publier le projet",
-        "archive": "Archiver le projet"
+        "archive": "Archiver le projet",
+        "remove_member": "Retirer le membre"
       },
       "confirm": {
         "publish": "Publier ce projet le rendra visible dans le Hub. Continuer ?",
@@ -708,6 +727,8 @@
         "load_error": "Impossible de charger le dépôt.",
         "empty_title": "Dépôt vide",
         "empty_text": "Ce dépôt n'a pas encore de commit. Clonez-le pour initialiser, ou créez un README depuis DevStreet.",
+        "empty_push_hint": "Envoie ton code local avec les commandes ci-dessous. Au premier push, confirme l’accès dans le navigateur DevStreet.",
+        "first_push_commands": "Premier envoi",
         "init_readme": "Créer un README initial",
         "initializing": "Initialisation…",
         "stat_commits": "{{count}} révision(s)",
@@ -792,55 +813,46 @@
         "submitting": "Création…"
       },
       "team": {
-        "title": "Collaborateurs et accès",
-        "subtitle": "Gère qui peut contribuer et maintenir ce projet.",
-        "hint": "Sans annuaire public, l'invitation se fait par ID utilisateur communiqué par le membre. Le rôle métier n'accorde pas le push Git.",
-        "owner": "Propriétaire · utilisateur #{{id}}",
-        "owner_subtitle": "Propriétaire du projet",
+        "title": "Qui collabore sur ce projet",
+        "subtitle": "Le dépôt est public en lecture. Ici tu choisis qui peut écrire et co-gérer.",
+        "owner_subtitle": "Contrôle total du projet et du dépôt",
         "user": "Utilisateur #{{id}}",
-        "user_id": "ID utilisateur",
+        "identifier": "Email ou pseudo",
+        "identifier_placeholder": "ex. marie@exemple.com ou marie",
         "role": "Rôle",
-        "role_label": "Rôle : {{role}}",
         "invite": "Ajouter",
-        "add_people": "Ajouter une personne",
+        "add_people": "Ajouter quelqu’un",
         "remove": "Retirer le membre",
-        "empty": "Aucun collaborateur ajouté pour le moment.",
-        "search_placeholder": "Rechercher une personne…",
+        "empty": "Personne d’autre pour l’instant. Ajoute quelqu’un pour lui donner le droit de pousser ou de co-gérer.",
+        "search_placeholder": "Rechercher…",
         "search_empty": "Aucun résultat pour cette recherche.",
-        "manage_title": "Gérer l'accès",
-        "direct_access_tab": "Accès direct",
+        "list_title": "Équipe",
         "visibility": {
           "public": {
             "title": "Projet public",
-            "hint": "Visible dans le Hub. Seuls les collaborateurs listés ci-dessous ont un rôle d'équipe."
+            "hint": "Tout le monde peut lire le dépôt. Seules les personnes listées peuvent pousser ou co-gérer."
           },
           "draft": {
             "title": "Projet brouillon",
-            "hint": "Visible uniquement pour le propriétaire et l'équipe. Publie le projet pour l'ouvrir au Hub."
+            "hint": "Visible pour toi et l’équipe. Publie pour l’afficher dans le Hub."
           },
           "archived": {
             "title": "Projet archivé",
-            "hint": "L'accès en lecture peut rester, mais les actions d'équipe sont limitées."
+            "hint": "Lecture possible, actions d’équipe limitées."
           }
         },
-        "summary": {
-          "base_role": "Rôle de base",
-          "base_role_hint": "Le propriétaire conserve le contrôle total du projet.",
-          "direct": "Accès direct",
-          "direct_count": "{{count}} entités ont accès à ce projet.",
-          "direct_members": "{{count}} collaborateurs · 1 propriétaire",
-          "org": "Accès organisation",
-          "org_count": "0 utilisateurs via une organisation",
-          "org_hint": "DevStreet Hub n'utilise pas encore les équipes d'organisation."
-        },
         "invite_dialog": {
-          "title": "Ajouter une personne",
-          "description": "Saisis l'ID utilisateur fourni par la personne à inviter, puis choisis son rôle."
+          "title": "Ajouter quelqu’un",
+          "description": "Saisis l’email ou le pseudo DevStreet de la personne, puis choisis ce qu’elle peut faire."
         },
         "roles": {
           "owner": "Propriétaire",
-          "maintainer": "Mainteneur",
-          "contributor": "Contributeur"
+          "maintainer": "Collaborateur",
+          "contributor": "Spectateur"
+        },
+        "role_hints": {
+          "maintainer": "Écriture Git (push) + co-gestion des tâches Hub.",
+          "contributor": "Lecture Git uniquement — pas de push."
         }
       },
       "toasts": {
@@ -922,9 +934,11 @@
       "init": {
         "readme_title": "Initialiser avec un README",
         "readme_text": "Crée README, LICENSE et .gitignore directement sur le dépôt via DevStreet.",
+        "readme_text_short": "README, LICENSE et .gitignore sur le dépôt.",
         "readme_done": "Dépôt initialisé avec README, licence et .gitignore.",
         "push_title": "Envoyer un projet existant",
-        "push_text": "Affiche les commandes de clone/push pour pousser ton code local."
+        "push_text": "Affiche les commandes de clone/push pour pousser ton code local.",
+        "push_text_short": "Commandes pour pousser ton code local."
       },
       "repo": {
         "status_ready": "Dépôt prêt",
@@ -944,15 +958,28 @@
         "forge_path_collision": "Une collision de nom a forcé un suffixe (slug-id) : le titre Hub et le dépôt Git diffèrent uniquement dans ce cas.",
         "forge_linked_text": "Ton compte DevStreet est lié à un compte forge distinct (même e-mail, login forge différent). Ce n'est pas un SSO unique.",
         "cli_title": "Commandes pour envoyer ton code",
+        "cli_title_short": "Commandes Git",
         "cli_waiting": "Les commandes apparaissent dès que l'URL réelle du dépôt est prête.",
-        "security_title": "Ne committe jamais de secrets",
-        "security_text": "Pas de .env, jetons ou clés d'API. Vérifie ton .gitignore avant le push.",
         "connect_title": "Connecter mon ordinateur",
-        "connect_text": "Autorise une fois cet ordinateur via le navigateur DevStreet. Les prochains git push / git fetch réutilisent cet accès (PAT HTTPS Gitea), sans recopier un mot de passe.",
-        "connect_step_install": "Installe le CLI DevStreet (dossier tools/, voir la doc).",
-        "connect_step_login": "Exécute la commande ci-dessous, puis confirme « Autoriser cet ordinateur ».",
-        "connect_step_once": "Une connexion suffit par ordinateur tant que l'accès reste valide.",
+        "connect_text": "Autorise une fois cet ordinateur via le navigateur DevStreet.",
+        "connect_step_install": "Installe Git for Windows (Git Credential Manager inclus).",
+        "connect_step_login": "Copie le bloc git config une fois, puis confirme au premier push.",
+        "connect_step_once": "Une autorisation suffit par ordinateur tant que l'accès reste valide.",
         "copy_connect": "Copier la commande",
+        "git_setup_title": "Configurer Git une fois (obligatoire)",
+        "git_setup_title_short": "Configurer Git une fois (premier push)",
+        "git_setup_text": "Le navigateur ne peut pas modifier silencieusement ta config Git. Ces commandes branchent Git Credential Manager sur DevStreet (pas Gitea). Aucun secret admin n'est inclus.",
+        "git_setup_text_short": "Une fois par ordinateur : branche GCM sur DevStreet. Au premier push, confirme dans le navigateur.",
+        "git_setup_step_git": "Installe Git for Windows (GCM inclus).",
+        "git_setup_step_config": "Exécute le bloc git config une fois sur cet ordinateur.",
+        "git_setup_step_push": "Au premier git push, confirme l'accès dans DevStreet ; les suivants sont silencieux.",
+        "git_setup_loading": "Chargement des commandes de configuration…",
+        "copy_git_config": "Copier la config Git",
+        "finalize_hint": "Quand le dépôt est prêt, finalise pour ouvrir l’onglet Code et envoyer ton projet.",
+        "publish_automatically": "Publier automatiquement (visible dans le Hub)",
+        "clone_path_title": "Parcours B — dépôt déjà initialisé",
+        "clone_path_title_short": "Cloner puis pousser",
+        "clone_path_hint": "Clone, modifie, commit, puis push.",
         "manage_computers": "Ordinateurs connectés",
         "auth_fallback_title": "Accès manuel (secours)",
         "auth_fallback_text": "Identifiant forge {{login}}. Conservé temporairement si le CLI n'est pas encore installé.",
@@ -973,8 +1000,8 @@
         "password_dismiss": "Je l'ai enregistré"
       },
       "publish": {
-        "visibility_title": "Reste privé jusqu'à publication",
-        "visibility_text": "Publier rend le projet visible dans le Hub et le dépôt public. C'est une action explicite, jamais automatique.",
+        "visibility_title": "Fiche Hub séparée du dépôt Git",
+        "visibility_text": "Le dépôt Git est public dès la création (clone anonyme). Publier affiche la fiche projet dans le Hub — à la création via la case « Publier automatiquement », ou plus tard depuis le menu du projet.",
         "integrity_label": "Confirmation :",
         "integrity_text": "J'ai vérifié que le code du projet « {{path}} » ne contient pas de secrets.",
         "need_repo": "Le dépôt doit être prêt avant de pouvoir publier."
@@ -982,7 +1009,8 @@
       "actions": {
         "create": "Créer mon projet",
         "creating": "Création en cours…",
-        "create_help": "Un clic enregistre le brouillon, prépare ton accès Git et crée le dépôt privé.",
+        "create_help": "Un clic enregistre le brouillon, prépare ton accès Git et crée le dépôt public.",
+        "finalize": "Finaliser",
         "publish": "Publier le projet",
         "new_draft": "Nouveau projet"
       },
@@ -1003,7 +1031,7 @@
         "visibility_private": "Privé",
         "visibility_public": "Public",
         "forge": "Stockage du code",
-        "forge_name": "DevStreet (privé)",
+        "forge_name": "DevStreet (public)",
         "branch": "Branche principale",
         "help_title": "Ensuite ?",
         "help_text": "Initialise avec un README dans DevStreet, ou pousse un projet existant. La publication publique reste optionnelle."

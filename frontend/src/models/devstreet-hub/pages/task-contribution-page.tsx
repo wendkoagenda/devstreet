@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { HubAssistantPanel } from "@/models/ai/components/hub-assistant-panel";
+import { HubConfirmDialog } from "../components/hub-confirm-dialog";
 import { useTaskContribution } from "../hooks/use-task-contribution";
 import { SafeMarkdown } from "../functions/safe-markdown";
 
@@ -74,6 +75,7 @@ export default function TaskContributionPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [criteriaText, setCriteriaText] = useState("");
+  const [confirmClose, setConfirmClose] = useState(false);
 
   useEffect(() => {
     if (!detail.task) return;
@@ -567,11 +569,7 @@ export default function TaskContributionPage() {
                 variant="outline"
                 disabled={detail.isBusy}
                 className="h-8 gap-1.5 rounded-md text-xs"
-                onClick={() => {
-                  if (window.confirm(t("hub.task.confirm.close"))) {
-                    void detail.patchTask({ status: "closed" });
-                  }
-                }}
+                onClick={() => setConfirmClose(true)}
               >
                 <CheckCircle2 aria-hidden className="size-3.5" />
                 {t("hub.task.actions.close_task")}
@@ -705,6 +703,21 @@ export default function TaskContributionPage() {
         projectTitle={project.title}
         taskId={task.id}
         taskTitle={task.title}
+      />
+
+      <HubConfirmDialog
+        open={confirmClose}
+        title={t("hub.task.actions.close_task")}
+        description={t("hub.task.confirm.close")}
+        confirmLabel={t("hub.task.actions.close_task")}
+        destructive
+        busy={detail.isBusy}
+        onOpenChange={setConfirmClose}
+        onConfirm={() => {
+          void detail
+            .patchTask({ status: "closed" })
+            .finally(() => setConfirmClose(false));
+        }}
       />
     </div>
   );

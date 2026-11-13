@@ -251,7 +251,7 @@ export function useCreateProject() {
 
   const formReady = isFormReady(form);
   const canPublish = Boolean(
-    project && repoReady && form.integrityConfirmed && project.status === "draft"
+    project && repoReady && project.status === "draft"
   );
 
   const mapError = useCallback(
@@ -427,25 +427,23 @@ export function useCreateProject() {
     }
   }, [initializeRepository, mapError, project, repoReady, t]);
 
-  const publish = useCallback(async () => {
-    if (!project) return;
+  const publish = useCallback(async (): Promise<boolean> => {
+    if (!project) return false;
     if (!canPublish) {
-      setActionError(
-        !repoReady
-          ? t("hub.create.errors.repo_not_ready")
-          : t("hub.create.errors.integrity_required")
-      );
-      return;
+      setActionError(t("hub.create.errors.repo_not_ready"));
+      return false;
     }
 
     try {
       const published = await publishProject(project.id).unwrap();
       toast.success(t("hub.create.toasts.published"));
-      navigate(`/hub/projects/${published.id}`);
+      navigate(`/hub/projects/${published.id}?tab=code`);
+      return true;
     } catch (error) {
       const message = mapError(error, "hub.create.errors.publish");
       setActionError(message);
       toast.error(message);
+      return false;
     }
   }, [
     canPublish,
@@ -453,7 +451,6 @@ export function useCreateProject() {
     navigate,
     project,
     publishProject,
-    repoReady,
     t,
   ]);
 

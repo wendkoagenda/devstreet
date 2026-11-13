@@ -5,7 +5,7 @@ import type { ProjectStatus } from "../schema";
 
 const STYLES: Record<ProjectStatus, string> = {
   published: "border-border bg-secondary text-muted-foreground",
-  draft: "border-warning/30 bg-warning-soft text-warning",
+  draft: "border-border bg-muted text-muted-foreground",
   archived: "border-border bg-muted text-muted-foreground",
 };
 

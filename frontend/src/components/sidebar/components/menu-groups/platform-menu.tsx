@@ -16,6 +16,7 @@ import {
   ClipboardList,
   FileText,
   FolderKanban,
+  FolderOpen,
   Home,
   LayoutDashboard,
   Mail,
@@ -30,6 +31,7 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useAuthSlice } from "@/models/auth/slice";
 import { MARKETPLACE_ADMIN_PAGES } from "@/models/marketplace-space/admin-pages";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 import { useGetActivityBadgesQuery } from "@/models/forum/api";
@@ -45,7 +47,7 @@ type NavItem = {
   icon: LucideIcon;
   exact?: boolean;
   badge?: string | null;
-  match?: (path: string) => boolean;
+  match?: (path: string, search: string) => boolean;
 };
 
 const itemClass =
@@ -54,8 +56,8 @@ const itemClass =
 const sectionLabelClass =
   "mb-0.5 h-auto px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80";
 
-function isItemActive(path: string, item: NavItem) {
-  if (item.match) return item.match(path);
+function isItemActive(path: string, search: string, item: NavItem) {
+  if (item.match) return item.match(path, search);
   if (path === item.url) return true;
   if (item.exact) return false;
   return path.startsWith(`${item.url}/`);
@@ -64,17 +66,19 @@ function isItemActive(path: string, item: NavItem) {
 function NavList({
   items,
   path,
+  search,
   onGo,
 }: {
   items: NavItem[];
   path: string;
+  search: string;
   onGo: (url: string) => void;
 }) {
   return (
     <SidebarMenu className="gap-0.5">
       {items.map((item) => {
         const Icon = item.icon;
-        const active = isItemActive(path, item);
+        const active = isItemActive(path, search, item);
         return (
           <SidebarMenuItem key={`${item.title}-${item.url}`}>
             <SidebarMenuButton
@@ -112,6 +116,8 @@ export default function PlatformMenu() {
   const { isMobile, setOpenMobile } = useSidebar();
   const permissions = usePermissions();
   const { hasProfil, isRecruiter } = useMySpace();
+  const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
+  const userId = useAuthSlice((state) => state.user?.id ?? null);
   const { data: badges } = useGetActivityBadgesQuery(undefined, {
     pollingInterval: 30000,
   });
@@ -122,6 +128,9 @@ export default function PlatformMenu() {
   };
 
   const path = location.pathname;
+  const search = location.search;
+  const myProjectsUrl =
+    userId != null ? `/hub/projects?owner=${userId}` : "/hub/projects";
 
   const principalItems: NavItem[] = [
     {
@@ -247,7 +256,22 @@ export default function PlatformMenu() {
       title: "Explorer les projets",
       url: "/hub/projects",
       icon: FolderKanban,
+      match: (p, s) =>
+        p.startsWith("/hub/projects") &&
+        !new URLSearchParams(s).get("owner"),
     },
+    ...(isAuthenticated && userId != null
+      ? [
+          {
+            title: "Mes projets",
+            url: myProjectsUrl,
+            icon: FolderOpen,
+            match: (p: string, s: string) =>
+              p.startsWith("/hub/projects") &&
+              new URLSearchParams(s).get("owner") === String(userId),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -256,7 +280,7 @@ export default function PlatformMenu() {
         <SidebarGroupLabel className={sectionLabelClass}>
           Principal
         </SidebarGroupLabel>
-        <NavList items={principalItems} path={path} onGo={go} />
+        <NavList items={principalItems} path={path} search={search} onGo={go} />
       </SidebarGroup>
 
       <Separator className="mx-3 bg-sidebar-border/70" />
@@ -265,7 +289,12 @@ export default function PlatformMenu() {
         <SidebarGroupLabel className={sectionLabelClass}>
           Marketplace
         </SidebarGroupLabel>
-        <NavList items={marketplaceItems} path={path} onGo={go} />
+        <NavList
+          items={marketplaceItems}
+          path={path}
+          search={search}
+          onGo={go}
+        />
       </SidebarGroup>
 
       <Separator className="mx-3 bg-sidebar-border/70" />
@@ -274,7 +303,7 @@ export default function PlatformMenu() {
         <SidebarGroupLabel className={sectionLabelClass}>
           DevStreet Hub
         </SidebarGroupLabel>
-        <NavList items={hubItems} path={path} onGo={go} />
+        <NavList items={hubItems} path={path} search={search} onGo={go} />
       </SidebarGroup>
     </>
   );

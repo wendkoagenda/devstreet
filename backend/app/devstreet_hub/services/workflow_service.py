@@ -851,8 +851,9 @@ class WorkflowService:
                 raise Conflict("Seul un brouillon peut être publié.")
             if target == "published" and project.repository.status != "ready":
                 raise Conflict("Le dépôt doit être prêt avant publication.")
-            if project.repository.status == "ready":
-                self.forge.set_public(project.repository, target == "published")
+            # Dépôts Hub publics dès la création ; la publication ne change que la fiche.
+            if target == "published" and project.repository.status == "ready":
+                self.forge.set_public(project.repository, True)
             self.repo.save(project, status=target, updated_by=actor.pk)
             record("project." + target, actor=actor, target=project)
         return project
@@ -870,23 +871,43 @@ class WorkflowService:
             raise Conflict("Seuls les projets publiés peuvent recevoir des étoiles.")
         return self.repo.set_star(project, actor, active)
 
-    def member(self, actor, project, user_id, role=None):
+    def member(self, actor, project, user_id=None, role=None, identifier=None):
         require_permission(actor, "projects.members")
         require_owner(actor, project)
-        if user_id == project.owner_id:
+        member_user = self._resolve_member_user(
+            user_id=user_id, identifier=identifier
+        )
+        if member_user.pk == project.owner_id:
             raise Conflict("Le propriétaire ne se modifie pas par les membres.")
-        from django.contrib.auth import get_user_model
-
-        member_user = get_user_model().objects.filter(pk=user_id, is_active=True).first()
-        if member_user is None:
-            raise NotFound("Utilisateur introuvable.")
         if role is None:
             self._sync_forge_collaborator(project, member_user, permission=None)
-            self.repo.remove_member(project, user_id)
+            self.repo.remove_member(project, member_user.pk)
             return None
         permission = "write" if role == "maintainer" else "read"
         self._sync_forge_collaborator(project, member_user, permission=permission)
-        return self.repo.set_member(project, user_id, role)
+        return self.repo.set_member(project, member_user.pk, role)
+
+    def _resolve_member_user(self, *, user_id=None, identifier=None):
+        """Résout un membre actif par id, email ou pseudo (insensible à la casse)."""
+        from django.contrib.auth import get_user_model
+        from django.db.models import Q
+
+        User = get_user_model()
+        user = None
+        if user_id is not None:
+            user = User.objects.filter(pk=user_id, is_active=True).first()
+        elif identifier:
+            needle = str(identifier).strip()
+            user = (
+                User.objects.filter(is_active=True)
+                .filter(Q(username__iexact=needle) | Q(email__iexact=needle))
+                .first()
+            )
+            if user is None and needle.isdigit():
+                user = User.objects.filter(pk=int(needle), is_active=True).first()
+        if user is None:
+            raise NotFound("Utilisateur introuvable.")
+        return user
 
     def _sync_forge_collaborator(self, project, member_user, *, permission):
         """Aligne le collaborateur Gitea sur le rôle Hub (idempotent)."""

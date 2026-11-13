@@ -10,10 +10,16 @@ import {
 } from "../components/project-detail-panels";
 import { ContributeTasksPanel } from "../components/contribute-tasks-panel";
 import { CreateTaskForm } from "../components/create-task-form";
+import { HubConfirmDialog } from "../components/hub-confirm-dialog";
 import { ProjectDetailTabs } from "../components/project-detail-tabs";
 import { TeamPanel } from "../components/team-panel";
 import { HubAssistantPanel } from "@/models/ai/components/hub-assistant-panel";
 import { useProjectDetail } from "../hooks/use-project-detail";
+
+type ConfirmAction =
+  | { type: "publish" }
+  | { type: "archive" }
+  | { type: "remove_member"; userId: number };
 
 export default function ProjectDetailPage() {
   const { t } = useTranslation();
@@ -21,6 +27,9 @@ export default function ProjectDetailPage() {
   const projectId = Number(params.id);
   const detail = useProjectDetail(projectId);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(
+    null
+  );
   const repositoryReady = detail.repository?.status === "ready";
 
   if (!Number.isFinite(projectId) || projectId <= 0) {
@@ -90,16 +99,8 @@ export default function ProjectDetailPage() {
         onToggleStar={() => {
           void detail.toggleStar();
         }}
-        onPublish={() => {
-          if (window.confirm(t("hub.detail.confirm.publish"))) {
-            void detail.publish();
-          }
-        }}
-        onArchive={() => {
-          if (window.confirm(t("hub.detail.confirm.archive"))) {
-            void detail.archive();
-          }
-        }}
+        onPublish={() => setConfirmAction({ type: "publish" })}
+        onArchive={() => setConfirmAction({ type: "archive" })}
         onCreateTask={() => {
           detail.setTab("contribute");
           setShowTaskForm(true);
@@ -173,15 +174,58 @@ export default function ProjectDetailPage() {
           isBusy={detail.isBusy}
           onInvite={detail.inviteMember}
           onUpdateRole={detail.updateMemberRole}
-          onRemove={(userId) => {
-            if (window.confirm(t("hub.detail.confirm.remove_member"))) {
-              void detail.ejectMember(userId);
-            }
-          }}
+          onRemove={(userId) =>
+            setConfirmAction({ type: "remove_member", userId })
+          }
         />
       ) : null}
 
       <HubAssistantPanel projectId={project.id} projectTitle={project.title} />
+
+      <HubConfirmDialog
+        open={confirmAction?.type === "publish"}
+        title={t("hub.detail.actions.publish")}
+        description={t("hub.detail.confirm.publish")}
+        confirmLabel={t("hub.detail.actions.publish")}
+        busy={detail.isBusy}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+        onConfirm={() => {
+          void detail.publish().finally(() => setConfirmAction(null));
+        }}
+      />
+      <HubConfirmDialog
+        open={confirmAction?.type === "archive"}
+        title={t("hub.detail.actions.archive")}
+        description={t("hub.detail.confirm.archive")}
+        confirmLabel={t("hub.detail.actions.archive")}
+        destructive
+        busy={detail.isBusy}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+        onConfirm={() => {
+          void detail.archive().finally(() => setConfirmAction(null));
+        }}
+      />
+      <HubConfirmDialog
+        open={confirmAction?.type === "remove_member"}
+        title={t("hub.detail.actions.manage")}
+        description={t("hub.detail.confirm.remove_member")}
+        confirmLabel={t("hub.detail.actions.remove_member")}
+        destructive
+        busy={detail.isBusy}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null);
+        }}
+        onConfirm={() => {
+          if (confirmAction?.type !== "remove_member") return;
+          void detail
+            .ejectMember(confirmAction.userId)
+            .finally(() => setConfirmAction(null));
+        }}
+      />
     </div>
   );
 }

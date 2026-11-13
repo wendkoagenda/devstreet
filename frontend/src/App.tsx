@@ -11,7 +11,7 @@ import OfferList from "./models/offer/pages/offer-list";
 import ProfilList from "./models/profil/pages/profil-list";
 import SkillList from "./models/skill/pages/skill-list";
 import CompanyList from "./models/company/pages/company-list";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import PrivateRoute from "./components/layouts/private-route";
 import PublicRoute from "./components/layouts/public-route";
 import LoginPage from "./models/auth/pages/login-page";
@@ -29,6 +29,7 @@ import ContributionReviewPage from "./models/devstreet-hub/pages/contribution-re
 import AiWorkshopPage from "./models/devstreet-hub/pages/ai-workshop-page";
 import ProjectProfilePage from "./models/devstreet-hub/pages/project-profile-page";
 import GitAuthAuthorizePage from "./models/devstreet-hub/pages/git-auth-authorize-page";
+import GitOAuthAuthorizePage from "./models/devstreet-hub/pages/git-oauth-authorize-page";
 import OffersPage from "./models/marketplace-offers/pages/offers-page";
 import OfferDetailPage from "./models/marketplace-offers/pages/offer-detail-page";
 import OfferApplyPage from "./models/marketplace-offers/pages/offer-apply-page";
@@ -69,6 +70,10 @@ function App() {
     <>
       <Routes>
         <Route element={<AppLayout />}>
+          <Route
+            element={<Navigate to="/hub/projects" replace />}
+            path="/hub"
+          />
           <Route element={<ExploreProjectsPage />} path="/hub/projects" />
           <Route element={<CreateProjectPage />} path="/hub/projects/new" />
           <Route element={<ProjectDetailPage />} path="/hub/projects/:id" />
@@ -88,6 +93,10 @@ function App() {
           <Route
             element={<GitAuthAuthorizePage />}
             path="/hub/git-auth/authorize"
+          />
+          <Route
+            element={<GitOAuthAuthorizePage />}
+            path="/hub/git-oauth/authorize"
           />
 
           <Route element={<PrivateRoute />}>

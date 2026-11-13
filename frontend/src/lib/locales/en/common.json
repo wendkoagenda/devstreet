@@ -196,7 +196,7 @@
       "rate_limited": "Too many requests. Wait a moment before trying again."
     },
     "status": {
-      "draft": "Draft — visible only to you",
+      "draft": "Draft",
       "published": "Public",
       "archived": "Archived"
     },
@@ -352,6 +352,24 @@
       "done_expired": "This request is no longer valid.",
       "action_error": "The action failed. Retry, or deny and restart the CLI.",
       "manage_computers": "Manage connected computers"
+    },
+    "git_oauth": {
+      "title": "Authorize Git on this computer",
+      "subtitle": "Git Credential Manager requests write access to your repositories. Confirm in DevStreet — not in Gitea.",
+      "missing_request": "Incomplete authorization link. Run git push again.",
+      "login_required": "Sign in to DevStreet to review and confirm this request.",
+      "login_cta": "Sign in",
+      "not_found": "Request not found or already expired.",
+      "load_error": "Unable to load the authorization request.",
+      "host": "Git host: {{host}}",
+      "expires": "Expires {{when}}",
+      "approve": "Authorize",
+      "approving": "Authorizing…",
+      "deny": "Deny",
+      "done_authorized": "Authorized. Git Credential Manager can finish.",
+      "done_denied": "Request denied.",
+      "done_other": "Status: {{status}}",
+      "action_error": "The action failed. Retry, or deny and run git push again."
     },
     "git_computers": {
       "title": "Connected computers",
@@ -629,7 +647,8 @@
         "continue_setup": "Continue setup",
         "manage": "Project management",
         "publish": "Publish project",
-        "archive": "Archive project"
+        "archive": "Archive project",
+        "remove_member": "Remove member"
       },
       "confirm": {
         "publish": "Publishing makes this project visible in the Hub. Continue?",
@@ -655,6 +674,8 @@
         "load_error": "Unable to load the repository.",
         "empty_title": "Empty repository",
         "empty_text": "This repository has no commits yet. Clone it to initialize, or create a README from DevStreet.",
+        "empty_push_hint": "Push your local code with the commands below. On the first push, confirm access in the DevStreet browser.",
+        "first_push_commands": "First push",
         "init_readme": "Create an initial README",
         "initializing": "Initializing…",
         "stat_commits": "{{count}} commit(s)",
@@ -739,55 +760,46 @@
         "submitting": "Creating…"
       },
       "team": {
-        "title": "Collaborators and access",
-        "subtitle": "Manage who can contribute to and maintain this project.",
-        "hint": "Without a public directory, invites use a user ID shared by the member. The business role does not grant Git push.",
-        "owner": "Owner · user #{{id}}",
-        "owner_subtitle": "Project owner",
+        "title": "Who collaborates on this project",
+        "subtitle": "The repository is public for reading. Here you choose who can write and co-manage.",
+        "owner_subtitle": "Full control of the project and repository",
         "user": "User #{{id}}",
-        "user_id": "User ID",
+        "identifier": "Email or username",
+        "identifier_placeholder": "e.g. marie@example.com or marie",
         "role": "Role",
-        "role_label": "Role: {{role}}",
         "invite": "Add",
-        "add_people": "Add people",
+        "add_people": "Add someone",
         "remove": "Remove member",
-        "empty": "No collaborators added yet.",
-        "search_placeholder": "Find a person…",
+        "empty": "No one else yet. Add someone to let them push or co-manage.",
+        "search_placeholder": "Search…",
         "search_empty": "No results for this search.",
-        "manage_title": "Manage access",
-        "direct_access_tab": "Direct access",
+        "list_title": "Team",
         "visibility": {
           "public": {
             "title": "Public project",
-            "hint": "Visible in the Hub. Only collaborators listed below have a team role."
+            "hint": "Anyone can read the repository. Only people listed below can push or co-manage."
           },
           "draft": {
             "title": "Draft project",
-            "hint": "Visible only to the owner and team. Publish the project to open it in the Hub."
+            "hint": "Visible to you and the team. Publish to show it in the Hub."
           },
           "archived": {
             "title": "Archived project",
-            "hint": "Read access may remain, but team actions are limited."
+            "hint": "Reading may remain, team actions are limited."
           }
         },
-        "summary": {
-          "base_role": "Base role",
-          "base_role_hint": "The owner keeps full control of the project.",
-          "direct": "Direct access",
-          "direct_count": "{{count}} entities have access to this project.",
-          "direct_members": "{{count}} collaborators · 1 owner",
-          "org": "Organization access",
-          "org_count": "0 users via an organization",
-          "org_hint": "DevStreet Hub does not use organization teams yet."
-        },
         "invite_dialog": {
-          "title": "Add people",
-          "description": "Enter the user ID shared by the person to invite, then choose their role."
+          "title": "Add someone",
+          "description": "Enter their DevStreet email or username, then choose what they can do."
         },
         "roles": {
           "owner": "Owner",
-          "maintainer": "Maintainer",
-          "contributor": "Contributor"
+          "maintainer": "Collaborator",
+          "contributor": "Spectator"
+        },
+        "role_hints": {
+          "maintainer": "Git write (push) + Hub task co-management.",
+          "contributor": "Git read only — no push."
         }
       },
       "toasts": {
@@ -869,9 +881,11 @@
       "init": {
         "readme_title": "Initialize with a README",
         "readme_text": "Creates README, LICENSE and .gitignore on the repository through DevStreet.",
+        "readme_text_short": "README, LICENSE and .gitignore on the repo.",
         "readme_done": "Repository initialized with README, license and .gitignore.",
         "push_title": "Push an existing project",
-        "push_text": "Shows clone/push commands to upload your local code."
+        "push_text": "Shows clone/push commands to upload your local code.",
+        "push_text_short": "Commands to push your local code."
       },
       "repo": {
         "status_ready": "Repository ready",
@@ -891,15 +905,28 @@
         "forge_path_collision": "A name collision forced a suffix (slug-id): the Hub title and Git repository differ only in that case.",
         "forge_linked_text": "Your DevStreet account is linked to a distinct forge account (shared email, different forge login). This is not a single SSO.",
         "cli_title": "Commands to push your code",
+        "cli_title_short": "Git commands",
         "cli_waiting": "Commands appear once the real repository URL is ready.",
-        "security_title": "Never commit secrets",
-        "security_text": "No .env, tokens or API keys. Check your .gitignore before pushing.",
         "connect_title": "Connect my computer",
-        "connect_text": "Authorize this computer once through the DevStreet browser. Later git push / git fetch reuse this access (HTTPS Gitea PAT), without retyping a password.",
-        "connect_step_install": "Install the DevStreet CLI (tools/ folder, see docs).",
-        "connect_step_login": "Run the command below, then confirm “Authorize this computer”.",
-        "connect_step_once": "One connection per computer is enough while the access stays valid.",
+        "connect_text": "Authorize this computer once through the DevStreet browser.",
+        "connect_step_install": "Install Git for Windows (Git Credential Manager included).",
+        "connect_step_login": "Copy the git config block once, then confirm on first push.",
+        "connect_step_once": "One authorization per computer is enough while the access stays valid.",
         "copy_connect": "Copy command",
+        "git_setup_title": "Configure Git once (required)",
+        "git_setup_title_short": "Configure Git once (first push)",
+        "git_setup_text": "The browser cannot silently change your Git config. These commands point Git Credential Manager at DevStreet (not Gitea). No admin secret is included.",
+        "git_setup_text_short": "Once per computer: point GCM at DevStreet. On first push, confirm in the browser.",
+        "git_setup_step_git": "Install Git for Windows (GCM included).",
+        "git_setup_step_config": "Run the git config block once on this computer.",
+        "git_setup_step_push": "On the first git push, confirm access in DevStreet; later pushes are silent.",
+        "git_setup_loading": "Loading configuration commands…",
+        "copy_git_config": "Copy Git config",
+        "finalize_hint": "When the repository is ready, finish to open the Code tab and push your project.",
+        "publish_automatically": "Publish automatically (visible in the Hub)",
+        "clone_path_title": "Path B — repository already initialized",
+        "clone_path_title_short": "Clone then push",
+        "clone_path_hint": "Clone, edit, commit, then push.",
         "manage_computers": "Connected computers",
         "auth_fallback_title": "Manual access (fallback)",
         "auth_fallback_text": "Forge login {{login}}. Kept temporarily if the CLI is not installed yet.",
@@ -920,8 +947,8 @@
         "password_dismiss": "I've saved it"
       },
       "publish": {
-        "visibility_title": "Stays private until publish",
-        "visibility_text": "Publishing makes the project visible in the Hub and the repository public. It is never automatic.",
+        "visibility_title": "Hub card separate from the Git repository",
+        "visibility_text": "The Git repository is public from creation (anonymous clone). Publishing shows the project card in the Hub — at creation via “Publish automatically”, or later from the project menu.",
         "integrity_label": "Confirmation:",
         "integrity_text": "I verified that project “{{path}}” contains no secrets.",
         "need_repo": "The repository must be ready before you can publish."
@@ -929,7 +956,8 @@
       "actions": {
         "create": "Create my project",
         "creating": "Creating…",
-        "create_help": "One click saves the draft, prepares Git access and creates the private repository.",
+        "create_help": "One click saves the draft, prepares Git access and creates the public repository.",
+        "finalize": "Finish",
         "publish": "Publish project",
         "new_draft": "New project"
       },
@@ -950,7 +978,7 @@
         "visibility_private": "Private",
         "visibility_public": "Public",
         "forge": "Code storage",
-        "forge_name": "DevStreet (private)",
+        "forge_name": "DevStreet (public)",
         "branch": "Main branch",
         "help_title": "Next?",
         "help_text": "Initialize with a README in DevStreet, or push an existing project. Public publication stays optional."

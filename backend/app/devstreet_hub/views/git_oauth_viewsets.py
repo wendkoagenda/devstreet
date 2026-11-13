@@ -1,0 +1,109 @@
+"""Endpoints OAuth2 publics pour Git Credential Manager (PKCE)."""
+
+from django.shortcuts import redirect
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+
+from app.devstreet_hub.services.errors import Conflict, ExternalUnavailable
+from app.devstreet_hub.services.git_oauth_service import GitOAuthService
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+
+
+class GitOAuthThrottle(AnonRateThrottle):
+    rate = "60/minute"
+
+
+class GitOAuthViewSet(viewsets.ViewSet):
+    """authorize (redirect) + token (GCM) ; approve/deny authentifiés."""
+
+    swagger_tags = ["DevStreet Hub - Git OAuth"]
+    lookup_value_regex = r"[0-9a-fA-F-]{36}"
+    authentication_classes_token = []
+
+    def get_permissions(self):
+        if self.action in ("authorize", "token", "client_config", "retrieve"):
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_throttles(self):
+        if self.action in ("authorize", "token"):
+            return [GitOAuthThrottle()]
+        return [UserRateThrottle()]
+
+    def get_authenticators(self):
+        # Le POST token de GCM n'envoie pas de session Django.
+        if getattr(self, "action", None) == "token" or self.request.path.endswith(
+            "/git-oauth/token"
+        ):
+            return []
+        return super().get_authenticators()
+
+    @swagger_auto_schema(tags=["V1 - Git OAuth"])
+    @action(detail=False, methods=["get"], url_path="client-config")
+    def client_config(self, request):
+        try:
+            return Response(GitOAuthService().client_config())
+        except ExternalUnavailable as error:
+            return Response({"detail": str(error.detail)}, status=503)
+
+    @swagger_auto_schema(tags=["V1 - Git OAuth"])
+    @action(detail=False, methods=["get"], url_path="authorize")
+    def authorize(self, request):
+        try:
+            started = GitOAuthService().start_authorize(request.query_params.dict())
+        except ValidationError as error:
+            return Response(error.detail, status=400)
+        except ExternalUnavailable as error:
+            return Response({"detail": str(error.detail)}, status=503)
+        return redirect(started["confirm_url"])
+
+    @swagger_auto_schema(tags=["V1 - Git OAuth"])
+    @action(detail=False, methods=["post"], url_path="token")
+    def token(self, request):
+        # GCM envoie application/x-www-form-urlencoded ou JSON.
+        data = request.data
+        if hasattr(data, "dict"):
+            data = data.dict()
+        try:
+            payload = GitOAuthService().exchange_token(data)
+            return Response(payload)
+        except ValidationError as error:
+            detail = error.detail
+            if isinstance(detail, dict) and "error" in detail:
+                return Response(detail, status=400)
+            return Response({"error": "invalid_request", "error_description": detail}, status=400)
+        except PermissionDenied:
+            return Response({"error": "invalid_grant"}, status=400)
+        except Conflict as error:
+            return Response(
+                {"error": "server_error", "error_description": str(error.detail)},
+                status=409,
+            )
+        except ExternalUnavailable as error:
+            return Response(
+                {"error": "temporarily_unavailable", "error_description": str(error.detail)},
+                status=503,
+            )
+
+    @swagger_auto_schema(tags=["V1 - Git OAuth"])
+    def retrieve(self, request, pk=None):
+        try:
+            return Response(GitOAuthService().get_public(pk))
+        except NotFound:
+            raise
+
+    @swagger_auto_schema(tags=["V1 - Git OAuth"])
+    @action(detail=True, methods=["post"], url_path="approve")
+    def approve(self, request, pk=None):
+        result = GitOAuthService().approve(request.user, pk)
+        return Response(result)
+
+    @swagger_auto_schema(tags=["V1 - Git OAuth"])
+    @action(detail=True, methods=["post"], url_path="deny")
+    def deny(self, request, pk=None):
+        result = GitOAuthService().deny(request.user, pk)
+        return Response(result)
