@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from drf_yasg.utils import swagger_auto_schema
 
+from app.core.pagination import StandardPagination
 from app.devstreet_hub.api_serializers_git_auth import (
     GitConnectedComputerSerializer,
     GitDevicePollSerializer,
@@ -45,7 +46,7 @@ class GitAuthViewSet(viewsets.ViewSet):
     @swagger_auto_schema(
         method="post",
         request_body=GitDeviceStartSerializer,
-        tags=["V1 - Git Auth"],
+        tags=["V1 - GitAuth"],
     )
     @action(detail=False, methods=["post"], url_path="device/start")
     def start(self, request):
@@ -55,7 +56,7 @@ class GitAuthViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(
         responses={200: GitDeviceRequestSerializer},
-        tags=["V1 - Git Auth"],
+        tags=["V1 - GitAuth"],
     )
     def retrieve(self, request, pk=None):
         return Response(GitAuthService().get_request_public(pk))
@@ -63,7 +64,7 @@ class GitAuthViewSet(viewsets.ViewSet):
     @swagger_auto_schema(
         method="post",
         request_body=GitDevicePollSerializer,
-        tags=["V1 - Git Auth"],
+        tags=["V1 - GitAuth"],
     )
     @action(detail=True, methods=["post"], url_path="poll")
     def poll(self, request, pk=None):
@@ -71,13 +72,13 @@ class GitAuthViewSet(viewsets.ViewSet):
         result = GitAuthService().poll(request_id=pk, **data)
         return Response(result)
 
-    @swagger_auto_schema(method="post", tags=["V1 - Git Auth"])
+    @swagger_auto_schema(method="post", tags=["V1 - GitAuth"])
     @action(detail=True, methods=["post"], url_path="authorize")
     def authorize(self, request, pk=None):
         result = GitAuthService().authorize(request.user, pk)
         return Response(result)
 
-    @swagger_auto_schema(method="post", tags=["V1 - Git Auth"])
+    @swagger_auto_schema(method="post", tags=["V1 - GitAuth"])
     @action(detail=True, methods=["post"], url_path="deny")
     def deny(self, request, pk=None):
         result = GitAuthService().deny(request.user, pk)
@@ -88,12 +89,15 @@ class GitConnectedComputerViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     swagger_tags = ["DevStreet Hub - Git Auth"]
 
-    @swagger_auto_schema(tags=["V1 - Git Auth"])
+    @swagger_auto_schema(tags=["V1 - GitConnectedComputer"])
     def list(self, request):
         qs = GitAuthService().list_computers(request.user)
-        return Response(GitConnectedComputerSerializer(qs, many=True).data)
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(qs, request, view=self)
+        serializer = GitConnectedComputerSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
-    @swagger_auto_schema(tags=["V1 - Git Auth"])
+    @swagger_auto_schema(tags=["V1 - GitConnectedComputer"])
     def destroy(self, request, pk=None):
         GitAuthService().revoke_computer(request.user, int(pk))
         return Response(status=204)

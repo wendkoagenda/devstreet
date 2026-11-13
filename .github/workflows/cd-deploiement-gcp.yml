@@ -3,7 +3,7 @@ name: CD - DEPLOIEMENT GCP
 # Description du workflow :
 # - Deploie un commit sur une VM GCP SANS IP publique : tunnel IAP et Workload Identity Federation (aucune cle, aucun secret).
 # - Meme deroulement que CD - DEPLOIEMENT SSH : seule la facon d'atteindre la VM change (deploy/ci/gcp-vm.sh).
-# - Prerequis cote GCP : 00readme/README_CD.md §7.
+# - Prerequis cote GCP : 00readme/PLAN_CD.md (hors perimetre du runbook SSH deploy/README.md).
 # Lancement : par cd-orchestrateur quand DEPLOY_ACCES vaut gcp dans l'environnement de la branche. Pas de lancement direct.
 
 on:
@@ -93,7 +93,10 @@ jobs:
           tar -czf - deploy | vm_gcp "set -eu; mkdir -p $app_dir; rm -rf $app_dir/deploy; tar -xzf - -C $app_dir"
 
           echo "== Envoi de la configuration (droits 600)"
-          tar -czf - -C "$RUNNER_TEMP/rendu" backend.env compose.env | vm_gcp "set -eu; umask 077; tar -xzf - -C $app_dir"
+          (
+            cd "$RUNNER_TEMP/rendu"
+            tar -czf - backend.env compose.env
+          ) | vm_gcp "set -eu; umask 077; tar -xzf - -C $app_dir"
 
           echo "== Deploiement"
           printf '%s\n%s\n' "$GITHUB_ACTOR" "$REGISTRY_TOKEN" | vm_gcp "cd $app_dir && sh deploy/vm/deployer.sh"

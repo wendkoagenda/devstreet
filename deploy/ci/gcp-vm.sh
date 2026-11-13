@@ -4,7 +4,7 @@
 #   vm_gcp "commande"         execute la commande sur la VM en tant qu'utilisateur deploy ; stdin est transmis
 # Variables attendues (deja validees par scripts.deploy_env) : GCP_PROJECT_ID, GCP_ZONE, GCP_INSTANCE, GCP_WIF_PROVIDER,
 # GCP_SERVICE_ACCOUNT, RUNNER_TEMP, ACTIONS_ID_TOKEN_REQUEST_URL, ACTIONS_ID_TOKEN_REQUEST_TOKEN.
-# Prerequis cote GCP : 00readme/README_CD.md §7.
+# Prerequis cote GCP : 00readme/PLAN_CD.md (hors perimetre du runbook SSH deploy/README.md).
 
 gcp_auth() {
   local dir="$RUNNER_TEMP/gcp"

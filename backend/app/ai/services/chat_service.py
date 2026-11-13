@@ -1,5 +1,6 @@
 """Service chat partagé : authz, quotas, historique, appel LlmRouter."""
 
+from django.core.exceptions import ImproperlyConfigured
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
 
 from app.ai.conf import config
@@ -35,8 +36,10 @@ class ChatService:
         raw = config("DAILY_LIMIT", "50")
         try:
             return max(0, int(raw))
-        except (TypeError, ValueError):
-            return 50
+        except (TypeError, ValueError) as error:
+            raise ImproperlyConfigured(
+                "DAILY_LIMIT doit être un entier (quota quotidien de l'assistant IA)."
+            ) from error
 
     def create_conversation(self, actor, *, consumer: str = "generic", title: str = ""):
         require_ai_chat(actor)

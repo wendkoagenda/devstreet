@@ -452,7 +452,7 @@ export default function CreateOfferDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Start date                  </FormLabel>
                   <FormControl>
-                    <Input type="date" {...formField} className="h-10" />
+                    <Input type="date" {...formField} value={formField.value ?? ""} className="h-10" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -466,7 +466,7 @@ export default function CreateOfferDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Deadline                  </FormLabel>
                   <FormControl>
-                    <Input type="date" {...formField} className="h-10" />
+                    <Input type="date" {...formField} value={formField.value ?? ""} className="h-10" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -514,7 +514,7 @@ export default function CreateOfferDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Published at                  </FormLabel>
                   <FormControl>
-                    <Input type="date" {...formField} className="h-10" />
+                    <Input type="date" {...formField} value={formField.value ?? ""} className="h-10" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

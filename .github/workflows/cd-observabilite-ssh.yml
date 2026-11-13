@@ -1,0 +1,212 @@
+name: CD - OBSERVABILITE SSH
+
+# Description du workflow :
+# - Installe ou met a jour la stack Grafana/Prometheus/Loki sur la VM (SSH), independamment du deploiement app.
+# - Lancement : par cd-orchestrateur apres deploiement-ssh (bloquant), ou a la main (workflow_dispatch)
+#   pour reparer la console sans redeployer l'app. Reserve aux GIT_MASTER_USERS en manuel.
+# - Périmètre actuel : DEPLOY_ACCES=ssh uniquement (GCP prevu plus tard).
+# - Variable : GRAFANA_ADMIN_USER (obligatoire). Secrets : GRAFANA_ADMIN_PASSWORD (obligatoire) ;
+#   SLACK_ALERT_WEBHOOK / TEAMS_ALERT_WEBHOOK (facultatifs).
+
+on:
+  workflow_call:
+    inputs:
+      branche:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit complet (40 caracteres). Vide = dernier commit de la branche
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Meme file d'attente que le deploiement SSH : pas d'observabilite pendant un deploy, et inversement
+concurrency:
+  group: cd-deploiement-${{ github.event_name == 'workflow_dispatch' && github.ref_name || inputs.branche }}
+  cancel-in-progress: false
+
+jobs:
+  autorisation:
+    name: autorisation
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      branche: ${{ steps.autorisation.outputs.branche }}
+      sha: ${{ steps.autorisation.outputs.sha }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Branche, auteur et commit
+        id: autorisation
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          set -eu
+          branche="$GITHUB_REF_NAME"
+          case "$branche" in
+            sandbox|main|prod) ;;
+            *) echo "::error::Lancer depuis sandbox, main ou prod (« Use workflow from ») : $branche n'a pas d'environnement."; exit 1 ;;
+          esac
+          masters="$(git show origin/develop:git-cli/access_control.conf | sed -n 's/^GIT_MASTER_USERS="\(.*\)"/\1/p')"
+          case ",$masters," in
+            *",$GITHUB_ACTOR,"*) ;;
+            *) echo "::error::$GITHUB_ACTOR n'est pas dans GIT_MASTER_USERS : lancement manuel refuse."; exit 1 ;;
+          esac
+          if [ -n "$INPUT_SHA" ]; then
+            sha="$INPUT_SHA"
+          else
+            sha="$GITHUB_SHA"
+          fi
+          if ! printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::sha doit etre un commit complet de 40 caracteres hexadecimaux."
+            exit 1
+          fi
+          {
+            echo "branche=$branche"
+            echo "sha=$sha"
+          } >> "$GITHUB_OUTPUT"
+
+  cible:
+    name: cible
+    needs: [autorisation]
+    if: always() && (github.event_name == 'workflow_call' || needs.autorisation.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: ${{ github.event_name == 'workflow_dispatch' && needs.autorisation.outputs.branche || inputs.branche }}
+    outputs:
+      branche: ${{ steps.cible.outputs.branche }}
+      sha: ${{ steps.cible.outputs.sha }}
+    steps:
+      - name: Verifier le mode d'acces SSH
+        id: cible
+        env:
+          ACCES: ${{ vars.DEPLOY_ACCES }}
+          CALL_BRANCHE: ${{ inputs.branche }}
+          CALL_SHA: ${{ inputs.sha }}
+          DISP_BRANCHE: ${{ needs.autorisation.outputs.branche }}
+          DISP_SHA: ${{ needs.autorisation.outputs.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -eu
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            branche="$DISP_BRANCHE"
+            sha="$DISP_SHA"
+          else
+            branche="$CALL_BRANCHE"
+            sha="$CALL_SHA"
+          fi
+          case "$ACCES" in
+            ssh) ;;
+            gcp)
+              echo "::error::CD - OBSERVABILITE SSH refuse DEPLOY_ACCES=gcp (prevu plus tard). Branche : $branche."
+              exit 1
+              ;;
+            *)
+              echo "::error::DEPLOY_ACCES absent ou inconnu dans l'environnement $branche (« $ACCES »)."
+              exit 1
+              ;;
+          esac
+          {
+            echo "branche=$branche"
+            echo "sha=$sha"
+          } >> "$GITHUB_OUTPUT"
+          echo "Observabilite SSH de $sha sur $branche." >> "$GITHUB_STEP_SUMMARY"
+
+  observabilite:
+    name: observabilite
+    needs: [cible]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ needs.cible.outputs.branche }}
+    permissions:
+      contents: read
+    env:
+      BRANCHE: ${{ needs.cible.outputs.branche }}
+      DEPLOY_SHA: ${{ needs.cible.outputs.sha }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.cible.outputs.sha }}
+          persist-credentials: false
+
+      - name: Rendre observabilite.env
+        working-directory: backend
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          python3 -m scripts.deploy_env.render_observabilite --sortie "$RUNNER_TEMP/rendu"
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          {
+            echo "SSH_HOST=$host"
+            echo "SSH_USER=$user"
+          } >> "$GITHUB_ENV"
+
+      - name: Envoyer et installer la stack
+        run: |
+          set -eu
+          ssh_vm() {
+            ssh -i "$RUNNER_TEMP/ssh/key" \
+              -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+              -o StrictHostKeyChecking=yes \
+              -o HostKeyAlgorithms=ssh-ed25519 \
+              -o BatchMode=yes \
+              -o IdentitiesOnly=yes \
+              -o ConnectTimeout=15 \
+              -o ServerAliveInterval=30 \
+              "$SSH_USER@$SSH_HOST" "$@"
+          }
+          remote_src="/tmp/observabilite-src-$$"
+          pack="$RUNNER_TEMP/obs-pack"
+          mkdir -p "$pack/deploy/vm"
+          cp -a deploy/observabilite "$pack/deploy/"
+          cp deploy/vm/observabilite.sh "$pack/deploy/vm/"
+          cp "$RUNNER_TEMP/rendu/observabilite.env" "$pack/"
+          if [ -f "$RUNNER_TEMP/rendu/alerting-contacts.yml" ]; then
+            cp "$RUNNER_TEMP/rendu/alerting-contacts.yml" "$pack/"
+          fi
+
+          echo "== Envoi de deploy/observabilite et de la config"
+          tar -czf - -C "$pack" . | ssh_vm "set -eu; umask 077; rm -rf $remote_src; mkdir -p $remote_src; tar -xzf - -C $remote_src"
+
+          echo "== Installation"
+          ssh_vm "set -eu; sh $remote_src/deploy/vm/observabilite.sh $remote_src; rm -rf $remote_src"
+
+          {
+            echo "### Observabilite $BRANCHE"
+            echo "- Commit : $DEPLOY_SHA"
+            echo "- Grafana : 127.0.0.1:3000 (tunnel : python git-cli/deploy_env.py tunnel --branche $BRANCHE)"
+            echo "- Dashboards Doonya (Browse) : General, Backend, Frontend, Proxy, Postgres, MinIO"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer la cle SSH et les fichiers rendus
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh" "$RUNNER_TEMP/rendu"

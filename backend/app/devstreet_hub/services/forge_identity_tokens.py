@@ -65,10 +65,8 @@ def extract_provisioning_key(description: str | None) -> uuid.UUID | None:
     )
     if not match:
         return None
-    try:
-        return uuid.UUID(match.group(1))
-    except ValueError:
-        return None
+    # Le motif ci-dessus garantit un UUID bien formé.
+    return uuid.UUID(match.group(1))
 
 
 def has_correlation(remote_user: dict, key: uuid.UUID) -> bool:

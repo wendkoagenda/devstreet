@@ -106,10 +106,9 @@ function stripCreateExtras(result: Project & {
   forge_access?: ForgeAccess | null;
   setup?: ProjectSetup;
 }): Project {
-  const { forge_access: _fa, setup: _setup, ...project } = result as Project & {
-    forge_access?: ForgeAccess | null;
-    setup?: ProjectSetup;
-  };
+  const project = { ...result };
+  delete project.forge_access;
+  delete project.setup;
   return project;
 }
 

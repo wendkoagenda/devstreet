@@ -18,6 +18,8 @@ from git_utils import (
     run_command,
     UserQuit,
 )
+from check_zones import run_zones_audit
+from quality_checks import run_quality_checks
 
 
 COMMIT_TYPES = [
@@ -126,6 +128,12 @@ def main():
         if code == 0 and status_output:
             print(status_output)
         print_success("Preparation terminee")
+
+        # Controles avant tout staging : echec = pas de git add.
+        if not run_quality_checks():
+            return 1
+        # Audit zones : avertissement seulement (la CI non-regression bloque les orphelins).
+        run_zones_audit(warn_only=True)
 
         unstaged_files = get_unstaged_or_untracked_files()
         if unstaged_files:

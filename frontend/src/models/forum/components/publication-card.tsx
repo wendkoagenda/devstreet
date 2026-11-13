@@ -177,7 +177,7 @@ function MediaLightbox({
 
   useEffect(() => {
     if (!open || images.length < 2) return;
-    const onKey = (event: KeyboardEvent) => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key === "ArrowRight") {
         setCurrent((value) => (value + 1) % images.length);
       } else if (event.key === "ArrowLeft") {

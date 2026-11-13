@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import re
 import uuid
 from datetime import timedelta
@@ -23,6 +24,8 @@ from app.devstreet_hub.models import (
 from app.devstreet_hub.repositories.workflow_repository import WorkflowRepository
 from app.devstreet_hub.services.errors import Conflict, ExternalUnavailable
 from app.devstreet_hub.services.gitea_client import GiteaClient
+
+logger = logging.getLogger(__name__)
 
 REQUEST_TTL = timedelta(minutes=10)
 POLL_MIN_INTERVAL = timedelta(seconds=2)
@@ -58,8 +61,12 @@ class GitAuthService:
     def forge(self):
         return self._forge or GiteaClient()
 
+    def _configured_gitea_url(self) -> str:
+        """URL publique de Gitea telle que configurée (chaîne vide si absente)."""
+        return config("GITEA_PUBLIC_URL", config("GITEA_URL")).rstrip("/")
+
     def _gitea_public_host(self) -> str:
-        url = config("GITEA_PUBLIC_URL", config("GITEA_URL")).rstrip("/")
+        url = self._configured_gitea_url()
         if not url:
             raise ExternalUnavailable("Gitea doit être configuré côté serveur.")
         return url
@@ -125,10 +132,8 @@ class GitAuthService:
         except (GitDeviceAuthRequest.DoesNotExist, ValueError, TypeError):
             raise NotFound("Demande introuvable.")
         self._expire_if_needed(item)
-        try:
-            gitea_host = urlsplit(self._gitea_public_host()).netloc
-        except ExternalUnavailable:
-            gitea_host = ""
+        # Information d'affichage : un Gitea non configuré donne un hôte vide, sans erreur.
+        gitea_host = urlsplit(self._configured_gitea_url()).netloc
         return {
             "id": str(item.id),
             "computer_name": item.computer_name,
@@ -348,7 +353,11 @@ class GitAuthService:
                     )
                 except ExternalUnavailable:
                     # On marque révoqué localement ; la forge peut être indisponible.
-                    pass
+                    logger.warning(
+                        "Jeton Gitea non supprimé (forge indisponible) pour l'ordinateur %s",
+                        computer.pk,
+                        exc_info=True,
+                    )
             computer.status = GitConnectedComputer.STATUS_REVOKED
             computer.revoked_at = timezone.now()
             computer.save(update_fields=["status", "revoked_at"])

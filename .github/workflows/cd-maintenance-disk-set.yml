@@ -1,0 +1,30 @@
+name: CD - MAINTENANCE disk-set
+
+# Apres agrandissement du disque dans la console GCP : etend la partition Linux
+# et enregistre DEPLOY_DISK_GB. Confirmation : DISK-SET-<branche>.
+# Use workflow from = sandbox | main. Masters only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      disk_gb:
+        description: Taille cible en Go (20-500), egale au disque GCP apres resize
+        required: true
+        type: string
+      confirmation:
+        description: Exactement DISK-SET-<branche> (ex. DISK-SET-sandbox)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance:
+    name: maintenance
+    uses: ./.github/workflows/cd-maintenance.yml
+    with:
+      action: disk-set
+      disk_gb: ${{ inputs.disk_gb }}
+      confirmation: ${{ inputs.confirmation }}
+    secrets: inherit

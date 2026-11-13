@@ -65,8 +65,11 @@ def cmd_login(args: argparse.Namespace) -> int:
         print(authorize_url)
         try:
             webbrowser.open(authorize_url)
-        except Exception:
-            pass
+        except webbrowser.Error as error:
+            print(
+                f"Navigateur non ouvert automatiquement ({error}) : ouvrez l'adresse ci-dessus.",
+                file=sys.stderr,
+            )
         print("En attente de votre confirmation…")
         deadline = time.time() + 10 * 60
         while time.time() < deadline:

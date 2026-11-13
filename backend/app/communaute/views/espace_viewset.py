@@ -45,6 +45,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         return [IsAuthenticated()]
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     def list(self, request):
         mine_raw = (request.query_params.get('mine') or '').strip().lower()
         mine_only = mine_raw in ('1', 'true', 'yes', 'moi')
@@ -63,6 +64,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     def retrieve(self, request, pk=None):
         espace = self.espace_service.get_by_id(pk)
         if not espace:
@@ -95,6 +97,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         data['via_preview'] = access.via_preview
         return Response(data)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     def create(self, request):
         try:
             type_espace = (
@@ -125,6 +128,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     def partial_update(self, request, pk=None):
         espace = self.espace_service.get_by_id(pk)
         if not espace:
@@ -167,9 +171,11 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     def update(self, request, pk=None):
         return self.partial_update(request, pk=pk)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     def destroy(self, request, pk=None):
         espace = self.espace_service.get_by_id(pk)
         if not espace:
@@ -186,6 +192,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         self.espace_service.delete(pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(detail=True, methods=['post'], url_path='rejoindre')
     def rejoindre(self, request, pk=None):
         espace = self.espace_service.get_by_id(pk)
@@ -212,6 +219,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(detail=True, methods=['post'], url_path='quitter')
     def quitter(self, request, pk=None):
         """Se désabonner / quitter (sauf SUPER_ADMIN)."""
@@ -229,6 +237,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(methods=['get', 'post'], tags=['V1 - Espace'])
     @action(detail=True, methods=['get', 'post'], url_path='liens')
     def liens(self, request, pk=None):
         espace = self.espace_service.get_by_id(pk)
@@ -242,9 +251,9 @@ class EspaceViewSet(viewsets.ModelViewSet):
                 liens = self.espace_service.list_liens(
                     espace=espace, acteur=request.user
                 )
-                return Response(
-                    LienInvitationSerializer(liens, many=True).data
-                )
+                page = self.paginate_queryset(liens)
+                serializer = LienInvitationSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
             lien, code = self.espace_service.create_lien(
                 espace=espace,
                 acteur=request.user,
@@ -258,6 +267,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(
         detail=True,
         methods=['post'],
@@ -285,6 +295,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
             message, context={'request': self.request}
         ).data
 
+    @swagger_auto_schema(methods=['get', 'post'], tags=['V1 - Espace'])
     @action(detail=True, methods=['get', 'post'], url_path='messages')
     def messages(self, request, pk=None):
         """Chat de communauté : liste ou envoi d'un message."""
@@ -346,6 +357,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(
         detail=True,
         methods=['post'],
@@ -368,6 +380,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(
         detail=True,
         methods=['post'],
@@ -391,6 +404,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(detail=True, methods=['get'], url_path='membres')
     def membres(self, request, pk=None):
         espace = self.espace_service.get_by_id(pk)
@@ -414,6 +428,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(
         detail=True,
         methods=['post'],
@@ -439,6 +454,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(
         detail=True,
         methods=['post'],
@@ -461,6 +477,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(
         detail=False,
         methods=['get'],
@@ -475,6 +492,7 @@ class EspaceViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({'error': _err(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(tags=['V1 - Espace'])
     @action(
         detail=False,
         methods=['post'],

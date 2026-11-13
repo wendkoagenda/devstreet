@@ -76,8 +76,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          REQUIRED_MARKER="<!-- X-Git-CLI-PR: onepourcent-git-cli/2.0 -->"
-          LEGACY_MARKER="<!-- X-Git-CLI-PR: onepourcent-git-cli/1.0 -->"
+          REQUIRED_MARKER="<!-- X-Git-CLI-PR: doonya-git-cli/2.0 -->"
+          LEGACY_MARKER="<!-- X-Git-CLI-PR: doonya-git-cli/1.0 -->"
           BODY="${PR_BODY}"
 
           if [[ "$BODY" != *"$REQUIRED_MARKER"* && "$BODY" != *"$LEGACY_MARKER"* ]]; then

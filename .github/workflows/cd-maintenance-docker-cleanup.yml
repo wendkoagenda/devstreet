@@ -1,0 +1,26 @@
+name: CD - MAINTENANCE docker-cleanup
+
+# Libere l'espace Docker (images, cache, conteneurs arretes).
+# Aucun volume n'est touche : pgdata, grafana-data, Loki/Prometheus, etc.
+# Conteneurs en cours (app / proxy / observabilite) laisses intactes.
+# Confirmation : DOCKER-CLEANUP-<branche>. Use workflow from = sandbox | main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Exactement DOCKER-CLEANUP-<branche> (ex. DOCKER-CLEANUP-sandbox)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance:
+    name: maintenance
+    uses: ./.github/workflows/cd-maintenance.yml
+    with:
+      action: docker-cleanup
+      confirmation: ${{ inputs.confirmation }}
+    secrets: inherit

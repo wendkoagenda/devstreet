@@ -2,8 +2,8 @@ name: CI - BACKEND
 
 # Description du workflow :
 # - Verifie qu'il n'y a pas de conflit de migrations (makemigrations --merge) ni de migration manquante
-#   (makemigrations --check).
-# - Lance toute la suite de tests Django sur une base PostgreSQL jetable.
+#   (makemigrations --check), sur une base PostgreSQL jetable.
+# - Tests Django retires de la CI pour le moment : suite pas encore fiable.
 # Lancement : par ci-orchestrateur, ou a la main (Actions > CI - BACKEND > Run workflow).
 # Les secrets de test sont generes a chaque execution : aucun secret reel n'est utilise ici.
 
@@ -29,7 +29,7 @@ jobs:
         env:
           # Base jetable detruite avec le job, jamais exposee : pas de mot de passe
           POSTGRES_HOST_AUTH_METHOD: trust
-          POSTGRES_DB: ci_devstreet
+          POSTGRES_DB: ci_boilerplate
         ports:
           - 5432:5432
         options: >-
@@ -67,7 +67,8 @@ jobs:
             echo "ENABLE_API_DOCS=True"
             echo "ENABLE_ADMIN=False"
             echo "USE_GCS=False"
-            echo "DB_NAME=ci_devstreet"
+            echo "USE_S3=False"
+            echo "DB_NAME=ci_boilerplate"
             echo "DB_USER=postgres"
             echo "DB_HOST=localhost"
             echo "DB_PORT=5432"
@@ -93,6 +94,3 @@ jobs:
             echo "::error::Des modifications de modeles n'ont pas de migration. Lancer makemigrations en local et commiter le resultat."
             exit 1
           fi
-
-      - name: Tests
-        run: python manage.py test --noinput

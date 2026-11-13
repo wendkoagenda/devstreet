@@ -191,7 +191,7 @@ export default function CreateExperienceDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Start date *                  </FormLabel>
                   <FormControl>
-                    <Input type="date" {...formField} className="h-10" />
+                    <Input type="date" {...formField} value={formField.value ?? ""} className="h-10" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -205,7 +205,7 @@ export default function CreateExperienceDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     End date                  </FormLabel>
                   <FormControl>
-                    <Input type="date" {...formField} className="h-10" />
+                    <Input type="date" {...formField} value={formField.value ?? ""} className="h-10" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

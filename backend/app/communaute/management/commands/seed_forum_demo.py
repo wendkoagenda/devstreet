@@ -7,6 +7,7 @@ Usage (depuis backend/, venv active) :
 from __future__ import annotations
 
 import random
+import secrets
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -24,8 +25,6 @@ from app.communaute.models import (
 )
 
 User = get_user_model()
-
-DEMO_PASSWORD = "Demo1234!"
 
 FIRST_NAMES = [
     "Amina", "Bruno", "Chloé", "Diego", "Emma", "Farid", "Gina", "Hugo",
@@ -82,6 +81,9 @@ class Command(BaseCommand):
         n_users = max(5, options["users"])
         n_pubs = max(20, options["publications"])
         force = options["force"]
+        # Mot de passe aléatoire propre à cette exécution : aucun secret n'est écrit dans le code.
+        self.demo_password = secrets.token_urlsafe(16)
+        self.comptes_crees = 0
 
         marker_email = "seed.forum.demo@devstreet.local"
         if User.objects.filter(email=marker_email).exists() and not force:
@@ -126,11 +128,17 @@ class Command(BaseCommand):
         self._ensure_messages(users, espaces)
         self.stdout.write(self.style.SUCCESS("Messages / chats de démo OK"))
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Mot de passe démo des comptes *demo* : {DEMO_PASSWORD}"
+        if self.comptes_crees:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Mot de passe des {self.comptes_crees} comptes *demo* créés "
+                    f"à l'instant : {self.demo_password}"
+                )
             )
-        )
+        else:
+            self.stdout.write(
+                "Aucun compte démo créé : les mots de passe existants sont inchangés."
+            )
 
     def _ensure_users(self, n_users: int) -> list:
         users: list[User] = []
@@ -155,8 +163,9 @@ class Command(BaseCommand):
                 },
             )
             if created:
-                user.set_password(DEMO_PASSWORD)
+                user.set_password(self.demo_password)
                 user.save(update_fields=["password"])
+                self.comptes_crees += 1
             users.append(user)
             i += 1
         return users

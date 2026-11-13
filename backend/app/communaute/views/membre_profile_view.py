@@ -2,6 +2,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -30,6 +31,7 @@ def _membre_brief(user) -> dict:
     }
 
 
+@swagger_auto_schema(method='get', tags=['V1 - Membre'])
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def membre_search_view(request):
@@ -50,6 +52,7 @@ def membre_search_view(request):
     return Response([_membre_brief(user) for user in qs])
 
 
+@swagger_auto_schema(method='get', tags=['V1 - Membre'])
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def membre_suivis_view(request):
@@ -58,7 +61,10 @@ def membre_suivis_view(request):
     try:
         limit = int(request.query_params.get('limit') or 50)
     except (TypeError, ValueError):
-        limit = 50
+        return Response(
+            {'error': 'Paramètre limit invalide (entier attendu).'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     membres = SuiviUtilisateurService().list_membres_suivis(
         request.user, search=search, limit=limit
     )
@@ -75,6 +81,7 @@ def _profile_payload(request, user):
     return data
 
 
+@swagger_auto_schema(method='get', tags=['V1 - Membre'])
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def membre_profile_view(request, user_id: int):
@@ -88,6 +95,7 @@ def membre_profile_view(request, user_id: int):
     return Response(_profile_payload(request, user), status=status.HTTP_200_OK)
 
 
+@swagger_auto_schema(method='get', tags=['V1 - Membre'])
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def membre_by_username_view(request, username: str):
@@ -104,6 +112,7 @@ def membre_by_username_view(request, username: str):
     return Response(_profile_payload(request, user), status=status.HTTP_200_OK)
 
 
+@swagger_auto_schema(method='post', tags=['V1 - Membre'])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def membre_suivre_view(request, user_id: int):

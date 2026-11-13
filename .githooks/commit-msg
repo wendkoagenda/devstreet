@@ -3,9 +3,9 @@
 set -eu
 
 MSG_FILE="$1"
-REQUIRED_TRAILER="X-Git-CLI: onepourcent-git-cli/2.0"
+REQUIRED_TRAILER="X-Git-CLI: doonya-git-cli/2.0"
 # Transition : les commits en 1.0 restent acceptes
-ACCEPTED_TRAILER_REGEX="X-Git-CLI: onepourcent-git-cli/(1\.0|2\.0)"
+ACCEPTED_TRAILER_REGEX="X-Git-CLI: doonya-git-cli/(1\.0|2\.0)"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 ACCESS_CONTROL_FILE="$REPO_ROOT/git-cli/access_control.conf"
 

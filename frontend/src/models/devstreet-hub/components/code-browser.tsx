@@ -36,6 +36,7 @@ import { SafeMarkdown } from "../functions/safe-markdown";
 import { useProjectCode } from "../hooks/use-project-code";
 import { CodeFileViewer } from "./code-file-viewer";
 import { CodeBrowserSkeleton, CodeRowsSkeleton } from "./code-browser-skeleton";
+import { copyText } from "@/helpers/clipboard";
 
 interface CodeBrowserProps {
   projectId: number;
@@ -43,15 +44,6 @@ interface CodeBrowserProps {
   isOwner: boolean;
   namespaceHint?: string | null;
   repoNameHint?: string | null;
-}
-
-async function copyText(value: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(value);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function formatRelative(iso: string | null | undefined, fallback: string): string {

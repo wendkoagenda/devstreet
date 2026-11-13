@@ -2,12 +2,15 @@ name: CI - ORCHESTRATEUR
 
 # Description du workflow :
 # Point d'entree de la CI : appelle les workflows par sujet sur chaque pull request, chaque revue de pull request
-# et chaque push vers develop/main/prod. Chaque workflow reste lancable seul (Actions > Run workflow).
+# et chaque push vers sandbox/main/prod. Chaque workflow reste lancable seul (Actions > Run workflow).
 # - ci-backend, ci-frontend, ci-securite, ci-non-regression : appeles ici, tous les quatre.
 # - La revue de pull request relance l'orchestrateur pour que la non-regression voie l'approbation d'un responsable.
-# - Push vers develop/main/prod : si tout est vert, appelle cd-orchestrateur (deploiement de la branche).
+# - Push vers sandbox/main/prod : si tout est vert, appelle cd-orchestrateur (deploiement de la branche).
 # - Lancement manuel de l'orchestrateur : backend, frontend et securite seulement. La comparaison de deux
 #   references se lance directement dans ci-non-regression.
+# - En fin de chaine : notifications Slack/Teams (memes secrets facultatifs que le CD :
+#   SLACK_NOTIF_WEBHOOK / TEAMS_NOTIF_WEBHOOK). Sur push/manuel sandbox|main|prod : secrets
+#   d'environnement. Sur pull_request (pas les revues) : secrets de depot du meme nom (facultatifs).
 # Controles a rendre obligatoires dans les reglages de branche : voir 00readme/README_CI.md.
 
 on:
@@ -15,7 +18,7 @@ on:
   pull_request_review:
     types: [submitted, dismissed]
   push:
-    branches: [develop, main, prod]
+    branches: [sandbox, main, prod]
   workflow_dispatch:
 
 permissions:
@@ -53,7 +56,7 @@ jobs:
       issues: write
     uses: ./.github/workflows/ci-non-regression.yml
 
-  # Push ou merge vers develop, main ou prod : deploiement de la branche une fois toute la CI verte.
+  # Push ou merge vers sandbox, main ou prod : deploiement de la branche une fois toute la CI verte.
   # Le run s'execute sur la branche poussee : son environnement GitHub (reserve a cette branche) est donc accessible.
   deploiement:
     name: deploiement
@@ -65,3 +68,188 @@ jobs:
       id-token: write
     uses: ./.github/workflows/cd-orchestrateur.yml
     secrets: inherit
+
+  # Notifications sur sandbox/main/prod (push ou manuel) : secrets d'environnement, comme le CD.
+  # Succes ignore sur push : le CD envoie deja notif-succes apres deploiement.
+  notif-succes:
+    name: notif-succes
+    needs: [backend, frontend, securite, non-regression]
+    if: >-
+      always()
+      && (github.event_name == 'workflow_dispatch')
+      && (github.ref_name == 'sandbox' || github.ref_name == 'main' || github.ref_name == 'prod')
+      && needs.backend.result == 'success'
+      && needs.frontend.result == 'success'
+      && needs.securite.result == 'success'
+      && (needs.non-regression.result == 'success' || needs.non-regression.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: ${{ github.ref_name }}
+    steps:
+      - name: Recuperer le commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Notifier le succes
+        env:
+          SLACK_NOTIF_WEBHOOK: ${{ secrets.SLACK_NOTIF_WEBHOOK }}
+          TEAMS_NOTIF_WEBHOOK: ${{ secrets.TEAMS_NOTIF_WEBHOOK }}
+          REF_LABEL: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          EVENEMENT: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUT: succes
+          ETAPE: ""
+          PR_NUMBER: ""
+        run: bash deploy/ci/notify-ci.sh
+
+  notif-echec:
+    name: notif-echec
+    needs: [backend, frontend, securite, non-regression]
+    if: >-
+      always()
+      && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      && (github.ref_name == 'sandbox' || github.ref_name == 'main' || github.ref_name == 'prod')
+      && (
+        needs.backend.result == 'failure'
+        || needs.backend.result == 'cancelled'
+        || needs.frontend.result == 'failure'
+        || needs.frontend.result == 'cancelled'
+        || needs.securite.result == 'failure'
+        || needs.securite.result == 'cancelled'
+        || needs.non-regression.result == 'failure'
+        || needs.non-regression.result == 'cancelled'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: ${{ github.ref_name }}
+    steps:
+      - name: Recuperer le commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Notifier l'echec
+        env:
+          SLACK_NOTIF_WEBHOOK: ${{ secrets.SLACK_NOTIF_WEBHOOK }}
+          TEAMS_NOTIF_WEBHOOK: ${{ secrets.TEAMS_NOTIF_WEBHOOK }}
+          REF_LABEL: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          EVENEMENT: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUT: echec
+          PR_NUMBER: ""
+          BACKEND_RESULT: ${{ needs.backend.result }}
+          FRONTEND_RESULT: ${{ needs.frontend.result }}
+          SECURITE_RESULT: ${{ needs.securite.result }}
+          NONREG_RESULT: ${{ needs.non-regression.result }}
+        run: |
+          set -eu
+          etape=""
+          case "$BACKEND_RESULT" in failure|cancelled) etape=backend ;; esac
+          if [ -z "$etape" ]; then
+            case "$FRONTEND_RESULT" in failure|cancelled) etape=frontend ;; esac
+          fi
+          if [ -z "$etape" ]; then
+            case "$SECURITE_RESULT" in failure|cancelled) etape=securite ;; esac
+          fi
+          if [ -z "$etape" ]; then
+            case "$NONREG_RESULT" in failure|cancelled) etape=non-regression ;; esac
+          fi
+          export ETAPE="$etape"
+          bash deploy/ci/notify-ci.sh
+
+  # Notifications sur pull request : secrets de depot (meme noms), pas l'environnement de branche.
+  notif-succes-pr:
+    name: notif-succes-pr
+    needs: [backend, frontend, securite, non-regression]
+    if: >-
+      always()
+      && github.event_name == 'pull_request'
+      && needs.backend.result == 'success'
+      && needs.frontend.result == 'success'
+      && needs.securite.result == 'success'
+      && needs.non-regression.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Recuperer le commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Notifier le succes
+        env:
+          SLACK_NOTIF_WEBHOOK: ${{ secrets.SLACK_NOTIF_WEBHOOK }}
+          TEAMS_NOTIF_WEBHOOK: ${{ secrets.TEAMS_NOTIF_WEBHOOK }}
+          REF_LABEL: ${{ github.head_ref || github.ref_name }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          EVENEMENT: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUT: succes
+          ETAPE: ""
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: bash deploy/ci/notify-ci.sh
+
+  notif-echec-pr:
+    name: notif-echec-pr
+    needs: [backend, frontend, securite, non-regression]
+    if: >-
+      always()
+      && github.event_name == 'pull_request'
+      && (
+        needs.backend.result == 'failure'
+        || needs.backend.result == 'cancelled'
+        || needs.frontend.result == 'failure'
+        || needs.frontend.result == 'cancelled'
+        || needs.securite.result == 'failure'
+        || needs.securite.result == 'cancelled'
+        || needs.non-regression.result == 'failure'
+        || needs.non-regression.result == 'cancelled'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Recuperer le commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Notifier l'echec
+        env:
+          SLACK_NOTIF_WEBHOOK: ${{ secrets.SLACK_NOTIF_WEBHOOK }}
+          TEAMS_NOTIF_WEBHOOK: ${{ secrets.TEAMS_NOTIF_WEBHOOK }}
+          REF_LABEL: ${{ github.head_ref || github.ref_name }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          EVENEMENT: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          STATUT: echec
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BACKEND_RESULT: ${{ needs.backend.result }}
+          FRONTEND_RESULT: ${{ needs.frontend.result }}
+          SECURITE_RESULT: ${{ needs.securite.result }}
+          NONREG_RESULT: ${{ needs.non-regression.result }}
+        run: |
+          set -eu
+          etape=""
+          case "$BACKEND_RESULT" in failure|cancelled) etape=backend ;; esac
+          if [ -z "$etape" ]; then
+            case "$FRONTEND_RESULT" in failure|cancelled) etape=frontend ;; esac
+          fi
+          if [ -z "$etape" ]; then
+            case "$SECURITE_RESULT" in failure|cancelled) etape=securite ;; esac
+          fi
+          if [ -z "$etape" ]; then
+            case "$NONREG_RESULT" in failure|cancelled) etape=non-regression ;; esac
+          fi
+          export ETAPE="$etape"
+          bash deploy/ci/notify-ci.sh

@@ -6,9 +6,9 @@ from pathlib import Path
 VERSION = "2.0"
 VERSION_DATE = "octobre 2026"
 GIT_CLI_VERSION = VERSION
-COMMIT_TRAILER = f"X-Git-CLI: onepourcent-git-cli/{GIT_CLI_VERSION}"
-PR_MARKER = f"<!-- X-Git-CLI-PR: onepourcent-git-cli/{GIT_CLI_VERSION} -->"
-PUSH_ENV_KEY = "ONEPOURCENT_GITCLI_PUSH"
+COMMIT_TRAILER = f"X-Git-CLI: doonya-git-cli/{GIT_CLI_VERSION}"
+PR_MARKER = f"<!-- X-Git-CLI-PR: doonya-git-cli/{GIT_CLI_VERSION} -->"
+PUSH_ENV_KEY = "DOONYA_GITCLI_PUSH"
 REQUIRED_HOOKS = (".githooks/commit-msg", ".githooks/pre-push")
 ACCESS_CONTROL_FILE = "git-cli/access_control.conf"
 IDENTITY_RESTRICTED_BRANCHES = tuple()
@@ -16,11 +16,12 @@ GIT_MASTER_EMAILS = tuple()
 PROTECTED_PATHS = tuple()
 
 BANNER = r"""
-      ___                ____                                          _
-     / _ \  _ __    ___ |  _ \   ___   _   _  _ __   ___   ___  _ __  | |_
-    | | | || '_ \  / _ \| |_) | / _ \ | | | || '__| / __| / _ \| '_ \ | __|
-    | |_| || | | ||  __/|  __/ | (_) || |_| || |   | (__ |  __/| | | || |_
-     \___/ |_| |_| \___||_|     \___/  \__,_||_|    \___| \___||_| |_| \__|
+     ____                                    _          _
+    |  _ \  ___   ___  _ __  _   _  __ _   | |    __ _| |__  ___
+    | | | |/ _ \ / _ \| '_ \| | | |/ _` |  | |   / _` | '_ \/ __|
+    | |_| | (_) | (_) | | | | |_| | (_| |  | |__| (_| | |_) \__ \
+    |____/ \___/ \___/|_| |_|\__, |\__,_|  |_____\__,_|_.__/|___/
+                              |___/
 """
 
 
@@ -80,31 +81,40 @@ def ask_non_empty(prompt_text):
 
 
 def run_command(command, cwd=None, stream=False, env=None):
-    if stream:
-        process = subprocess.Popen(
+    # UTF-8 explicite : evite le mojibake sous Windows (cp1252) sur les sorties FR.
+    try:
+        if stream:
+            process = subprocess.Popen(
+                command,
+                cwd=cwd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                bufsize=1,
+                env=env,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                print(line, end="")
+            process.wait()
+            return process.returncode, ""
+
+        completed = subprocess.run(
             command,
             cwd=cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            capture_output=True,
             text=True,
-            bufsize=1,
+            encoding="utf-8",
+            errors="replace",
             env=env,
         )
-        assert process.stdout is not None
-        for line in process.stdout:
-            print(line, end="")
-        process.wait()
-        return process.returncode, ""
-
-    completed = subprocess.run(
-        command,
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        env=env,
-    )
-    output = (completed.stdout or "") + (completed.stderr or "")
-    return completed.returncode, output.strip()
+        output = (completed.stdout or "") + (completed.stderr or "")
+        return completed.returncode, output.strip()
+    except FileNotFoundError:
+        missing = command[0] if command else "(commande vide)"
+        return 127, f"Commande introuvable : {missing}"
 
 
 def is_git_diagnostic_line(line):
@@ -255,7 +265,7 @@ def _load_access_control():
     config_path = repo_root / ACCESS_CONTROL_FILE
     default_emails = ("elisee.wou@gmail.com",)
     default_branches = ("main", "develop", "prod")
-    default_paths = ("terraform/", ".github/workflows/")
+    default_paths = (".github/workflows/",)
 
     if not config_path.exists():
         return default_emails, default_branches, default_paths

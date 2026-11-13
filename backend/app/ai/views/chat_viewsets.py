@@ -27,7 +27,7 @@ class AiConversationViewSet(
     permission_classes = [IsAuthenticated]
     serializer_class = AiConversationSerializer
     lookup_value_regex = "[0-9]+"
-    swagger_tags = ["V1 - AI"]
+    swagger_tags = ["V1 - AiConversation"]
 
     def get_queryset(self):
         return []
@@ -35,7 +35,7 @@ class AiConversationViewSet(
     @swagger_auto_schema(
         request_body=AiConversationCreateSerializer,
         responses={201: AiConversationSerializer},
-        tags=["V1 - AI"],
+        tags=["V1 - AiConversation"],
     )
     def create(self, request, *args, **kwargs):
         data = validated(AiConversationCreateSerializer, request.data)
@@ -48,7 +48,7 @@ class AiConversationViewSet(
             AiConversationSerializer(conversation).data, status=status.HTTP_201_CREATED
         )
 
-    @swagger_auto_schema(responses={200: AiConversationSerializer}, tags=["V1 - AI"])
+    @swagger_auto_schema(responses={200: AiConversationSerializer}, tags=["V1 - AiConversation"])
     def retrieve(self, request, *args, **kwargs):
         conversation = ChatService().get_conversation(request.user, int(kwargs["pk"]))
         return Response(AiConversationSerializer(conversation).data)
@@ -57,7 +57,7 @@ class AiConversationViewSet(
         method="post",
         request_body=AiMessageCreateSerializer,
         responses={200: AiChatResponseSerializer},
-        tags=["V1 - AI"],
+        tags=["V1 - AiConversation"],
     )
     @action(detail=True, methods=["post"], url_path="messages")
     def messages(self, request, pk=None):

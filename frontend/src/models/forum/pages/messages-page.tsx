@@ -47,6 +47,7 @@ import {
   parseVocalUrl,
 } from "../lib/vocal-message";
 import type { Espace } from "../schema";
+import type { AppDispatch } from "@/redux/store";
 
 function memberLabel(member: ConversationMember | null | undefined) {
   if (!member) return "Membre";
@@ -584,7 +585,7 @@ function ConversationThread({
   conversationId: number;
   currentUserId: number | null;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const listRef = useRef<HTMLDivElement | null>(null);
   const [draft, setDraft] = useState("");
   const {

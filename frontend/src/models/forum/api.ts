@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "@/helpers/api/base-query";
 import {
   cursorFromUrl,
+  fetchAllPages,
   PAGE_SIZE,
   toQueryString,
   type CursorPaginated,
@@ -14,10 +15,10 @@ import type {
   ConfirmationAideToggleResult,
   CreateApplicationInput,
   CreateChoixInput,
-  CreateCommentInput,
+  CreateCommentFormValues,
   CreateDiscussionInput,
   CreateEntraideInput,
-  CreateEspaceInput,
+  CreateEspaceBody,
   DecideChoixInput,
   Espace,
   EspaceMembre,
@@ -290,8 +291,9 @@ export const forumApi = createApi({
           dispatch(
             forumApi.util.invalidateTags(["ActivityBadges"])
           );
-        } catch {
-          /* ignore */
+        } catch (error) {
+          // L'échec de la mutation est traité par l'appelant (unwrap) ; ici, seulement le journal.
+          console.warn("Badges d'activité non rafraîchis :", error);
         }
       },
     }),
@@ -362,7 +364,7 @@ export const forumApi = createApi({
     >({
       query: (file) => {
         const formData = new FormData();
-        const safeName = file.name.replace(/[^\w.\-]+/g, "-").toLowerCase();
+        const safeName = file.name.replace(/[^\w.-]+/g, "-").toLowerCase();
         const stamp = Date.now();
         formData.append("image", file);
         formData.append("kind", "IMAGE");
@@ -381,7 +383,7 @@ export const forumApi = createApi({
     >({
       query: ({ file, kind }) => {
         const formData = new FormData();
-        const safeName = file.name.replace(/[^\w.\-]+/g, "-").toLowerCase();
+        const safeName = file.name.replace(/[^\w.-]+/g, "-").toLowerCase();
         const stamp = Date.now();
         const folder =
           kind === "VIDEO"
@@ -454,7 +456,7 @@ export const forumApi = createApi({
       ],
     }),
 
-    createEspace: builder.mutation<Espace, CreateEspaceInput>({
+    createEspace: builder.mutation<Espace, CreateEspaceBody>({
       query: (body) => ({
         url: "/espaces",
         method: "POST",
@@ -541,8 +543,9 @@ export const forumApi = createApi({
         try {
           await queryFulfilled;
           dispatch(forumApi.util.invalidateTags(["ActivityBadges"]));
-        } catch {
-          /* ignore */
+        } catch (error) {
+          // L'échec de la mutation est traité par l'appelant (unwrap) ; ici, seulement le journal.
+          console.warn("Badges d'activité non rafraîchis :", error);
         }
       },
     }),
@@ -593,7 +596,10 @@ export const forumApi = createApi({
     }),
 
     getEspaceLiens: builder.query<LienInvitation[], number>({
-      query: (espaceId) => `/espaces/${espaceId}/liens`,
+      queryFn: (espaceId, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<LienInvitation>((qs) =>
+          fetchWithBQ(`/espaces/${espaceId}/liens${qs}`)
+        ),
       providesTags: (_result, _error, id) => [{ type: "Espace", id }],
     }),
 
@@ -731,7 +737,10 @@ export const forumApi = createApi({
     }),
 
     getPublicationAvis: builder.query<AvisChoix[], number>({
-      query: (id) => `/publications/${id}/avis`,
+      queryFn: (id, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<AvisChoix>((qs) =>
+          fetchWithBQ(`/publications/${id}/avis${qs}`)
+        ),
       providesTags: (_result, _error, id) => [{ type: "Avis", id }],
     }),
 
@@ -882,13 +891,16 @@ export const forumApi = createApi({
     }),
 
     getPublicationComments: builder.query<Commentaire[], number>({
-      query: (id) => `/publications/${id}/commentaires`,
+      queryFn: (id, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<Commentaire>((qs) =>
+          fetchWithBQ(`/publications/${id}/commentaires${qs}`)
+        ),
       providesTags: (_result, _error, id) => [{ type: "Comments", id }],
     }),
 
     createPublicationComment: builder.mutation<
       Commentaire,
-      { publicationId: number; body: CreateCommentInput }
+      { publicationId: number; body: CreateCommentFormValues }
     >({
       query: ({ publicationId, body }) => ({
         url: `/publications/${publicationId}/commentaires`,

@@ -16,7 +16,7 @@ fi
 RESTRICTED_BRANCHES="$(printf '%s' "${IDENTITY_RESTRICTED_BRANCHES:-main,develop,prod}" | tr ',' ' ')"
 GIT_MASTER_EMAILS_LIST="$(printf '%s' "${GIT_MASTER_EMAILS:-}" | tr ',' ' ')"
 
-if [ "${ONEPOURCENT_GITCLI_PUSH:-}" != "1" ]; then
+if [ "${DOONYA_GITCLI_PUSH:-}" != "1" ]; then
   echo ""
   echo "Push refuse: utilisez python git-cli/push.py"
   echo "Le push direct via git push n'est pas autorise."
