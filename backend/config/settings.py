@@ -56,6 +56,7 @@ LOCAL_APPS = [
     'app.devstreet_hub',
     'app.ai',
     'app.marketplace',
+    'app.communaute',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -187,6 +188,7 @@ REST_FRAMEWORK = {
         'password_reset_confirm': '10/hour',
         # Limitation de débit de la connexion et du rafraîchissement (par IP)
         'login': '10/minute',
+        'register': '5/minute',
         'token_refresh': '30/minute',
         'token_verify': '60/minute',
         'logout': '30/minute',

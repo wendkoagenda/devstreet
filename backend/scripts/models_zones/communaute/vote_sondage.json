@@ -1,0 +1,11 @@
+{
+  "model_name": "VoteSondage",
+  "app_name": "communaute",
+  "fields": [],
+  "meta": {
+    "db_table": "communaute_vote_sondage",
+    "resource_plural": "votes-sondage",
+    "verbose_name": "Vote de sondage",
+    "verbose_name_plural": "Votes de sondage"
+  }
+}

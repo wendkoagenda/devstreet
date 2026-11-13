@@ -1,0 +1,31 @@
+{
+  "model_name": "Commentaire",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "nature",
+      "type": "CharField",
+      "max_length": 20,
+      "choices": [
+        ["COMMENTAIRE", "Commentaire"],
+        ["RETOUR_APP", "Retour sur application"],
+        ["REPONSE_TECHNIQUE", "Réponse technique"]
+      ]
+    },
+    {
+      "name": "texte",
+      "type": "TextField"
+    },
+    {
+      "name": "est_anonyme",
+      "type": "BooleanField",
+      "default": false
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_commentaire",
+    "resource_plural": "commentaires",
+    "verbose_name": "Commentaire",
+    "verbose_name_plural": "Commentaires"
+  }
+}

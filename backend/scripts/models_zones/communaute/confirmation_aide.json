@@ -1,0 +1,11 @@
+{
+  "model_name": "ConfirmationAide",
+  "app_name": "communaute",
+  "fields": [],
+  "meta": {
+    "db_table": "communaute_confirmation_aide",
+    "resource_plural": "confirmations-aide",
+    "verbose_name": "Confirmation d'aide",
+    "verbose_name_plural": "Confirmations d'aide"
+  }
+}

@@ -1,0 +1,152 @@
+<mxfile host="65bd71144e">
+    <diagram id="modele-communaute-complet" name="Modèle complet">
+        <mxGraphModel dx="1714" dy="3143" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2500" pageHeight="1800" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=26;fontStyle=1;fontColor=#0F172A;" value="DevStreet — modèle complet de l&#39;app Communauté" vertex="1">
+                    <mxGeometry height="50" width="1100" x="40" y="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontColor=#334155;" value="Gris : modèles existants  ·  Jaune : communautés et chaînes  ·  Bleu : publications  ·  Vert : suivi et aide  ·  Rose : messagerie privée" vertex="1">
+                    <mxGeometry height="30" width="1800" x="40" y="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#E5E7EB;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;User (core, existant)&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id: bigint&lt;br/&gt;username: texte&lt;br/&gt;email: email&lt;br/&gt;first_name: texte&lt;br/&gt;last_name: texte&lt;br/&gt;is_active: bool&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="180" width="240" x="110" y="580" as="geometry"/>
+                </mxCell>
+                <mxCell id="project" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#E5E7EB;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;Project (devstreet_hub, existant)&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id: bigint&lt;br/&gt;title: texte&lt;br/&gt;slug: texte&lt;br/&gt;owner_id: FK User&lt;br/&gt;status: enum&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="160" width="240" x="40" y="1100" as="geometry"/>
+                </mxCell>
+                <mxCell id="espace" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#FDE68A;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;Espace&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;type : enum&lt;br/&gt;nom : texte court&lt;br/&gt;description : texte&lt;br/&gt;acces : enum&lt;br/&gt;membres_peuvent_publier : booléen&lt;br/&gt;commentaires_ouverts : booléen&lt;br/&gt;created_at : datetime&lt;br/&gt;updated_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="275" width="300" x="380" y="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="participation" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#FDE68A;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;ParticipationEspace&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;espace_id : FK Espace&lt;br/&gt;membre_id : FK User&lt;br/&gt;role : enum&lt;br/&gt;joined_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="175" width="300" x="750" y="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="invitation" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#FDE68A;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;LienInvitation&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;espace_id : FK Espace&lt;br/&gt;cree_par_id : FK User&lt;br/&gt;code_hash : texte unique&lt;br/&gt;previsualisation_autorisee : booléen&lt;br/&gt;created_at : datetime&lt;br/&gt;revoked_at? : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="195" width="300" x="750" y="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="suivi" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DCFCE7;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;SuiviUtilisateur&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;suiveur_id : FK User&lt;br/&gt;suivi_id : FK User&lt;br/&gt;created_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="155" width="300" x="10" y="890" as="geometry"/>
+                </mxCell>
+                <mxCell id="resume" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DCFCE7;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;NotificationResume&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;destinataire_id : FK User&lt;br/&gt;periode_debut : date&lt;br/&gt;periode_fin : date&lt;br/&gt;nombre_nouveautes : entier&lt;br/&gt;created_at : datetime&lt;br/&gt;read_at? : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="195" width="300" x="750" y="645" as="geometry"/>
+                </mxCell>
+                <mxCell id="publication" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;Publication&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;auteur_id : FK User&lt;br/&gt;projet_id? : FK Project&lt;br/&gt;espace_id? : FK Espace&lt;br/&gt;type : enum&lt;br/&gt;titre : texte court&lt;br/&gt;description : texte&lt;br/&gt;lien_app? : URL&lt;br/&gt;plateforme_app? : enum&lt;br/&gt;contraintes? : texte&lt;br/&gt;reponse_acceptee_id? : FK Commentaire&lt;br/&gt;option_retenue_id? : FK OptionPublication&lt;br/&gt;justification_finale? : texte&lt;br/&gt;decided_at? : datetime&lt;br/&gt;mode_vote? : UNIQUE/MULTIPLE&lt;br/&gt;votes_fermes_at? : datetime&lt;br/&gt;created_at : datetime&lt;br/&gt;updated_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="430" width="350" x="1120" y="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="image" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;ImagePublication&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;publication_id : FK Publication&lt;br/&gt;url : URL&lt;br/&gt;texte_alternatif : texte court&lt;br/&gt;position : entier&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="165" width="290" x="2250" y="105" as="geometry"/>
+                </mxCell>
+                <mxCell id="E-6d7DuBZhtxtR2Unifx-1" edge="1" parent="1" source="likepub" style="edgeStyle=none;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;" target="legend">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="likepub" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;LikePublication&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;publication_id : FK Publication&lt;br/&gt;membre_id : FK User&lt;br/&gt;created_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="150" width="290" x="1560" y="285" as="geometry"/>
+                </mxCell>
+                <mxCell id="commentaire" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;Commentaire&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;publication_id : FK Publication&lt;br/&gt;auteur_id : FK User&lt;br/&gt;parent_id? : FK Commentaire&lt;br/&gt;nature : enum&lt;br/&gt;texte : texte&lt;br/&gt;est_anonyme : booléen&lt;br/&gt;created_at : datetime&lt;br/&gt;updated_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="245" width="300" x="1560" y="585" as="geometry"/>
+                </mxCell>
+                <mxCell id="option" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;OptionPublication&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;publication_id : FK Publication&lt;br/&gt;libelle : texte court&lt;br/&gt;description? : texte&lt;br/&gt;image_url? : URL&lt;br/&gt;position : entier&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="180" width="290" x="1390" y="-300" as="geometry"/>
+                </mxCell>
+                <mxCell id="avis" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;AvisChoix&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;membre_id : FK User&lt;br/&gt;option_id : FK OptionPublication&lt;br/&gt;explication : texte&lt;br/&gt;created_at : datetime&lt;br/&gt;updated_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="195" width="300" x="2150" y="-290" as="geometry"/>
+                </mxCell>
+                <mxCell id="confirmation" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DCFCE7;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;ConfirmationAide&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;commentaire_id : FK Commentaire&lt;br/&gt;membre_id : FK User&lt;br/&gt;created_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="160" width="300" x="1490" y="1010" as="geometry"/>
+                </mxCell>
+                <mxCell id="likecomment" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;LikeCommentaire&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;commentaire_id : FK Commentaire&lt;br/&gt;membre_id : FK User&lt;br/&gt;created_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="150" width="300" x="1950" y="790" as="geometry"/>
+                </mxCell>
+                <mxCell id="conversation" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#FCE7F3;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;Conversation&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;membre_1_id : FK User&lt;br/&gt;membre_2_id : FK User&lt;br/&gt;created_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="300" x="420" y="1320" as="geometry"/>
+                </mxCell>
+                <mxCell id="message" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#FCE7F3;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;Message&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;conversation_id : FK Conversation&lt;br/&gt;auteur_id : FK User&lt;br/&gt;texte : texte&lt;br/&gt;sent_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="300" x="890" y="1320" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge2" edge="1" parent="1" source="espace" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="participation" value="1 → 0..*">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge3" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="participation" value="membre">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge4" edge="1" parent="1" source="espace" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="invitation" value="1 → 0..*">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge5" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="suivi" value="suiveur / suivi">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge6" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="resume" value="destinataire">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge7" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="publication" value="auteur">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge8" edge="1" parent="1" source="project" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="publication" value="projet lié ?">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge9" edge="1" parent="1" source="espace" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="publication" value="espace ?">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="280" y="287.5"/>
+                            <mxPoint x="280" y="585"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge10" edge="1" parent="1" source="publication" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="image" value="1 → 0..*">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1970" y="585"/>
+                            <mxPoint x="1970" y="177.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge11" edge="1" parent="1" source="publication" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="likepub" value="1 → 0..*">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge12" edge="1" parent="1" source="publication" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="commentaire" value="1 → 0..*">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge13" edge="1" parent="1" source="publication" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="option" value="si CHOIX ou SONDAGE">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge15" edge="1" parent="1" source="commentaire" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="commentaire" value="parent ?">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge16" edge="1" parent="1" source="commentaire" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="confirmation" value="si réponse technique">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge17" edge="1" parent="1" source="commentaire" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="likecomment" value="1 → 0..*">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge18" edge="1" parent="1" source="option" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="avis" value="option choisie">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge19" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="conversation" value="2 membres">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge20" edge="1" parent="1" source="conversation" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="message" value="1 → 0..*">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge21" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="commentaire" value="auteur interne">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="160" y="870"/>
+                            <mxPoint x="920" y="870"/>
+                            <mxPoint x="920" y="707.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge22" edge="1" parent="1" source="option" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#64748B;endArrow=none;fontSize=11;labelBackgroundColor=#FFFFFF;" target="vote" value="option votée">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="vote" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#DBEAFE;strokeColor=#64748B;fontColor=#0F172A;" value="&lt;div style=&quot;font-size:16px&quot;&gt;&lt;b&gt;VoteSondage&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;font-size:11px;line-height:1.35&quot;&gt;id : bigint PK&lt;br/&gt;membre_id : FK User&lt;br/&gt;option_id : FK OptionPublication&lt;br/&gt;created_at : datetime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="300" x="2040" y="1140" as="geometry"/>
+                </mxCell>
+                <mxCell id="note" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=12;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontColor=#334155;fontSize=13;" value="Publication : 5 types, dont SONDAGE. Les avis et votes remontent à Publication via OptionPublication. Espace : Communauté ou Chaîne. Un espace au plus par publication (hypothèse à confirmer). Options partagées entre CHOIX et SONDAGE. Réponse acceptée et option retenue sont des références conditionnelles dans Publication. Conversation est indépendante des publications et espaces." vertex="1">
+                    <mxGeometry height="100" width="1130" x="1120" y="1510" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

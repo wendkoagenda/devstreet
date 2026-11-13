@@ -1,0 +1,86 @@
+{
+  "model_name": "Publication",
+  "app_name": "communaute",
+  "fields": [
+    {
+      "name": "type",
+      "type": "CharField",
+      "max_length": 20,
+      "choices": [
+        ["DISCUSSION", "Discussion"],
+        ["APPLICATION", "Application"],
+        ["ENTRAIDE", "Entraide technique"],
+        ["CHOIX", "Aide au choix"],
+        ["SONDAGE", "Sondage"]
+      ]
+    },
+    {
+      "name": "titre",
+      "type": "CharField",
+      "max_length": 200
+    },
+    {
+      "name": "description",
+      "type": "TextField"
+    },
+    {
+      "name": "lien_app",
+      "type": "URLField",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "plateforme_app",
+      "type": "CharField",
+      "max_length": 20,
+      "blank": true,
+      "default": "",
+      "choices": [
+        ["WEB", "Web"],
+        ["MOBILE", "Mobile"],
+        ["LES_DEUX", "Web et mobile"]
+      ]
+    },
+    {
+      "name": "contraintes",
+      "type": "TextField",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "justification_finale",
+      "type": "TextField",
+      "blank": true,
+      "default": ""
+    },
+    {
+      "name": "decided_at",
+      "type": "DateTimeField",
+      "blank": true,
+      "null": true
+    },
+    {
+      "name": "mode_vote",
+      "type": "CharField",
+      "max_length": 20,
+      "blank": true,
+      "default": "",
+      "choices": [
+        ["UNIQUE", "Choix unique"],
+        ["MULTIPLE", "Choix multiple"]
+      ]
+    },
+    {
+      "name": "votes_fermes_at",
+      "type": "DateTimeField",
+      "blank": true,
+      "null": true
+    }
+  ],
+  "meta": {
+    "db_table": "communaute_publication",
+    "resource_plural": "publications",
+    "verbose_name": "Publication",
+    "verbose_name_plural": "Publications"
+  }
+}

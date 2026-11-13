@@ -49,9 +49,10 @@ export function MultiSelect({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover modal open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -96,7 +97,8 @@ export function MultiSelect({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
+                  value={option.label}
+                  keywords={[option.label, option.value]}
                   onSelect={() => toggleOption(option.value)}
                 >
                   <div

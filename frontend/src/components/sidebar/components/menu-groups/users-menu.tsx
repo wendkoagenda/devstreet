@@ -1,10 +1,5 @@
+import { Separator } from "@/components/ui/separator";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  SidebarContent,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -14,10 +9,15 @@ import {
 } from "@/components/ui/sidebar";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Icons } from "@/lib/constants/icons";
+import { cn } from "@/lib/utils";
 import { t } from "i18next";
-import { ChevronDown } from "lucide-react";
-import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
+const itemClass =
+  "h-8 gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-border))]";
+
+const sectionLabelClass =
+  "mb-0.5 h-auto px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80";
 
 export default function UsersMenu() {
   const navigate = useNavigate();
@@ -38,52 +38,51 @@ export default function UsersMenu() {
       icon: Icons.Roles,
       permission: canViewRoles,
     },
-  ].filter((item) => item.permission); // Filtrage direct des items sans permission
+  ].filter((item) => item.permission);
 
-  // Ne pas afficher le menu s'il n'y a aucun élément
   if (menuItems.length === 0) {
     return null;
   }
 
   return (
-    <SidebarMenu>
-      <Collapsible defaultOpen className="group/collapsible">
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger>
-              <Icons.User className="mr-2 h-4 w-4" />
-              {t("sidebar.users")}
-              <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarContent className="ml-2">
-              <SidebarMenu>
-                {menuItems.map((item) => {
-                  const isActive = location.pathname === `/${item.url}`;
+    <>
+      <Separator className="mx-3 bg-sidebar-border/70" />
+      <SidebarGroup className="p-0 px-1">
+        <SidebarGroupLabel className={sectionLabelClass}>
+          Administration
+        </SidebarGroupLabel>
+        <SidebarMenu className="gap-0.5">
+          {menuItems.map((item) => {
+            const isActive = location.pathname === `/${item.url}`;
+            const Icon = item.icon;
 
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive}>
-                        <button
-                          onClick={() => {
-                            navigate(item.url);
-                            if (isMobile) setOpenMobile(false);
-                          }}
-                          className="flex items-center gap-2"
-                        >
-                          {React.createElement(item.icon)}
-                          <span>{item.title}</span>
-                        </button>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    </SidebarMenu>
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  onClick={() => {
+                    navigate(item.url);
+                    if (isMobile) setOpenMobile(false);
+                  }}
+                  tooltip={item.title}
+                  className={itemClass}
+                >
+                  <Icon
+                    aria-hidden
+                    className={cn(
+                      "size-4 stroke-[1.75]",
+                      isActive
+                        ? "text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/55"
+                    )}
+                  />
+                  <span className="truncate">{item.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroup>
+    </>
   );
 }

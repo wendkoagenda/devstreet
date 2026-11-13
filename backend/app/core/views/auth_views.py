@@ -24,10 +24,14 @@ from app.core.serializers import (
     UserSerializer,
     PasswordChangeSerializer,
     UserLoginSerializer,
+    PublicProfileSerializer,
+    PublicRegisterSerializer,
     ForgotPasswordSerializer,
     VerifyResetCodeSerializer,
     ResetPasswordSerializer,
 )
+from app.core.services.user_service import UserService
+from app.core.models import Role
 from app.core.services.forgot_password_service import (
     ForgotPasswordService,
     PasswordResetError,
@@ -38,6 +42,7 @@ from app.core.services.forgot_password_service import (
 from app.core.throttles import (
     CsrfThrottle,
     LoginThrottle,
+    RegisterThrottle,
     LogoutThrottle,
     TokenRefreshThrottle,
     TokenVerifyThrottle,
@@ -285,6 +290,155 @@ def profile_view(request):
 
 
 @swagger_auto_schema(
+    method='get',
+    operation_description="Profil public d'un membre (mur : photo, bannière, nom)",
+    responses={
+        200: PublicProfileSerializer,
+        401: "Non authentifié",
+        404: "Profil introuvable",
+    },
+    tags=['Auth'],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def public_profile_view(request, user_id: int):
+    """Retourne le profil public d'un utilisateur actif."""
+    user = User.objects.filter(pk=user_id, is_active=True).first()
+    if user is None:
+        return Response(
+            {'error': 'Profil introuvable'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    return Response(PublicProfileSerializer(user).data, status=status.HTTP_200_OK)
+
+
+def _update_profile_media_field(
+    request,
+    *,
+    field_name: str,
+    upload_folder: str,
+    max_size_mb: int = 5,
+):
+    """
+    Met à jour ou supprime un champ média du profil (photo, bannière).
+    """
+    from django.core.exceptions import ValidationError
+    from app.metier.services.storage_service import get_storage_service
+    from app.metier.utils.file_field_utils import _validate_upload, delete_storage_files
+
+    user = request.user
+
+    if request.method == 'DELETE':
+        old_path = (getattr(user, field_name, '') or '').strip()
+        if old_path:
+            delete_storage_files([old_path])
+            setattr(user, field_name, '')
+            user.save(update_fields=[field_name, 'updated_at'])
+        return Response(UserLoginSerializer(user).data, status=status.HTTP_200_OK)
+
+    uploaded = request.FILES.get(field_name)
+    if uploaded is None:
+        return Response(
+            {'error': f'Fichier image manquant (champ {field_name}).'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    path_key = f'{field_name}_path'
+    relative_path = str(request.data.get(path_key) or '').strip().lstrip('/')
+    expected_prefix = f'{upload_folder}/'
+    if not relative_path.startswith(expected_prefix):
+        return Response(
+            {'error': f'Chemin invalide : doit commencer par {expected_prefix}.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        _validate_upload(
+            uploaded,
+            allowed_extensions=['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+            max_size_mb=max_size_mb,
+        )
+        storage = get_storage_service()
+        old_path = (getattr(user, field_name, '') or '').strip()
+        saved_path = storage.save(relative_path, uploaded)
+        setattr(user, field_name, saved_path)
+        user.save(update_fields=[field_name, 'updated_at'])
+        if old_path and old_path != saved_path:
+            delete_storage_files([old_path])
+        return Response(UserLoginSerializer(user).data, status=status.HTTP_200_OK)
+    except ValidationError as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        logger.exception("Échec de l'enregistrement du média de profil (%s)", field_name)
+        return Response(
+            {'error': "Impossible d'enregistrer l'image de profil."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Mettre à jour la photo de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        400: "Fichier invalide",
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Supprimer la photo de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def profile_photo_view(request):
+    """Met à jour (POST) ou supprime (DELETE) la photo de profil."""
+    return _update_profile_media_field(
+        request,
+        field_name='photo',
+        upload_folder='profile_photos',
+        max_size_mb=5,
+    )
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Mettre à jour la bannière de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        400: "Fichier invalide",
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Supprimer la bannière de profil de l'utilisateur connecté",
+    responses={
+        200: UserLoginSerializer,
+        401: "Non authentifié",
+    },
+    tags=['Auth'],
+)
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def profile_banner_view(request):
+    """Met à jour (POST) ou supprime (DELETE) la bannière de profil."""
+    return _update_profile_media_field(
+        request,
+        field_name='banner',
+        upload_folder='profile_banners',
+        max_size_mb=8,
+    )
+
+
+@swagger_auto_schema(
     method='post',
     operation_description="Changer le mot de passe de l'utilisateur actuel",
     request_body=PasswordChangeSerializer,
@@ -445,6 +599,98 @@ def user_roles_view(request):
     return Response({
         'roles': roles
     }, status=status.HTTP_200_OK)
+
+
+def _ensure_default_member_role() -> str:
+    """Garantit l'existence du rôle membre public avec ses droits forum, projets et IA (sans droits d'administration)."""
+    from app.communaute.permission_codes import COMMUNAUTE_PERMISSION_CODES
+    from app.core.models import Permission
+    from app.devstreet_hub.management.commands.init_devstreet_hub import DEVELOPER_CODES
+
+    role_name = 'DevStreet Hub Developer'
+    role, _ = Role.objects.get_or_create(
+        name=role_name,
+        defaults={'description': 'Membre DevStreet (forum, projets collaboratifs et marketplace)'},
+    )
+    needed_codes = set(COMMUNAUTE_PERMISSION_CODES) | set(DEVELOPER_CODES)
+    existing_codes = set(role.permissions.values_list('code', flat=True))
+    missing_codes = needed_codes - existing_codes
+    if missing_codes:
+        perms = [
+            Permission.objects.get_or_create(
+                code=code,
+                defaults={'description': f'Permission {code}'},
+            )[0]
+            for code in sorted(missing_codes)
+        ]
+        role.permissions.add(*perms)
+    return role_name
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Inscription publique : crée le compte membre, pose les cookies JWT",
+    request_body=PublicRegisterSerializer,
+    responses={
+        201: "Compte créé et session ouverte",
+        400: "Données invalides",
+        429: "Trop de demandes",
+    },
+    tags=['Auth'],
+)
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@throttle_classes([RegisterThrottle])
+def register_view(request):
+    """
+    Crée un compte public puis ouvre une session (cookies HttpOnly), comme après un login.
+    """
+    serializer = PublicRegisterSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    data = serializer.validated_data
+    role_names = [_ensure_default_member_role()]
+
+    try:
+        user = UserService().create_user(
+            {
+                'email': data['email'],
+                'username': data['username'],
+                'first_name': data['first_name'],
+                'last_name': data['last_name'],
+                'password': data['password'],
+                'role_names': role_names,
+                'is_active': True,
+            }
+        )
+    except Exception as exc:
+        message = str(exc)
+        return Response({'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+
+    refresh = RefreshToken.for_user(user)
+    refresh['user_id'] = user.id
+    refresh['email'] = user.email
+    refresh['full_name'] = user.full_name
+    access = refresh.access_token
+    access['user_id'] = user.id
+    access['email'] = user.email
+    access['full_name'] = user.full_name
+
+    audit_service.record(
+        Actions.USER_CREATED,
+        actor=user,
+        target=user,
+        subject=audit_service.account_key(user.email),
+        request=request,
+    )
+
+    response = Response(
+        {'user': UserLoginSerializer(user).data},
+        status=status.HTTP_201_CREATED,
+    )
+    return set_auth_cookies(response, str(access), str(refresh))
 
 
 # === MOT DE PASSE OUBLIÉ (challenge e-mail) ===

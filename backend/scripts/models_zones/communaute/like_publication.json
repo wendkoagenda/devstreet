@@ -1,0 +1,11 @@
+{
+  "model_name": "LikePublication",
+  "app_name": "communaute",
+  "fields": [],
+  "meta": {
+    "db_table": "communaute_like_publication",
+    "resource_plural": "likes-publication",
+    "verbose_name": "Like de publication",
+    "verbose_name_plural": "Likes de publication"
+  }
+}

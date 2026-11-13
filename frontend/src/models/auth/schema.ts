@@ -12,6 +12,36 @@ export type LoginSchema = {
   password: string;
 };
 
+export const registerSchema = (t: TFunction) =>
+  z
+    .object({
+      first_name: z.string().min(1, t("validation.first_name.required")),
+      last_name: z.string().min(1, t("validation.last_name.required")),
+      username: z
+        .string()
+        .trim()
+        .min(3, t("validation.username.min_length"))
+        .max(150),
+      email: z.string().email(t("validation.email.invalid")),
+      password: z.string().min(8, t("validation.password.min_length")),
+      password_confirm: z
+        .string()
+        .min(1, t("validation.password_confirm.required")),
+    })
+    .refine((data) => data.password === data.password_confirm, {
+      message: t("validation.password.not_match"),
+      path: ["password_confirm"],
+    });
+
+export type RegisterSchema = {
+  first_name: string;
+  last_name: string;
+  username: string;
+  email: string;
+  password: string;
+  password_confirm: string;
+};
+
 /** Réponse de connexion : les jetons sont dans des cookies HttpOnly, jamais dans le corps. */
 export type LoginResponse = {
   user: {
@@ -19,6 +49,8 @@ export type LoginResponse = {
     email: string;
     username: string;
     full_name: string;
+    photo?: string;
+    banner?: string;
     roles: string[];
   };
 };
@@ -32,6 +64,8 @@ export interface User {
   full_name: string;
   username: string;
   email: string;
+  photo?: string;
+  banner?: string;
   roles?: string[];
   permissions?: string[];
 }

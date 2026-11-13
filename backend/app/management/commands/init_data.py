@@ -71,6 +71,15 @@ class Command(BaseCommand):
                 # Permissions de la marketplace (créées par la migration marketplace.0002) pour les rôles de base
                 self._assign_marketplace_permissions()
 
+                # Rôle membre (« DevStreet Hub Developer ») et permissions DevStreet Hub
+                call_command('init_devstreet_hub', stdout=self.stdout)
+
+                # Permissions communauté / forum (créées ici si absentes, puis attribuées aux membres et admins)
+                self._ensure_and_assign_communaute_permissions()
+
+                # Permission assistant IA
+                self._ensure_and_assign_ai_permissions()
+
                 # Créer l'admin avant les seeds (les seeds peuvent créer l'admin sans rôle)
                 if not options['skip_admin']:
                     self._create_admin_user(
@@ -260,6 +269,48 @@ class Command(BaseCommand):
         for role in Role.objects.filter(name__in=['Admin', 'Super Admin']):
             role.permissions.add(*permissions)
         self.stdout.write(f'  ✓ {permissions.count()} permissions marketplace attribuées à Admin / Super Admin')
+
+    def _ensure_and_assign_communaute_permissions(self):
+        """Crée si besoin les permissions communauté/forum et les attribue aux membres et administrateurs."""
+        from app.communaute.permission_codes import COMMUNAUTE_PERMISSION_CODES
+
+        created = 0
+        permissions = []
+        for code in COMMUNAUTE_PERMISSION_CODES:
+            permission, was_created = Permission.objects.get_or_create(
+                code=code,
+                defaults={'description': f'Can {code.split(".", 1)[1]} {code.split(".", 1)[0]}'},
+            )
+            if was_created:
+                created += 1
+            permissions.append(permission)
+
+        target_roles = [
+            'DevStreet Hub Developer',
+            'Viewer',
+            'Editor',
+            'Manager',
+            'Admin',
+            'Super Admin',
+        ]
+        for role in Role.objects.filter(name__in=target_roles):
+            role.permissions.add(*permissions)
+
+        self.stdout.write(
+            f'  ✓ {len(permissions)} permissions communauté '
+            f'({created} créées) attribuées aux rôles membres et admins'
+        )
+
+    def _ensure_and_assign_ai_permissions(self):
+        """Crée si besoin ai.chat et l'attribue aux rôles membre et administrateurs."""
+        permission, was_created = Permission.objects.get_or_create(
+            code='ai.chat',
+            defaults={'description': 'Assistant IA : ai.chat'},
+        )
+        for role in Role.objects.filter(name__in=['DevStreet Hub Developer', 'Admin', 'Super Admin']):
+            role.permissions.add(permission)
+        status = 'créée' if was_created else 'existante'
+        self.stdout.write(f'  ✓ Permission ai.chat ({status}) attribuée à DevStreet Hub Developer / Admin / Super Admin')
 
     def _create_admin_user(self, admin_email, admin_password):
         """
