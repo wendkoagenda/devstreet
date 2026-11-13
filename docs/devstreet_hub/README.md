@@ -49,6 +49,8 @@ Le worker se lance périodiquement avec l’ordonnanceur de votre déploiement ;
 
 Gitea est un service séparé de Django. L’app métier utilise son API ; aucun code Go n’est converti en Django.
 
+**Guide déploiement (install Docker, token admin, webhook, variables `.env`)** : [gitea-deploy.md](gitea-deploy.md).
+
 ```dotenv
 DEVSTREET_HUB_GITEA_URL=https://git.votre-domaine.example
 DEVSTREET_HUB_GITEA_TOKEN=
