@@ -42,8 +42,12 @@ class GitOAuthService:
     def forge(self):
         return self._forge or GiteaClient()
 
+    def _configured_gitea_url(self) -> str:
+        """URL publique de Gitea telle que configurée (chaîne vide si absente)."""
+        return config("GITEA_PUBLIC_URL", config("GITEA_URL")).rstrip("/")
+
     def _gitea_public_origin(self) -> str:
-        url = config("GITEA_PUBLIC_URL", config("GITEA_URL")).rstrip("/")
+        url = self._configured_gitea_url()
         if not url:
             raise ExternalUnavailable("Gitea doit être configuré côté serveur.")
         return url
@@ -131,10 +135,8 @@ class GitOAuthService:
     def get_public(self, request_id) -> dict:
         item = self._get(request_id)
         self._expire_if_needed(item)
-        try:
-            gitea_host = urlsplit(self._gitea_public_origin()).netloc
-        except ExternalUnavailable:
-            gitea_host = ""
+        # Information d'affichage : un Gitea non configuré donne un hôte vide, sans erreur.
+        gitea_host = urlsplit(self._configured_gitea_url()).netloc
         return {
             "id": str(item.id),
             "status": item.status,

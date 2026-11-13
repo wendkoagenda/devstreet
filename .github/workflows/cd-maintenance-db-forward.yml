@@ -1,0 +1,27 @@
+name: CD - MAINTENANCE db-forward
+
+# Ouvre UNIQUEMENT le forward Postgres sur la VM (127.0.0.1:5432, TTL 8 h).
+# Grafana (3000) et MinIO console (9001) ecoutent deja en local sur la VM : ce volet ne les touche pas.
+# Ensuite en local : python git-cli/deploy_env.py tunnel --branche <branche>
+#   → pgAdmin 15432 (apres ce forward), Grafana :13000 et MinIO :19001 (deja joignables via tunnel).
+# Confirmation : DB-FORWARD-OPEN-<branche>. Use workflow from = sandbox | main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Exactement DB-FORWARD-OPEN-<branche> (ex. DB-FORWARD-OPEN-sandbox)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance:
+    name: maintenance
+    uses: ./.github/workflows/cd-maintenance.yml
+    with:
+      action: db-forward-open
+      confirmation: ${{ inputs.confirmation }}
+    secrets: inherit

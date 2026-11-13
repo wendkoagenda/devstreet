@@ -538,7 +538,9 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 publication_id=int(pk),
                 membre=request.user,
             )
-            return Response(AvisChoixSerializer(avis_list, many=True).data)
+            page = self.paginate_queryset(avis_list)
+            serializer = AvisChoixSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         try:
             serializer = AvisChoixSerializer(data=request.data)
@@ -617,6 +619,7 @@ class PublicationViewSet(viewsets.ModelViewSet):
         """Compat : upload image (délègue à upload-media)."""
         return self.upload_media(request)
 
+    @swagger_auto_schema(tags=['V1 - Publication'])
     @action(detail=False, methods=['post'], url_path='upload-media')
     def upload_media(self, request):
         """Enregistre un média forum (image, vidéo ou audio) et retourne son URL."""
@@ -723,7 +726,9 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 publication_id=int(pk),
                 membre=request.user,
             )
-            return Response(CommentaireSerializer(commentaires, many=True).data)
+            page = self.paginate_queryset(commentaires)
+            serializer = CommentaireSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         try:
             payload = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)

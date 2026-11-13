@@ -1,0 +1,257 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: vm-sante
+    folder: Doonya
+    interval: 1m
+    rules:
+      - uid: disk-plein-85
+        title: Disque racine presque plein
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (1 - (node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|overlay"})) * 100
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: C
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [85]
+                  operator:
+                    type: and
+                  type: query
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Le systeme de fichiers / utilise plus de 85 % de l'espace.
+        labels:
+          severite: critique
+
+      - uid: ram-basse-10
+        title: Memoire disponible basse
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: C
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [10]
+                  operator:
+                    type: and
+                  type: query
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Moins de 10 % de memoire disponible sur la VM.
+        labels:
+          severite: critique
+
+      - uid: conteneur-backend-absent
+        title: Conteneur backend absent
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: absent(container_memory_usage_bytes{name=~".+-backend"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: C
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  type: query
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Aucun conteneur *-backend visible dans cAdvisor depuis 5 minutes.
+        labels:
+          severite: critique
+
+      - uid: conteneur-proxy-absent
+        title: Proxy nginx absent
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: absent(container_memory_usage_bytes{name="proxy-nginx"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: C
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  type: query
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Le conteneur proxy-nginx est absent depuis 5 minutes.
+        labels:
+          severite: critique
+
+      - uid: nginx-5xx-eleve
+        title: Taux HTTP 5xx nginx eleve
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: |
+                (
+                  sum(count_over_time({container="proxy-nginx"} |~ ` [5][0-9]{2} ` [5m]))
+                  /
+                  clamp_min(sum(count_over_time({container="proxy-nginx"} |~ ` [1-5][0-9]{2} ` [5m])), 1)
+                ) * 100
+              queryType: instant
+              refId: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: C
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5]
+                  operator:
+                    type: and
+                  type: query
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Plus de 5 % de reponses HTTP 5xx dans les logs nginx sur 5 minutes.
+        labels:
+          severite: warning

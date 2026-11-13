@@ -1,0 +1,685 @@
+name: CD - MAINTENANCE
+
+# Moteur reutilisable des volets de maintenance (pas de formulaire ici).
+# Lancement : Actions > un des workflows « CD - MAINTENANCE … » (formulaire dedie par volet) :
+#   reset-db | db-forward | disk-set | docker-cleanup | logs-urgence
+# Voir deploy/README.md. Acces SSH ; masters ; sandbox/main (prod = logs-urgence seulement).
+
+on:
+  workflow_call:
+    inputs:
+      action:
+        description: Volet (reset-db | db-forward-open | disk-set | docker-cleanup | logs-urgence)
+        required: true
+        type: string
+      confirmation:
+        description: Confirmation exacte (ex. RESET-DB-sandbox)
+        required: true
+        type: string
+      disk_gb:
+        description: Taille cible Go (disk-set)
+        required: false
+        type: string
+        default: ""
+      since:
+        description: Fenetre logs (logs-urgence)
+        required: false
+        type: string
+        default: "2h"
+
+permissions:
+  contents: read
+
+# Meme file d'attente que le deploiement SSH : pas de maintenance pendant un deploy, et inversement
+concurrency:
+  group: cd-deploiement-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  autorisation:
+    name: autorisation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      branche: ${{ steps.autorisation.outputs.branche }}
+      action: ${{ steps.autorisation.outputs.action }}
+      disk_gb: ${{ steps.autorisation.outputs.disk_gb }}
+      since: ${{ steps.autorisation.outputs.since }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Branche, auteur, confirmation
+        id: autorisation
+        env:
+          INPUT_ACTION: ${{ inputs.action }}
+          INPUT_CONFIRMATION: ${{ inputs.confirmation }}
+          INPUT_DISK_GB: ${{ inputs.disk_gb }}
+          INPUT_SINCE: ${{ inputs.since }}
+        run: |
+          set -eu
+          branche="$GITHUB_REF_NAME"
+          action="$INPUT_ACTION"
+          case "$branche" in
+            sandbox|main) ;;
+            prod)
+              if [ "$action" != "logs-urgence" ]; then
+                echo "::error::Sur prod, seul le volet logs-urgence est autorise (recu « $action »)."
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::Branche refusee (« Use workflow from ») : $branche (sandbox, main, ou prod pour logs-urgence)."
+              exit 1
+              ;;
+          esac
+          masters="$(git show origin/develop:git-cli/access_control.conf | sed -n 's/^GIT_MASTER_USERS="\(.*\)"/\1/p')"
+          case ",$masters," in
+            *",$GITHUB_ACTOR,"*) ;;
+            *)
+              echo "::error::$GITHUB_ACTOR n'est pas dans GIT_MASTER_USERS : lancement refuse."
+              exit 1
+              ;;
+          esac
+          case "$action" in
+            reset-db) attendu="RESET-DB-$branche" ;;
+            db-forward-open) attendu="DB-FORWARD-OPEN-$branche" ;;
+            disk-set) attendu="DISK-SET-$branche" ;;
+            docker-cleanup) attendu="DOCKER-CLEANUP-$branche" ;;
+            logs-urgence) attendu="LOGS-URGENCE-$branche" ;;
+            *)
+              echo "::error::Action inconnue : $INPUT_ACTION"
+              exit 1
+              ;;
+          esac
+          if [ "$INPUT_CONFIRMATION" != "$attendu" ]; then
+            echo "::error::Confirmation invalide (recu « $INPUT_CONFIRMATION », attendu « $attendu »)."
+            exit 1
+          fi
+          disk_gb=""
+          if [ "$action" = "disk-set" ]; then
+            disk_gb="$(printf '%s' "$INPUT_DISK_GB" | tr -d '[:space:]')"
+            if ! printf '%s' "$disk_gb" | grep -Eq '^[1-9][0-9]{1,2}$' || [ "$disk_gb" -lt 20 ] || [ "$disk_gb" -gt 500 ]; then
+              echo "::error::disk_gb obligatoire pour disk-set : entier entre 20 et 500 (recu « $INPUT_DISK_GB »)."
+              exit 1
+            fi
+          fi
+          since=""
+          if [ "$action" = "logs-urgence" ]; then
+            since="$INPUT_SINCE"
+            if [ -z "$since" ]; then
+              since=2h
+            fi
+            case "$since" in
+              30m|1h|2h|6h|24h) ;;
+              *)
+                echo "::error::since invalide (« $since »), attendu : 30m, 1h, 2h, 6h ou 24h."
+                exit 1
+                ;;
+            esac
+          fi
+          {
+            echo "branche=$branche"
+            echo "action=$action"
+            echo "disk_gb=$disk_gb"
+            echo "since=$since"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "Maintenance $action sur $branche (demandeur : $GITHUB_ACTOR)."
+            if [ -n "$disk_gb" ]; then
+              echo "disk_gb=$disk_gb"
+            fi
+            if [ -n "$since" ]; then
+              echo "since=$since"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  reset-db:
+    name: reset-db
+    needs: autorisation
+    if: needs.autorisation.outputs.action == 'reset-db'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.autorisation.outputs.branche }}
+    permissions:
+      contents: read
+    env:
+      BRANCHE: ${{ needs.autorisation.outputs.branche }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Lire la cible
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          lire() { printf '%s' "$VARS_JSON" | jq -r --arg k "$1" '.[$k] // empty'; }
+          acces="$(lire DEPLOY_ACCES)"
+          namespace="$(lire DEPLOY_NAMESPACE)"
+          db_mode="$(lire DEPLOY_DB_MODE)"
+          case "$acces" in
+            ssh) ;;
+            gcp)
+              echo "::error::reset-db en mode gcp n'est pas encore implemente (DEPLOY_ACCES=gcp). Utiliser ssh pour l'instant."
+              exit 1
+              ;;
+            *)
+              echo "::error::DEPLOY_ACCES absent ou inconnu (« $acces »)."
+              exit 1
+              ;;
+          esac
+          if [ "$db_mode" != "interne" ]; then
+            echo "::error::reset-db reserve a DEPLOY_DB_MODE=interne (actuel : « $db_mode »)."
+            exit 1
+          fi
+          if ! printf '%s' "$namespace" | grep -Eq '^[a-z0-9][a-z0-9-]{1,40}$'; then
+            echo "::error::DEPLOY_NAMESPACE invalide ou absent (« $namespace »)."
+            exit 1
+          fi
+          {
+            echo "ACCES=$acces"
+            echo "NAMESPACE=$namespace"
+          } >> "$GITHUB_ENV"
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          echo "SSH_HOST=$host" >> "$GITHUB_ENV"
+          echo "SSH_USER=$user" >> "$GITHUB_ENV"
+
+      - name: Reset volume pgdata
+        run: |
+          set -eu
+          ssh -i "$RUNNER_TEMP/ssh/key" \
+            -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "cd /opt/apps/$NAMESPACE && sh -s" < deploy/vm/maintenance-reset-db.sh
+          {
+            echo "### Maintenance reset-db ($BRANCHE)"
+            echo "- Namespace : \`$NAMESPACE\`"
+            echo "- Volume : \`${NAMESPACE}_pgdata\`"
+            echo "- Suite : lancer **CD - ORCHESTRATEUR** pour recreer la base."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer la cle SSH
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh"
+
+  db-forward:
+    name: db-forward
+    needs: autorisation
+    if: needs.autorisation.outputs.action == 'db-forward-open'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.autorisation.outputs.branche }}
+    permissions:
+      contents: read
+    env:
+      BRANCHE: ${{ needs.autorisation.outputs.branche }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Lire la cible
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          lire() { printf '%s' "$VARS_JSON" | jq -r --arg k "$1" '.[$k] // empty'; }
+          acces="$(lire DEPLOY_ACCES)"
+          namespace="$(lire DEPLOY_NAMESPACE)"
+          db_mode="$(lire DEPLOY_DB_MODE)"
+          db_name="$(lire DB_NAME)"
+          db_user="$(lire DB_USER)"
+          case "$acces" in
+            ssh) ;;
+            gcp)
+              echo "::error::db-forward en mode gcp n'est pas encore implemente (DEPLOY_ACCES=gcp). Utiliser ssh pour l'instant."
+              exit 1
+              ;;
+            *)
+              echo "::error::DEPLOY_ACCES absent ou inconnu (« $acces »)."
+              exit 1
+              ;;
+          esac
+          if [ "$db_mode" != "interne" ]; then
+            echo "::error::db-forward reserve a DEPLOY_DB_MODE=interne (actuel : « $db_mode »)."
+            exit 1
+          fi
+          if ! printf '%s' "$namespace" | grep -Eq '^[a-z0-9][a-z0-9-]{1,40}$'; then
+            echo "::error::DEPLOY_NAMESPACE invalide ou absent (« $namespace »)."
+            exit 1
+          fi
+          {
+            echo "ACCES=$acces"
+            echo "NAMESPACE=$namespace"
+            echo "DB_NAME=$db_name"
+            echo "DB_USER=$db_user"
+          } >> "$GITHUB_ENV"
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          echo "SSH_HOST=$host" >> "$GITHUB_ENV"
+          echo "SSH_USER=$user" >> "$GITHUB_ENV"
+
+      - name: Ouvrir le forward sur la VM
+        run: |
+          set -eu
+          ssh -i "$RUNNER_TEMP/ssh/key" \
+            -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "cd /opt/apps/$NAMESPACE && sh -s open" < deploy/vm/maintenance-db-forward.sh
+
+          {
+            echo "### Maintenance db-forward-open ($BRANCHE)"
+            echo ""
+            echo "**Effet de ce run** : forward Postgres uniquement sur la VM"
+            echo "(\`127.0.0.1:5432\` → conteneur \`${NAMESPACE}-db:5432\`, fermeture auto apres **8 h**)."
+            echo "Rien d'autre n'a ete active ici."
+            echo ""
+            echo "#### Deja disponibles sur la VM (sans ce volet)"
+            echo ""
+            echo "| Service | Sur la VM | Role de ce run |"
+            echo "|---|---|---|"
+            echo "| Postgres | \`127.0.0.1:5432\` (apres ce forward) | **ouvert par ce run** |"
+            echo "| Grafana | \`127.0.0.1:3000\` | deja en ecoute, inchange |"
+            echo "| Console MinIO | \`127.0.0.1:9001\` | deja en ecoute, inchange |"
+            echo ""
+            echo "#### Tunnel SSH local (depuis ton PC)"
+            echo ""
+            echo "Pour atteindre ces ports VM depuis ta machine :"
+            echo ""
+            echo '```powershell'
+            echo "python git-cli/deploy_env.py tunnel --branche $BRANCHE"
+            echo '```'
+            echo ""
+            echo "| Service | Sur ton PC |"
+            echo "|---|---|"
+            echo "| Postgres (pgAdmin) | \`127.0.0.1:15432\` (necessite le forward ci-dessus) |"
+            echo "| Grafana | http://localhost:13000 (deja possible avant ce run) |"
+            echo "| Console MinIO | http://localhost:19001 (deja possible avant ce run) |"
+            echo ""
+            echo "Keepalive, reconnexion auto, arret apres 8 h (Ctrl+C pour couper). Lit \`.env.vm.$BRANCHE\`."
+            echo ""
+            echo "#### pgAdmin (ou autre client) sur ton PC"
+            echo ""
+            db_label="$DB_NAME"
+            if [ -z "$db_label" ]; then
+              db_label="(voir variable GitHub DB_NAME)"
+            fi
+            user_label="$DB_USER"
+            if [ -z "$user_label" ]; then
+              user_label="(voir variable GitHub DB_USER)"
+            fi
+            echo "| Champ | Valeur |"
+            echo "|---|---|"
+            echo "| Host | \`127.0.0.1\` |"
+            echo "| Port | \`15432\` |"
+            echo "| Database | \`${db_label}\` |"
+            echo "| Username | \`${user_label}\` |"
+            echo "| Password | secret GitHub \`DB_PASSWORD\` (ou \`backend.env.$BRANCHE\`) |"
+            echo ""
+            echo "Cocher **Save password** dans pgAdmin pour eviter les prompts repetes."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer la cle SSH
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh"
+
+  disk-set:
+    name: disk-set
+    needs: autorisation
+    if: needs.autorisation.outputs.action == 'disk-set'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.autorisation.outputs.branche }}
+    permissions:
+      contents: read
+    env:
+      BRANCHE: ${{ needs.autorisation.outputs.branche }}
+      DISK_GB: ${{ needs.autorisation.outputs.disk_gb }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Lire la cible
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          lire() { printf '%s' "$VARS_JSON" | jq -r --arg k "$1" '.[$k] // empty'; }
+          acces="$(lire DEPLOY_ACCES)"
+          case "$acces" in
+            ssh) ;;
+            gcp)
+              echo "::error::disk-set en mode gcp n'est pas encore implemente (DEPLOY_ACCES=gcp)."
+              exit 1
+              ;;
+            *)
+              echo "::error::DEPLOY_ACCES absent ou inconnu (« $acces »)."
+              exit 1
+              ;;
+          esac
+
+      - name: Enregistrer DEPLOY_DISK_GB sur GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          # Variable d'environnement de branche (sandbox/main/prod). Peut exiger un token admin ;
+          # en cas d'echec : mettre a jour .env.deploy.<branche> puis definir.
+          if gh variable set DEPLOY_DISK_GB --env "$BRANCHE" --body "$DISK_GB" --repo "$GITHUB_REPOSITORY"; then
+            echo "Variable d'environnement $BRANCHE : DEPLOY_DISK_GB=$DISK_GB"
+          else
+            echo "::warning::Impossible d'ecrire DEPLOY_DISK_GB via GITHUB_TOKEN."
+            echo "Mettre a jour localement : DEPLOY_DISK_GB=$DISK_GB dans .env.deploy.$BRANCHE puis :"
+            echo "  python git-cli/deploy_env.py definir --branche $BRANCHE"
+          fi
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          echo "SSH_HOST=$host" >> "$GITHUB_ENV"
+          echo "SSH_USER=$user" >> "$GITHUB_ENV"
+
+      - name: Controler le disque et etendre /
+        run: |
+          set -eu
+          # Taille du disque parent (Go) vue par la VM — doit etre >= DISK_GB (resize cloud avant)
+          remote_info="$(ssh -i "$RUNNER_TEMP/ssh/key" \
+            -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "root_src=\$(findmnt -n -o SOURCE /); disk=\$(lsblk -no PKNAME \"\$root_src\" 2>/dev/null); lsblk -bndo SIZE /dev/\$disk 2>/dev/null; df -B1G / | awk 'NR==2{print \$2}'")"
+          disk_bytes="$(printf '%s\n' "$remote_info" | sed -n '1p')"
+          root_g="$(printf '%s\n' "$remote_info" | sed -n '2p')"
+          if [ -n "$disk_bytes" ] && printf '%s' "$disk_bytes" | grep -Eq '^[0-9]+$'; then
+            disk_g=$((disk_bytes / 1024 / 1024 / 1024))
+            echo "Disque VM ~${disk_g} Go ; partition / ~${root_g} Go ; cible DEPLOY_DISK_GB=$DISK_GB"
+            if [ "$disk_g" -lt "$DISK_GB" ]; then
+              echo "::error::Le disque cloud (~${disk_g} Go) est plus petit que $DISK_GB Go."
+              echo "Agrandir d'abord le disque a ${DISK_GB} Go dans la console GCP, puis relancer disk-set."
+              exit 1
+            fi
+          else
+            echo "::warning::Impossible de lire la taille disque ; on tente quand meme grow-rootfs."
+          fi
+
+          if ssh -i "$RUNNER_TEMP/ssh/key" \
+            -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "test -x /usr/local/sbin/doonya-grow-rootfs && sudo -n /usr/local/sbin/doonya-grow-rootfs"; then
+            echo "Partition root etendue."
+          else
+            echo "::error::doonya-grow-rootfs absent ou sudo refuse."
+            echo "En admin VM : sudo growpart /dev/sda 1 && sudo resize2fs /dev/sda1"
+            echo "Puis preparer-vm pour installer doonya-grow-rootfs."
+            exit 1
+          fi
+          {
+            echo "### Maintenance disk-set ($BRANCHE)"
+            echo "- Cible : **${DISK_GB} Go** (\`DEPLOY_DISK_GB\`)."
+            echo "- Alignement local : \`DEPLOY_DISK_GB=$DISK_GB\` dans \`.env.deploy.$BRANCHE\` puis \`definir\`."
+            echo "- Verifier : \`df -h /\` sur la VM."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer la cle SSH
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh"
+
+  docker-cleanup:
+    name: docker-cleanup
+    needs: autorisation
+    if: needs.autorisation.outputs.action == 'docker-cleanup'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.autorisation.outputs.branche }}
+    permissions:
+      contents: read
+    env:
+      BRANCHE: ${{ needs.autorisation.outputs.branche }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Lire la cible
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          lire() { printf '%s' "$VARS_JSON" | jq -r --arg k "$1" '.[$k] // empty'; }
+          acces="$(lire DEPLOY_ACCES)"
+          namespace="$(lire DEPLOY_NAMESPACE)"
+          case "$acces" in
+            ssh) ;;
+            gcp)
+              echo "::error::docker-cleanup en mode gcp n'est pas encore implemente."
+              exit 1
+              ;;
+            *)
+              echo "::error::DEPLOY_ACCES absent ou inconnu (« $acces »)."
+              exit 1
+              ;;
+          esac
+          echo "NAMESPACE=$namespace" >> "$GITHUB_ENV"
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          echo "SSH_HOST=$host" >> "$GITHUB_ENV"
+          echo "SSH_USER=$user" >> "$GITHUB_ENV"
+
+      - name: Nettoyer Docker sur la VM
+        run: |
+          set -eu
+          ssh -i "$RUNNER_TEMP/ssh/key" \
+            -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "cd /opt/apps/$NAMESPACE && sh -s" < deploy/vm/cleanup-docker.sh
+          {
+            echo "### Maintenance docker-cleanup ($BRANCHE)"
+            echo "- Nettoye : images inutilises, cache build/buildx, conteneurs **arretes**, reseaux orphelins."
+            echo "- **Ne touche a aucun volume Docker** : \`pgdata\` (Postgres), \`grafana-data\` (Grafana),"
+            echo "  \`minio-data\` (MinIO), volumes Loki/Prometheus/Alloy, et tout autre volume nomme."
+            echo "- Les conteneurs **en cours** (app, proxy, observabilite, minio) ne sont pas arretes."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer la cle SSH
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh"
+
+  logs-urgence:
+    name: logs-urgence
+    needs: autorisation
+    if: needs.autorisation.outputs.action == 'logs-urgence'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ needs.autorisation.outputs.branche }}
+    permissions:
+      contents: read
+    env:
+      BRANCHE: ${{ needs.autorisation.outputs.branche }}
+      SINCE: ${{ needs.autorisation.outputs.since }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Lire la cible
+        env:
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          lire() { printf '%s' "$VARS_JSON" | jq -r --arg k "$1" '.[$k] // empty'; }
+          acces="$(lire DEPLOY_ACCES)"
+          namespace="$(lire DEPLOY_NAMESPACE)"
+          case "$acces" in
+            ssh) ;;
+            gcp)
+              echo "::error::logs-urgence en mode gcp n'est pas encore implemente."
+              exit 1
+              ;;
+            *)
+              echo "::error::DEPLOY_ACCES absent ou inconnu (« $acces »)."
+              exit 1
+              ;;
+          esac
+          if [ -z "$namespace" ]; then
+            echo "::error::DEPLOY_NAMESPACE absent dans l'environnement $BRANCHE."
+            exit 1
+          fi
+          echo "NAMESPACE=$namespace" >> "$GITHUB_ENV"
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          echo "SSH_HOST=$host" >> "$GITHUB_ENV"
+          echo "SSH_USER=$user" >> "$GITHUB_ENV"
+
+      - name: Collecter les logs sur la VM
+        run: |
+          set -eu
+          ssh_vm() {
+            ssh -i "$RUNNER_TEMP/ssh/key" \
+              -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+              -o StrictHostKeyChecking=yes \
+              -o HostKeyAlgorithms=ssh-ed25519 \
+              -o BatchMode=yes \
+              -o IdentitiesOnly=yes \
+              -o ConnectTimeout=15 \
+              -o ServerAliveInterval=30 \
+              "$SSH_USER@$SSH_HOST" "$@"
+          }
+          remote="/tmp/logs-urgence-$$"
+          local_dir="$RUNNER_TEMP/logs-urgence"
+          mkdir -p "$local_dir"
+          umask 077
+
+          echo "== Collecte since=$SINCE namespace=$NAMESPACE"
+          ssh_vm "set -eu; umask 077; rm -rf '$remote'; mkdir -p '$remote'; \
+            DEPLOY_NAMESPACE='$NAMESPACE' SINCE='$SINCE' OUT_DIR='$remote' \
+            sh -s" < deploy/vm/maintenance-logs-urgence.sh
+
+          echo "== Recuperation"
+          ssh_vm "set -eu; tar -czf - -C '$remote' .; rm -rf '$remote'" \
+            | tar -xzf - -C "$local_dir"
+
+          echo "LOCAL_DIR=$local_dir" >> "$GITHUB_ENV"
+          {
+            echo "### Maintenance logs-urgence ($BRANCHE)"
+            echo "- Fenetre : \`$SINCE\` (plafond 5000 lignes / service)"
+            echo "- Namespace : \`$NAMESPACE\`"
+            echo "- Artefact : \`logs-urgence-$BRANCHE\` — \`backend.log\`, \`frontend.log\`, \`proxy.log\`, \`observabilite.log\`, \`minio.log\` + \`meta.txt\` / \`statut.txt\`"
+            echo
+            echo "#### Statut"
+            echo '```'
+            cat "$local_dir/statut.txt"
+            echo '```'
+            if [ -f "$local_dir/backend.log" ]; then
+              echo
+              echo "#### Fin de backend.log (80 lignes)"
+              echo '```'
+              tail -n 80 "$local_dir/backend.log"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: logs-urgence-${{ needs.autorisation.outputs.branche }}
+          path: ${{ env.LOCAL_DIR }}
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Supprimer la cle SSH et les dumps locaux
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh" "$RUNNER_TEMP/logs-urgence"

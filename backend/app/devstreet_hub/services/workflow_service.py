@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 import re
 from urllib.parse import quote
 from django.db import transaction
@@ -24,6 +25,8 @@ from app.devstreet_hub.services.errors import (
     QuotaExceeded,
 )
 from app.devstreet_hub.services.gitea_client import GiteaClient
+
+logger = logging.getLogger(__name__)
 
 _REF_RE = re.compile(r"^[A-Za-z0-9._/\-]+$")
 _PATH_RE = re.compile(r"^(?:[A-Za-z0-9._\-]+(?:/[A-Za-z0-9._\-]+)*)?$")
@@ -284,9 +287,8 @@ class WorkflowService:
         raw = raw[: self.forge.MAX_README_BYTES]
         if b"\x00" in raw:
             return None
-        try:
-            text = raw.decode("utf-8")
-        except UnicodeDecodeError:
+        text = raw.decode("utf-8", errors="replace")
+        if "\ufffd" in text:  # pas de l'UTF-8 valide : pas d'aperçu texte
             return None
         return {
             "name": path.split("/")[-1],
@@ -318,13 +320,12 @@ class WorkflowService:
         content = None
         encoding = "none"
         if not too_large and not is_binary:
-            try:
-                content = sample.decode("utf-8")
-                encoding = "utf-8"
-            except UnicodeDecodeError:
+            decoded = sample.decode("utf-8", errors="replace")
+            if "\ufffd" in decoded:  # pas de l'UTF-8 valide : traité comme binaire
                 is_binary = True
-                content = None
-                encoding = "none"
+            else:
+                content = decoded
+                encoding = "utf-8"
         # HTML et tout texte : jamais exécutés ; renvoyés comme code source.
         return {
             "ref": ref,
@@ -464,14 +465,15 @@ class WorkflowService:
             return {"project": project, "forge_access": forge_access, "setup": setup}
 
         try:
-            repository = self.provision_repository(actor, project)
-            setup["repository"] = "ok" if repository.status == "ready" else "failed"
-        except ExternalUnavailable:
-            setup["repository"] = "failed"
-        except Conflict:
-            setup["repository"] = "failed"
+            self.provision_repository(actor, project)
+        except (ExternalUnavailable, Conflict):
+            logger.warning(
+                "Création du dépôt Git du projet %s impossible", project.pk, exc_info=True
+            )
 
+        # L'état du dépôt est relu en base : il reflète le résultat réel (« failed » enregistré par la provision).
         project = self.repo.visible_project(actor, project.pk)
+        setup["repository"] = "ok" if project.repository.status == "ready" else "failed"
         return {
             "project": project,
             "forge_access": forge_access,

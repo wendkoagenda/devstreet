@@ -1,6 +1,8 @@
 """
 ViewSet pour les messages privés d'une conversation.
 """
+import logging
+
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from drf_yasg import openapi
@@ -13,6 +15,9 @@ from app.communaute.serializers import MessageSerializer
 from app.communaute.services.conversation_service import ConversationService
 from app.communaute.services.message_service import MessageService
 from app.core.pagination import StandardPagination
+
+
+logger = logging.getLogger(__name__)
 
 
 class MessageViewSet(viewsets.ViewSet):
@@ -150,7 +155,9 @@ class MessageViewSet(viewsets.ViewSet):
             emit_message_new(conversation_id, payload)
         except Exception:
             # L'envoi REST reste valide même si le push temps réel échoue
-            pass
+            logger.exception(
+                "Push temps réel du message impossible (conversation %s)", conversation_id
+            )
 
         return Response(payload, status=status.HTTP_201_CREATED)
 

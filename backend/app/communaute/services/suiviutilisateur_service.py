@@ -85,8 +85,9 @@ class SuiviUtilisateurService:
                     updated_by=suiveur.id,
                 )
         except IntegrityError:
-            # Course double-clic : considéré comme déjà suivi.
-            pass
+            # Course double-clic : valide seulement si l'autre requête a bien créé le suivi.
+            if not SuiviUtilisateur.objects.filter(suiveur=suiveur, suivi=cible).exists():
+                raise
         return {'following': True, 'suivi_id': cible.id}
 
     def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:

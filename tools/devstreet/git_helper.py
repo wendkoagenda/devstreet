@@ -8,14 +8,14 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 
-def _run_git(*args: str) -> str:
+def _run_git(*args: str, ok_codes: tuple[int, ...] = (0,)) -> str:
     result = subprocess.run(
         ["git", *args],
         check=False,
         capture_output=True,
         text=True,
     )
-    if result.returncode != 0:
+    if result.returncode not in ok_codes:
         raise RuntimeError(result.stderr.strip() or "git a échoué")
     return result.stdout.strip()
 
@@ -32,17 +32,17 @@ def setup_git_credential(gitea_url: str, login: str, token: str) -> None:
         raise RuntimeError("Interpréteur Python introuvable pour le credential helper.")
 
     # Helper DevStreet en premier, sans retirer manager-core / wincred existants.
-    existing = []
-    try:
-        listed = _run_git("config", "--global", "--get-all", "credential.helper")
-        existing = [line for line in listed.splitlines() if line.strip()]
-    except RuntimeError:
-        existing = []
+    # Code 1 : aucun helper configuré (cas normal) ; toute autre erreur de git remonte.
+    listed = _run_git(
+        "config", "--global", "--get-all", "credential.helper", ok_codes=(0, 1)
+    )
+    existing = [line for line in listed.splitlines() if line.strip()]
 
     helper_value = f"!{python} {helper_script}"
     # Remplace une ancienne entrée DevStreet si présente.
     filtered = [h for h in existing if "git-credential-devstreet" not in h]
-    _run_git("config", "--global", "--unset-all", "credential.helper")
+    # Code 5 : clé absente, rien à retirer.
+    _run_git("config", "--global", "--unset-all", "credential.helper", ok_codes=(0, 5))
     _run_git("config", "--global", "--add", "credential.helper", helper_value)
     for helper in filtered:
         _run_git("config", "--global", "--add", "credential.helper", helper)

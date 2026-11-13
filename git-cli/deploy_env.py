@@ -2,16 +2,19 @@
 """
 Variables et secrets de deploiement (GitHub Actions) et preparation des VM.
 
-    python git-cli/deploy_env.py definir --branche develop          # cree l'environnement, pousse les 3 fichiers locaux
-    python git-cli/deploy_env.py etat --branche develop             # compare GitHub a la liste de reference
-    python git-cli/deploy_env.py preparer-vm --branche develop --hote 203.0.113.10 --admin-user ubuntu
+    python git-cli/deploy_env.py definir --branche sandbox          # cree l'environnement, pousse les 5 fichiers locaux
+    python git-cli/deploy_env.py etat --branche sandbox             # compare GitHub a la liste de reference
+    python git-cli/deploy_env.py preparer-vm --branche sandbox --hote 203.0.113.10 --admin-user ubuntu
     python git-cli/deploy_env.py preparer-vm-gcp --branche prod --projet mon-projet --zone europe-west1-b --instance vm-prod
+    python git-cli/deploy_env.py tunnel --branche sandbox           # tunnels locaux base + Grafana + MinIO (8 h)
+    # definir / etat / preparer-vm* : HEAD local doit etre egal a --branche (sinon refus).
+    # tunnel : lit .env.vm.<branche>, n'exige ni master ni branche locale.
 
 Fichiers locaux (a la racine, ignores par Git, format .env sans commentaire en fin de ligne) :
-    backend.env.<branche>, frontend.env.<branche>, .env.deploy.<branche>
+    backend.env.<branche>, frontend.env.<branche>, .env.deploy.<branche>, observabilite.env.<branche>, minio.env.<branche>
 Les noms attendus viennent de backend/.env.example, frontend/.env.example et de backend/scripts/deploy_env/spec.py.
 Les valeurs vont dans l'environnement GitHub qui porte le nom de la branche, reserve a cette seule branche.
-Reserve aux emails de GIT_MASTER_EMAILS (git-cli/access_control.conf). Voir 00readme/PLAN_CD.md.
+Reserve aux emails de GIT_MASTER_EMAILS (git-cli/access_control.conf), sauf tunnel. Voir 00readme/PLAN_CD.md.
 """
 import argparse
 import json
@@ -21,6 +24,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import git_utils
@@ -34,6 +39,8 @@ LOCAL_FILES = {
     "backend": "backend.env.{branche}",
     "frontend": "frontend.env.{branche}",
     "deploy": ".env.deploy.{branche}",
+    "observabilite": "observabilite.env.{branche}",
+    "minio": "minio.env.{branche}",
 }
 # Infos de connexion admin a la VM pour preparer-vm : restent sur le poste, jamais envoyees a GitHub
 LOCAL_VM_FILE = ".env.vm.{branche}"
@@ -41,6 +48,17 @@ VM_FILE_OPTIONS = {"VM_HOTE": "hote", "VM_ADMIN_USER": "admin_user", "VM_CLE_ADM
 HOST_PATTERN = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$")
 USER_PATTERN = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$")
 DEPLOY_USER = "deploy"
+# Tunnel local : duree alignee sur le TTL du forward Postgres cote VM (8 h)
+TUNNEL_HEURES = 8
+TUNNEL_LOCAL_DB = 15432
+TUNNEL_LOCAL_GRAFANA = 13000
+TUNNEL_LOCAL_MINIO = 19001
+TUNNEL_REMOTE_DB = "127.0.0.1:5432"
+TUNNEL_REMOTE_GRAFANA = "127.0.0.1:3000"
+TUNNEL_REMOTE_MINIO = "127.0.0.1:9001"
+TUNNEL_RECONNECT_SECONDS = 5
+TUNNEL_FAST_FAIL_SECONDS = 15
+TUNNEL_MAX_FAST_FAILS = 3
 
 
 class Failure(Exception):
@@ -55,6 +73,23 @@ def ensure_master():
     if email not in git_utils.GIT_MASTER_EMAILS:
         raise Failure(
             f"Cette commande est reservee aux GIT_MASTER_EMAILS ({git_utils.ACCESS_CONTROL_FILE}). Email actuel : {email}"
+        )
+
+
+def ensure_branche_locale(branche):
+    """Refuse definir / etat / preparer-vm si HEAD local n'est pas la branche cible (--branche)."""
+    code, output = git_utils.run_command(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=REPO_ROOT,
+    )
+    if code != 0 or not output:
+        raise Failure("Impossible de detecter la branche Git locale.")
+    courante = output.strip()
+    if courante == "HEAD":
+        raise Failure(f"Detached HEAD : placez-vous sur la branche {branche} (git checkout {branche}).")
+    if courante != branche:
+        raise Failure(
+            f"Branche locale « {courante} » : pour --branche {branche}, faites d'abord : git checkout {branche}"
         )
 
 
@@ -214,9 +249,10 @@ def plan_changes(entries, secrets, variables):
 def cmd_definir(args):
     """Idempotent : relancer avec les memes fichiers locaux ne change rien (voir plan_changes)."""
     ensure_master()
+    ensure_branche_locale(args.branche)
     definitions = reference.load_spec(REPO_ROOT)
     entries, errors = [], []
-    for source in ("backend", "frontend", "deploy"):
+    for source in ("backend", "frontend", "deploy", "observabilite", "minio"):
         values = read_local(source, args.branche)
         problems = reference.check_values(definitions, source, values)
         errors.extend(f"{LOCAL_FILES[source].format(branche=args.branche)} : {p}" for p in problems)
@@ -260,6 +296,7 @@ def cmd_definir(args):
 
 def cmd_etat(args):
     ensure_master()
+    ensure_branche_locale(args.branche)
     repo = repository()
     if get_environment(repo, args.branche) is None:
         print(f"Environnement {args.branche} incomplet :")
@@ -318,6 +355,16 @@ def pin_host_key(host, known_hosts):
     return lines[0]
 
 
+def resolve_cle_admin(cle_admin):
+    """Chemin de la cle admin : ~ expandu ; relatif = depuis la racine du depot (ex. .ssh/sshsandbox)."""
+    if not cle_admin:
+        return None
+    path = Path(cle_admin).expanduser()
+    if not path.is_absolute():
+        path = REPO_ROOT / path
+    return path
+
+
 def resolve_vm_options(args):
     """Complete les options absentes de preparer-vm avec .env.vm.<branche> (facultatif) : la ligne de commande prime."""
     path = REPO_ROOT / LOCAL_VM_FILE.format(branche=args.branche)
@@ -339,12 +386,14 @@ def resolve_vm_options(args):
 
 def cmd_preparer_vm(args):
     ensure_master()
+    ensure_branche_locale(args.branche)
     resolve_vm_options(args)
     if not HOST_PATTERN.match(args.hote):
         raise Failure("Hote invalide (adresse IP ou nom de domaine).")
-    if not USER_PATTERN.match(args.admin_user) or args.admin_user == "root":
-        raise Failure("--admin-user doit etre un utilisateur avec sudo sans mot de passe, pas root (ex. ubuntu).")
-    admin_key = Path(args.cle_admin).expanduser() if args.cle_admin else None
+    if not USER_PATTERN.match(args.admin_user):
+        raise Failure("--admin-user doit etre root ou un utilisateur avec sudo sans mot de passe (ex. ubuntu).")
+    sudo = "" if args.admin_user == "root" else "sudo -n "
+    admin_key = resolve_cle_admin(args.cle_admin)
     if admin_key and not admin_key.is_file():
         raise Failure(f"Cle d'administration introuvable : {admin_key}")
     repo = repository()
@@ -365,7 +414,7 @@ def cmd_preparer_vm(args):
         known_hosts_line = pin_host_key(args.hote, known_hosts)
 
         admin = ssh_command(args.hote, args.admin_user, known_hosts, admin_key)
-        if run_remote(admin, "sudo -n true") != 0:
+        if run_remote(admin, f"{sudo}true") != 0:
             raise Failure("Connexion admin refusee, ou sudo demande un mot de passe (cle chargee dans l'agent ? --cle-admin ?).")
 
         key_file = workdir / "deploy_key"
@@ -378,7 +427,7 @@ def cmd_preparer_vm(args):
         pubkey = Path(f"{key_file}.pub").read_text(encoding="utf-8").strip()
 
         git_utils.print_step("Phase a : installation et pare-feu")
-        remote = f"sudo -n env DEPLOY_PUBKEY={shlex.quote(pubkey)} bash -s -- a"
+        remote = f"{sudo}env DEPLOY_PUBKEY={shlex.quote(pubkey)} bash -s -- a"
         if run_remote(admin, remote, REPO_ROOT / "deploy/vm/preparer.sh") != 0:
             raise Failure("La phase a a echoue (voir ci-dessus). Rien n'a ete ecrit sur GitHub.")
 
@@ -396,7 +445,7 @@ def cmd_preparer_vm(args):
             set_value(repo, args.branche, reference.gh_name(name, args.branche), value, secret)
 
         git_utils.print_step("Phase b : durcissement SSH")
-        if run_remote(admin, "sudo -n bash -s -- b", REPO_ROOT / "deploy/vm/preparer.sh") != 0:
+        if run_remote(admin, f"{sudo}bash -s -- b", REPO_ROOT / "deploy/vm/preparer.sh") != 0:
             raise Failure("La phase b a echoue. Les acces SSH sont deja sur GitHub ; corrigez puis relancez.")
         if run_remote(deploy, "true") != 0:
             raise Failure("Apres durcissement, la connexion deploy echoue : verifiez la VM depuis la console du fournisseur.")
@@ -414,6 +463,7 @@ def cmd_preparer_vm(args):
 def cmd_preparer_vm_gcp(args):
     """VM GCP sans IP publique : meme preparation que preparer-vm, par le tunnel IAP, sans cle SSH ni secret."""
     ensure_master()
+    ensure_branche_locale(args.branche)
     for name, value in (
         ("GCP_PROJECT_ID", args.projet), ("GCP_ZONE", args.zone), ("GCP_INSTANCE", args.instance),
     ):
@@ -427,7 +477,7 @@ def cmd_preparer_vm_gcp(args):
     print(f"VM {args.instance} ({args.projet}, {args.zone}) par le tunnel IAP.")
     print("Actions : Docker, utilisateur deploy, pare-feu (80/443 ; SSH reserve au tunnel IAP), fail2ban,")
     print("          mises a jour de securite, SSH par cle uniquement. Aucune cle ni secret n'est cree.")
-    print("Votre compte gcloud a besoin de roles/iap.tunnelResourceAccessor et roles/compute.osAdminLogin (README_CD.md §7).")
+    print("Votre compte gcloud a besoin de roles/iap.tunnelResourceAccessor et roles/compute.osAdminLogin (voir 00readme/PLAN_CD.md).")
     if not git_utils.ask_confirm("Preparer cette VM"):
         print("Annule.")
         return
@@ -445,6 +495,94 @@ def cmd_preparer_vm_gcp(args):
     git_utils.print_success(
         f"VM preparee. Suite : renseignez les GCP_* dans .env.deploy.{args.branche}, puis definir et etat --branche {args.branche}."
     )
+
+
+# --- tunnel ------------------------------------------------------------------
+
+def tunnel_command(host, user, key=None):
+    """Construit la commande ssh -N (base, Grafana, MinIO console), liee a 127.0.0.1."""
+    command = [
+        "ssh",
+        "-N",
+        "-o", "ServerAliveInterval=30",
+        "-o", "ServerAliveCountMax=3",
+        "-o", "ExitOnForwardFailure=yes",
+        "-o", "ConnectTimeout=15",
+        "-o", "StrictHostKeyChecking=accept-new",
+        "-L", f"127.0.0.1:{TUNNEL_LOCAL_DB}:{TUNNEL_REMOTE_DB}",
+        "-L", f"127.0.0.1:{TUNNEL_LOCAL_GRAFANA}:{TUNNEL_REMOTE_GRAFANA}",
+        "-L", f"127.0.0.1:{TUNNEL_LOCAL_MINIO}:{TUNNEL_REMOTE_MINIO}",
+    ]
+    if key:
+        command += ["-i", str(key), "-o", "IdentitiesOnly=yes"]
+    return command + [f"{user}@{host}"]
+
+
+def run_tunnel_session(command, duration_seconds, run=subprocess.run, sleep=time.sleep, clock=time.monotonic):
+    """
+    Maintient le tunnel jusqu'a duration_seconds : reconnexion apres coupure, arret a l'echeance.
+    Apres TUNNEL_MAX_FAST_FAILS echecs de suite en moins de TUNNEL_FAST_FAIL_SECONDS : Failure.
+    """
+    deadline = clock() + duration_seconds
+    fast_fails = 0
+    while True:
+        remaining = deadline - clock()
+        if remaining <= 0:
+            print(f"Duree de {TUNNEL_HEURES} h ecoulee : tunnel arrete.")
+            return
+        started = clock()
+        try:
+            result = run(command, timeout=remaining)
+        except subprocess.TimeoutExpired:
+            print(f"Duree de {TUNNEL_HEURES} h ecoulee : tunnel arrete.")
+            return
+        except KeyboardInterrupt:
+            print("\nTunnel interrompu (Ctrl+C).")
+            return
+        elapsed = clock() - started
+        if result.returncode == 0:
+            fast_fails = 0
+        elif elapsed < TUNNEL_FAST_FAIL_SECONDS:
+            fast_fails += 1
+            if fast_fails >= TUNNEL_MAX_FAST_FAILS:
+                raise Failure(
+                    "Connexion SSH refusee, ou ports locaux 15432 / 13000 / 19001 deja utilises "
+                    "(un tunnel tourne peut-etre deja)."
+                )
+        else:
+            fast_fails = 0
+        remaining = deadline - clock()
+        if remaining <= 0:
+            print(f"Duree de {TUNNEL_HEURES} h ecoulee : tunnel arrete.")
+            return
+        wait = min(TUNNEL_RECONNECT_SECONDS, remaining)
+        print(f"Tunnel coupe, reconnexion dans {wait:.0f} s…")
+        try:
+            sleep(wait)
+        except KeyboardInterrupt:
+            print("\nTunnel interrompu (Ctrl+C).")
+            return
+
+
+def cmd_tunnel(args):
+    """Ouvre les tunnels locaux base + Grafana + MinIO (8 h, keepalive, reconnexion). Lit .env.vm.<branche>."""
+    resolve_vm_options(args)
+    if not HOST_PATTERN.match(args.hote):
+        raise Failure("Hote invalide (adresse IP ou nom de domaine).")
+    if not USER_PATTERN.match(args.admin_user):
+        raise Failure("--admin-user invalide (ex. ubuntu, sandbox).")
+    admin_key = resolve_cle_admin(args.cle_admin)
+    if args.cle_admin and (not admin_key or not admin_key.is_file()):
+        raise Failure(f"Cle d'administration introuvable : {admin_key or args.cle_admin}")
+
+    command = tunnel_command(args.hote, args.admin_user, admin_key)
+    fin = datetime.now() + timedelta(hours=TUNNEL_HEURES)
+    print(f"Tunnel vers {args.admin_user}@{args.hote} (arret prevu vers {fin.strftime('%H:%M')}, Ctrl+C pour couper).")
+    print(f"  pgAdmin      : Host 127.0.0.1  Port {TUNNEL_LOCAL_DB}  (apres CD - MAINTENANCE db-forward)")
+    print(f"  Grafana      : http://localhost:{TUNNEL_LOCAL_GRAFANA}")
+    print(f"  Console MinIO : http://localhost:{TUNNEL_LOCAL_MINIO}")
+    print("  Keepalive 30 s ; reconnexion auto si la liaison coupe.")
+    run_tunnel_session(command, TUNNEL_HEURES * 3600)
 
 
 def build_parser():
@@ -466,8 +604,11 @@ def build_parser():
     vm = commands.add_parser("preparer-vm", help="prepare une VM Ubuntu LTS et ecrit les acces SSH sur GitHub")
     branch_option(vm)
     vm.add_argument("--hote", help="adresse IP ou nom de la VM (sinon : VM_HOTE de .env.vm.<branche>)")
-    vm.add_argument("--admin-user", help="utilisateur avec sudo sans mot de passe, pas root (sinon : VM_ADMIN_USER)")
-    vm.add_argument("--cle-admin", help="chemin de la cle privee SSH de l'administrateur (sinon : VM_CLE_ADMIN, puis agent SSH)")
+    vm.add_argument("--admin-user", help="root, ou utilisateur avec sudo sans mot de passe (sinon : VM_ADMIN_USER) ; root : aucun sudo n'est ajoute")
+    vm.add_argument(
+        "--cle-admin",
+        help="chemin de la cle privee SSH admin (sinon : VM_CLE_ADMIN dans .env.vm.<branche>, puis agent SSH) ; relatif = racine du depot",
+    )
     vm.set_defaults(action=cmd_preparer_vm)
 
     vm_gcp = commands.add_parser("preparer-vm-gcp", help="prepare une VM GCP sans IP publique (tunnel IAP)")
@@ -476,6 +617,19 @@ def build_parser():
     vm_gcp.add_argument("--zone", required=True, help="zone de la VM (ex. europe-west1-b)")
     vm_gcp.add_argument("--instance", required=True, help="nom de l'instance")
     vm_gcp.set_defaults(action=cmd_preparer_vm_gcp)
+
+    tunnel = commands.add_parser(
+        "tunnel",
+        help="ouvre les tunnels locaux base (15432), Grafana (13000) et MinIO (19001) (8 h, reconnexion)",
+    )
+    branch_option(tunnel)
+    tunnel.add_argument("--hote", help="adresse IP ou nom de la VM (sinon : VM_HOTE de .env.vm.<branche>)")
+    tunnel.add_argument("--admin-user", help="utilisateur SSH admin (sinon : VM_ADMIN_USER)")
+    tunnel.add_argument(
+        "--cle-admin",
+        help="chemin de la cle privee SSH admin (sinon : VM_CLE_ADMIN dans .env.vm.<branche>, puis agent SSH)",
+    )
+    tunnel.set_defaults(action=cmd_tunnel)
     return parser
 
 

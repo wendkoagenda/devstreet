@@ -31,6 +31,7 @@ python git-cli/pull.py
 python git-cli/rebase.py
 python git-cli/merge.py --from feature/ma-feature
 python git-cli/doctor.py
+python git-cli/check_zones.py
 ```
 
 Chaque commande propose un mode interactif (sortie rapide `q`) et un `--dry-run`.
@@ -44,9 +45,11 @@ Chaque commande propose un mode interactif (sortie rapide `q`) et un `--dry-run`
 
 ## Règles (condensé)
 
-**Commit** — `commit.py` ajoute le trailer `X-Git-CLI: onepourcent-git-cli/2.0` ; le hook refuse les commits sans ce trailer. Les `PROTECTED_PATHS` sont réservés aux masters (`GIT_MASTER_EMAILS`).
+**Commit** — `commit.py` ajoute le trailer `X-Git-CLI: doonya-git-cli/2.0` ; le hook refuse les commits sans ce trailer. Les `PROTECTED_PATHS` sont réservés aux masters (`GIT_MASTER_EMAILS`). Ordre : contrôles locaux (sécurité, migrations backend, lint frontend) → audit zones (avertissement si motifs orphelins / hors zone) → staging → message. Échec des contrôles qualité = pas de `git add`. L’audit zones ne bloque pas le commit local (la CI non-régression bloque les orphelins). Les tests / le build frontend restent dans la CI.
 
-**Push** — `push.py` positionne `ONEPOURCENT_GITCLI_PUSH=1` ; le hook refuse un `git push` direct. Le build frontend est vérifié par la CI, pas au push. Sur `main` / `develop` / `prod`, identité master requise.
+**Zones** — `check_zones.py` lance `python -m scripts.regression_guard --audit` : motifs orphelins dans `regression-guard.json` / `PROTECTED_PATHS`, et résumé des fichiers hors zone.
+
+**Push** — `push.py` positionne `DOONYA_GITCLI_PUSH=1` ; le hook refuse un `git push` direct. Le build frontend est vérifié par la CI, pas au push. Sur `main` / `develop` / `prod`, identité master requise.
 
 **PR** — à lancer depuis la branche source ; marqueur `<!-- X-Git-CLI-PR: … -->` dans le body ; synchronisation de la branche avant création ; blocage s'il n'y a aucun commit à merger.
 

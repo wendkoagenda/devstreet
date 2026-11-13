@@ -79,7 +79,6 @@ jobs:
           namespace="$(sed -n "s/^DEPLOY_NAMESPACE='\(.*\)'$/\1/p" "$RUNNER_TEMP/rendu/compose.env")"
           domain="$(sed -n "s/^DEPLOY_DOMAIN='\(.*\)'$/\1/p" "$RUNNER_TEMP/rendu/compose.env")"
           echo "::add-mask::$host"
-          echo "::add-mask::$user"
           {
             echo "SSH_HOST=$host"
             echo "SSH_USER=$user"
@@ -109,7 +108,10 @@ jobs:
           tar -czf - deploy | ssh_vm "set -eu; mkdir -p $app_dir; rm -rf $app_dir/deploy; tar -xzf - -C $app_dir"
 
           echo "== Envoi de la configuration (droits 600)"
-          tar -czf - -C "$RUNNER_TEMP/rendu" backend.env compose.env | ssh_vm "set -eu; umask 077; tar -xzf - -C $app_dir"
+          (
+            cd "$RUNNER_TEMP/rendu"
+            tar -czf - backend.env compose.env
+          ) | ssh_vm "set -eu; umask 077; tar -xzf - -C $app_dir"
 
           echo "== Deploiement"
           printf '%s\n%s\n' "$GITHUB_ACTOR" "$REGISTRY_TOKEN" | ssh_vm "cd $app_dir && sh deploy/vm/deployer.sh"

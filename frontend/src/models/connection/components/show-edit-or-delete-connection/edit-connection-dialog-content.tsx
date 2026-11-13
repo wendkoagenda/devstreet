@@ -164,7 +164,7 @@ export default function EditConnectionDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Matched at *                  </FormLabel>
                   <FormControl>
-                    <Input type="date" {...formField} className="h-10" />
+                    <Input type="date" {...formField} value={formField.value ?? ""} className="h-10" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

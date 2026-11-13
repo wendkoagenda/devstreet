@@ -1,0 +1,36 @@
+name: CD - MAINTENANCE logs-urgence
+
+# Dump des logs Docker (un fichier .log par service) en artefact (retention 1 j).
+# Confirmation : LOGS-URGENCE-<branche>. Use workflow from = sandbox | main | prod.
+
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: Fenetre de logs
+        required: true
+        type: choice
+        options:
+          - 30m
+          - 1h
+          - 2h
+          - 6h
+          - 24h
+        default: 2h
+      confirmation:
+        description: Exactement LOGS-URGENCE-<branche> (ex. LOGS-URGENCE-sandbox)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance:
+    name: maintenance
+    uses: ./.github/workflows/cd-maintenance.yml
+    with:
+      action: logs-urgence
+      since: ${{ inputs.since }}
+      confirmation: ${{ inputs.confirmation }}
+    secrets: inherit

@@ -9,6 +9,8 @@ Prépare, dans un workflow de déploiement, les fichiers d'environnement d'une b
 - backend.env : les variables de backend/.env.example, une valeur entre apostrophes par ligne ;
 - compose.env : réglages du namespace (images, domaine, base) lus par docker compose et par deployer.sh.
 
+L'observabilité (Grafana) est rendue à part : `python -m scripts.deploy_env.render_observabilite`.
+
 N'affiche jamais une valeur. Code de sortie : 0 écrit, 1 valeurs invalides ou manquantes, 2 entrée invalide.
 """
 import argparse
@@ -56,6 +58,9 @@ def render(definitions, branch, secrets, variables, images, sha):
     for var in definitions:
         if var.source not in ('backend', 'deploy') or (var.acces and not var.applies(acces)):
             continue
+        # Notifications CD : restent dans GitHub, jamais écrites sur la VM
+        if var.name in reference.NOTIF_WEBHOOKS:
+            continue
         value = value_of(var)
         if not value:
             if var.required:
@@ -76,6 +81,23 @@ def render(definitions, branch, secrets, variables, images, sha):
         errors.append("Références d'images invalides (attendu ghcr.io/<chemin>:<tag>).")
     if not _SHA.match(sha):
         errors.append("DEPLOY_SHA doit être un commit complet de 40 caractères hexadécimaux.")
+
+    use_gcs = (backend.get('USE_GCS') or '').strip().lower() in ('1', 'true', 'yes', 'on')
+    use_s3 = (backend.get('USE_S3') or '').strip().lower() in ('1', 'true', 'yes', 'on')
+    if use_gcs and use_s3:
+        errors.append("USE_GCS et USE_S3 ne peuvent pas être actifs ensemble.")
+    if use_s3:
+        for name in ('S3_ENDPOINT_URL', 'S3_BUCKET_NAME', 'S3_ACCESS_KEY', 'S3_SECRET_KEY', 'S3_PUBLIC_URL'):
+            if not backend.get(name):
+                errors.append(f"{name} : manquant (requis quand USE_S3=True).")
+            else:
+                problem = reference.validate_value(name, backend[name])
+                if problem:
+                    errors.append(problem)
+    for name in backend:
+        if name.startswith('MINIO_'):
+            errors.append(f"{name} : ne doit pas apparaître dans backend.env (réservé à minio.env).")
+
     if errors:
         return {}, errors
 
@@ -84,6 +106,7 @@ def render(definitions, branch, secrets, variables, images, sha):
         'DEPLOY_DOMAIN': deploy['DEPLOY_DOMAIN'],
         'DEPLOY_LETSENCRYPT_EMAIL': deploy['DEPLOY_LETSENCRYPT_EMAIL'],
         'DEPLOY_DB_MODE': deploy['DEPLOY_DB_MODE'],
+        'DEPLOY_DISK_GB': deploy['DEPLOY_DISK_GB'],
         'DEPLOY_SHA': sha,
         'BACKEND_IMAGE': images['BACKEND_IMAGE'],
         'FRONTEND_IMAGE': images['FRONTEND_IMAGE'],

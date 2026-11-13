@@ -1,6 +1,10 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "@/helpers/api/base-query";
-import { toQueryString, type Paginated } from "@/helpers/api/pagination";
+import {
+  fetchAllPages,
+  toQueryString,
+  type Paginated,
+} from "@/helpers/api/pagination";
 import type {
   AdoptSuggestion,
   Analysis,
@@ -325,7 +329,10 @@ export const devstreetHubApi = createApi({
     }),
 
     getGitConnectedComputers: builder.query<GitConnectedComputer[], void>({
-      query: () => "/git-computers",
+      queryFn: (_arg, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<GitConnectedComputer>((qs) =>
+          fetchWithBQ(`/git-computers${qs}`)
+        ),
       providesTags: [{ type: "GitComputers", id: "LIST" }],
     }),
 

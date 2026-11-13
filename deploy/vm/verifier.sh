@@ -26,12 +26,12 @@ for dir in /opt/apps /srv/public; do
   [ -w "$dir" ] || fail "$dir n'existe pas ou n'est pas modifiable par $(id -un)"
 done
 
-# Seuls 22, 80 et 443 doivent ecouter hors boucle locale (un port publie par Docker contourne ufw).
-extra=$(ss -Hltn | awk '{print $4}' | grep -Ev '^(127\.|\[::1\]|\[::ffff:127\.)' | sed 's/.*://' | sort -un | grep -Ev '^(22|80|443)$' || true)
+# Hors boucle locale : 22/80/443 (app) + 20201/20202 (agents de metriques GCP). Un port publie par Docker contourne ufw.
+extra=$(ss -Hltn | awk '{print $4}' | grep -Ev '^(127\.|\[::1\]|\[::ffff:127\.)' | sed 's/.*://' | sort -un | grep -Ev '^(22|80|443|20201|20202)$' || true)
 if [ -n "$extra" ]; then
-  fail "ports en ecoute sur l'exterieur en plus de 22, 80 et 443 : $(echo "$extra" | tr '\n' ' ')"
+  fail "ports en ecoute sur l'exterieur en plus de 22, 80, 443, 20201 et 20202 : $(echo "$extra" | tr '\n' ' ')"
 else
-  echo "Ports en ecoute : 22, 80, 443 uniquement"
+  echo "Ports en ecoute autorises : 22, 80, 443 (+ 20201/20202 metriques GCP si presents)"
 fi
 
 exit "$status"

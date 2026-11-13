@@ -51,16 +51,27 @@ function readAdopted(analysisId: number): Record<number, number> {
     return Object.fromEntries(
       Object.entries(parsed).map(([key, value]) => [Number(key), value])
     );
-  } catch {
+  } catch (error) {
+    console.warn("Badges adoptés illisibles, réinitialisés :", error);
+    clearAdopted(analysisId);
     return {};
+  }
+}
+
+function clearAdopted(analysisId: number): void {
+  try {
+    sessionStorage.removeItem(adoptedStorageKey(analysisId));
+  } catch (error) {
+    console.warn("sessionStorage indisponible :", error);
   }
 }
 
 function writeAdopted(analysisId: number, map: Record<number, number>): void {
   try {
     sessionStorage.setItem(adoptedStorageKey(analysisId), JSON.stringify(map));
-  } catch {
+  } catch (error) {
     // sessionStorage indisponible : les badges adoptés ne survivent pas au refresh
+    console.warn("Badges adoptés non enregistrés :", error);
   }
 }
 

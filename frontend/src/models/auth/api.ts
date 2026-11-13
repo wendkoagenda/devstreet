@@ -61,7 +61,7 @@ export const authApi = createApi({
     uploadProfilePhoto: builder.mutation<User, File>({
       query: (file) => {
         const formData = new FormData();
-        const safeName = file.name.replace(/[^\w.\-]+/g, "-").toLowerCase();
+        const safeName = file.name.replace(/[^\w.-]+/g, "-").toLowerCase();
         const stamp = Date.now();
         formData.append("photo", file);
         formData.append("photo_path", `profile_photos/${stamp}-${safeName}`);
@@ -81,7 +81,7 @@ export const authApi = createApi({
     uploadProfileBanner: builder.mutation<User, File>({
       query: (file) => {
         const formData = new FormData();
-        const safeName = file.name.replace(/[^\w.\-]+/g, "-").toLowerCase();
+        const safeName = file.name.replace(/[^\w.-]+/g, "-").toLowerCase();
         const stamp = Date.now();
         formData.append("banner", file);
         formData.append("banner_path", `profile_banners/${stamp}-${safeName}`);
