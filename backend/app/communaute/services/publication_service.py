@@ -9,10 +9,12 @@ from django.db.models import (
     Case,
     Count,
     Exists,
+    IntegerField,
     OuterRef,
     Prefetch,
     Q,
     QuerySet,
+    Subquery,
     Value,
     When,
 )
@@ -111,6 +113,12 @@ class PublicationService:
                     espace_id=OuterRef('espace_id'),
                 )
             )
+            annotations['espace_mon_role'] = Subquery(
+                ParticipationEspace.objects.filter(
+                    membre_id=membre.id,
+                    espace_id=OuterRef('espace_id'),
+                ).values('role')[:1]
+            )
         options_qs = (
             OptionPublication.objects.order_by('position', 'id')
             .annotate(avis_count=Count('avis', distinct=True))
@@ -126,6 +134,7 @@ class PublicationService:
             .prefetch_related(
                 Prefetch('images', queryset=ImagePublication.objects.order_by('position', 'id')),
                 Prefetch('options', queryset=options_qs),
+                'tags',
             )
             .annotate(**annotations)
         )
@@ -143,10 +152,12 @@ class PublicationService:
         abonnements: bool = False,
         favoris: bool = False,
         populaires: bool = False,
+        tag_slug: Optional[str] = None,
+        tags_suivis: bool = False,
     ) -> QuerySet:
         """
         Fil d'actualité : publications chronologiques avec auteur, images et engagement.
-        Mode pour_vous : priorise amis suivis + chaînes abonnées.
+        Mode pour_vous : priorise thèmes suivis + abonnements, puis le reste.
         Mode abonnements : uniquement suivis + chaînes (hors contenus hors abonnement).
         Mode favoris : bookmarks de l'utilisateur.
         Mode populaires : tri par likes puis commentaires.
@@ -162,28 +173,39 @@ class PublicationService:
             ):
                 raise ValueError(f'Type invalide : {type_filter}')
         if favoris:
-            return self.get_feed_favoris(
+            qs = self.get_feed_favoris(
                 membre=membre,
                 search=search,
                 type_filter=type_filter or None,
+            )
+            return self._apply_tag_filters(
+                qs, tag_slug=tag_slug, tags_suivis=tags_suivis, membre=membre
             )
         if populaires:
-            return self.get_feed_populaires(
+            qs = self.get_feed_populaires(
                 membre=membre,
                 search=search,
                 type_filter=type_filter or None,
+            )
+            return self._apply_tag_filters(
+                qs, tag_slug=tag_slug, tags_suivis=tags_suivis, membre=membre
             )
         if abonnements:
-            return self.get_feed_abonnements(
+            qs = self.get_feed_abonnements(
                 membre=membre,
                 search=search,
                 type_filter=type_filter or None,
             )
+            return self._apply_tag_filters(
+                qs, tag_slug=tag_slug, tags_suivis=tags_suivis, membre=membre
+            )
         if pour_vous:
+            # Tag = boost de priorité, pas un filtre exclusif (le reste du fil suit).
             return self.get_feed_pour_vous(
                 membre=membre,
                 search=search,
                 type_filter=type_filter or None,
+                prefer_tag_slug=tag_slug,
             )
         queryset = self.publication_repository.get_all(
             search=search,
@@ -193,7 +215,47 @@ class PublicationService:
             espace_id=espace_id,
             general_only=general_only,
         )
-        return self._with_engagement(queryset, membre=membre)
+        queryset = self._with_engagement(queryset, membre=membre)
+        return self._apply_tag_filters(
+            queryset, tag_slug=tag_slug, tags_suivis=tags_suivis, membre=membre
+        )
+
+    def _apply_tag_filters(
+        self,
+        queryset: QuerySet,
+        *,
+        tag_slug: Optional[str] = None,
+        tags_suivis: bool = False,
+        membre: Optional[User] = None,
+    ) -> QuerySet:
+        from app.communaute.services.tag_service import TagService
+
+        slug = (tag_slug or '').strip().lower()
+        if slug:
+            return queryset.filter(tags__slug=slug).distinct()
+        if tags_suivis:
+            # Mode legacy : boost de priorité (pas un mur exclusif).
+            tag_ids = TagService().ids_suivis(membre)
+            if not tag_ids:
+                return queryset
+            through = Publication.tags.through
+            priorite = Case(
+                When(
+                    Exists(
+                        through.objects.filter(
+                            publication_id=OuterRef('pk'),
+                            tag_id__in=tag_ids,
+                        )
+                    ),
+                    then=Value(2),
+                ),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+            return queryset.annotate(priorite_tags=priorite).order_by(
+                '-priorite_tags', '-created_at', '-id'
+            )
+        return queryset
 
     def _subscription_ids(
         self, membre: Optional[User]
@@ -245,12 +307,30 @@ class PublicationService:
         membre: Optional[User],
         search: Optional[str] = None,
         type_filter: Optional[str] = None,
+        prefer_tag_slug: Optional[str] = None,
     ) -> QuerySet:
         """
-        Fil personnalisé : pubs générales + chaînes abonnées,
-        avec les suivis / chaînes remontés en premier.
+        Fil personnalisé : pubs générales + chaînes abonnées.
+
+        Ordre (sans masquer le reste) :
+        1. thème explicitement choisi (favori cliqué), s'il y en a un
+        2. thèmes suivis + membres suivis + chaînes abonnées
+        3. le reste du fil
         """
+        from app.communaute.models import Tag
+        from app.communaute.services.tag_service import TagService
+
         followed_ids, channel_ids = self._subscription_ids(membre)
+        tag_ids = TagService().ids_suivis(membre)
+
+        prefer_slug = (prefer_tag_slug or '').strip().lower()
+        prefer_tag_id = None
+        if prefer_slug:
+            prefer_tag_id = (
+                Tag.objects.filter(slug=prefer_slug)
+                .values_list('id', flat=True)
+                .first()
+            )
 
         visibility = Q(espace__isnull=True)
         if channel_ids:
@@ -263,28 +343,54 @@ class PublicationService:
             queryset, search=search, type_filter=type_filter
         )
 
-        priority_clauses = []
+        # Exists évite les doublons M2M (pas de DISTINCT, compatible curseur).
+        through = Publication.tags.through
+        whens: List[When] = []
+        if prefer_tag_id is not None:
+            whens.append(
+                When(
+                    Exists(
+                        through.objects.filter(
+                            publication_id=OuterRef('pk'),
+                            tag_id=prefer_tag_id,
+                        )
+                    ),
+                    then=Value(3),
+                )
+            )
         if followed_ids:
-            priority_clauses.append(
-                Q(auteur_id__in=followed_ids, espace__isnull=True)
+            whens.append(
+                When(
+                    Q(auteur_id__in=followed_ids, espace__isnull=True),
+                    then=Value(2),
+                )
             )
         if channel_ids:
-            priority_clauses.append(Q(espace_id__in=channel_ids))
+            whens.append(When(Q(espace_id__in=channel_ids), then=Value(2)))
+        if tag_ids:
+            whens.append(
+                When(
+                    Exists(
+                        through.objects.filter(
+                            publication_id=OuterRef('pk'),
+                            tag_id__in=tag_ids,
+                        )
+                    ),
+                    then=Value(2),
+                )
+            )
 
-        if priority_clauses:
-            priority = priority_clauses[0]
-            for clause in priority_clauses[1:]:
-                priority |= clause
-            prioritaire = Case(
-                When(priority, then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField(),
+        if whens:
+            priorite = Case(
+                *whens,
+                default=Value(0),
+                output_field=IntegerField(),
             )
         else:
-            prioritaire = Value(False, output_field=BooleanField())
+            priorite = Value(0, output_field=IntegerField())
 
-        queryset = queryset.annotate(prioritaire=prioritaire).order_by(
-            '-prioritaire', '-created_at', '-id'
+        queryset = queryset.annotate(priorite=priorite).order_by(
+            '-priorite', '-created_at', '-id'
         )
         return self._with_engagement(queryset, membre=membre)
 

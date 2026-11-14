@@ -23,6 +23,7 @@ import type {
   Espace,
   EspaceMembre,
   FavoriToggleResult,
+  ForumTag,
   LienInvitation,
   LikeToggleResult,
   Publication,
@@ -36,7 +37,14 @@ export type FeedListArg = {
   auteur?: number;
   espace?: number;
   invite?: string;
-  feed?: "pour-vous" | "abonnements" | "derniers" | "populaires" | "favoris";
+  tag?: string;
+  feed?:
+    | "pour-vous"
+    | "abonnements"
+    | "derniers"
+    | "populaires"
+    | "favoris"
+    | "tags-suivis";
 };
 
 export type ConversationMember = {
@@ -115,6 +123,8 @@ export const forumApi = createApi({
     "EspaceMessages",
     "ActivityBadges",
     "NotificationResume",
+    "ForumTags",
+    "TagsSuivis",
   ],
   endpoints: (builder) => ({
     getActivityBadges: builder.query<
@@ -334,6 +344,7 @@ export const forumApi = createApi({
           ...(queryArg?.espace ? { espace: queryArg.espace } : {}),
           ...(queryArg?.invite ? { invite: queryArg.invite } : {}),
           ...(queryArg?.feed ? { feed: queryArg.feed } : {}),
+          ...(queryArg?.tag ? { tag: queryArg.tag } : {}),
           ...(pageParam ? { cursor: pageParam } : {}),
         };
         return `/publications${toQueryString(params)}`;
@@ -351,6 +362,34 @@ export const forumApi = createApi({
             ]
           : [{ type: "Publications", id: "LIST" }];
       },
+    }),
+
+    getForumTags: builder.query<
+      ForumTag[],
+      { search?: string; limit?: number } | void
+    >({
+      query: (params) =>
+        `/tags${toQueryString({
+          search: params?.search || undefined,
+          limit: params?.limit ?? 30,
+        })}`,
+      providesTags: ["ForumTags"],
+    }),
+
+    getTagsSuivis: builder.query<ForumTag[], void>({
+      query: () => `/tags/suivis`,
+      providesTags: ["TagsSuivis"],
+    }),
+
+    toggleSuivreTag: builder.mutation<
+      { following: boolean; tag: ForumTag },
+      string
+    >({
+      query: (slug) => ({
+        url: `/tags/${encodeURIComponent(slug)}/suivre`,
+        method: "POST",
+      }),
+      invalidatesTags: ["TagsSuivis", "ForumTags"],
     }),
 
     getPublication: builder.query<Publication, number>({
@@ -378,8 +417,12 @@ export const forumApi = createApi({
     }),
 
     uploadForumMedia: builder.mutation<
-      { url: string; path: string; kind: "IMAGE" | "VIDEO" | "AUDIO" },
-      { file: File; kind: "IMAGE" | "VIDEO" | "AUDIO" }
+      {
+        url: string;
+        path: string;
+        kind: "IMAGE" | "VIDEO" | "AUDIO" | "FILE";
+      },
+      { file: File; kind: "IMAGE" | "VIDEO" | "AUDIO" | "FILE" }
     >({
       query: ({ file, kind }) => {
         const formData = new FormData();
@@ -390,7 +433,9 @@ export const forumApi = createApi({
             ? "forum_videos"
             : kind === "AUDIO"
               ? "forum_audios"
-              : "forum_images";
+              : kind === "FILE"
+                ? "forum_files"
+                : "forum_images";
         formData.append("file", file);
         formData.append("kind", kind);
         formData.append("path", `${folder}/${stamp}-${safeName}`);
@@ -684,10 +729,15 @@ export const forumApi = createApi({
           titre: body.titre,
           description: body.description,
           images_data: body.images_data ?? [],
+          tags_data: body.tags_data ?? [],
           ...(body.espace_id ? { espace_id: body.espace_id } : {}),
         },
       }),
-      invalidatesTags: [{ type: "Publications", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Publications", id: "LIST" },
+        "ForumTags",
+        "TagsSuivis",
+      ],
     }),
 
     createApplication: builder.mutation<Publication, CreateApplicationInput>({
@@ -701,9 +751,14 @@ export const forumApi = createApi({
           lien_app: body.lien_app,
           plateforme_app: body.plateforme_app ?? "WEB",
           images_data: body.images_data ?? [],
+          tags_data: body.tags_data ?? [],
         },
       }),
-      invalidatesTags: [{ type: "Publications", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Publications", id: "LIST" },
+        "ForumTags",
+        "TagsSuivis",
+      ],
     }),
 
     createEntraide: builder.mutation<Publication, CreateEntraideInput>({
@@ -715,9 +770,14 @@ export const forumApi = createApi({
           titre: body.titre,
           description: body.description,
           images_data: body.images_data ?? [],
+          tags_data: body.tags_data ?? [],
         },
       }),
-      invalidatesTags: [{ type: "Publications", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Publications", id: "LIST" },
+        "ForumTags",
+        "TagsSuivis",
+      ],
     }),
 
     createChoix: builder.mutation<Publication, CreateChoixInput>({
@@ -731,9 +791,14 @@ export const forumApi = createApi({
           contraintes: body.contraintes ?? "",
           options_data: body.options_data,
           images_data: body.images_data ?? [],
+          tags_data: body.tags_data ?? [],
         },
       }),
-      invalidatesTags: [{ type: "Publications", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Publications", id: "LIST" },
+        "ForumTags",
+        "TagsSuivis",
+      ],
     }),
 
     getPublicationAvis: builder.query<AvisChoix[], number>({
@@ -957,6 +1022,9 @@ export const {
   useGetMessagesQuery,
   useSendMessageMutation,
   useGetPublicationsInfiniteQuery,
+  useGetForumTagsQuery,
+  useGetTagsSuivisQuery,
+  useToggleSuivreTagMutation,
   useGetPublicationQuery,
   useUploadForumImageMutation,
   useUploadForumMediaMutation,

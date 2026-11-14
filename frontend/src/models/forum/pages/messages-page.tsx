@@ -14,9 +14,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
 import { cn } from "@/lib/utils";
 import { useAuthSlice } from "@/models/auth/slice";
+import { PAGE_SIZE } from "@/helpers/api/pagination";
 import {
   forumApi,
   useGetConversationQuery,
@@ -25,15 +25,21 @@ import {
   useGetEspacesInfiniteQuery,
   useGetMembresSuivisQuery,
   useGetMessagesQuery,
+  useGetPublicationsInfiniteQuery,
   useOpenConversationMutation,
   useSendMessageMutation,
   type Conversation,
   type ConversationMember,
 } from "../api";
+import { ChatAttachMenu } from "../components/chat-attach-menu";
+import {
+  ChatMessageBody,
+  isMediaBubble,
+} from "../components/chat-message-body";
 import { EspaceChat } from "../components/espace-chat";
-import { ForumAudioPlayer } from "../components/forum-audio-player";
+import { FeedComposer } from "../components/feed-composer";
 import { ForumAvatar } from "../components/forum-avatar";
-import { ForumRichText } from "../components/forum-rich-text";
+import { PublicationCard } from "../components/publication-card";
 import { VoiceRecorderButton } from "../components/voice-recorder-button";
 import {
   connectMessagingSocket,
@@ -42,10 +48,7 @@ import {
   subscribeToNewMessages,
 } from "../lib/messaging-socket";
 import { looksLikeCodeBlock } from "../lib/parse-mixed-content";
-import {
-  encodeVocalMessage,
-  parseVocalUrl,
-} from "../lib/vocal-message";
+import { encodeVocalMessage, parseRichMessage } from "../lib/rich-message";
 import type { Espace } from "../schema";
 import type { AppDispatch } from "@/redux/store";
 
@@ -273,10 +276,6 @@ export default function MessagesPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Messages
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Groupes (communautés = chat · chaînes = annonces) et conversations
-          privées
-        </p>
       </header>
 
       <div className="grid min-h-0 flex-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:grid-cols-[300px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
@@ -490,6 +489,21 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
     ? `/forum/chaines/${espaceId}`
     : `/forum/communautes/${espaceId}`;
 
+  const {
+    data: feed,
+    isLoading: feedLoading,
+    isFetching,
+    isError: feedError,
+    fetchNextPage,
+    hasNextPage,
+    refetch: refetchFeed,
+  } = useGetPublicationsInfiniteQuery(
+    { espace: espaceId, page_size: PAGE_SIZE },
+    { skip: !isChaine || !isMember }
+  );
+  const publications =
+    feed?.pages.flatMap((page) => page.results ?? []) ?? [];
+
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
@@ -524,56 +538,114 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <Button
-            asChild
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="shrink-0 lg:hidden"
-            aria-label="Retour à la liste"
-          >
-            <Link to="/messages">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {espace.nom}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isChaine
-                ? "Chaîne · lecture & réactions · admins seuls publient"
-                : "Communauté · chat de groupe"}
-            </p>
-          </div>
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2.5 sm:px-4 sm:py-3">
+        <Button
+          asChild
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="size-8 shrink-0 lg:hidden"
+          aria-label="Retour à la liste"
+        >
+          <Link to="/messages">
+            <ArrowLeft className="size-4" />
+          </Link>
+        </Button>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold text-foreground sm:text-sm">
+            {espace.nom}
+          </p>
+          <p className="truncate text-[11px] text-muted-foreground sm:text-xs">
+            {isChaine ? "Chaîne" : "Communauté"}
+          </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {isChaine ? (
-            <Button asChild size="sm" variant="outline">
-              <Link to={detailHref}>Fil publications</Link>
-            </Button>
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          className="h-7 shrink-0 px-2 text-[11px] sm:h-8 sm:px-3 sm:text-sm"
+        >
+          <Link to={`${detailHref}?manage=1`}>Infos</Link>
+        </Button>
+      </div>
+
+      {isChaine ? (
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4">
+          {canWrite ? (
+            <FeedComposer
+              espaceId={espaceId}
+              discussionOnly
+              onCreated={() => {
+                void refetchFeed();
+              }}
+            />
+          ) : (
+            <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-[12px] text-muted-foreground sm:text-sm">
+              Seuls les admins publient ici. Tu peux liker et commenter.
+            </p>
+          )}
+
+          {feedLoading ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Chargement…
+            </p>
           ) : null}
-          <Button asChild size="sm" variant="outline">
-            <Link to={`${detailHref}?manage=1`}>Infos</Link>
-          </Button>
+
+          {feedError ? (
+            <div className="space-y-2 py-6 text-center">
+              <p className="text-sm text-destructive">
+                Impossible de charger les annonces.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void refetchFeed()}
+              >
+                Réessayer
+              </Button>
+            </div>
+          ) : null}
+
+          {!feedLoading && !feedError && publications.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+              Aucune annonce pour l’instant.
+            </p>
+          ) : null}
+
+          {publications.map((publication) => (
+            <PublicationCard
+              key={publication.id}
+              publication={publication}
+            />
+          ))}
+
+          {hasNextPage ? (
+            <div className="flex justify-center pb-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isFetching}
+                onClick={() => void fetchNextPage()}
+              >
+                {isFetching ? "Chargement…" : "Voir plus"}
+              </Button>
+            </div>
+          ) : null}
         </div>
-      </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
-        <EspaceChat
-          embedded
-          espaceId={espaceId}
-          canWrite={canWrite}
-          canReact={isMember}
-          canModerate={isAdmin}
-          readOnlyHint={
-            isChaine
-              ? "Chaîne en lecture : tu peux liker / réagir, seuls les admins publient."
-              : "Seuls les administrateurs peuvent écrire ici."
-          }
-        />
-      </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <EspaceChat
+            embedded
+            espaceId={espaceId}
+            canWrite={canWrite}
+            canReact={isMember}
+            canModerate={isAdmin}
+            readOnlyHint="Seuls les administrateurs peuvent écrire ici."
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -650,12 +722,13 @@ function ConversationThread({
     }
   };
 
+  const handleSendEncoded = async (texte: string) => {
+    await sendMessage({ conversationId, texte }).unwrap();
+  };
+
   const handleSendVocal = async (url: string) => {
     try {
-      await sendMessage({
-        conversationId,
-        texte: encodeVocalMessage(url),
-      }).unwrap();
+      await handleSendEncoded(encodeVocalMessage(url));
     } catch {
       toast.error("Impossible d'envoyer le vocal");
       throw new Error("send vocal failed");
@@ -737,8 +810,10 @@ function ConversationThread({
         {messages.map((message) => {
           const mine =
             currentUserId != null && message.auteur?.id === currentUserId;
-          const vocalUrl = parseVocalUrl(message.texte);
-          const hasCode = !vocalUrl && looksLikeCodeBlock(message.texte);
+          const rich = parseRichMessage(message.texte);
+          const media = isMediaBubble(message.texte);
+          const hasCode =
+            rich.kind === "text" && looksLikeCodeBlock(message.texte);
           return (
             <div
               key={message.id}
@@ -747,40 +822,16 @@ function ConversationThread({
               <div
                 className={cn(
                   "max-w-[min(100%,36rem)] rounded-2xl px-3 py-2 text-sm",
-                  vocalUrl
-                    ? mine
-                      ? "bg-brand text-brand-foreground"
-                      : "bg-muted text-foreground"
-                    : hasCode
-                      ? "w-full border border-border bg-card text-foreground"
-                      : mine
+                  hasCode
+                    ? "w-full border border-border bg-card text-foreground"
+                    : media || mine
+                      ? mine
                         ? "bg-brand text-brand-foreground"
                         : "bg-muted text-foreground"
+                      : "bg-muted text-foreground"
                 )}
               >
-                {vocalUrl ? (
-                  <ForumAudioPlayer
-                    compact
-                    src={buildMediaUrl(vocalUrl)}
-                    className={
-                      mine
-                        ? "border-brand-foreground/20 bg-brand-foreground/10"
-                        : undefined
-                    }
-                  />
-                ) : (
-                  <ForumRichText
-                    text={message.texte}
-                    compact
-                    className={cn(
-                      hasCode
-                        ? "text-foreground"
-                        : mine
-                          ? "text-brand-foreground [&_code]:border-brand-foreground/30 [&_code]:bg-brand-foreground/15 [&_code]:text-brand-foreground"
-                          : "text-foreground"
-                    )}
-                  />
-                )}
+                <ChatMessageBody texte={message.texte} mine={mine} />
                 <p
                   className={cn(
                     "mt-1 text-[10px]",
@@ -815,6 +866,17 @@ function ConversationThread({
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 void handleSend();
+              }
+            }}
+          />
+          <ChatAttachMenu
+            disabled={sending}
+            onSendEncoded={async (texte) => {
+              try {
+                await handleSendEncoded(texte);
+              } catch {
+                toast.error("Impossible d'envoyer la pièce jointe");
+                throw new Error("send attachment failed");
               }
             }}
           />

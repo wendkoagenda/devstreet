@@ -238,6 +238,35 @@ CORS_ALLOWED_ORIGINS = required_list('CORS_ALLOWED_ORIGINS')
 
 CORS_ALLOW_CREDENTIALS = True
 
+# En DEBUG : téléphone sur le LAN / tunnel Cloudflare (Vite proxy).
+# Sans ça, les POST (like, commentaire, message) renvoient 403 CSRF.
+if DEBUG:
+    import socket
+    from ipaddress import ip_address
+
+    _lan_origins: list[str] = []
+    try:
+        _hostname = socket.gethostname()
+        for _info in socket.getaddrinfo(_hostname, None, socket.AF_INET):
+            _ip = _info[4][0]
+            try:
+                _addr = ip_address(_ip)
+            except ValueError:
+                continue
+            if _addr.is_private and not _addr.is_loopback:
+                _lan_origins.append(f'http://{_ip}:5173')
+    except OSError:
+        pass
+
+    CORS_ALLOWED_ORIGINS = list(
+        dict.fromkeys([*CORS_ALLOWED_ORIGINS, *_lan_origins])
+    )
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r'^https://[a-z0-9-]+\.trycloudflare\.com$',
+        r'^https://[a-z0-9-]+\.ngrok-free\.app$',
+        r'^https://[a-z0-9-]+\.ngrok\.io$',
+    ]
+
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -405,3 +434,16 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 # Origines exactes autorisées à envoyer des requêtes modifiantes (schéma + hôte + port)
 CSRF_TRUSTED_ORIGINS = required_list('CSRF_TRUSTED_ORIGINS')
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = list(
+        dict.fromkeys(
+            [
+                *CSRF_TRUSTED_ORIGINS,
+                *_lan_origins,
+                'https://*.trycloudflare.com',
+                'https://*.ngrok-free.app',
+                'https://*.ngrok.io',
+            ]
+        )
+    )
