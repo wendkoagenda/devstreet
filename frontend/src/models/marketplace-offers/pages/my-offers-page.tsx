@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CreateOfferDialog } from "@/models/marketplace-offers/components/create-offer-dialog";
+import { OffersStatsStrip } from "@/models/marketplace-stats/components/page-stats";
 import { RequireRecruiter } from "@/models/marketplace-space/components/guards";
 import { useGetMyOffersQuery } from "../api";
 import { OFFER_STATUS_LABELS, formatDate, offerFacts } from "../labels";
@@ -12,6 +13,7 @@ function MyOffersContent() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+      <OffersStatsStrip />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold text-foreground">Mes offres</h1>
@@ -19,9 +21,7 @@ function MyOffersContent() {
             Les offres de votre entreprise et les candidatures reçues.
           </p>
         </div>
-        <Button asChild>
-          <Link to="/marketplace/my-offers/new">Publier une offre</Link>
-        </Button>
+        <CreateOfferDialog label="Publier une offre" size="default" />
       </div>
 
       {isLoading ? (
@@ -63,9 +63,7 @@ function MyOffersContent() {
       ) : (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
           Vous n'avez pas encore d'offre.
-          <Button asChild>
-            <Link to="/marketplace/my-offers/new">Publier ma première offre</Link>
-          </Button>
+          <CreateOfferDialog label="Publier ma première offre" size="default" />
         </div>
       )}
     </div>

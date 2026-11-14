@@ -12,7 +12,8 @@ class OfferWriteSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     description = serializers.CharField()
     type = serializers.ChoiceField(choices=_choice("type"))
-    contract_duration = serializers.IntegerField(min_value=1, max_value=120, required=False, allow_null=True)
+    contract_duration = serializers.IntegerField(min_value=1, max_value=10000, required=False, allow_null=True)
+    contract_duration_unit = serializers.ChoiceField(choices=_choice("contract_duration_unit"), required=False)
     experience_level = serializers.ChoiceField(choices=_choice("experience_level"))
     budget_min = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0, required=False, allow_null=True)
     budget_max = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0, required=False, allow_null=True)
@@ -33,7 +34,15 @@ class OfferWriteSerializer(serializers.Serializer):
     def validate_currency(self, value):
         return value.upper()
 
+    # Durée maximale raisonnable selon l'unité choisie
+    MAX_DURATION = {"hour": 10000, "day": 3650, "month": 120, "year": 20}
+
     def validate(self, attrs):
+        duration, unit = attrs.get("contract_duration"), attrs.get("contract_duration_unit")
+        if duration and unit and duration > self.MAX_DURATION[unit]:
+            raise serializers.ValidationError(
+                {"contract_duration": f"La durée ne peut pas dépasser {self.MAX_DURATION[unit]} dans cette unité."}
+            )
         low, high = attrs.get("budget_min"), attrs.get("budget_max")
         if low is not None and high is not None and low > high:
             raise serializers.ValidationError({"budget_max": "Le budget maximum doit dépasser le minimum."})

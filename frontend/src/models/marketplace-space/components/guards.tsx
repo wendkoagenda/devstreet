@@ -11,7 +11,7 @@ function Gate({ title, text, cta }: { title: string; text: string; cta: string }
         <h1 className="mb-2 text-xl font-semibold text-foreground">{title}</h1>
         <p className="mb-6 max-w-md text-sm text-muted-foreground">{text}</p>
         <Button asChild>
-          <Link to="/marketplace/profile">{cta}</Link>
+          <Link to="/profil/me?section=dev">{cta}</Link>
         </Button>
       </section>
     </div>
@@ -43,11 +43,28 @@ export function RequireProfil({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-/** Réservé aux recruteurs (profil rattaché à une entreprise) ; sinon explique comment le devenir. */
+/** Affiche son contenu si le membre a un profil dev ou un profil entreprise ; sinon l'invite à créer un profil. */
+export function RequireMarketplaceMember({ children }: { children: ReactNode }) {
+  const { hasAnyProfile, isLoading } = useMySpace();
+  if (isLoading) return <Loading />;
+  if (!hasAnyProfile) {
+    return (
+      <Gate
+        title="Créez votre profil pour continuer"
+        text="Un profil dev ou une entreprise est nécessaire pour utiliser la marketplace."
+        cta="Créer mon profil"
+      />
+    );
+  }
+  return <>{children}</>;
+}
+
+/** Réservé aux recruteurs (profil entreprise) ; sinon explique comment le devenir. */
 export function RequireRecruiter({ children }: { children: ReactNode }) {
   const { hasProfil, isRecruiter, isLoading } = useMySpace();
   if (isLoading) return <Loading />;
-  if (!hasProfil || !isRecruiter) {
+  // Un membre invité n'a qu'un profil entreprise : le profil dev n'est pas nécessaire pour recruter
+  if (!isRecruiter) {
     return (
       <Gate
         title="Espace recruteur"

@@ -29,6 +29,10 @@ type CompanyFormProps = {
   company: MyCompany | null;
   /** Seul le propriétaire peut modifier une entreprise existante. */
   canEdit: boolean;
+  /** Appelé après la création de l'entreprise (ex. pour fermer la boîte de dialogue). */
+  onCreated?: () => void;
+  /** Appelé après l'enregistrement des modifications d'une entreprise existante. */
+  onUpdated?: () => void;
 };
 
 const countryOptions = COUNTRIES.map((country) => ({
@@ -37,7 +41,7 @@ const countryOptions = COUNTRIES.map((country) => ({
 }));
 
 /** Formulaire de l'entreprise de l'utilisateur (création, puis modification par son propriétaire). */
-export function CompanyForm({ company, canEdit }: CompanyFormProps) {
+export function CompanyForm({ company, canEdit, onCreated, onUpdated }: CompanyFormProps) {
   const { t } = useTranslation();
   const [createCompany, { isLoading: isCreating }] =
     useCreateMyCompanyMutation();
@@ -58,9 +62,11 @@ export function CompanyForm({ company, canEdit }: CompanyFormProps) {
       if (isEdit) {
         await updateCompany(payload).unwrap();
         CreationSuccessSonner("Entreprise enregistrée");
+        onUpdated?.();
       } else {
         await createCompany(payload).unwrap();
         CreationSuccessSonner("Entreprise créée");
+        onCreated?.();
       }
     } catch (err) {
       setGlobalError(applySubmitError(err, form, t));

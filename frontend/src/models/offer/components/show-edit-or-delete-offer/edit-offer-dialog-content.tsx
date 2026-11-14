@@ -298,8 +298,9 @@ export default function EditOfferDialogContent() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="junior">Junior</SelectItem>
-                        <SelectItem value="mid">Confirmé</SelectItem>
-                        <SelectItem value="senior">Sénior</SelectItem>
+                        <SelectItem value="mid">Intermédiaire</SelectItem>
+                        <SelectItem value="senior">Senior</SelectItem>
+                        <SelectItem value="expert">Expert</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>

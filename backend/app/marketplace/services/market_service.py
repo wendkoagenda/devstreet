@@ -42,8 +42,9 @@ class MarketService:
 
     @classmethod
     def _recruiter(cls, user) -> Profil:
-        profil = cls._profil(user)
-        if profil.company_id is None:
+        """Profil entreprise du recruteur (celui qui publie les offres)."""
+        profil = MeService.get_entreprise_profil(user)
+        if profil is None:
             raise PermissionDenied("Réservé aux recruteurs : créez d'abord votre entreprise.")
         return profil
 
@@ -107,9 +108,10 @@ class MarketService:
     def list_open_offers(cls, user, search: Optional[str] = None, offer_type: Optional[str] = None, work_mode: Optional[str] = None) -> List[dict]:
         """Offres ouvertes (hors entreprise du recruteur), triées par score si l'utilisateur a un profil."""
         profil = MeService.get_profil(user)
+        company_id = MeService.company_id_of(user.id)
         queryset = _offer_queryset().filter(status="open")
-        if profil and profil.company_id:
-            queryset = queryset.exclude(company_id=profil.company_id)
+        if company_id:
+            queryset = queryset.exclude(company_id=company_id)
         if offer_type:
             queryset = queryset.filter(type=offer_type)
         if work_mode:
@@ -140,7 +142,7 @@ class MarketService:
         offer = _offer_queryset().filter(id=offer_id).first()
         if offer is None:
             raise NotFound("Offre introuvable.")
-        is_own = bool(profil and profil.company_id == offer.company_id)
+        is_own = MeService.company_id_of(user.id) == offer.company_id
         if offer.status != "open" and not is_own:
             raise NotFound("Offre introuvable.")
         if offer.status == "open" and not is_own:
@@ -161,7 +163,7 @@ class MarketService:
         offer = _offer_queryset().filter(id=offer_id, status="open").first()
         if offer is None:
             raise NotFound("Offre introuvable ou fermée.")
-        if offer.company_id == profil.company_id:
+        if offer.company_id == MeService.company_id_of(user.id):
             raise ValidationError({"error": "Vous ne pouvez pas postuler à l'offre de votre propre entreprise."})
         if Candidature.objects.filter(offer=offer, profil=profil).exists():
             raise ValidationError({"error": "Vous avez déjà postulé à cette offre."})
@@ -272,8 +274,8 @@ class MarketService:
         """Profils ouverts aux opportunités classés par score pour l'offre (hors profils de l'entreprise)."""
         offer = cls._company_offer(user, offer_id)
         profils = list(
-            Profil.objects.filter(is_open_to_work=True)
-            .exclude(company_id=offer.company_id)
+            Profil.objects.filter(type=Profil.TYPE_DEV, is_open_to_work=True)
+            .exclude(user_id__in=Profil.objects.filter(company_id=offer.company_id).values("user_id"))
             .select_related("user")
             .prefetch_related("profil_skills__skill")[:500]
         )
@@ -320,7 +322,9 @@ class MarketService:
     def _book_mission(candidature: Candidature, user) -> None:
         """Ajoute la mission au calendrier du candidat (période « occupé », origine « mission »)."""
         offer = candidature.offer
-        period = offer_period(offer) or mission_period(timezone.localdate(), offer.contract_duration, offer.type)
+        period = offer_period(offer) or mission_period(
+            timezone.localdate(), offer.contract_duration, offer.type, offer.contract_duration_unit
+        )
         Availability.objects.create(
             profil=candidature.profil,
             start_date=period[0],

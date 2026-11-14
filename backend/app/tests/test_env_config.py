@@ -70,7 +70,7 @@ class SettingsStartupTests(SimpleTestCase):
 
     def test_each_mandatory_variable_stops_the_startup(self):
         for name in ('DEBUG', 'ALLOWED_HOSTS', 'CORS_ALLOWED_ORIGINS', 'CSRF_TRUSTED_ORIGINS', 'FRONTEND_URL',
-                     'EMAIL_BACKEND', 'DEFAULT_FROM_EMAIL', 'USE_X_FORWARDED_PROTO', 'ENABLE_API_DOCS', 'ENABLE_ADMIN', 'USE_GCS',
+                     'EMAIL_BACKEND', 'DEFAULT_FROM_EMAIL', 'USE_X_FORWARDED_PROTO', 'ENABLE_API_DOCS', 'ENABLE_ADMIN', 'USE_S3',
                      'DB_NAME'):
             with self.subTest(variable=name):
                 result = self.start(**{name: ''})
@@ -82,13 +82,26 @@ class SettingsStartupTests(SimpleTestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('EMAIL_HOST est obligatoire', result.stderr)
 
-    def test_gcs_requires_its_variables_only_when_enabled(self):
-        enabled = self.start(USE_GCS='true', GS_BUCKET_NAME='')
-        self.assertNotEqual(enabled.returncode, 0)
-        self.assertIn('GS_BUCKET_NAME est obligatoire', enabled.stderr)
+    def test_s3_requires_its_variables_only_when_enabled(self):
+        complete = {'S3_ENDPOINT_URL': 'http://minio-serveur:9000', 'S3_BUCKET_NAME': 'bucket-test',
+                    'S3_ACCESS_KEY': 'cle-applicative', 'S3_SECRET_KEY': 'secret-applicatif'}
+        for name in complete:
+            with self.subTest(variable=name):
+                enabled = self.start(USE_S3='true', **{**complete, name: ''})
+                self.assertNotEqual(enabled.returncode, 0)
+                self.assertIn(f'{name} est obligatoire', enabled.stderr)
 
-        disabled = self.start(USE_GCS='false', GS_BUCKET_NAME='')
+        disabled = self.start(USE_S3='false', S3_BUCKET_NAME='')
         self.assertEqual(disabled.returncode, 0, disabled.stderr)
+
+    def test_s3_enabled_with_all_variables_starts(self):
+        result = self.start(USE_S3='true', S3_ENDPOINT_URL='http://minio-serveur:9000', S3_BUCKET_NAME='bucket-test',
+                            S3_ACCESS_KEY='cle-applicative', S3_SECRET_KEY='secret-applicatif')
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_legacy_gcs_variables_are_ignored(self):
+        result = self.start(USE_GCS='true', GS_BUCKET_NAME='', USE_S3='false')
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_tuning_values_are_constants_not_environment(self):
         from django.conf import settings

@@ -82,12 +82,9 @@ def render(definitions, branch, secrets, variables, images, sha):
     if not _SHA.match(sha):
         errors.append("DEPLOY_SHA doit être un commit complet de 40 caractères hexadécimaux.")
 
-    use_gcs = (backend.get('USE_GCS') or '').strip().lower() in ('1', 'true', 'yes', 'on')
     use_s3 = (backend.get('USE_S3') or '').strip().lower() in ('1', 'true', 'yes', 'on')
-    if use_gcs and use_s3:
-        errors.append("USE_GCS et USE_S3 ne peuvent pas être actifs ensemble.")
     if use_s3:
-        for name in ('S3_ENDPOINT_URL', 'S3_BUCKET_NAME', 'S3_ACCESS_KEY', 'S3_SECRET_KEY', 'S3_PUBLIC_URL'):
+        for name in ('S3_ENDPOINT_URL', 'S3_BUCKET_NAME', 'S3_ACCESS_KEY', 'S3_SECRET_KEY'):
             if not backend.get(name):
                 errors.append(f"{name} : manquant (requis quand USE_S3=True).")
             else:

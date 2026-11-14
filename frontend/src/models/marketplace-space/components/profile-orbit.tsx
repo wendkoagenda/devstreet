@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -10,14 +11,9 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { OpenToWorkRing } from "@/components/ui/open-to-work-ring";
+import { ForumAvatar } from "@/models/forum/components/forum-avatar";
 import { cn } from "@/lib/utils";
-
-export type OrbitLeaf = {
-  key: string;
-  title: string;
-  summary?: string;
-  onSelect?: () => void;
-};
 
 export type OrbitNode = {
   key: string;
@@ -27,12 +23,10 @@ export type OrbitNode = {
   icon: ReactNode;
   /** Élément à compléter : bordure en pointillés et pastille « À compléter ». */
   todo?: boolean;
-  /** Ouvre un panneau d'édition. */
+  /** Ouvre un panneau d'édition ou une autre vue. */
   onSelect?: () => void;
   /** Ou mène vers une autre page. */
   to?: string;
-  /** Feuilles hors de la branche (compétences, expériences…). */
-  children?: OrbitLeaf[];
 };
 
 type Point = { x: number; y: number };
@@ -42,6 +36,8 @@ type ProfileOrbitProps = {
   nodes: OrbitNode[];
   /** Clé localStorage pour mémoriser les positions déplacées. */
   storageKey?: string;
+  /** Les branches se déplacent à la souris (désactivé pour un visiteur : il ne modifie pas la présentation). */
+  draggable?: boolean;
 };
 
 const RADIUS = 34;
@@ -49,22 +45,6 @@ const RADIUS = 34;
 function positionOf(index: number, count: number): Point {
   const angle = ((-90 + (360 / Math.max(count, 1)) * index) * Math.PI) / 180;
   return { x: 50 + RADIUS * Math.cos(angle), y: 50 + RADIUS * Math.sin(angle) };
-}
-
-function childPosition(parent: Point, index: number, count: number): Point {
-  const dx = parent.x - 50;
-  const dy = parent.y - 50;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  const px = -uy;
-  const py = ux;
-  const fan = count <= 1 ? 0 : (index - (count - 1) / 2) * 7;
-  const extend = 16;
-  return {
-    x: Math.min(96, Math.max(4, parent.x + ux * extend + px * fan)),
-    y: Math.min(96, Math.max(4, parent.y + uy * extend + py * fan)),
-  };
 }
 
 function loadPositions(storageKey?: string): Record<string, Point> {
@@ -89,36 +69,77 @@ function savePositions(storageKey: string | undefined, positions: Record<string,
   }
 }
 
+/**
+ * Largeur minimale (px) du conteneur pour afficher l'orbite complète. En dessous (colonne étroite, petit écran),
+ * les branches s'affichent en grille de cartes. La mesure se fait sur le conteneur lui-même, pas sur l'écran :
+ * l'orbite s'adapte à la place réellement disponible, par exemple à côté du menu de la page de profil.
+ */
+const ORBIT_MIN_WIDTH = 720;
+
 const BRANCH_CLASSES =
   "group flex w-full items-center gap-3 rounded-xl border bg-card p-3 text-left shadow-sm transition-colors " +
-  "hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
-  "xl:absolute xl:left-[var(--x)] xl:top-[var(--y)] xl:z-20 xl:w-44 xl:-translate-x-1/2 xl:-translate-y-1/2 " +
-  "xl:cursor-grab xl:active:cursor-grabbing xl:touch-none";
+  "hover:border-brand hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-const LEAF_CLASSES =
-  "absolute z-10 flex w-36 -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 text-left text-xs shadow-sm " +
-  "hover:border-brand-soft-border hover:bg-brand-soft/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const BRANCH_ORBIT_CLASSES =
+  "absolute left-[var(--x)] top-[var(--y)] z-20 w-44 -translate-x-1/2 -translate-y-1/2";
+
+const BRANCH_DRAG_CLASSES = "cursor-grab active:cursor-grabbing touch-none";
+
+/** Carte centrale du profil : photo, nom, accroche et statut « ouvert aux opportunités » — rien d'autre. */
+export function ProfileOrbitCenter({
+  name,
+  photo,
+  headline,
+  headlinePlaceholder,
+  openToWork,
+}: {
+  name: string;
+  photo?: string | null;
+  headline?: string;
+  /** Texte affiché quand l'accroche est vide (ex. invitation à la renseigner sur mon propre profil). */
+  headlinePlaceholder?: string;
+  openToWork: boolean;
+}) {
+  const tagline = headline || headlinePlaceholder;
+  return (
+    <section
+      aria-label={`Profil de ${name}`}
+      className="flex flex-col items-center gap-2.5 rounded-2xl border border-brand-soft-border bg-card p-4 text-center shadow-md ring-4 ring-brand-soft"
+    >
+      {/* Statut « ouvert aux opportunités » : arc façon LinkedIn sur la photo */}
+      <div className="relative mb-1.5">
+        <ForumAvatar
+          name={name}
+          photo={photo}
+          tone="brand"
+          className="!h-24 !w-24 !text-2xl"
+        />
+        {openToWork ? <OpenToWorkRing /> : null}
+      </div>
+      <div className="flex min-w-0 flex-col gap-1">
+        <h2 className="truncate text-lg font-semibold text-foreground">{name}</h2>
+        {tagline ? <p className="text-xs text-muted-foreground">{tagline}</p> : null}
+      </div>
+    </section>
+  );
+}
 
 function BranchBody({ node }: { node: OrbitNode }) {
   return (
     <>
       <span
-        className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-foreground"
+        className="flex size-9 shrink-0 items-center justify-center rounded-full border border-brand-soft-border bg-brand-soft text-brand-strong"
         aria-hidden
       >
         {node.icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-sm font-semibold text-foreground">
-          {node.title}
-        </span>
-        <span className="line-clamp-2 text-xs text-muted-foreground">
-          {node.summary}
-        </span>
+        <span className="truncate text-sm font-semibold text-foreground">{node.title}</span>
+        <span className="line-clamp-2 text-xs text-muted-foreground">{node.summary}</span>
         {node.todo ? (
           <Badge
             variant="outline"
-            className="mt-0.5 w-fit px-1.5 py-0 text-[10px]"
+            className="mt-0.5 w-fit border-brand px-1.5 py-0 text-[10px] text-brand-strong"
           >
             À compléter
           </Badge>
@@ -129,11 +150,14 @@ function BranchBody({ node }: { node: OrbitNode }) {
 }
 
 /**
- * Profil au centre + branches déplaçables.
- * Chaque compétence / expérience / entreprise crée une feuille plus loin sur l'arbre.
+ * Profil au centre + résumé en branches : chaque branche donne un compte ou un état (« 12 compétences »),
+ * le détail s'ouvre au clic. Les branches sont déplaçables (positions mémorisées) quand `draggable` est actif.
  */
-export function ProfileOrbit({ center, nodes, storageKey }: ProfileOrbitProps) {
+export function ProfileOrbit({ center, nodes, storageKey, draggable = true }: ProfileOrbitProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [orbital, setOrbital] = useState(false);
+  const orbitalRef = useRef(false);
+  orbitalRef.current = orbital;
   const defaults = useMemo(
     () =>
       Object.fromEntries(
@@ -142,17 +166,26 @@ export function ProfileOrbit({ center, nodes, storageKey }: ProfileOrbitProps) {
     [nodes]
   );
   const [overrides, setOverrides] = useState<Record<string, Point>>(() =>
-    loadPositions(storageKey)
+    draggable ? loadPositions(storageKey) : {}
   );
-  const dragRef = useRef<{
-    key: string;
-    pointerId: number;
-  } | null>(null);
+  const dragRef = useRef<{ key: string; pointerId: number } | null>(null);
   const movedRef = useRef(false);
 
   useEffect(() => {
-    setOverrides(loadPositions(storageKey));
-  }, [storageKey]);
+    setOverrides(draggable ? loadPositions(storageKey) : {});
+  }, [storageKey, draggable]);
+
+  // Orbite complète si le conteneur est assez large, grille de cartes sinon
+  useLayoutEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+    const update = () => setOrbital(node.getBoundingClientRect().width >= ORBIT_MIN_WIDTH);
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const positions = useMemo(() => {
     const next: Record<string, Point> = { ...defaults };
@@ -162,63 +195,39 @@ export function ProfileOrbit({ center, nodes, storageKey }: ProfileOrbitProps) {
     return next;
   }, [defaults, overrides]);
 
-  const lines = useMemo(() => {
-    const edges: Array<{ key: string; x1: number; y1: number; x2: number; y2: number }> =
-      [];
-    for (const node of nodes) {
-      const parent = positions[node.key] ?? { x: 50, y: 50 };
-      edges.push({
-        key: `root-${node.key}`,
-        x1: 50,
-        y1: 50,
-        x2: parent.x,
-        y2: parent.y,
-      });
-      const kids = node.children ?? [];
-      kids.forEach((leaf, index) => {
-        const child = childPosition(parent, index, kids.length);
-        edges.push({
-          key: `leaf-${node.key}-${leaf.key}`,
-          x1: parent.x,
-          y1: parent.y,
-          x2: child.x,
-          y2: child.y,
-        });
-      });
-    }
-    return edges;
-  }, [nodes, positions]);
-
   const onPointerDown = useCallback(
     (key: string, event: ReactPointerEvent<HTMLElement>) => {
-      if (event.button !== 0) return;
-      // Sur mobile (liste), pas de drag.
-      if (window.matchMedia("(max-width: 1279px)").matches) return;
+      if (event.button !== 0 || !draggable) return;
+      // En grille de cartes, pas de drag.
+      if (!orbitalRef.current) return;
       movedRef.current = false;
       dragRef.current = { key, pointerId: event.pointerId };
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    []
+    [draggable]
   );
 
-  const onPointerMove = useCallback((event: ReactPointerEvent<HTMLElement>) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    const box = containerRef.current?.getBoundingClientRect();
-    if (!box || box.width <= 0 || box.height <= 0) return;
-    movedRef.current = true;
-    const x = ((event.clientX - box.left) / box.width) * 100;
-    const y = ((event.clientY - box.top) / box.height) * 100;
-    const clamped = {
-      x: Math.min(94, Math.max(6, x)),
-      y: Math.min(94, Math.max(6, y)),
-    };
-    setOverrides((prev) => {
-      const next = { ...prev, [drag.key]: clamped };
-      savePositions(storageKey, next);
-      return next;
-    });
-  }, [storageKey]);
+  const onPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const box = containerRef.current?.getBoundingClientRect();
+      if (!box || box.width <= 0 || box.height <= 0) return;
+      movedRef.current = true;
+      const x = ((event.clientX - box.left) / box.width) * 100;
+      const y = ((event.clientY - box.top) / box.height) * 100;
+      const clamped = {
+        x: Math.min(94, Math.max(6, x)),
+        y: Math.min(94, Math.max(6, y)),
+      };
+      setOverrides((prev) => {
+        const next = { ...prev, [drag.key]: clamped };
+        savePositions(storageKey, next);
+        return next;
+      });
+    },
+    [storageKey]
+  );
 
   const onPointerUp = useCallback((event: ReactPointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
@@ -237,51 +246,66 @@ export function ProfileOrbit({ center, nodes, storageKey }: ProfileOrbitProps) {
     node.onSelect?.();
   };
 
-  const hasLeaves = nodes.some((node) => (node.children?.length ?? 0) > 0);
+  const lines = useMemo(
+    () =>
+      nodes.map((node) => {
+        const point = positions[node.key] ?? { x: 50, y: 50 };
+        return { key: node.key, x2: point.x, y2: point.y };
+      }),
+    [nodes, positions]
+  );
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        "flex flex-col gap-6 xl:relative xl:mx-auto xl:block xl:aspect-square xl:w-full xl:gap-0",
-        hasLeaves ? "xl:max-w-[960px]" : "xl:max-w-[800px]"
+        "w-full",
+        orbital ? "relative mx-auto block aspect-square max-w-[800px]" : "flex flex-col gap-6"
       )}
     >
-      <svg
-        className="pointer-events-none absolute inset-0 hidden h-full w-full text-border xl:block"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
-        {lines.map((line) => (
-          <line
-            key={line.key}
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-            stroke="currentColor"
-            strokeWidth={1}
-            strokeDasharray="2 4"
-            vectorEffect="non-scaling-stroke"
+      {orbital ? (
+        <>
+          <svg
+            className="pointer-events-none absolute inset-0 h-full w-full text-brand-soft-border"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            {lines.map((line) => (
+              <line
+                key={line.key}
+                x1={50}
+                y1={50}
+                x2={line.x2}
+                y2={line.y2}
+                stroke="currentColor"
+                strokeWidth={1}
+                strokeDasharray="2 4"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </svg>
+
+          <div
+            className="pointer-events-none absolute inset-[14%] rounded-full border border-dashed border-brand-soft-border bg-brand-soft/40"
+            aria-hidden
           />
-        ))}
-      </svg>
+          <div
+            className="pointer-events-none absolute inset-[30%] rounded-full border border-dashed border-brand-soft-border"
+            aria-hidden
+          />
+        </>
+      ) : null}
 
       <div
-        className="pointer-events-none absolute inset-[14%] hidden rounded-full border border-dashed border-border bg-muted/20 xl:block"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-[30%] hidden rounded-full border border-dashed border-border xl:block"
-        aria-hidden
-      />
-
-      <div className="xl:absolute xl:left-1/2 xl:top-1/2 xl:z-30 xl:w-64 xl:-translate-x-1/2 xl:-translate-y-1/2">
+        className={cn(
+          orbital && "absolute left-1/2 top-1/2 z-30 w-64 -translate-x-1/2 -translate-y-1/2"
+        )}
+      >
         {center}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:contents">
+      <div className={cn(orbital ? "contents" : "grid gap-3 sm:grid-cols-2")}>
         {nodes.map((node) => {
           const point = positions[node.key] ?? { x: 50, y: 50 };
           const style = {
@@ -290,99 +314,42 @@ export function ProfileOrbit({ center, nodes, storageKey }: ProfileOrbitProps) {
           } as CSSProperties;
           const className = cn(
             BRANCH_CLASSES,
-            node.todo
-              ? "border-dashed border-muted-foreground"
-              : "border-border"
+            orbital && BRANCH_ORBIT_CLASSES,
+            orbital && draggable && BRANCH_DRAG_CLASSES,
+            node.todo ? "border-dashed border-brand" : "border-brand-soft-border"
           );
 
-          const kids = node.children ?? [];
-
-          return (
-            <div key={node.key} className="contents">
-              {node.to ? (
-                <Link
-                  to={node.to}
-                  className={className}
-                  style={style}
-                  onPointerDown={(event) => onPointerDown(node.key, event)}
-                  onPointerMove={onPointerMove}
-                  onPointerUp={onPointerUp}
-                  onClick={(event) => {
-                    if (movedRef.current) {
-                      event.preventDefault();
-                      movedRef.current = false;
-                    }
-                  }}
-                >
-                  <BranchBody node={node} />
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  className={className}
-                  style={style}
-                  onPointerDown={(event) => onPointerDown(node.key, event)}
-                  onPointerMove={onPointerMove}
-                  onPointerUp={onPointerUp}
-                  onClick={() => handleBranchActivate(node)}
-                >
-                  <BranchBody node={node} />
-                </button>
-              )}
-
-              {/* Feuilles desktop : hors de la branche */}
-              {kids.map((leaf, index) => {
-                const leafPoint = childPosition(point, index, kids.length);
-                const leafStyle = {
-                  left: `${leafPoint.x}%`,
-                  top: `${leafPoint.y}%`,
-                } as CSSProperties;
-                return (
-                  <button
-                    key={`${node.key}-${leaf.key}`}
-                    type="button"
-                    className={cn(LEAF_CLASSES, "hidden xl:flex")}
-                    style={leafStyle}
-                    onClick={() => leaf.onSelect?.() ?? node.onSelect?.()}
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium text-foreground">
-                        {leaf.title}
-                      </span>
-                      {leaf.summary ? (
-                        <span className="block truncate text-[10px] text-muted-foreground">
-                          {leaf.summary}
-                        </span>
-                      ) : null}
-                    </span>
-                  </button>
-                );
-              })}
-
-              {/* Feuilles mobile : sous la branche */}
-              {kids.length > 0 ? (
-                <ul className="ml-4 space-y-1.5 border-l border-dashed border-border pl-3 xl:hidden">
-                  {kids.map((leaf) => (
-                    <li key={leaf.key}>
-                      <button
-                        type="button"
-                        className="w-full rounded-lg border border-border bg-card px-2.5 py-2 text-left text-xs hover:bg-muted"
-                        onClick={() => leaf.onSelect?.() ?? node.onSelect?.()}
-                      >
-                        <span className="block font-medium text-foreground">
-                          {leaf.title}
-                        </span>
-                        {leaf.summary ? (
-                          <span className="text-muted-foreground">
-                            {leaf.summary}
-                          </span>
-                        ) : null}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
+          return node.to ? (
+            <Link
+              key={node.key}
+              to={node.to}
+              className={className}
+              style={style}
+              onPointerDown={(event) => onPointerDown(node.key, event)}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onClick={(event) => {
+                if (movedRef.current) {
+                  event.preventDefault();
+                  movedRef.current = false;
+                }
+              }}
+            >
+              <BranchBody node={node} />
+            </Link>
+          ) : (
+            <button
+              key={node.key}
+              type="button"
+              className={className}
+              style={style}
+              onPointerDown={(event) => onPointerDown(node.key, event)}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onClick={() => handleBranchActivate(node)}
+            >
+              <BranchBody node={node} />
+            </button>
           );
         })}
       </div>

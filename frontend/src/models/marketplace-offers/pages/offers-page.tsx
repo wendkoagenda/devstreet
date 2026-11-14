@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
+import { CreateOfferDialog } from "@/models/marketplace-offers/components/create-offer-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { RequireProfil } from "@/models/marketplace-space/components/guards";
+import { ExploreStatsStrip } from "@/models/marketplace-stats/components/page-stats";
+import { RequireMarketplaceMember } from "@/models/marketplace-space/components/guards";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 import { useGetOffersQuery } from "../api";
 import { OFFER_TYPE_LABELS } from "../labels";
@@ -27,6 +29,7 @@ function OffersContent() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
+      <ExploreStatsStrip />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold text-foreground">Offres pour vous</h1>
@@ -35,9 +38,7 @@ function OffersContent() {
           </p>
         </div>
         {isRecruiter ? (
-          <Button asChild>
-            <Link to="/marketplace/my-offers/new">Publier une offre</Link>
-          </Button>
+          <CreateOfferDialog label="Publier une offre" size="default" redirectToList />
         ) : null}
       </div>
 
@@ -113,8 +114,8 @@ function OffersContent() {
 /** Missions : offres ouvertes recommandées, avec recherche et filtres. */
 export default function OffersPage() {
   return (
-    <RequireProfil>
+    <RequireMarketplaceMember>
       <OffersContent />
-    </RequireProfil>
+    </RequireMarketplaceMember>
   );
 }

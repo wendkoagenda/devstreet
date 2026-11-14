@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreationErrorSonner, CreationSuccessSonner } from "@/helpers/api/feed-backs";
 import { formatDate } from "@/models/marketplace-offers/labels";
+import { AvailabilityStatsStrip } from "@/models/marketplace-stats/components/page-stats";
 import { RequireProfil } from "@/models/marketplace-space/components/guards";
 import { useDeleteAvailabilityMutation, useGetMyAvailabilitiesQuery } from "../api";
 import { AvailabilityForm } from "../components/availability-form";
@@ -36,10 +37,12 @@ function AvailabilityContent() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+      <AvailabilityStatsStrip />
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold text-foreground">Mes disponibilités</h1>
         <p className="text-sm text-muted-foreground">
-          Votre calendrier alimente le score des offres. Une candidature acceptée ajoute
+          Sans période, vous êtes disponible : ajoutez seulement vos plages occupées (mission, congé, charge
+          partielle). Votre calendrier alimente le score des offres, et une candidature acceptée ajoute
           automatiquement la mission en « occupé ».
         </p>
       </div>

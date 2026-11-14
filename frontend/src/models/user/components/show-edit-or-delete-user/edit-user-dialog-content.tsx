@@ -2,6 +2,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -131,6 +132,11 @@ export default function EditUserDialogContent() {
                     <FormControl>
                       <Input {...field} className="h-10" />
                     </FormControl>
+                    {field.value?.trim() !== selectedUser.username && (
+                      <FormDescription className="text-destructive">
+                        {t("username_change_warning")}
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

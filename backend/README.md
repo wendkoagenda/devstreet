@@ -96,7 +96,7 @@ Toutes les variables listées dans `.env.example` sont **obligatoires** : Django
 | `USE_X_FORWARDED_PROTO`                        | `true` derrière un reverse proxy    |
 | `FRONTEND_URL`                                 | URL publique (liens e-mails)        |
 | `EMAIL_*`                                      | Backend e-mail (`console` en local) |
-| `USE_GCS`, `GS_*`, `GCS_UPLOADER_SA`           | Stockage GCS si activé              |
+| `USE_S3`, `S3_*`                               | Stockage S3/MinIO privé si activé   |
 
 Les réglages de tuning (rate limit, durées JWT, cookies, HSTS…) sont des constantes dans `config/settings.py`.
 

@@ -1,9 +1,11 @@
+import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate, initialsOf } from "@/models/marketplace-offers/labels";
+import { formatDate } from "@/models/marketplace-offers/labels";
+import { PoolStatsStrip } from "@/models/marketplace-stats/components/page-stats";
 import { RequireRecruiter } from "@/models/marketplace-space/components/guards";
 import { useGetPoolQuery } from "../api";
 
@@ -12,6 +14,7 @@ function PoolContent() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
+      <PoolStatsStrip />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-semibold text-foreground">Mon vivier de talents</h1>
@@ -36,12 +39,7 @@ function PoolContent() {
             <Card key={talent.id}>
               <CardContent className="flex flex-col gap-3 p-4">
                 <div className="flex items-center gap-3">
-                  <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold"
-                    aria-hidden
-                  >
-                    {initialsOf(talent.name)}
-                  </span>
+                  <ProfileInitialsAvatar name={talent.name} openToWork={talent.is_open_to_work} />
                   <span className="flex min-w-0 flex-col">
                     <span className="truncate text-sm font-semibold text-foreground">
                       {talent.name}

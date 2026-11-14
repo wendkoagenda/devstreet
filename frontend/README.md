@@ -30,7 +30,7 @@ Toutes ces valeurs sont **publiques** (intégrées au JavaScript) : jamais de se
 |---|---|---|
 | `VITE_API_URL` | oui | Base API (ex. `/api` en local ; le serveur Vite relaie vers Django) |
 | `VITE_API_V1_URL` | oui | Base API v1 (ex. `/api/v1`) |
-| `VITE_GCS_BUCKET_NAME` | non | Absente ou vide = pas de stockage GCS côté front |
+| `VITE_USE_S3` | non | `true` si le backend a `USE_S3=True` : les fichiers sont lus via `/api/v1/files/` (utilisateur connecté). Absente = `/media/` |
 
 Exemple local typique :
 

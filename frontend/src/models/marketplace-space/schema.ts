@@ -43,7 +43,33 @@ export type MyCompany = {
   is_verified: boolean;
 };
 
-export type MySpace = { profil: MyProfil | null; company: MyCompany | null };
+export type MySpace = {
+  profil: MyProfil | null;
+  company: MyCompany | null;
+  /** Profil entreprise du membre (propriétaire ou simple membre de la société). */
+  entreprise_profil: { id: number; is_owner: boolean } | null;
+};
+
+export type InvitationState = "valid" | "expired" | "revoked" | "accepted";
+
+/** Invitation à rejoindre l'entreprise ; `link` n'est renvoyé qu'à la création. */
+export type EntrepriseInvitation = {
+  id: number;
+  email: string;
+  state: InvitationState;
+  expires_at: string;
+  created_at: string;
+  link?: string;
+};
+
+/** Ce que voit la personne invitée avant d'accepter. */
+export type InvitationDetail = {
+  state: InvitationState;
+  message: string;
+  company: { id: number; name: string; is_verified: boolean };
+  already_in_company: boolean;
+  email_mismatch: boolean;
+};
 
 const optionalUrl = z
   .string()

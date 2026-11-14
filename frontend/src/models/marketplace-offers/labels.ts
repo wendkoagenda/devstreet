@@ -1,5 +1,6 @@
 import type {
   CandidatureStatus,
+  DurationUnit,
   ExperienceLevel,
   Offer,
   OfferStatus,
@@ -16,9 +17,38 @@ export const OFFER_TYPE_LABELS: Record<OfferType, string> = {
 
 export const LEVEL_LABELS: Record<ExperienceLevel, string> = {
   junior: "Junior",
-  mid: "Confirmé",
-  senior: "Sénior",
+  mid: "Intermédiaire",
+  senior: "Senior",
+  expert: "Expert",
 };
+
+/** Unités de durée proposées (heures, jours, mois, années). */
+export const DURATION_UNIT_LABELS: Record<DurationUnit, string> = {
+  hour: "Heures",
+  day: "Jours",
+  month: "Mois",
+  year: "Années",
+};
+
+const DURATION_UNIT_SINGULAR: Record<DurationUnit, string> = {
+  hour: "heure",
+  day: "jour",
+  month: "mois",
+  year: "an",
+};
+
+const DURATION_UNIT_PLURAL: Record<DurationUnit, string> = {
+  hour: "heures",
+  day: "jours",
+  month: "mois",
+  year: "ans",
+};
+
+/** Durée lisible : « 1 heure », « 3 mois », « 2 ans ». */
+export function formatDuration(value: number | string, unit: DurationUnit): string {
+  const amount = Number(value);
+  return `${amount} ${amount > 1 ? DURATION_UNIT_PLURAL[unit] : DURATION_UNIT_SINGULAR[unit]}`;
+}
 
 export const WORK_MODE_LABELS: Record<WorkMode, string> = {
   on_site: "Sur site",
@@ -67,7 +97,7 @@ export function formatBudget(offer: Offer): string {
 export function offerFacts(offer: Offer): string[] {
   return [
     OFFER_TYPE_LABELS[offer.type],
-    offer.contract_duration ? `${offer.contract_duration} mois` : "",
+    offer.contract_duration ? formatDuration(offer.contract_duration, offer.contract_duration_unit) : "",
     WORK_MODE_LABELS[offer.work_mode],
     LEVEL_LABELS[offer.experience_level],
   ].filter(Boolean);

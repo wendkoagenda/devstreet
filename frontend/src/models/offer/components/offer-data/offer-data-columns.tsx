@@ -143,7 +143,7 @@ export const useOfferColumns = (): ColumnDef<GetOfferSchema>[] => {
         </Button>
       ),
       cell: ({ row }) => {
-        const labels = {"junior": "Junior", "mid": "Confirmé", "senior": "Sénior"} as Record<string, string>;
+        const labels = {"junior": "Junior", "mid": "Intermédiaire", "senior": "Senior", "expert": "Expert"} as Record<string, string>;
         const value = row.getValue("experience_level");
         return <div>{labels[String(value ?? "")] ?? String(value ?? "—")}</div>;
       },

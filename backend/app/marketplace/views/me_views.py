@@ -17,10 +17,16 @@ from app.marketplace.services.me_service import MeService
 def _space_response(user, http_status=status.HTTP_200_OK):
     """Réponse commune : profil et entreprise de l'utilisateur (null si absents)."""
     profil, company = MeService.get_space(user)
+    entreprise = MeService.get_entreprise_profil(user)
+    profil_data = ProfilSerializer(profil).data if profil else None
+    if profil_data is not None:
+        # Le rôle de propriétaire se porte sur le profil entreprise, pas sur le profil dev
+        profil_data["is_company_owner"] = bool(entreprise and entreprise.is_company_owner)
     return Response(
         {
-            "profil": ProfilSerializer(profil).data if profil else None,
+            "profil": profil_data,
             "company": CompanySerializer(company).data if company else None,
+            "entreprise_profil": {"id": entreprise.id, "is_owner": entreprise.is_company_owner} if entreprise else None,
         },
         status=http_status,
     )

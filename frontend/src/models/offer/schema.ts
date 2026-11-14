@@ -8,7 +8,7 @@ export const offerSchema = z.object({
   description: z.string(),
   type: z.enum(["mission", "cdd", "cdi", "stage"]),
   contract_duration: z.string().nullable().optional(),
-  experience_level: z.enum(["junior", "mid", "senior"]),
+  experience_level: z.enum(["junior", "mid", "senior", "expert"]),
   budget_min: z.coerce.number().nullable().optional(),
   budget_max: z.coerce.number().nullable().optional(),
   currency: z.string(),
@@ -36,7 +36,7 @@ export const createOfferSchema = (t: TFunction) =>
     description: z.string(t("validation.required")).min(1, t("validation.required")),
     type: z.enum(["mission", "cdd", "cdi", "stage"]),
     contract_duration: z.string().nullable().optional(),
-    experience_level: z.enum(["junior", "mid", "senior"]),
+    experience_level: z.enum(["junior", "mid", "senior", "expert"]),
     budget_min: z.preprocess(
       (val) =>
         val === undefined || val === null || val === ""
@@ -155,7 +155,7 @@ export const updateOfferSchema = (t: TFunction) =>
     description: z.string(t("validation.required")).min(1, t("validation.required")),
     type: z.enum(["mission", "cdd", "cdi", "stage"]),
     contract_duration: z.string().nullable().optional(),
-    experience_level: z.enum(["junior", "mid", "senior"]),
+    experience_level: z.enum(["junior", "mid", "senior", "expert"]),
     budget_min: z.preprocess(
       (val) =>
         val === undefined || val === null || val === ""

@@ -2,7 +2,9 @@ import { marketplaceSpaceApi } from "@/models/marketplace-space/api";
 import type {
   ConnectionEntry,
   DeckCard,
+  NetworkRequests,
   PoolEntry,
+  ActingAs,
   PublicProfile,
   SwipeContext,
   SwipeDirection,
@@ -12,20 +14,21 @@ import type {
 /** Découverte de profils, vivier, connexions et fiche publique : endpoints injectés dans l'API « espace marketplace ». */
 export const marketplaceNetworkApi = marketplaceSpaceApi.injectEndpoints({
   endpoints: (builder) => ({
-    getDeck: builder.query<DeckCard[], SwipeContext>({
-      query: (context) => `/marketplace/me/deck?context=${context}`,
+    getDeck: builder.query<DeckCard[], { context: SwipeContext; acting?: ActingAs }>({
+      query: ({ context, acting }) =>
+        `/marketplace/me/deck?context=${context}${acting ? `&acting=${acting}` : ""}`,
     }),
     swipe: builder.mutation<
       SwipeResult,
-      { target_id: number; direction: SwipeDirection; context: SwipeContext }
+      { target_id: number; direction: SwipeDirection; context: SwipeContext; acting?: ActingAs }
     >({
       query: (body) => ({ url: "/marketplace/me/swipes", method: "POST", body }),
       // Le paquet affiché n'est pas relu à chaque choix (il avance localement) ; le vivier et les connexions, si.
       invalidatesTags: ["Pool", "Connections"],
     }),
-    undoSwipe: builder.mutation<{ undone: number }, SwipeContext>({
-      query: (context) => ({
-        url: `/marketplace/me/swipes/last?context=${context}`,
+    undoSwipe: builder.mutation<{ undone: number }, { context: SwipeContext; acting?: ActingAs }>({
+      query: ({ context, acting }) => ({
+        url: `/marketplace/me/swipes/last?context=${context}${acting ? `&acting=${acting}` : ""}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Pool", "Connections"],
@@ -36,6 +39,10 @@ export const marketplaceNetworkApi = marketplaceSpaceApi.injectEndpoints({
     }),
     getConnections: builder.query<ConnectionEntry[], void>({
       query: () => "/marketplace/me/connections",
+      providesTags: ["Connections"],
+    }),
+    getNetworkRequests: builder.query<NetworkRequests, void>({
+      query: () => "/marketplace/me/network-requests",
       providesTags: ["Connections"],
     }),
     getPublicProfile: builder.query<PublicProfile, number>({
@@ -52,5 +59,6 @@ export const {
   useUndoSwipeMutation,
   useGetPoolQuery,
   useGetConnectionsQuery,
+  useGetNetworkRequestsQuery,
   useGetPublicProfileQuery,
 } = marketplaceNetworkApi;

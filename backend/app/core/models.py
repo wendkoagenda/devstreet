@@ -3,6 +3,7 @@ Core models for the Django devstreet application.
 """
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.functions import Lower
 from typing import List
 
 
@@ -92,6 +93,12 @@ class User(AbstractUser):
     class Meta:
         db_table = 'core_user'
         ordering = ['email']
+        constraints = [
+            # Un nom d'utilisateur désigne une seule personne, quelle que soit la casse
+            models.UniqueConstraint(
+                Lower('username'), name='core_user_username_ci_unique'
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.email

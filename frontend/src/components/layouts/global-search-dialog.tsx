@@ -1,3 +1,4 @@
+import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -31,7 +32,7 @@ const QUICK_LINKS = [
   { label: "Communautés", href: "/forum/communautes", icon: Users },
   { label: "Chaînes", href: "/forum/chaines", icon: Radio },
   { label: "Marketplace", href: "/marketplace", icon: Briefcase },
-  { label: "Mon profil", href: "/forum/profil/me", icon: UserRound },
+  { label: "Mon profil", href: "/profil/me", icon: UserRound },
 ] as const;
 
 export function GlobalSearchDialog({
@@ -104,7 +105,7 @@ export function GlobalSearchDialog({
               <CommandItem
                 key={membre.id}
                 value={`membre-${membre.username}`}
-                onSelect={() => go(`/forum/profil/${membre.id}`)}
+                onSelect={() => go(profilePath(membre.username))}
               >
                 <ForumAvatar
                   name={membre.full_name || membre.username}

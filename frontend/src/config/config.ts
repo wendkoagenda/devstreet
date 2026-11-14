@@ -1,8 +1,8 @@
 const config = {
-  gcs: {
-    // Facultative : absente = pas de stockage GCS (fichiers servis par le backend).
-    // L'absence est gérée explicitement par media-url-builder, sans valeur de repli.
-    bucket_name: import.meta.env.VITE_GCS_BUCKET_NAME as string | undefined,
+  storage: {
+    // Facultative : absente ou différente de "true" = fichiers servis depuis /media/ (disque local).
+    // "true" (backend avec USE_S3=True) = fichiers lus via /api/v1/files/, réservé aux utilisateurs connectés.
+    use_s3: import.meta.env.VITE_USE_S3 === "true",
   },
 };
 

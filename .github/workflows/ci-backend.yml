@@ -66,7 +66,6 @@ jobs:
             echo "USE_X_FORWARDED_PROTO=False"
             echo "ENABLE_API_DOCS=True"
             echo "ENABLE_ADMIN=False"
-            echo "USE_GCS=False"
             echo "USE_S3=False"
             echo "DB_NAME=ci_boilerplate"
             echo "DB_USER=postgres"

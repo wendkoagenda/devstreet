@@ -7,6 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from app.marketplace.cv_settings import COLOR_PRESETS, DEFAULTS, SECTIONS, merged_settings, validated_settings
 from app.marketplace.market_serializers import AvailabilityWriteSerializer, ExperienceWriteSerializer
 from app.marketplace.services.calendar_service import CalendarService, ExperienceService
 from app.marketplace.services.cv_service import cv_data, cv_filename, get_cv_profil, render_cv_pdf
@@ -69,11 +70,31 @@ def my_experience(request, experience_id):
     return Response(ExperienceService.update(request.user, experience_id, data))
 
 
+def _preview_settings(request) -> dict:
+    """
+    Réglages de style passés dans l'adresse pour l'aperçu de mon CV (sans enregistrer), ex. `?color=bleu&font=serif`.
+    `hidden_sections` est une liste séparée par des virgules (vide : tout afficher).
+    """
+    params = {key: request.query_params[key] for key in DEFAULTS if key in request.query_params}
+    if "hidden_sections" in params:
+        params["hidden_sections"] = [item for item in params["hidden_sections"].split(",") if item]
+    return params
+
+
 def _cv_response(request, profil_id):
+    # Mon CV : profil dev obligatoire ; le CV d'un autre : le lecteur peut être un recruteur (profil entreprise)
     viewer = MeService.get_profil(request.user)
+    if viewer is None and profil_id is not None:
+        viewer = MeService.get_entreprise_profil(request.user)
     if viewer is None:
         raise PermissionDenied("Créez d'abord votre profil marketplace.")
-    data = cv_data(get_cv_profil(profil_id, viewer))
+    profil = get_cv_profil(profil_id, viewer)
+    data = cv_data(profil)
+    if profil.id == viewer.id:
+        # Aperçu de mon propre CV avec des réglages pas encore enregistrés : le CV des autres suit toujours leurs réglages
+        preview = _preview_settings(request)
+        if preview:
+            data["settings"] = validated_settings(preview, profil.cv_settings)
     response = HttpResponse(render_cv_pdf(data), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{cv_filename(data)}"'
     response["Cache-Control"] = "no-store"
@@ -94,3 +115,36 @@ def my_cv(request):
 def profil_cv(request, profil_id):
     """GET /marketplace/profils/<id>/cv : CV d'un profil en PDF, selon sa visibilité (public, entreprises, privé)."""
     return _cv_response(request, profil_id)
+
+
+def _settings_payload(profil) -> dict:
+    return {
+        "settings": merged_settings(profil.cv_settings),
+        "defaults": DEFAULTS,
+        "presets": COLOR_PRESETS,
+        "sections": list(SECTIONS),
+    }
+
+
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace profil"])
+@swagger_auto_schema(method="patch", tags=["V1 - Marketplace profil"])
+@swagger_auto_schema(method="delete", tags=["V1 - Marketplace profil"])
+@api_view(["GET", "PATCH", "DELETE"])
+@permission_classes([IsAuthenticated])
+def my_cv_settings(request):
+    """
+    /marketplace/me/cv-settings : réglages de style de mon CV (couleur, police, mise en page…).
+    GET les lit (avec les valeurs par défaut et les couleurs proposées), PATCH les enregistre, DELETE les réinitialise.
+    """
+    profil = MeService.get_profil(request.user)
+    if profil is None:
+        raise PermissionDenied("Créez d'abord votre profil marketplace.")
+    if request.method == "PATCH":
+        profil.cv_settings = validated_settings(request.data, profil.cv_settings)
+        profil.updated_by = request.user.id
+        profil.save(update_fields=["cv_settings", "updated_by", "updated_at"])
+    elif request.method == "DELETE":
+        profil.cv_settings = {}
+        profil.updated_by = request.user.id
+        profil.save(update_fields=["cv_settings", "updated_by", "updated_at"])
+    return Response(_settings_payload(profil))
