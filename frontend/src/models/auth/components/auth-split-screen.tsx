@@ -1,12 +1,24 @@
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Button } from "@/components/ui/button";
+import { CreationErrorSonner } from "@/helpers/api/feed-backs";
 import { cn } from "@/lib/utils";
 import { t } from "i18next";
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import LoginForm from "./login-form";
+import OAuthButtons from "./oauth-buttons";
 import RegisterForm from "./register-form";
+
+const OAUTH_ERROR_KEYS: Record<string, string> = {
+  denied: "auth.oauth_error_denied",
+  inactive: "auth.oauth_error_inactive",
+  invalid_state: "auth.oauth_error_invalid_state",
+  exchange_failed: "auth.oauth_error_exchange",
+  email_required: "auth.oauth_error_email",
+  not_configured: "auth.oauth_error_not_configured",
+  invalid_provider: "auth.oauth_error_generic",
+};
 
 type AuthMode = "login" | "register";
 
@@ -18,7 +30,7 @@ function PanelCopy({ mode }: { mode: AuthMode }) {
         <img
           src="/devstreet-logo.png"
           alt="DevStreet"
-          className="h-10 w-auto brightness-0 invert"
+          className="h-10 w-auto brightness-0 invert dark:invert-0"
         />
       </div>
       <div className="space-y-4">
@@ -69,7 +81,19 @@ export default function AuthSplitScreen({
   initialMode?: AuthMode;
 }) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [params, setParams] = useSearchParams();
   const isRegister = mode === "register";
+
+  useEffect(() => {
+    const oauthError = params.get("oauth_error");
+    if (!oauthError) return;
+    const key = OAUTH_ERROR_KEYS[oauthError] ?? "auth.oauth_error_generic";
+    CreationErrorSonner(t(key));
+    const next = new URLSearchParams(params);
+    next.delete("oauth_error");
+    next.delete("oauth");
+    setParams(next, { replace: true });
+  }, [params, setParams]);
 
   const formTitle = useMemo(
     () => (isRegister ? t("auth.register_title") : t("auth.login_title")),
@@ -110,7 +134,8 @@ export default function AuthSplitScreen({
             <h1 className="text-2xl font-semibold tracking-tight">{formTitle}</h1>
             <p className="text-sm text-muted-foreground">{formDescription}</p>
           </div>
-          <div className="px-6 py-5">
+          <div className="space-y-5 px-6 py-5">
+            <OAuthButtons />
             {isRegister ? <RegisterForm /> : <LoginForm />}
           </div>
           <div className="border-t border-border/70 bg-muted/30 px-6 py-4 text-center text-sm">
@@ -145,17 +170,17 @@ export default function AuthSplitScreen({
         </div>
 
         {/* Desktop : split + overlay glissant */}
-        <div className="relative hidden min-h-[640px] md:block">
+        <div className="relative hidden min-h-[min(52rem,calc(100svh-3rem))] md:block">
           {/* Couche formulaires : Register à gauche, Login à droite */}
           <div className="absolute inset-0 grid grid-cols-2">
             <div
               className={cn(
-                "flex flex-col justify-center px-8 py-10 transition-opacity duration-500 lg:px-12",
+                "flex flex-col justify-start overflow-y-auto px-8 py-8 transition-opacity duration-500 lg:px-12 lg:py-10",
                 isRegister ? "opacity-100" : "pointer-events-none opacity-0"
               )}
               aria-hidden={!isRegister}
             >
-              <div className="mb-6 space-y-1">
+              <div className="mb-5 space-y-1">
                 <h1 className="text-2xl font-semibold tracking-tight">
                   {t("auth.register_title")}
                 </h1>
@@ -163,16 +188,19 @@ export default function AuthSplitScreen({
                   {t("auth.register_description")}
                 </p>
               </div>
-              <RegisterForm />
+              <div className="space-y-4">
+                <OAuthButtons />
+                <RegisterForm />
+              </div>
             </div>
             <div
               className={cn(
-                "flex flex-col justify-center px-8 py-10 transition-opacity duration-500 lg:px-12",
+                "flex flex-col justify-start overflow-y-auto px-8 py-8 transition-opacity duration-500 lg:px-12 lg:py-10",
                 isRegister ? "pointer-events-none opacity-0" : "opacity-100"
               )}
               aria-hidden={isRegister}
             >
-              <div className="mb-6 space-y-1">
+              <div className="mb-5 space-y-1">
                 <h1 className="text-2xl font-semibold tracking-tight">
                   {t("auth.login_title")}
                 </h1>
@@ -180,7 +208,10 @@ export default function AuthSplitScreen({
                   {t("login_form_description")}
                 </p>
               </div>
-              <LoginForm />
+              <div className="space-y-4">
+                <OAuthButtons />
+                <LoginForm />
+              </div>
             </div>
           </div>
 
