@@ -58,6 +58,11 @@ class HealthThrottle(AnonRateThrottle):
     scope = 'health'
 
 
+class OAuthProvidersThrottle(AnonRateThrottle):
+    """Liste des providers OAuth configurés (route publique lue par la page de connexion)."""
+    scope = 'oauth_providers'
+
+
 class OAuthStartThrottle(AnonRateThrottle):
     """Démarrage du flux OAuth (redirection IdP)."""
     scope = 'oauth_start'

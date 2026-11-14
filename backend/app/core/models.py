@@ -269,7 +269,10 @@ class SocialAccount(models.Model):
             ),
         ]
         indexes = [
-            models.Index(fields=['user', 'provider']),
+            models.Index(
+                fields=['user', 'provider'],
+                name='core_social_user_id_5f0e0c_idx',
+            ),
         ]
 
     def __str__(self) -> str:

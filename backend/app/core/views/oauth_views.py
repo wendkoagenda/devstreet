@@ -29,7 +29,11 @@ from app.core.services.oauth_service import (
     complete_oauth,
     configured_providers,
 )
-from app.core.throttles import OAuthCallbackThrottle, OAuthStartThrottle
+from app.core.throttles import (
+    OAuthCallbackThrottle,
+    OAuthProvidersThrottle,
+    OAuthStartThrottle,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +60,7 @@ def _frontend_login_redirect(**params) -> HttpResponseRedirect:
 @api_view(['GET'])
 @authentication_classes([])
 @permission_classes([AllowAny])
+@throttle_classes([OAuthProvidersThrottle])
 def oauth_providers_view(request):
     return Response(configured_providers(), status=status.HTTP_200_OK)
 
@@ -82,7 +87,11 @@ def oauth_start_view(request, provider: str):
                 {'detail': 'OAuth non configuré pour ce provider'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-        return Response({'detail': exc.code}, status=status.HTTP_400_BAD_REQUEST)
+        logger.info('OAuth %s démarrage refusé : %s', provider, exc.code)
+        return Response(
+            {'detail': 'Requête OAuth invalide'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     return redirect(url)
 
 

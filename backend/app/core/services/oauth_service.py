@@ -52,12 +52,10 @@ def configured_providers() -> Dict[str, bool]:
     """Providers pour lesquels client_id et secret sont tous deux définis."""
     return {
         SocialAccount.PROVIDER_GOOGLE: bool(
-            getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', None)
-            and getattr(settings, 'GOOGLE_OAUTH_CLIENT_SECRET', None)
+            settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET
         ),
         SocialAccount.PROVIDER_GITHUB: bool(
-            getattr(settings, 'GITHUB_OAUTH_CLIENT_ID', None)
-            and getattr(settings, 'GITHUB_OAUTH_CLIENT_SECRET', None)
+            settings.GITHUB_OAUTH_CLIENT_ID and settings.GITHUB_OAUTH_CLIENT_SECRET
         ),
     }
 
