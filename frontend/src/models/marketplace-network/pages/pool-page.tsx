@@ -23,7 +23,7 @@ function PoolContent() {
           </p>
         </div>
         <Button asChild variant="outline">
-          <Link to="/marketplace/talents">Découvrir des profils</Link>
+          <Link to="/marketplace/talents">Annuaire des talents</Link>
         </Button>
       </div>
 
@@ -77,7 +77,7 @@ function PoolContent() {
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
           Votre vivier est vide : gardez des profils en glissant leur carte vers la droite.
           <Button asChild>
-            <Link to="/marketplace/talents">Découvrir des profils</Link>
+            <Link to="/marketplace/talents">Annuaire des talents</Link>
           </Button>
         </div>
       )}

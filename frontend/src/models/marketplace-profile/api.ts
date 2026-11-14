@@ -1,7 +1,7 @@
 import { marketplaceSpaceApi } from "@/models/marketplace-space/api";
-import type { Availability, Experience } from "./schema";
+import type { Availability, Experience, PendingReview, Prestation } from "./schema";
 
-/** Calendrier de disponibilité et expériences du profil connecté (endpoints injectés dans l'API « espace marketplace »). */
+/** Calendrier, expériences et prestations du profil connecté (endpoints injectés dans l'API « espace marketplace »). */
 export const marketplaceProfileApi = marketplaceSpaceApi.injectEndpoints({
   endpoints: (builder) => ({
     getMyAvailabilities: builder.query<Availability[], void>({
@@ -45,6 +45,39 @@ export const marketplaceProfileApi = marketplaceSpaceApi.injectEndpoints({
       query: (id) => ({ url: `/marketplace/me/experiences/${id}`, method: "DELETE" }),
       invalidatesTags: ["Experiences"],
     }),
+
+    getMyPrestations: builder.query<Prestation[], void>({
+      query: () => "/marketplace/me/prestations",
+      providesTags: ["Prestations"],
+    }),
+    createPrestation: builder.mutation<Prestation, Record<string, unknown>>({
+      query: (body) => ({ url: "/marketplace/me/prestations", method: "POST", body }),
+      invalidatesTags: ["Prestations"],
+    }),
+    updatePrestation: builder.mutation<Prestation, { id: number } & Record<string, unknown>>({
+      query: ({ id, ...body }) => ({
+        url: `/marketplace/me/prestations/${id}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Prestations"],
+    }),
+    deletePrestation: builder.mutation<void, number>({
+      query: (id) => ({ url: `/marketplace/me/prestations/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Prestations"],
+    }),
+
+    getPendingReviews: builder.query<PendingReview[], void>({
+      query: () => "/marketplace/me/reviews/pending",
+      providesTags: ["PendingReviews"],
+    }),
+    createReview: builder.mutation<
+      Record<string, unknown>,
+      { candidature_id: number; rating: number; comment: string; is_public: boolean }
+    >({
+      query: (body) => ({ url: "/marketplace/me/reviews", method: "POST", body }),
+      invalidatesTags: ["PendingReviews", "MyReviews"],
+    }),
   }),
 });
 
@@ -57,4 +90,10 @@ export const {
   useCreateExperienceMutation,
   useUpdateExperienceMutation,
   useDeleteExperienceMutation,
+  useGetMyPrestationsQuery,
+  useCreatePrestationMutation,
+  useUpdatePrestationMutation,
+  useDeletePrestationMutation,
+  useGetPendingReviewsQuery,
+  useCreateReviewMutation,
 } = marketplaceProfileApi;

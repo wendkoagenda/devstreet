@@ -19,6 +19,9 @@ export const marketplaceSpaceApi = createApi({
     "Availabilities",
     "Experiences",
     "Invitations",
+    "Prestations",
+    "PendingReviews",
+    "MyReviews",
   ],
   endpoints: (builder) => ({
     getMySpace: builder.query<MySpace, void>({

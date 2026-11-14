@@ -1,7 +1,7 @@
 """Validation des corps de requête des écrans utilisateur (offres, candidatures, compétences)."""
 from rest_framework import serializers
 
-from app.marketplace.models import Availability, Experience, Offer
+from app.marketplace.models import Availability, Experience, Offer, Prestation
 
 _choice = lambda field: [value for value, _label in Offer._meta.get_field(field).choices]  # noqa: E731
 
@@ -60,6 +60,12 @@ class OfferWriteSerializer(serializers.Serializer):
         return attrs
 
 
+class OfferGenerateSerializer(serializers.Serializer):
+    """Besoin en langage naturel pour préremplir une offre (UC-09)."""
+
+    brief = serializers.CharField(min_length=12, max_length=4000)
+
+
 class ApplySerializer(serializers.Serializer):
     message = serializers.CharField(max_length=5000, allow_blank=True, required=False, default="")
 
@@ -112,10 +118,29 @@ class ExperienceWriteSerializer(serializers.Serializer):
         return attrs
 
 
+class PrestationWriteSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=150)
+    description = serializers.CharField()
+    category = serializers.ChoiceField(
+        choices=[value for value, _label in Prestation._meta.get_field("category").choices]
+    )
+    price = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0)
+    currency = serializers.RegexField(regex=r"^[A-Za-z]{3}$", required=False)
+    delivery_days = serializers.IntegerField(min_value=1, max_value=365)
+    revisions = serializers.IntegerField(min_value=0, max_value=50, required=False)
+    cover_image = serializers.CharField(max_length=512, required=False, allow_blank=True)
+    is_active = serializers.BooleanField(required=False)
+
+    def validate_currency(self, value):
+        return value.upper()
+
+
 __all__ = [
     "AvailabilityWriteSerializer",
     "ExperienceWriteSerializer",
+    "PrestationWriteSerializer",
     "OfferWriteSerializer",
+    "OfferGenerateSerializer",
     "ApplySerializer",
     "DecisionSerializer",
     "ProfilSkillsSerializer",

@@ -8,11 +8,17 @@ from rest_framework.response import Response
 from app.marketplace.market_serializers import (
     ApplySerializer,
     DecisionSerializer,
+    OfferGenerateSerializer,
     OfferWriteSerializer,
     ProfilSkillsSerializer,
 )
-from app.marketplace.services.stats_service import StatsService
+from rest_framework.exceptions import PermissionDenied
+
 from app.marketplace.services.market_service import MarketService
+from app.marketplace.services.me_service import MeService
+from app.marketplace.services.offer_ai_service import OfferAiService
+from app.marketplace.services.reputation_service import ReputationService
+from app.marketplace.services.stats_service import StatsService
 
 
 def _valid(serializer_class, request, partial=False):
@@ -89,6 +95,15 @@ def my_offers(request):
     return Response(MarketService.my_offers(request.user))
 
 
+@swagger_auto_schema(method="post", tags=["V1 - Marketplace offres"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def my_offers_generate(request):
+    """POST /marketplace/me/offers/generate : brouillon d'offre + suggestions de profils (UC-09)."""
+    data = _valid(OfferGenerateSerializer, request)
+    return Response(OfferAiService().generate(request.user, data["brief"]))
+
+
 @swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @swagger_auto_schema(method="patch", tags=["V1 - Marketplace offres"])
 @api_view(["GET", "PATCH"])
@@ -135,3 +150,13 @@ def stats(request):
     availability, cv, profile, explore, network).
     """
     return Response(StatsService.get(request.user, request.query_params.get("scope")))
+
+
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_reputation(request):
+    """GET /marketplace/me/reputation : score calculé depuis les contributions DevStreet (UC-02)."""
+    if MeService.get_profil(request.user) is None:
+        raise PermissionDenied("Créez d'abord votre profil marketplace.")
+    return Response(ReputationService.for_user(request.user))

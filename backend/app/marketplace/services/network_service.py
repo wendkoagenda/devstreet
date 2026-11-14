@@ -3,6 +3,8 @@
 Deux contextes de swipe (modèle Swipe.context) :
 - `recruit` : un recruteur parcourt des talents ; un like les place dans le vivier de son entreprise ;
 - `network` : un dev parcourt d'autres devs ; un like réciproque crée une Connection (« amis »).
+
+UC-08 : annuaire filtrable (`search_talents`) pour contacter sans publier d'offre.
 """
 from datetime import date
 from typing import List, Optional
@@ -19,6 +21,7 @@ from app.marketplace.services.me_service import MeService
 from app.marketplace.services.scoring import build_contexts, compute_score
 
 DECK_SIZE = 20
+DIRECTORY_SIZE = 100
 CONTEXTS = ("recruit", "network")
 
 
@@ -142,6 +145,66 @@ class NetworkService:
             )
         )
         return rows[:DECK_SIZE]
+
+    # ── Annuaire (UC-08) ─────────────────────────────────────────────────────
+
+    @classmethod
+    def search_talents(cls, user, filters: Optional[dict] = None) -> List[dict]:
+        """Annuaire recruteur : filtres compétence, pays, disponibilité, remote, recherche texte."""
+        me = cls._profil_for_context(user, "recruit")
+        filters = filters or {}
+        today = timezone.localdate()
+
+        candidates = (
+            _card_queryset()
+            .filter(is_open_to_work=True)
+            .exclude(id=me.id)
+            .exclude(company_id=me.company_id)
+        )
+
+        search = (filters.get("search") or "").strip()
+        if search:
+            candidates = candidates.filter(
+                Q(headline__icontains=search)
+                | Q(user__first_name__icontains=search)
+                | Q(user__last_name__icontains=search)
+                | Q(profil_skills__skill__name__icontains=search)
+            ).distinct()
+
+        country = (filters.get("country") or "").strip().upper()
+        if country:
+            candidates = candidates.filter(country=country)
+
+        if (filters.get("remote") or "").lower() in ("1", "true", "yes"):
+            candidates = candidates.filter(remote=True)
+
+        skill = (filters.get("skill") or "").strip()
+        if skill:
+            if skill.isdigit():
+                candidates = candidates.filter(profil_skills__skill_id=int(skill)).distinct()
+            else:
+                candidates = candidates.filter(profil_skills__skill__name__icontains=skill).distinct()
+
+        if (filters.get("available") or "").lower() in ("1", "true", "yes"):
+            available_ids = (
+                Availability.objects.filter(
+                    status__in=("available", "partial"),
+                    end_date__gte=today,
+                )
+                .values_list("profil_id", flat=True)
+                .distinct()
+            )
+            candidates = candidates.filter(id__in=available_ids)
+
+        profils = list(candidates.order_by("-years_of_experience", "id")[:DIRECTORY_SIZE])
+        contexts = build_contexts(profils)
+        availability = _next_available([p.id for p in profils], today)
+        rows = []
+        for profil in profils:
+            card = profil_card(profil, contexts[profil.id])
+            card["available_from"] = availability[profil.id].isoformat() if profil.id in availability else None
+            rows.append(card)
+        return rows
 
     # ── Swipe ────────────────────────────────────────────────────────────────
 
@@ -341,6 +404,20 @@ class NetworkService:
                         "technologies": exp.technologies,
                     }
                     for exp in target.experiences.order_by("-start_date")
+                ],
+                "prestations": [
+                    {
+                        "id": row.id,
+                        "title": row.title,
+                        "slug": row.slug,
+                        "description": row.description,
+                        "category": row.category,
+                        "price": str(row.price),
+                        "currency": row.currency,
+                        "delivery_days": row.delivery_days,
+                        "revisions": row.revisions,
+                    }
+                    for row in target.prestations.filter(is_active=True).order_by("-created_at")
                 ],
                 "reviews": [
                     {

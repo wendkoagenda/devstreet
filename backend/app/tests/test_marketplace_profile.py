@@ -15,8 +15,15 @@ from app.marketplace.factories import (
     make_skill,
     make_user,
 )
-from app.marketplace.models import Availability, Experience
-from app.marketplace.services.cv_service import PhotoUnavailable, _square_photo, can_download_cv, cv_data, cv_filename, render_cv_pdf
+from app.marketplace.models import Availability, Experience, Prestation
+from app.marketplace.services.cv_service import (
+    PhotoUnavailable,
+    _square_photo,
+    can_download_cv,
+    cv_data,
+    cv_filename,
+    render_cv_pdf,
+)
 from app.tests.test_marketplace_market import login
 
 
@@ -93,6 +100,48 @@ class ExperienceApiTests(ProfileBase):
     def test_cannot_edit_someone_elses_experience(self):
         other = make_experience(self.by, profil=make_profil(self.by))
         self.assertEqual(self.client.patch(f"{self.URL}/{other.id}", {"title": "x"}, format="json").status_code, 404)
+
+
+class PrestationApiTests(ProfileBase):
+    URL = "/api/v1/marketplace/me/prestations"
+    BODY = {
+        "title": "Landing page en 5 jours",
+        "description": "Création d'une landing responsive avec formulaire de contact.",
+        "category": "web",
+        "price": "150000.00",
+        "delivery_days": 5,
+        "revisions": 2,
+    }
+
+    def test_crud(self):
+        created = self.client.post(self.URL, self.BODY, format="json")
+        self.assertEqual(created.status_code, 201, created.data)
+        self.assertTrue(created.data["slug"])
+        self.assertTrue(created.data["is_active"])
+        pk = created.data["id"]
+        updated = self.client.patch(f"{self.URL}/{pk}", {"price": "175000.00", "is_active": False}, format="json")
+        self.assertEqual(updated.status_code, 200, updated.data)
+        self.assertEqual(updated.data["price"], "175000.00")
+        self.assertFalse(updated.data["is_active"])
+        self.assertEqual(len(self.client.get(self.URL).data), 1)
+        self.assertEqual(self.client.delete(f"{self.URL}/{pk}").status_code, 204)
+        self.assertFalse(Prestation.objects.exists())
+
+    def test_invalid_category_refused(self):
+        response = self.client.post(self.URL, {**self.BODY, "category": "blockchain"}, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_cannot_edit_someone_elses_prestation(self):
+        other = make_prestation(self.by, profil=make_profil(self.by))
+        self.assertEqual(self.client.patch(f"{self.URL}/{other.id}", {"title": "x"}, format="json").status_code, 404)
+
+    def test_public_profile_lists_active_prestations_only(self):
+        make_prestation(self.by, profil=self.profil, title="Active", is_active=True)
+        make_prestation(self.by, profil=self.profil, title="Inactive", is_active=False)
+        response = self.client.get(f"/api/v1/marketplace/profils/{self.profil.id}")
+        self.assertEqual(response.status_code, 200)
+        titles = [row["title"] for row in response.data["prestations"]]
+        self.assertEqual(titles, ["Active"])
 
 
 class CvVisibilityTests(TestCase):

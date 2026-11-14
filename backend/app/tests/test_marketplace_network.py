@@ -207,3 +207,45 @@ class PublicProfileTests(NetworkBase):
     def test_requires_profil(self):
         self.as_user(make_user())
         self.assertEqual(self.client.get(f"/api/v1/marketplace/profils/{self.yao.id}").status_code, 403)
+
+
+class TalentsDirectoryTests(NetworkBase):
+    URL = "/api/v1/marketplace/talents"
+
+    def test_lists_open_talents_for_recruiter(self):
+        self.as_user(self.recruiter_user)
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, 200, response.data)
+        ids = {row["id"] for row in response.data}
+        self.assertTrue({self.yao.id, self.mariam.id, self.kossi.id}.issubset(ids))
+        self.assertNotIn(self.recruiter.id, ids)
+
+    def test_filters_by_skill_country_and_availability(self):
+        self.yao.country = "SN"
+        self.yao.remote = True
+        self.yao.save()
+        for other in (self.mariam, self.kossi):
+            other.remote = False
+            other.country = "BF"
+            other.save()
+        start = date.today()
+        make_availability(
+            self.by,
+            profil=self.yao,
+            start_date=start,
+            end_date=start + timedelta(days=20),
+            status="available",
+        )
+        self.as_user(self.recruiter_user)
+        by_skill = self.client.get(f"{self.URL}?skill={self.python.id}")
+        self.assertEqual({row["id"] for row in by_skill.data}, {self.yao.id, self.mariam.id})
+        by_country = self.client.get(f"{self.URL}?country=SN")
+        self.assertEqual([row["id"] for row in by_country.data], [self.yao.id])
+        by_remote = self.client.get(f"{self.URL}?remote=1")
+        self.assertEqual([row["id"] for row in by_remote.data], [self.yao.id])
+        by_available = self.client.get(f"{self.URL}?available=1")
+        self.assertEqual([row["id"] for row in by_available.data], [self.yao.id])
+
+    def test_requires_recruiter(self):
+        self.as_user(self.yao.user)
+        self.assertEqual(self.client.get(self.URL).status_code, 403)

@@ -25,10 +25,12 @@ Les endpoints `/api/v1/marketplace/...` sont ouverts à tout utilisateur connect
 | | `POST marketplace/offers/<id>/apply` | Postuler |
 | | `GET marketplace/me/candidatures` | Mes candidatures |
 | Recruteur | `GET` / `POST marketplace/me/offers` | Offres de mon entreprise |
+| | `POST marketplace/me/offers/generate` | Brouillon d'offre + suggestions (IA, UC-09) |
 | | `GET` / `PATCH marketplace/me/offers/<id>` | Lire / modifier (dont le statut) |
 | | `GET marketplace/me/offers/<id>/candidatures` | Candidatures reçues, triées par score |
 | | `GET marketplace/me/offers/<id>/recommended-profils` | Talents classés pour l'offre |
 | | `POST marketplace/candidatures/<id>/decision` | `shortlisted`, `rejected` ou `accepted` |
+| | `GET marketplace/talents` | Annuaire filtrable (compétence, pays, dispo, remote) |
 | Découverte | `GET marketplace/me/deck?context=recruit\|network` | Paquet de cartes |
 | | `POST marketplace/me/swipes` | Like ou passe (un like réseau réciproque crée la connexion) |
 | | `DELETE marketplace/me/swipes/last?context=` | Annuler le dernier choix |
@@ -39,6 +41,11 @@ Les endpoints `/api/v1/marketplace/...` sont ouverts à tout utilisateur connect
 | | `PATCH` / `DELETE marketplace/me/availabilities/<id>` | Seules les périodes saisies à la main |
 | Expériences | `GET` / `POST marketplace/me/experiences` | Parcours professionnel |
 | | `PATCH` / `DELETE marketplace/me/experiences/<id>` | |
+| Prestations | `GET` / `POST marketplace/me/prestations` | Services packagés du profil |
+| | `PATCH` / `DELETE marketplace/me/prestations/<id>` | |
+| Avis | `GET marketplace/me/reviews/pending` | Missions acceptées à noter |
+| | `GET` / `POST marketplace/me/reviews` | Avis déposés / noter l'autre partie |
+| Réputation | `GET marketplace/me/reputation` | Score /100 (avis, forum, hub, apps) |
 | CV | `GET marketplace/me/cv` | Mon CV en PDF |
 | | `GET marketplace/profils/<id>/cv` | CV d'un profil, selon `cv_visibility` |
 
@@ -48,7 +55,7 @@ La page `/marketplace` s'adapte au profil. Toutes les valeurs sont celles de l'u
 
 - **Recruteur** (profil rattaché à une entreprise) : offres ouvertes, brouillons et clôturées, candidatures reçues et à traiter, vues des offres, taille du vivier, candidatures par semaine sur 8 semaines, répartition par statut, offres les plus actives et dernières candidatures avec leur score.
 - **Candidat** (tout profil, recruteur compris) : répartition de ses candidatures par statut, missions à venir, trois offres recommandées.
-- **Profil** : complétude sur 8 critères avec les éléments manquants, statut du jour du calendrier (le plus contraignant des périodes en cours) et prochaine disponibilité, note moyenne des avis publics, nombre de connexions.
+- **Profil** : complétude sur 8 critères avec les éléments manquants, statut du jour du calendrier (le plus contraignant des périodes en cours) et prochaine disponibilité, score de réputation DevStreet (breakdown), nombre de connexions.
 
 ## Règles métier
 
@@ -61,7 +68,7 @@ La page `/marketplace` s'adapte au profil. Toutes les valeurs sont celles de l'u
 
 ## Hors périmètre pour l'instant
 
-Génération d'offre par IA, part IA du score, messagerie intégrée (« Contacter » ouvre un `mailto:`), photo de profil, gestion des prestations et dépôt d'avis, historique des modifications du profil (`ProfilHistory`), `Skill.forum_tag`.
+Part IA du score (embeddings), messagerie intégrée (« Contacter » ouvre un `mailto:`), photo de profil, historique des modifications du profil (`ProfilHistory`), `Skill.forum_tag`, paiement Mobile Money (UC-15).
 
 ## Données de démonstration
 
