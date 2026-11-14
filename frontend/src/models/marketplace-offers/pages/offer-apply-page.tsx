@@ -25,10 +25,43 @@ function OfferApplyContent() {
   if (isLoading) {
     return <Skeleton className="mx-auto h-64 w-full max-w-3xl" />;
   }
-  if (!offer || offer.status !== "open" || offer.is_own || offer.my_candidature) {
+  if (!offer) {
     return (
       <div className="mx-auto w-full max-w-3xl rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-        Vous ne pouvez pas postuler à cette offre.{" "}
+        Offre introuvable.{" "}
+        <Link to="/marketplace/offers" className="underline">
+          Retour aux offres
+        </Link>
+      </div>
+    );
+  }
+
+  if (offer.is_own) {
+    return (
+      <div className="mx-auto w-full max-w-3xl rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
+        C’est l’offre de votre entreprise : vous ne pouvez pas y postuler.{" "}
+        <Link to={`/marketplace/my-offers/${offer.id}`} className="underline">
+          Gérer l’offre
+        </Link>
+      </div>
+    );
+  }
+
+  if (offer.my_candidature) {
+    return (
+      <div className="mx-auto w-full max-w-3xl rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
+        Vous avez déjà postulé.{" "}
+        <Link to="/marketplace/applications" className="underline">
+          Suivre ma candidature
+        </Link>
+      </div>
+    );
+  }
+
+  if (offer.status !== "open") {
+    return (
+      <div className="mx-auto w-full max-w-3xl rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
+        Cette offre n’est plus ouverte.{" "}
         <Link to="/marketplace/offers" className="underline">
           Retour aux offres
         </Link>

@@ -6,7 +6,6 @@ import {
   Copy,
   Loader2,
   Link2,
-  MessageSquare,
   Settings,
   UserMinus,
   Users,
@@ -125,10 +124,9 @@ export default function CommunityDetailPage() {
   const canLeave = isMember && !isSuperAdmin;
   const manageMode = searchParams.get("manage") === "1";
 
-  // Membre d'une communauté : le chat vit dans Messages (sauf panneau Infos).
+  // Membre : chat / annonces vivent dans Messages (sauf panneau Infos).
   useEffect(() => {
     if (!espace || skip) return;
-    if (espace.type !== "COMMUNAUTE") return;
     if (!espace.mon_role) return;
     if (manageMode) {
       setSettingsOpen(true);
@@ -136,13 +134,6 @@ export default function CommunityDetailPage() {
     }
     navigate(`/messages?groupe=${espace.id}`, { replace: true });
   }, [espace, skip, manageMode, navigate]);
-
-  // Chaîne : ?manage=1 ouvre aussi le panneau Infos.
-  useEffect(() => {
-    if (!espace || skip) return;
-    if (espace.type !== "CHAINE") return;
-    if (manageMode) setSettingsOpen(true);
-  }, [espace, skip, manageMode]);
 
   const inviteUrl = useMemo(() => {
     if (!freshCode) return null;
@@ -405,14 +396,6 @@ export default function CommunityDetailPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {isChannel && isMember ? (
-              <Button asChild>
-                <Link to={`/messages?groupe=${espace.id}`}>
-                  <MessageSquare className="h-4 w-4" />
-                  Ouvrir le chat
-                </Link>
-              </Button>
-            ) : null}
             {!isMember ? (
               <Button
                 type="button"
@@ -543,8 +526,8 @@ export default function CommunityDetailPage() {
               {isAdmin
                 ? `Photo, détails, droits et ${isChannel ? "abonnés" : "membres"}.`
                 : isChannel
-                  ? "Fil d'annonces — le chat se trouve dans Messages."
-                  : "Chat de groupe — discussion entre membres."}
+                  ? "Les annonces s’affichent dans Messages."
+                  : "La discussion s’affiche dans Messages."}
             </SheetDescription>
           </SheetHeader>
 

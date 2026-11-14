@@ -25,11 +25,6 @@ from app.communaute.permissions.publication_permissions import (
     CanUpdatePublication,
     CanDeletePublication,
 )
-from app.communaute.permissions.commentaire_permissions import (
-    CanViewCommentaire,
-    CanCreateCommentaire,
-)
-from app.communaute.permissions.likepublication_permissions import CanCreateLikePublication
 from app.communaute.permissions.avischoix_permissions import (
     CanCreateAvisChoix,
     CanViewAvisChoix,
@@ -76,15 +71,13 @@ class PublicationViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Retourne les permissions requises selon l'action."""
-        if self.action in ('list', 'retrieve', 'commentaires'):
-            if self.action == 'commentaires' and self.request.method == 'POST':
-                permission_classes = [CanCreateCommentaire]
-            elif self.action == 'commentaires':
-                permission_classes = [CanViewCommentaire]
-            else:
-                permission_classes = [CanViewPublication]
-        elif self.action == 'like':
-            permission_classes = [CanCreateLikePublication]
+        # Like / commentaire / favori : tout membre connecté (règles d'espace dans le service).
+        if self.action in ('like', 'favori'):
+            permission_classes = [IsAuthenticated]
+        elif self.action == 'commentaires':
+            permission_classes = [IsAuthenticated]
+        elif self.action in ('list', 'retrieve'):
+            permission_classes = [CanViewPublication]
         elif self.action in ('accepter_reponse', 'decider'):
             permission_classes = [CanUpdatePublication]
         elif self.action == 'avis':
@@ -174,6 +167,13 @@ class PublicationViewSet(viewsets.ModelViewSet):
         )
         favoris = feed_mode in ('favoris', 'favorites', 'bookmarks')
         populaires = feed_mode in ('populaires', 'popular', 'trending')
+        tags_suivis = feed_mode in (
+            'tags-suivis',
+            'tags_suivis',
+            'mes-tags',
+            'mes_tags',
+        )
+        tag_slug = (request.query_params.get('tag') or '').strip().lower() or None
         self._use_pour_vous_pagination = pour_vous
         self._use_populaires_pagination = populaires
         if espace_raw not in (None, ''):
@@ -195,6 +195,8 @@ class PublicationViewSet(viewsets.ModelViewSet):
             and not abonnements
             and not favoris
             and not populaires
+            and not tags_suivis
+            and not tag_slug
         ):
             # Fil général : hors publications rattachées à un espace
             general_only = True
@@ -242,6 +244,8 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 abonnements=abonnements,
                 favoris=favoris,
                 populaires=populaires,
+                tag_slug=tag_slug,
+                tags_suivis=tags_suivis,
                 membre=request.user,
             )
         except ValueError:
@@ -339,6 +343,19 @@ class PublicationViewSet(viewsets.ModelViewSet):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            from app.communaute.services.tag_service import TagService
+
+            # Tags + auto-suivi persisté pour l'auteur (Mes favoris = user, pas session).
+            TagService().set_publication_tags(
+                publication,
+                validated.get('tags_data') or [],
+                acteur_id=request.user.id,
+                auto_follow=True,
+                membre=request.user,
+            )
+            publication = self.publication_service.get_by_id(
+                publication.id, membre=request.user
+            )
             return Response(
                 self.get_serializer(publication).data,
                 status=status.HTTP_201_CREATED,
@@ -651,11 +668,20 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 'extensions': ['.mp3', '.ogg', '.wav', '.m4a', '.webm'],
                 'max_size_mb': 15,
             },
+            # Fichiers joints au chat / messages (PDF, archives, docs…)
+            'FILE': {
+                'folder': 'forum_files',
+                'extensions': [
+                    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                    '.txt', '.md', '.csv', '.zip', '.rar', '.7z', '.json',
+                ],
+                'max_size_mb': 25,
+            },
         }
         profile = profiles.get(kind)
         if profile is None:
             return Response(
-                {'error': 'Type invalide : IMAGE, VIDEO ou AUDIO.'},
+                {'error': 'Type invalide : IMAGE, VIDEO, AUDIO ou FILE.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

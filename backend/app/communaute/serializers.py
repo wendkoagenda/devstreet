@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from collections import Counter
 
-from app.communaute.models import AvisChoix, Commentaire, ConfirmationAide, Conversation, Espace, ImagePublication, LienInvitation, LikeCommentaire, LikePublication, MediaCommentaire, Message, MessageGroupe, NotificationResume, OptionPublication, ParticipationEspace, Publication, SuiviUtilisateur, VoteSondage
+from app.communaute.models import AvisChoix, Commentaire, ConfirmationAide, Conversation, Espace, ImagePublication, LienInvitation, LikeCommentaire, LikePublication, MediaCommentaire, Message, MessageGroupe, NotificationResume, OptionPublication, ParticipationEspace, Publication, SuiviTag, SuiviUtilisateur, Tag, VoteSondage
 
 
 def public_user_payload(user):
@@ -1005,6 +1005,32 @@ class ParticipationEspaceSerializer(serializers.ModelSerializer):
         return data
 
 
+class TagSerializer(serializers.ModelSerializer):
+    """Serializer lecture pour un tag / thème."""
+
+    publications_count = serializers.IntegerField(read_only=True, required=False)
+    followed_by_me = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Tag
+        fields = [
+            'id',
+            'label',
+            'slug',
+            'publications_count',
+            'followed_by_me',
+        ]
+
+    def get_followed_by_me(self, instance):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request else None
+        if user is None or not getattr(user, 'is_authenticated', False):
+            return False
+        return SuiviTag.objects.filter(
+            membre_id=user.id, tag_id=instance.id
+        ).exists()
+
+
 class PublicationSerializer(serializers.ModelSerializer):
     """
     Serializer pour les publications.
@@ -1018,6 +1044,14 @@ class PublicationSerializer(serializers.ModelSerializer):
     options = OptionPublicationSerializer(many=True, read_only=True)
     options_data = OptionPublicationWriteSerializer(
         many=True, write_only=True, required=False, default=list
+    )
+    tags = TagSerializer(many=True, read_only=True)
+    tags_data = serializers.ListField(
+        child=serializers.CharField(max_length=48),
+        write_only=True,
+        required=False,
+        default=list,
+        max_length=3,
     )
     option_retenue = serializers.PrimaryKeyRelatedField(read_only=True)
     likes_count = serializers.SerializerMethodField()
@@ -1063,6 +1097,8 @@ class PublicationSerializer(serializers.ModelSerializer):
             'options_data',
             'images',
             'images_data',
+            'tags',
+            'tags_data',
             'likes_count',
             'comments_count',
             'liked_by_me',
@@ -1090,6 +1126,7 @@ class PublicationSerializer(serializers.ModelSerializer):
             'reponse_acceptee',
             'option_retenue',
             'options',
+            'tags',
             'projet',
             'projet_id',
             'espace',
@@ -1110,6 +1147,7 @@ class PublicationSerializer(serializers.ModelSerializer):
             'mode_vote',
             'votes_fermes_at',
             'espace_id',
+            'tags_data',
         ]:
             if optional_field in fields:
                 fields[optional_field].required = False
@@ -1151,6 +1189,7 @@ class PublicationSerializer(serializers.ModelSerializer):
             'acces': getattr(espace, 'acces', 'PUBLIC'),
             'commentaires_ouverts': bool(espace.commentaires_ouverts),
             'joined_by_me': bool(getattr(instance, 'joined_espace', False)),
+            'mon_role': getattr(instance, 'espace_mon_role', None) or None,
         }
 
     def get_mon_avis_option_id(self, instance):

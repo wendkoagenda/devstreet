@@ -25,10 +25,10 @@ class FeedCursorPagination(CursorPagination):
 
 class PourVousCursorPagination(FeedCursorPagination):
     """
-    Fil « Pour vous » : contenus priorisés (suivis / chaînes) puis chronologie.
+    Fil « Pour vous » : thèmes / abonnements priorisés puis le reste.
     """
 
-    ordering = ('-prioritaire', '-created_at', '-id')
+    ordering = ('-priorite', '-created_at', '-id')
 
 
 class PopulairesCursorPagination(FeedCursorPagination):

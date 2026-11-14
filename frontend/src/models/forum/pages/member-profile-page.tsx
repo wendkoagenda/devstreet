@@ -77,7 +77,7 @@ export default function MemberProfilePage() {
     if (currentUserId) {
       return <Navigate to={`/forum/profil/${currentUserId}`} replace />;
     }
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/welcome" replace />;
   }
 
   if (!validUserId) {

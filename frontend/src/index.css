@@ -3,106 +3,109 @@
 @tailwind utilities;
 
 /*
-  Palette Graphite (plateforme DevStreet)
-  - Neutres : blancs / gris très légers (clair) et anthracite (sombre)
-  - Accent / brand : violet #220147 (HSL 268 97% 14%), variantes pour lisibilité
+  Palette Soft Violet (plateforme DevStreet)
+  - Neutres : canvas #F2F2F0, cartes blanches, texte anthracite
+  - Brand / accent : violet adouci (saturation basse), pas le #220147 saturé
+  - Structure (primary) : slate — le violet marque l’action / le focus, pas tout
   - Modes : clair (:root), sombre (.dark), système via ThemeProvider
 */
 @layer base {
   :root {
     /* Fond page #F2F2F0 — cartes restent blanches pour le relief */
     --background: 60 8% 95%;
-    --foreground: 220 12% 12%;
+    --foreground: 250 10% 16%;
     --card: 0 0% 100%;
-    --card-foreground: 220 12% 12%;
+    --card-foreground: 250 10% 16%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 12% 12%;
-    --primary: 220 12% 12%;
+    --popover-foreground: 250 10% 16%;
+    --primary: 250 12% 16%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 60 6% 92%;
-    --secondary-foreground: 220 12% 12%;
-    --muted: 60 6% 92%;
-    --muted-foreground: 220 8% 42%;
-    --accent: 268 97% 14%;
+    --secondary: 270 12% 94%;
+    --secondary-foreground: 250 10% 16%;
+    --muted: 270 10% 94%;
+    --muted-foreground: 250 8% 42%;
+    /* Violet soft ≈ #6B6290 — lisible avec texte blanc */
+    --accent: 265 22% 48%;
     --accent-foreground: 0 0% 100%;
-    --brand: 268 97% 14%;
+    --brand: 265 22% 48%;
     --brand-foreground: 0 0% 100%;
-    --brand-strong: 268 97% 10%;
-    --brand-soft: 268 45% 96%;
-    --brand-soft-border: 268 35% 82%;
-    --destructive: 0 72% 51%;
+    --brand-strong: 265 26% 38%;
+    --brand-soft: 265 28% 96%;
+    --brand-soft-border: 265 18% 86%;
+    --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 98%;
-    --success: 160 84% 30%;
+    --success: 160 50% 32%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 40%;
+    --warning: 36 80% 42%;
     --warning-foreground: 0 0% 100%;
-    --warning-soft: 38 90% 94%;
-    --info: 210 80% 42%;
+    --warning-soft: 36 70% 94%;
+    --info: 210 55% 42%;
     --info-foreground: 0 0% 100%;
-    --border: 60 5% 88%;
-    --input: 60 5% 88%;
-    --ring: 268 97% 14%;
-    --chart-1: 268 97% 14%;
-    --chart-2: 160 84% 30%;
-    --chart-3: 210 80% 42%;
-    --chart-4: 38 92% 40%;
-    --chart-5: 220 12% 40%;
+    --border: 270 10% 88%;
+    --input: 270 10% 88%;
+    --ring: 265 22% 48%;
+    --chart-1: 265 22% 48%;
+    --chart-2: 160 50% 32%;
+    --chart-3: 210 55% 42%;
+    --chart-4: 36 80% 42%;
+    --chart-5: 250 8% 45%;
     --radius: 0.5rem;
     --sidebar-background: 60 8% 95%;
-    --sidebar-foreground: 220 10% 28%;
-    --sidebar-primary: 220 12% 12%;
+    --sidebar-foreground: 250 8% 32%;
+    --sidebar-primary: 250 12% 16%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 60 6% 92%;
-    --sidebar-accent-foreground: 220 12% 12%;
-    --sidebar-border: 60 5% 88%;
-    --sidebar-ring: 268 97% 14%;
+    --sidebar-accent: 270 14% 93%;
+    --sidebar-accent-foreground: 250 10% 16%;
+    --sidebar-border: 270 10% 88%;
+    --sidebar-ring: 265 22% 48%;
   }
 
   .dark {
-    --background: 220 14% 8%;
-    --foreground: 40 10% 96%;
-    --card: 220 13% 11%;
-    --card-foreground: 40 10% 96%;
-    --popover: 220 13% 11%;
-    --popover-foreground: 40 10% 96%;
-    --primary: 40 10% 96%;
-    --primary-foreground: 220 14% 10%;
-    --secondary: 220 12% 16%;
-    --secondary-foreground: 40 10% 96%;
-    --muted: 220 12% 16%;
-    --muted-foreground: 220 8% 68%;
-    --accent: 268 70% 68%;
-    --accent-foreground: 220 14% 8%;
-    --brand: 268 70% 68%;
-    --brand-foreground: 220 14% 8%;
-    --brand-strong: 268 75% 76%;
-    --brand-soft: 268 35% 16%;
-    --brand-soft-border: 268 40% 28%;
-    --destructive: 0 70% 48%;
+    --background: 250 14% 8%;
+    --foreground: 270 12% 96%;
+    --card: 250 12% 11%;
+    --card-foreground: 270 12% 96%;
+    --popover: 250 12% 11%;
+    --popover-foreground: 270 12% 96%;
+    --primary: 270 12% 96%;
+    --primary-foreground: 250 14% 10%;
+    --secondary: 250 12% 16%;
+    --secondary-foreground: 270 12% 96%;
+    --muted: 250 12% 16%;
+    --muted-foreground: 270 10% 68%;
+    /* Lavande soft sur fond sombre */
+    --accent: 265 38% 72%;
+    --accent-foreground: 250 14% 10%;
+    --brand: 265 38% 72%;
+    --brand-foreground: 250 14% 10%;
+    --brand-strong: 265 42% 80%;
+    --brand-soft: 265 22% 16%;
+    --brand-soft-border: 265 20% 28%;
+    --destructive: 0 62% 52%;
     --destructive-foreground: 0 0% 98%;
-    --success: 152 60% 42%;
-    --success-foreground: 220 14% 8%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 14% 8%;
-    --warning-soft: 38 35% 16%;
-    --info: 210 80% 58%;
-    --info-foreground: 220 14% 8%;
-    --border: 220 12% 20%;
-    --input: 220 12% 20%;
-    --ring: 268 70% 68%;
-    --chart-1: 268 70% 68%;
-    --chart-2: 152 60% 42%;
-    --chart-3: 210 80% 58%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 220 8% 68%;
-    --sidebar-background: 220 14% 8%;
-    --sidebar-foreground: 40 10% 96%;
-    --sidebar-primary: 268 70% 68%;
-    --sidebar-primary-foreground: 220 14% 8%;
-    --sidebar-accent: 220 12% 16%;
-    --sidebar-accent-foreground: 40 10% 96%;
-    --sidebar-border: 220 12% 20%;
-    --sidebar-ring: 268 70% 68%;
+    --success: 152 45% 45%;
+    --success-foreground: 250 14% 8%;
+    --warning: 36 85% 52%;
+    --warning-foreground: 250 14% 8%;
+    --warning-soft: 36 30% 16%;
+    --info: 210 60% 58%;
+    --info-foreground: 250 14% 8%;
+    --border: 250 12% 20%;
+    --input: 250 12% 20%;
+    --ring: 265 38% 72%;
+    --chart-1: 265 38% 72%;
+    --chart-2: 152 45% 45%;
+    --chart-3: 210 60% 58%;
+    --chart-4: 36 85% 52%;
+    --chart-5: 270 10% 68%;
+    --sidebar-background: 250 14% 8%;
+    --sidebar-foreground: 270 12% 96%;
+    --sidebar-primary: 265 38% 72%;
+    --sidebar-primary-foreground: 250 14% 10%;
+    --sidebar-accent: 250 12% 16%;
+    --sidebar-accent-foreground: 270 12% 96%;
+    --sidebar-border: 250 12% 20%;
+    --sidebar-ring: 265 38% 72%;
   }
 
   @keyframes pulse-delay {
@@ -328,8 +331,13 @@
   * {
     @apply border-border;
   }
+  html {
+    /* Empêche certains navigateurs mobiles d’agrandir le texte tout seuls. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased text-[15px] sm:text-base;
   }
   /* Les notifications sonner imposent leur propre police : on force l'heritage (Poppins) */
   [data-sonner-toaster] {

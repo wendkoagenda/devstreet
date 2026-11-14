@@ -29,8 +29,8 @@ export function ResumeQuotidienBanner({
 
   const label =
     resume.nombre_nouveautes === 1
-      ? "1 nouveauté de tes abonnements"
-      : `${resume.nombre_nouveautes} nouveautés de tes abonnements`;
+      ? "nouveauté de tes abonnements"
+      : "nouveautés de tes abonnements";
 
   const handleOpen = async () => {
     try {
@@ -51,19 +51,25 @@ export function ResumeQuotidienBanner({
 
   return (
     <aside
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 overflow-hidden rounded-xl border border-brand-soft-border bg-brand-soft px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
       aria-live="polite"
     >
-      <div className="space-y-0.5">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground">
-          Résumé du {formatPeriode(resume.periode_debut)}
-        </p>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="mt-0.5 font-mono text-2xl font-semibold tabular-nums leading-none text-brand">
+          {resume.nombre_nouveautes}
+        </span>
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-sm font-medium text-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">
+            Résumé du {formatPeriode(resume.periode_debut)}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <Button
           type="button"
           size="sm"
+          className="bg-foreground text-background hover:bg-foreground/90"
           onClick={() => void handleOpen()}
           disabled={isLoading}
         >
@@ -73,6 +79,7 @@ export function ResumeQuotidienBanner({
           type="button"
           size="sm"
           variant="ghost"
+          className="text-muted-foreground"
           onClick={() => void handleDismiss()}
           disabled={isLoading}
         >

@@ -1,54 +1,165 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PAGE_SIZE } from "@/helpers/api/pagination";
-import { useGetPublicationsInfiniteQuery } from "../api";
+import {
+  useGetEspacesInfiniteQuery,
+  useGetPublicationsInfiniteQuery,
+} from "../api";
+import type { Espace } from "../schema";
 import { FeedComposer } from "../components/feed-composer";
-import { FeedTabs, type FeedTabId } from "../components/feed-tabs";
+import { FeedIndexAside } from "../components/feed-index-aside";
+import {
+  FeedTabs,
+  type FeedScopeId,
+  type FeedSortId,
+  type FeedTypeFilterId,
+} from "../components/feed-tabs";
 import { PublicationCard } from "../components/publication-card";
-import { ResumeQuotidienBanner } from "../components/resume-quotidien-banner";
 
-function typeForTab(tab: FeedTabId): string | undefined {
-  if (tab === "discussions") return "DISCUSSION";
-  if (tab === "showcase") return "APPLICATION";
+function typeForFilter(filter: FeedTypeFilterId): string | undefined {
+  if (filter === "discussions") return "DISCUSSION";
+  if (filter === "showcase") return "APPLICATION";
+  if (filter === "entraide") return "ENTRAIDE";
   return undefined;
 }
 
-function feedForTab(
-  tab: FeedTabId
+function feedForQuery(
+  scope: FeedScopeId,
+  sort: FeedSortId
 ): "pour-vous" | "abonnements" | "populaires" | undefined {
-  if (tab === "pour-vous") return "pour-vous";
-  if (tab === "abonnements") return "abonnements";
-  if (tab === "populaires") return "populaires";
-  return undefined;
+  if (scope === "abonnements") return "abonnements";
+  if (sort === "populaires") return "populaires";
+  return "pour-vous";
+}
+
+function topByMembers(espaces: Espace[], limit = 3) {
+  return [...espaces]
+    .sort((a, b) => (b.membres_count ?? 0) - (a.membres_count ?? 0))
+    .slice(0, limit);
 }
 
 export default function FeedPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<FeedTabId>("pour-vous");
-  const typeFilter = typeForTab(tab);
-  const feedMode = feedForTab(tab);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tagFilter = searchParams.get("tag")?.trim() || null;
+  const [scope, setScope] = useState<FeedScopeId>(
+    searchParams.get("tab") === "abonnements" ? "abonnements" : "pour-vous"
+  );
+  const [typeFilter, setTypeFilter] = useState<FeedTypeFilterId>("tout");
+  const [sort, setSort] = useState<FeedSortId>("recents");
+  const [publishOpen, setPublishOpen] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    if (searchParams.get("tab") === "abonnements") {
+      setScope("abonnements");
+      const next = new URLSearchParams(searchParams);
+      next.delete("tab");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (tagFilter) setScope("pour-vous");
+  }, [tagFilter]);
+
+  useEffect(() => {
+    if (searchParams.get("publish") !== "1") return;
+    setPublishOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("publish");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const typeApi = typeForFilter(typeFilter);
+  const feedMode = feedForQuery(scope, sort);
+
+  const clearTagFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tag");
+    setSearchParams(next, { replace: true });
+  };
+
   const {
-    data,
-    isLoading,
+    data: pubsData,
+    isLoading: pubsLoading,
     isFetching,
     isFetchingNextPage,
-    isError,
-    refetch,
+    isError: pubsError,
+    refetch: refetchPubs,
     fetchNextPage,
     hasNextPage,
   } = useGetPublicationsInfiniteQuery({
     page_size: PAGE_SIZE,
-    ...(typeFilter ? { type: typeFilter } : {}),
+    ...(typeApi ? { type: typeApi } : {}),
     ...(feedMode ? { feed: feedMode } : {}),
+    ...(tagFilter ? { tag: tagFilter } : {}),
+  });
+
+  const { data: communautesData } = useGetEspacesInfiniteQuery({
+    type: "COMMUNAUTE",
+    page_size: 20,
+  });
+
+  const { data: chainesData } = useGetEspacesInfiniteQuery({
+    type: "CHAINE",
+    page_size: 20,
   });
 
   const results = useMemo(
-    () => data?.pages.flatMap((page) => page.results) ?? [],
-    [data?.pages]
+    () => pubsData?.pages.flatMap((page) => page.results) ?? [],
+    [pubsData?.pages]
   );
+
+  const topCommunautes = useMemo(
+    () =>
+      topByMembers(
+        communautesData?.pages.flatMap((page) => page.results) ?? [],
+        3
+      ),
+    [communautesData?.pages]
+  );
+
+  const topChaines = useMemo(
+    () =>
+      topByMembers(
+        chainesData?.pages.flatMap((page) => page.results) ?? [],
+        3
+      ),
+    [chainesData?.pages]
+  );
+
+  const peers = useMemo(() => {
+    const seen = new Set<number>();
+    const list: Array<{
+      id: number;
+      username: string;
+      full_name: string;
+      photo?: string;
+      following?: boolean;
+    }> = [];
+    for (const pub of results) {
+      const auteur = pub.auteur;
+      if (!auteur?.id || seen.has(auteur.id)) continue;
+      seen.add(auteur.id);
+      list.push({
+        id: auteur.id,
+        username: auteur.username,
+        full_name: auteur.full_name || auteur.username,
+        photo: auteur.photo,
+        following: Boolean(pub.following_auteur),
+      });
+      if (list.length >= 4) break;
+    }
+    return list;
+  }, [results]);
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -74,102 +185,114 @@ export default function FeedPage() {
   }, [fetchNextPage, hasNextPage, isFetching, isFetchingNextPage]);
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5">
-      <header className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {tab === "showcase"
-            ? "Projets"
-            : tab === "abonnements"
-              ? "Suivis"
-              : tab === "populaires"
-                ? "Tendances"
-                : "Accueil"}
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          {tab === "showcase"
-            ? "Showcase & dépôts"
-            : tab === "abonnements"
-              ? "Abonnements"
-              : tab === "populaires"
-                ? "Populaires"
-                : "Fil d'actualité"}
-        </h1>
-        {tab === "showcase" ? (
-          <p className="text-sm text-muted-foreground">
-            Applications partagées par la communauté — teste, commente, aide.
-          </p>
-        ) : null}
-        {tab === "abonnements" ? (
-          <p className="text-sm text-muted-foreground">
-            Publications des membres que tu suis et des chaînes auxquelles tu
-            es abonné.
-          </p>
-        ) : null}
-        {tab === "populaires" ? (
-          <p className="text-sm text-muted-foreground">
-            Les publications les plus likées et commentées du fil général.
-          </p>
-        ) : null}
-      </header>
+    <div className="mx-auto w-full max-w-7xl">
+      <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
+        <DialogContent className="max-h-[90dvh] w-[min(100vw-1.5rem,40rem)] max-w-none overflow-y-auto sm:rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Nouvelle publication</DialogTitle>
+          </DialogHeader>
+          {publishOpen ? (
+            <FeedComposer
+              key="publish-modal"
+              forceExpanded
+              bare
+              onCreated={(id) => {
+                setPublishOpen(false);
+                navigate(`/forum/publications/${id}`);
+              }}
+              onCancel={() => setPublishOpen(false)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
-      <FeedComposer
-        onCreated={(id) => navigate(`/forum/publications/${id}`)}
-      />
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_17rem]">
+        <div className="min-w-0 space-y-4">
+          <header className="space-y-1">
+            <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+              Fil d&apos;actualité
+            </h1>
+            {tagFilter ? (
+              <p className="text-xs text-muted-foreground">
+                Priorité à{" "}
+                <button
+                  type="button"
+                  onClick={clearTagFilter}
+                  className="font-mono font-medium text-brand hover:underline"
+                >
+                  #{tagFilter}
+                </button>
+                {" — "}
+                puis tes suivis, abonnements, et le reste du fil.
+              </p>
+            ) : null}
+          </header>
 
-      <ResumeQuotidienBanner
-        onOpenAbonnements={() => setTab("abonnements")}
-      />
+          <FeedTabs
+            scope={scope}
+            onScopeChange={setScope}
+            typeFilter={typeFilter}
+            onTypeFilterChange={setTypeFilter}
+            sort={sort}
+            onSortChange={setSort}
+          />
 
-      <FeedTabs value={tab} onChange={setTab} />
+          <div className="space-y-2" aria-live="polite">
+            {pubsLoading ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Chargement…
+              </p>
+            ) : null}
 
-      <section className="space-y-5" aria-live="polite">
-        {isLoading ? (
-          <div className="rounded-2xl border border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
-            Chargement du fil…
+            {pubsError ? (
+              <div className="space-y-2 py-8 text-center">
+                <p className="text-sm text-destructive">
+                  Impossible de charger le fil.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchPubs()}
+                >
+                  Réessayer
+                </Button>
+              </div>
+            ) : null}
+
+            {!pubsLoading && !pubsError && results.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                Aucune publication pour le moment.
+              </p>
+            ) : null}
+
+            {!pubsLoading && !pubsError
+              ? results.map((publication) => (
+                  <PublicationCard
+                    key={publication.id}
+                    publication={publication}
+                  />
+                ))
+              : null}
+
+            <div ref={loadMoreRef} className="h-6 w-full" aria-hidden />
+
+            {isFetchingNextPage ? (
+              <p className="pb-2 text-center text-xs text-muted-foreground">
+                Chargement…
+              </p>
+            ) : null}
           </div>
-        ) : null}
+        </div>
 
-        {isError ? (
-          <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-12 text-center">
-            <p className="text-sm text-destructive">
-              Impossible de charger le fil.
-            </p>
-            <Button type="button" variant="outline" onClick={() => refetch()}>
-              Réessayer
-            </Button>
-          </div>
-        ) : null}
-
-        {!isLoading && !isError && results.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-12 text-center text-sm text-muted-foreground">
-            {tab === "abonnements"
-              ? "Rien ici pour l’instant. Suis des membres ou abonne-toi à des chaînes."
-              : tab === "populaires"
-                ? "Pas encore assez d’engagement pour un classement."
-                : "Aucune publication ici pour le moment. Lance la première discussion."}
-          </div>
-        ) : null}
-
-        {!isLoading && !isError
-          ? results.map((publication) => (
-              <PublicationCard key={publication.id} publication={publication} />
-            ))
-          : null}
-
-        <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
-
-        {isFetchingNextPage ? (
-          <p className="pb-4 text-center text-sm text-muted-foreground">
-            Chargement…
-          </p>
-        ) : null}
-
-        {!isLoading && !isError && !hasNextPage && results.length > 0 ? (
-          <p className="pb-4 text-center text-xs text-muted-foreground">
-            Fin du fil
-          </p>
-        ) : null}
-      </section>
+        <div className="hidden xl:block">
+          <FeedIndexAside
+            peers={peers}
+            topCommunautes={topCommunautes}
+            topChaines={topChaines}
+          />
+        </div>
+      </div>
     </div>
   );
 }

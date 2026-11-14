@@ -602,17 +602,27 @@ def user_roles_view(request):
 
 
 def _ensure_default_member_role() -> str:
-    """Garantit l'existence du rôle membre public avec ses droits forum, projets et IA (sans droits d'administration)."""
+    """Garantit l'existence du rôle membre public avec ses droits forum, projets, marketplace et IA."""
     from app.communaute.permission_codes import COMMUNAUTE_PERMISSION_CODES
     from app.core.models import Permission
     from app.devstreet_hub.management.commands.init_devstreet_hub import DEVELOPER_CODES
+    from app.marketplace.permission_codes import MARKETPLACE_PERMISSION_CODES
 
     role_name = 'DevStreet Hub Developer'
     role, _ = Role.objects.get_or_create(
         name=role_name,
-        defaults={'description': 'Membre DevStreet (forum, projets collaboratifs et marketplace)'},
+        defaults={
+            'description': (
+                'Membre DevStreet (forum, likes/commentaires, projets, marketplace)'
+            ),
+        },
     )
-    needed_codes = set(COMMUNAUTE_PERMISSION_CODES) | set(DEVELOPER_CODES)
+    needed_codes = (
+        set(COMMUNAUTE_PERMISSION_CODES)
+        | set(DEVELOPER_CODES)
+        | set(MARKETPLACE_PERMISSION_CODES)
+        | {'ai.chat'}
+    )
     existing_codes = set(role.permissions.values_list('code', flat=True))
     missing_codes = needed_codes - existing_codes
     if missing_codes:

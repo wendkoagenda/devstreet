@@ -45,12 +45,21 @@ export const publicationProjetSchema = z
   .optional()
   .default(null);
 
+export const forumTagSchema = z.object({
+  id: z.number(),
+  label: z.string(),
+  slug: z.string(),
+  publications_count: z.number().optional().default(0),
+  followed_by_me: z.boolean().optional().default(false),
+});
+
 export const publicationSchema = z.object({
   id: z.number(),
   auteur: publicationAuteurSchema.nullable(),
   type: z.enum(["DISCUSSION", "APPLICATION", "ENTRAIDE", "CHOIX", "SONDAGE"]),
   titre: z.string(),
   description: z.string(),
+  tags: z.array(forumTagSchema).optional().default([]),
   lien_app: z
     .string()
     .optional()
@@ -83,6 +92,11 @@ export const publicationSchema = z.object({
       acces: z.enum(["PUBLIC", "LIEN"]).optional().default("PUBLIC"),
       commentaires_ouverts: z.boolean().optional().default(true),
       joined_by_me: z.boolean().optional().default(false),
+      mon_role: z
+        .enum(["SUPER_ADMIN", "ADMIN", "MEMBRE"])
+        .nullable()
+        .optional()
+        .default(null),
     })
     .nullable()
     .optional()
@@ -102,6 +116,12 @@ const imagesDataSchema = z
     })
   )
   .max(10)
+  .optional()
+  .default([]);
+
+const tagsDataSchema = z
+  .array(z.string().trim().min(1).max(48))
+  .max(3, "Maximum 3 thèmes")
   .optional()
   .default([]);
 
@@ -183,6 +203,7 @@ export const createDiscussionSchema = z.object({
   titre: z.string().trim().min(1, "Le titre est obligatoire").max(200),
   description: z.string().trim().min(1, "Le contenu est obligatoire"),
   images_data: imagesDataSchema,
+  tags_data: tagsDataSchema,
   espace_id: z.number().int().positive().nullable().optional(),
 });
 
@@ -199,6 +220,7 @@ export const createApplicationSchema = z.object({
     ),
   plateforme_app: z.enum(["WEB", "MOBILE", "LES_DEUX"]).default("WEB"),
   images_data: imagesDataSchema,
+  tags_data: tagsDataSchema,
 });
 
 export const createEntraideSchema = z.object({
@@ -208,6 +230,7 @@ export const createEntraideSchema = z.object({
     .trim()
     .min(1, "Décris le problème (texte et/ou code)"),
   images_data: imagesDataSchema,
+  tags_data: tagsDataSchema,
 });
 
 export const createChoixSchema = z.object({
@@ -225,6 +248,7 @@ export const createChoixSchema = z.object({
     )
     .min(2, "Au moins deux options sont requises"),
   images_data: imagesDataSchema,
+  tags_data: tagsDataSchema,
 });
 
 export const upsertAvisSchema = z.object({
@@ -271,6 +295,7 @@ export type PublicationAuteur = z.infer<typeof publicationAuteurSchema>;
 export type PublicationImage = z.infer<typeof publicationImageSchema>;
 export type MediaCommentaire = z.infer<typeof mediaCommentaireSchema>;
 export type OptionPublication = z.infer<typeof optionPublicationSchema>;
+export type ForumTag = z.infer<typeof forumTagSchema>;
 export type Publication = z.infer<typeof publicationSchema>;
 export type Espace = z.infer<typeof espaceSchema>;
 export type CreateEspaceInput = z.infer<typeof createEspaceSchema>;

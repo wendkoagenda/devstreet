@@ -28,7 +28,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthSlice } from "@/models/auth/slice";
 import { useGetDashboardQuery } from "@/models/marketplace-dashboard/api";
-import { useGetPublicProfileQuery } from "@/models/marketplace-network/api";
+import {
+  useGetConnectionsQuery,
+  useGetPublicProfileQuery,
+} from "@/models/marketplace-network/api";
 import { useGetMySkillsQuery } from "@/models/marketplace-offers/api";
 import { SkillsCard } from "@/models/marketplace-offers/components/skills-card";
 import { formatDate, initialsOf } from "@/models/marketplace-offers/labels";
@@ -41,7 +44,13 @@ import { ProfilForm } from "../components/profil-form";
 import { useMySpace } from "../hooks/use-my-space";
 import { CV_VISIBILITIES, countryName } from "../options";
 
-type PanelKey = "infos" | "skills" | "experiences" | "company" | "reviews";
+type PanelKey =
+  | "infos"
+  | "skills"
+  | "experiences"
+  | "company"
+  | "reviews"
+  | "friends";
 
 const PANEL_TITLES: Record<PanelKey, string> = {
   infos: "Mes informations",
@@ -49,6 +58,7 @@ const PANEL_TITLES: Record<PanelKey, string> = {
   experiences: "Mes expériences",
   company: "Mon entreprise",
   reviews: "Mes avis",
+  friends: "Mes amis",
 };
 
 /** Anneau de progression autour de l'avatar : la part du profil déjà complétée. */
@@ -113,6 +123,79 @@ function ReviewsPanel({ profilId }: { profilId: number }) {
   );
 }
 
+function FriendsPanel() {
+  const { data, isLoading, isError, refetch } = useGetConnectionsQuery();
+  const friends = data ?? [];
+
+  return (
+    <Card className="border-0 shadow-none">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Handshake className="size-4" />
+          Mes amis
+        </CardTitle>
+        <CardDescription>
+          Connexions mutuelles : vous vous êtes choisis l’un l’autre.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {isLoading ? <Skeleton className="h-20 w-full" /> : null}
+        {isError ? (
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-sm text-destructive">
+              Impossible de charger vos amis.
+            </p>
+            <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
+              Réessayer
+            </Button>
+          </div>
+        ) : null}
+        {!isLoading && !isError && friends.length === 0 ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              Pas encore d’ami. Rencontrez des développeurs : un like réciproque
+              crée la connexion.
+            </p>
+            <Button asChild size="sm">
+              <Link to="/marketplace/network">Rencontrer des devs</Link>
+            </Button>
+          </div>
+        ) : null}
+        {friends.length > 0 ? (
+          <ul className="flex flex-col gap-2">
+            {friends.map((friend) => (
+              <li key={friend.id}>
+                <Link
+                  to={`/marketplace/profiles/${friend.id}`}
+                  className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:bg-muted/40"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                    {initialsOf(friend.name)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-foreground">
+                      {friend.name}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {friend.headline ||
+                        `Connectés le ${formatDate(friend.matched_at)}`}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {friends.length > 0 ? (
+          <Button asChild size="sm" variant="outline">
+            <Link to="/marketplace/network">Trouver d’autres amis</Link>
+          </Button>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 /** « Mon profil pro » : le profil au centre, ses éléments liés (compétences, expériences, entreprise…) en orbite autour. */
 export default function MyProfilePage() {
   const user = useAuthSlice((state) => state.user);
@@ -120,6 +203,7 @@ export default function MyProfilePage() {
   const dashboard = useGetDashboardQuery(undefined, { skip: !profil });
   const skills = useGetMySkillsQuery(undefined, { skip: !profil });
   const experiences = useGetMyExperiencesQuery(undefined, { skip: !profil });
+  const connections = useGetConnectionsQuery(undefined, { skip: !profil });
   const [panel, setPanel] = useState<PanelKey | null>(null);
   const fullName = user?.full_name || user?.email || "";
 
@@ -184,22 +268,34 @@ export default function MyProfilePage() {
       title: "Compétences",
       summary:
         skillCount > 0
-          ? `${skillCount} compétence(s) · ${(skills.data ?? []).slice(0, 2).map((skill) => skill.name).join(", ")}`
+          ? `${skillCount} compétence(s)`
           : "Aucune pour l'instant",
       icon: <Sparkles className="size-4" />,
       todo: skillCount < 3,
       onSelect: () => setPanel("skills"),
+      children: (skills.data ?? []).map((skill) => ({
+        key: String(skill.skill_id),
+        title: skill.name,
+        summary: `Niveau ${skill.level}`,
+        onSelect: () => setPanel("skills"),
+      })),
     },
     {
       key: "experiences",
       title: "Expériences",
       summary:
         experienceCount > 0
-          ? `${experienceCount} expérience(s) · ${experiences.data?.[0]?.title ?? ""}`
+          ? `${experienceCount} expérience(s)`
           : "Aucune pour l'instant",
       icon: <Briefcase className="size-4" />,
       todo: experienceCount === 0,
       onSelect: () => setPanel("experiences"),
+      children: (experiences.data ?? []).map((exp) => ({
+        key: String(exp.id),
+        title: exp.title,
+        summary: exp.company_name,
+        onSelect: () => setPanel("experiences"),
+      })),
     },
     {
       key: "company",
@@ -210,6 +306,16 @@ export default function MyProfilePage() {
       icon: <Building2 className="size-4" />,
       todo: !company,
       onSelect: () => setPanel("company"),
+      children: company
+        ? [
+            {
+              key: String(company.id),
+              title: company.name,
+              summary: profil.is_company_owner ? "Propriétaire" : "Membre",
+              onSelect: () => setPanel("company"),
+            },
+          ]
+        : undefined,
     },
     {
       key: "availability",
@@ -231,11 +337,21 @@ export default function MyProfilePage() {
       to: "/marketplace/cv",
     },
     {
-      key: "network",
-      title: "Réseau",
-      summary: `${summary?.connections_count ?? 0} connexion(s)`,
+      key: "friends",
+      title: "Mes amis",
+      summary:
+        (connections.data?.length ?? summary?.connections_count ?? 0) > 0
+          ? `${connections.data?.length ?? summary?.connections_count ?? 0} ami(s)`
+          : "Aucun ami pour l’instant",
       icon: <Handshake className="size-4" />,
-      to: "/marketplace/network",
+      todo: (connections.data?.length ?? summary?.connections_count ?? 0) === 0,
+      onSelect: () => setPanel("friends"),
+      children: (connections.data ?? []).map((friend) => ({
+        key: String(friend.id),
+        title: friend.name,
+        summary: friend.headline || undefined,
+        onSelect: () => setPanel("friends"),
+      })),
     },
     {
       key: "reviews",
@@ -288,7 +404,11 @@ export default function MyProfilePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <ProfileOrbit center={center} nodes={nodes} />
+      <ProfileOrbit
+        center={center}
+        nodes={nodes}
+        storageKey={`marketplace-orbit:${profil.id}`}
+      />
 
       <Sheet open={panel !== null} onOpenChange={(open) => (open ? null : setPanel(null))}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
@@ -339,6 +459,7 @@ export default function MyProfilePage() {
               </Card>
             ) : null}
             {panel === "reviews" ? <ReviewsPanel profilId={profil.id} /> : null}
+            {panel === "friends" ? <FriendsPanel /> : null}
           </div>
         </SheetContent>
       </Sheet>

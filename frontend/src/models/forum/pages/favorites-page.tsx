@@ -8,6 +8,7 @@ import { PublicationCard } from "../components/publication-card";
 
 export default function FavoritesPage() {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
   const {
     data,
     isLoading,
