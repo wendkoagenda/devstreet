@@ -155,9 +155,6 @@ export function DevProfileView({
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-1.5">
-            <Badge variant={profil.is_open_to_work ? "default" : "secondary"}>
-              {profil.is_open_to_work ? "Ouvert aux opportunités" : "Non disponible"}
-            </Badge>
             <Badge variant="outline">{profil.years_of_experience} an(s) d'expérience</Badge>
           </div>
           {profil.is_self ? (
@@ -176,11 +173,6 @@ export function DevProfileView({
                   </Link>
                 </Button>
               )}
-              {links.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  Ajoutez vos liens (GitHub, LinkedIn, portfolio) pour qu'ils apparaissent ici.
-                </p>
-              ) : null}
             </>
           ) : profil.email ? (
             <Button asChild>
