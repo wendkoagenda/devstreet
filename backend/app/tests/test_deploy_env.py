@@ -455,3 +455,23 @@ class GiteaTests(SimpleTestCase):
     def test_les_variables_gitea_sont_facultatives_pour_etat(self):
         definitions = [v for v in spec.GITEA_VARS]
         self.assertEqual(spec.check_environment(definitions, 'prod', set(), set(), None), [])
+
+
+class NomsGithubTests(SimpleTestCase):
+    def test_github_refuse_le_prefixe_github(self):
+        depot = faire_depot(backend=BACKEND_EXAMPLE + 'GITHUB_OAUTH_CLIENT_ID=\n')
+        with self.assertRaises(spec.SpecError) as erreur:
+            spec.load_spec(depot)
+        self.assertIn('GITHUB_', str(erreur.exception))
+
+    def test_le_depot_ne_declare_aucun_nom_en_github(self):
+        racine = Path(__file__).resolve().parents[3]
+        definitions = spec.load_spec(racine)
+        self.assertEqual([v.name for v in definitions if v.name.upper().startswith('GITHUB_')], [])
+
+    def test_oauth_github_est_declare_avec_le_bon_type(self):
+        racine = Path(__file__).resolve().parents[3]
+        variables = {v.name: v for v in spec.load_spec(racine)}
+        self.assertFalse(variables['OAUTH_GITHUB_CLIENT_ID'].secret)
+        self.assertTrue(variables['OAUTH_GITHUB_CLIENT_SECRET'].secret)
+        self.assertFalse(variables['OAUTH_GITHUB_CLIENT_ID'].required)

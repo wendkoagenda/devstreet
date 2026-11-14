@@ -55,7 +55,7 @@ def configured_providers() -> Dict[str, bool]:
             settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET
         ),
         SocialAccount.PROVIDER_GITHUB: bool(
-            settings.GITHUB_OAUTH_CLIENT_ID and settings.GITHUB_OAUTH_CLIENT_SECRET
+            settings.OAUTH_GITHUB_CLIENT_ID and settings.OAUTH_GITHUB_CLIENT_SECRET
         ),
     }
 
@@ -111,7 +111,7 @@ def authorization_url(request, provider: str) -> str:
         return f'https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}'
 
     params = {
-        'client_id': settings.GITHUB_OAUTH_CLIENT_ID,
+        'client_id': settings.OAUTH_GITHUB_CLIENT_ID,
         'redirect_uri': redirect_uri,
         'scope': 'read:user user:email',
         'state': state,
@@ -167,8 +167,8 @@ def _exchange_github(code: str, redirect_uri: str) -> OAuthProfile:
         'https://github.com/login/oauth/access_token',
         headers={'Accept': 'application/json'},
         data={
-            'client_id': settings.GITHUB_OAUTH_CLIENT_ID,
-            'client_secret': settings.GITHUB_OAUTH_CLIENT_SECRET,
+            'client_id': settings.OAUTH_GITHUB_CLIENT_ID,
+            'client_secret': settings.OAUTH_GITHUB_CLIENT_SECRET,
             'code': code,
             'redirect_uri': redirect_uri,
         },

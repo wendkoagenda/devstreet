@@ -168,6 +168,11 @@ def load_spec(repo_root):
         if var.name in seen:
             raise SpecError(f"{var.name} est défini par deux sources.")
         seen.add(var.name)
+        if var.name.upper().startswith('GITHUB_'):
+            raise SpecError(
+                f"{var.name} : GitHub refuse les noms de secrets et de variables commençant par GITHUB_ "
+                "(ex. OAUTH_GITHUB_CLIENT_ID)."
+            )
     return spec
 
 
