@@ -194,6 +194,7 @@ REST_FRAMEWORK = {
         'logout': '30/minute',
         'csrf': '60/minute',
         'health': '60/minute',
+        'oauth_providers': '60/minute',
         'oauth_start': '20/minute',
         'oauth_callback': '20/minute',
     },

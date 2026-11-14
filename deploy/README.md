@@ -66,6 +66,7 @@ Noms = ceux de `backend/.env.example` et `frontend/.env.example` (pas de `DEPLOY
 
 - Si `DEPLOY_DB_MODE=interne` (dans `.env.deploy.sandbox`) : dans `backend.env.sandbox`, mettre `DB_HOST=db` et inclure le domaine (`DEPLOY_DOMAIN`) dans `ALLOWED_HOSTS`.
 - `frontend.env.sandbox` : au minimum `VITE_API_URL` et `VITE_API_V1_URL` (ex. `https://sandbox.monapp.com/api`).
+- Connexion sociale (facultative) : `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GITHUB_OAUTH_CLIENT_ID`, `GITHUB_OAUTH_CLIENT_SECRET` dans `backend.env.sandbox`. Les deux `*_CLIENT_ID` sont des variables GitHub, les deux `*_CLIENT_SECRET` des secrets. Un fournisseur n'est actif que si son identifiant **et** son secret sont renseignés ; sans eux, ses boutons restent masqués. L'URL de rappel à déclarer chez le fournisseur est `https://<DEPLOY_DOMAIN>/api/auth/oauth/google/callback` (ou `.../github/callback`) : elle est construite depuis `FRONTEND_URL`, qui doit donc être l'URL publique exacte (`https://...`).
 
 ### Renseigner `observabilite.env.sandbox`
 
