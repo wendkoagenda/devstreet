@@ -25,8 +25,8 @@ User = get_user_model()
 @override_settings(
     GOOGLE_OAUTH_CLIENT_ID='google-id',
     GOOGLE_OAUTH_CLIENT_SECRET='google-secret',
-    GITHUB_OAUTH_CLIENT_ID='github-id',
-    GITHUB_OAUTH_CLIENT_SECRET='github-secret',
+    OAUTH_GITHUB_CLIENT_ID='github-id',
+    OAUTH_GITHUB_CLIENT_SECRET='github-secret',
     FRONTEND_URL='http://localhost:5173',
     PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
 )
@@ -148,8 +148,8 @@ class OAuthServiceTests(TestCase):
 @override_settings(
     GOOGLE_OAUTH_CLIENT_ID=None,
     GOOGLE_OAUTH_CLIENT_SECRET=None,
-    GITHUB_OAUTH_CLIENT_ID=None,
-    GITHUB_OAUTH_CLIENT_SECRET=None,
+    OAUTH_GITHUB_CLIENT_ID=None,
+    OAUTH_GITHUB_CLIENT_SECRET=None,
     FRONTEND_URL='http://localhost:5173',
 )
 class OAuthViewsTests(TestCase):
@@ -169,8 +169,8 @@ class OAuthViewsTests(TestCase):
 @override_settings(
     GOOGLE_OAUTH_CLIENT_ID='google-id',
     GOOGLE_OAUTH_CLIENT_SECRET='google-secret',
-    GITHUB_OAUTH_CLIENT_ID=None,
-    GITHUB_OAUTH_CLIENT_SECRET=None,
+    OAUTH_GITHUB_CLIENT_ID=None,
+    OAUTH_GITHUB_CLIENT_SECRET=None,
     FRONTEND_URL='http://localhost:5173',
     PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
 )
