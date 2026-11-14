@@ -70,7 +70,12 @@ def make_skill(by, **overrides):
 
 
 def make_profil(by, **overrides):
+    """Profil dev par défaut ; avec `type="entreprise"`, une entreprise est créée si elle n'est pas fournie."""
     suffix = _suffix()
+    if overrides.get("company") is not None:
+        overrides.setdefault("type", "entreprise")  # un profil rattaché à une entreprise est un profil entreprise
+    if overrides.get("type") == "entreprise" and not overrides.get("company"):
+        overrides["company"] = make_company(by)
     data = {
         "user": overrides.pop("user", None) or make_user(),
         "slug": f"profil-{suffix}",
@@ -85,9 +90,10 @@ def make_profil(by, **overrides):
 
 def make_offer(by, **overrides):
     suffix = _suffix()
+    company = overrides.pop("company", None) or make_company(by)
     data = {
-        "company": overrides.pop("company", None) or make_company(by),
-        "recruiter": overrides.pop("recruiter", None) or make_profil(by),
+        "company": company,
+        "recruiter": overrides.pop("recruiter", None) or make_profil(by, type="entreprise", company=company),
         "title": f"Développeur backend {suffix}",
         "slug": f"offre-{suffix}",
         "description": "Mission de développement d'une API Django REST.",
@@ -188,8 +194,10 @@ def make_review(by, **overrides):
 
 
 def make_swipe(by, **overrides):
+    """Swipe de recrutement par défaut (profil entreprise vers profil dev) ; contexte réseau : dev vers dev."""
+    author_type = "entreprise" if overrides.get("context", "recruit") == "recruit" else "dev"
     data = {
-        "author": overrides.pop("author", None) or make_profil(by),
+        "author": overrides.pop("author", None) or make_profil(by, type=author_type),
         "target": overrides.pop("target", None) or make_profil(by),
         "direction": "like",
         "context": "recruit",

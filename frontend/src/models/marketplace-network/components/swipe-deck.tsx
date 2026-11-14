@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
-import { Check, Undo2, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowUpRight, Check, Info, Undo2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { initialsOf } from "@/models/marketplace-offers/labels";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
+import { profilePath } from "@/helpers/routes/profile-path";
 import type { DeckCard, SwipeResult } from "../schema";
 
 /** Distance de glissement (px) à partir de laquelle un relâchement vaut un choix. */
@@ -26,7 +29,10 @@ type SwipeDeckProps = {
   likeVerb: string;
   likeStamp: string;
   likeAria: string;
-  keptLabel: (kept: number) => string;
+  /** Compteur à côté de la position (« Vivier : 2 »…) ; sans cette fonction, aucun compteur n'est affiché. */
+  keptLabel?: (kept: number) => string;
+  /** Masque l'en-tête (titre, position, compteur) et la phrase d'instruction : seules les cartes restent. */
+  hideHeader?: boolean;
   emptyAction: ReactNode;
   matchedText: (name: string) => string;
   matchedAction?: ReactNode;
@@ -45,6 +51,7 @@ export function SwipeDeck({
   likeStamp,
   likeAria,
   keptLabel,
+  hideHeader = false,
   emptyAction,
   matchedText,
   matchedAction,
@@ -139,19 +146,29 @@ export function SwipeDeck({
 
   return (
     <section aria-label={title} className="flex flex-col items-center gap-4">
-      <div className="flex w-full max-w-md flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-        <div className="flex gap-2">
-          <Badge variant="outline">
-            {Math.min(index + 1, cards.length)} / {cards.length}
-          </Badge>
-          <Badge>{keptLabel(kept)}</Badge>
-        </div>
-      </div>
-      <p className="max-w-md text-center text-xs text-muted-foreground">
-        Glissez la carte vers la droite pour {likeVerb}, vers la gauche pour passer, ou utilisez
-        les boutons.
-      </p>
+      {hideHeader ? null : (
+        <>
+          <div className="flex w-full max-w-md flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+              {/* Mode d'emploi dans une bulle : s'ouvre au clic sur le « i » */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon" className="size-7 rounded-full text-muted-foreground" aria-label="Comment ça marche ?">
+                    <Info className="size-4" aria-hidden />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-72 text-xs leading-relaxed">
+                  Glissez la carte vers la droite pour {likeVerb}, vers la gauche pour passer, ou utilisez les boutons.
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="flex gap-2">
+              {keptLabel ? <Badge>{keptLabel(kept)}</Badge> : null}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="relative h-[26rem] w-full max-w-md">
         {hasBack2 ? (
@@ -190,13 +207,25 @@ export function SwipeDeck({
             ) : null}
 
             <div className="flex items-center gap-3">
-              <span
-                className="flex size-16 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-lg font-semibold text-foreground"
-                aria-hidden
-              >
-                {initialsOf(card.name)}
-              </span>
+              <ProfileInitialsAvatar
+                name={card.name}
+                size="xl"
+                kind={card.type === "entreprise" ? "entreprise" : "dev"}
+                openToWork={card.type !== "entreprise" && card.is_open_to_work}
+              />
               <div className="flex min-w-0 flex-col gap-0.5">
+                {card.type ? (
+                  <Badge
+                    variant="outline"
+                    className={`w-fit ${
+                      card.type === "entreprise"
+                        ? "border-brand bg-brand-soft text-brand-strong"
+                        : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    {card.type === "entreprise" ? "Entreprise" : "Dev"}
+                  </Badge>
+                ) : null}
                 <span className="truncate text-lg font-semibold text-foreground">{card.name}</span>
                 <span className="text-xs text-muted-foreground">
                   {[card.headline, card.city].filter(Boolean).join(" · ")}
@@ -224,7 +253,21 @@ export function SwipeDeck({
             </div>
 
             <p className="text-xs leading-relaxed text-muted-foreground">{facts.proof}</p>
-            <span className="mt-auto text-xs text-muted-foreground">{facts.source}</span>
+            <div className="mt-auto flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">{facts.source}</span>
+              {card.username ? (
+                <Button asChild size="sm" variant="outline" className="shrink-0">
+                  <Link
+                    to={profilePath(card.username, card.type === "entreprise" ? "entreprise" : "dev")}
+                    // Ne pas démarrer un glissement de la carte quand on clique sur le lien
+                    onPointerDown={(event) => event.stopPropagation()}
+                  >
+                    Voir le profil
+                    <ArrowUpRight className="ml-1 size-3.5" aria-hidden />
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
           </article>
         ) : null}
 
@@ -245,7 +288,7 @@ export function SwipeDeck({
             role="status"
             className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-xl bg-primary p-6 text-center text-primary-foreground"
           >
-            <span className="text-2xl font-semibold">Vous êtes amis !</span>
+            <span className="text-2xl font-semibold">Vous êtes connectés !</span>
             <span className="text-sm opacity-90">{matchedText(matched)}</span>
             <div className="flex flex-wrap justify-center gap-2">
               <Button variant="secondary" onClick={() => setMatched("")}>

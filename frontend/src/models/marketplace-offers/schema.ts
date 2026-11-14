@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export type OfferType = "mission" | "cdd" | "cdi" | "stage";
-export type ExperienceLevel = "junior" | "mid" | "senior";
+export type ExperienceLevel = "junior" | "mid" | "senior" | "expert";
+/** Unité de la durée d'une offre. */
+export type DurationUnit = "hour" | "day" | "month" | "year";
 export type WorkMode = "on_site" | "hybrid" | "remote";
 export type OfferStatus = "draft" | "open" | "closed";
 export type CandidatureStatus = "sent" | "shortlisted" | "rejected" | "accepted";
@@ -31,6 +33,7 @@ export type Offer = {
   title: string;
   type: OfferType;
   contract_duration: number | null;
+  contract_duration_unit: DurationUnit;
   experience_level: ExperienceLevel;
   budget_min: string | null;
   budget_max: string | null;
@@ -69,6 +72,11 @@ export type TalentCard = {
   skills: string[];
   rating_avg: number | null;
   reviews_count: number;
+  /** Profil dev ou profil entreprise (l'accroche d'un profil entreprise est le nom de sa société). */
+  type?: "dev" | "entreprise";
+  /** Nom d'utilisateur du membre : sert à ouvrir sa page de profil. */
+  username?: string;
+  company?: { id: number; name: string; is_verified: boolean } | null;
   email?: string;
   score?: number;
   breakdown?: ScoreItem[];
@@ -107,6 +115,31 @@ export type OfferFilters = {
   work_mode?: string;
 };
 
+/** Brouillon renvoyé par POST /marketplace/me/offers/generate (UC-09). */
+export type OfferAiDraft = {
+  title: string;
+  description: string;
+  type: OfferType;
+  experience_level: ExperienceLevel;
+  work_mode: WorkMode;
+  contract_duration: number | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  currency: string;
+  budget_period: "day" | "month" | "fixed";
+  country: string;
+  city: string;
+  required_skill_ids: number[];
+  skills: SkillOption[];
+};
+
+export type OfferAiGenerateResult = {
+  draft: OfferAiDraft;
+  suggested_profils: TalentCard[];
+  provider: string;
+  model: string;
+};
+
 const optionalDate = z
   .string()
   .refine((value) => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value), "Date invalide");
@@ -119,12 +152,13 @@ export const offerFormSchema = z.object({
   title: z.string().trim().min(1, "Le titre est obligatoire").max(200),
   description: z.string().trim().min(1, "La description est obligatoire"),
   type: z.enum(["mission", "cdd", "cdi", "stage"]),
-  experience_level: z.enum(["junior", "mid", "senior"]),
+  experience_level: z.enum(["junior", "mid", "senior", "expert"]),
   work_mode: z.enum(["on_site", "hybrid", "remote"]),
   contract_duration: z
     .string()
     .trim()
-    .refine((value) => value === "" || /^\d{1,3}$/.test(value), "Durée en mois (nombre entier)"),
+    .refine((value) => value === "" || /^\d{1,5}$/.test(value), "Durée : nombre entier"),
+  contract_duration_unit: z.enum(["hour", "day", "month", "year"]),
   budget_min: optionalNumber,
   budget_max: optionalNumber,
   currency: z.string().regex(/^[A-Za-z]{3}$/, "Devise à 3 lettres"),
@@ -146,6 +180,7 @@ export function offerToForm(offer: Offer | null, defaults?: { country?: string; 
     experience_level: offer?.experience_level ?? "mid",
     work_mode: offer?.work_mode ?? "hybrid",
     contract_duration: offer?.contract_duration ? String(offer.contract_duration) : "",
+    contract_duration_unit: offer?.contract_duration_unit ?? "month",
     budget_min: offer?.budget_min ? String(Number(offer.budget_min)) : "",
     budget_max: offer?.budget_max ? String(Number(offer.budget_max)) : "",
     currency: offer?.currency ?? "XOF",
@@ -155,6 +190,27 @@ export function offerToForm(offer: Offer | null, defaults?: { country?: string; 
     start_date: offer?.start_date ?? "",
     deadline: offer?.deadline ?? "",
     required_skill_ids: offer?.skills.map((skill) => skill.id) ?? [],
+  };
+}
+
+/** Convertit le brouillon IA en valeurs de formulaire (dates laissées vides). */
+export function draftToForm(draft: OfferAiDraft): OfferFormValues {
+  return {
+    title: draft.title,
+    description: draft.description,
+    type: draft.type,
+    experience_level: draft.experience_level,
+    work_mode: draft.work_mode,
+    contract_duration: draft.contract_duration != null ? String(draft.contract_duration) : "",
+    budget_min: draft.budget_min != null ? String(draft.budget_min) : "",
+    budget_max: draft.budget_max != null ? String(draft.budget_max) : "",
+    currency: draft.currency || "XOF",
+    budget_period: draft.budget_period,
+    country: draft.country || "",
+    city: draft.city || "",
+    start_date: "",
+    deadline: "",
+    required_skill_ids: draft.required_skill_ids ?? [],
   };
 }
 

@@ -188,6 +188,8 @@ Configuration (`backend/.env`, voir `.env.example`) : ces variables sont obligat
 | `DEFAULT_FROM_EMAIL` | Expéditeur |
 | `FRONTEND_URL` | URL publique du frontend (lien de connexion) |
 
+Vérifier la configuration SMTP (e-mail de test, erreur du serveur affichée en clair) : `python manage.py test_email destinataire@exemple.com`.
+
 --- | --- |
 | `EMAIL_HOST` | Serveur SMTP. **Vide = les e-mails s'affichent dans la console du serveur** (développement) |
 | `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS` | Paramètres SMTP |

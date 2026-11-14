@@ -3,6 +3,7 @@ import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ApplicationsStatsStrip } from "@/models/marketplace-stats/components/page-stats";
 import { RequireProfil } from "@/models/marketplace-space/components/guards";
 import { useGetMyCandidaturesQuery } from "../api";
 import { CANDIDATURE_STATUS_LABELS, formatDate } from "../labels";
@@ -88,6 +89,7 @@ function MyApplicationsContent() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <ApplicationsStatsStrip />
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold text-foreground">Suivi de mes candidatures</h1>
         <p className="text-sm text-muted-foreground">

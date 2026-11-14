@@ -15,8 +15,15 @@ from app.marketplace.factories import (
     make_skill,
     make_user,
 )
-from app.marketplace.models import Availability, Experience
-from app.marketplace.services.cv_service import can_download_cv, cv_data, cv_filename, render_cv_pdf
+from app.marketplace.models import Availability, Experience, Prestation
+from app.marketplace.services.cv_service import (
+    PhotoUnavailable,
+    _square_photo,
+    can_download_cv,
+    cv_data,
+    cv_filename,
+    render_cv_pdf,
+)
 from app.tests.test_marketplace_market import login
 
 
@@ -95,6 +102,48 @@ class ExperienceApiTests(ProfileBase):
         self.assertEqual(self.client.patch(f"{self.URL}/{other.id}", {"title": "x"}, format="json").status_code, 404)
 
 
+class PrestationApiTests(ProfileBase):
+    URL = "/api/v1/marketplace/me/prestations"
+    BODY = {
+        "title": "Landing page en 5 jours",
+        "description": "Création d'une landing responsive avec formulaire de contact.",
+        "category": "web",
+        "price": "150000.00",
+        "delivery_days": 5,
+        "revisions": 2,
+    }
+
+    def test_crud(self):
+        created = self.client.post(self.URL, self.BODY, format="json")
+        self.assertEqual(created.status_code, 201, created.data)
+        self.assertTrue(created.data["slug"])
+        self.assertTrue(created.data["is_active"])
+        pk = created.data["id"]
+        updated = self.client.patch(f"{self.URL}/{pk}", {"price": "175000.00", "is_active": False}, format="json")
+        self.assertEqual(updated.status_code, 200, updated.data)
+        self.assertEqual(updated.data["price"], "175000.00")
+        self.assertFalse(updated.data["is_active"])
+        self.assertEqual(len(self.client.get(self.URL).data), 1)
+        self.assertEqual(self.client.delete(f"{self.URL}/{pk}").status_code, 204)
+        self.assertFalse(Prestation.objects.exists())
+
+    def test_invalid_category_refused(self):
+        response = self.client.post(self.URL, {**self.BODY, "category": "blockchain"}, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_cannot_edit_someone_elses_prestation(self):
+        other = make_prestation(self.by, profil=make_profil(self.by))
+        self.assertEqual(self.client.patch(f"{self.URL}/{other.id}", {"title": "x"}, format="json").status_code, 404)
+
+    def test_public_profile_lists_active_prestations_only(self):
+        make_prestation(self.by, profil=self.profil, title="Active", is_active=True)
+        make_prestation(self.by, profil=self.profil, title="Inactive", is_active=False)
+        response = self.client.get(f"/api/v1/marketplace/profils/{self.profil.id}")
+        self.assertEqual(response.status_code, 200)
+        titles = [row["title"] for row in response.data["prestations"]]
+        self.assertEqual(titles, ["Active"])
+
+
 class CvVisibilityTests(TestCase):
     def setUp(self):
         self.by = make_user()
@@ -167,3 +216,136 @@ class CvApiTests(ProfileBase):
         self.assertTrue(self.client.get(f"/api/v1/marketplace/profils/{target.id}").data["can_download_cv"])
         hidden = make_profil(self.by, cv_visibility="private")
         self.assertFalse(self.client.get(f"/api/v1/marketplace/profils/{hidden.id}").data["can_download_cv"])
+
+    # ── Photo de profil sur le CV ─────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _jpeg(width=300, height=200) -> bytes:
+        from io import BytesIO
+
+        from PIL import Image
+
+        buffer = BytesIO()
+        Image.new("RGB", (width, height), (200, 120, 80)).save(buffer, format="JPEG")
+        return buffer.getvalue()
+
+    def test_square_photo_is_a_centered_square_png(self):
+        from io import BytesIO
+
+        from PIL import Image
+
+        image = Image.open(BytesIO(_square_photo(self._jpeg(300, 200))))
+        self.assertEqual(image.format, "PNG")
+        self.assertEqual(image.size[0], image.size[1])
+
+    def test_unreadable_photo_gives_no_image(self):
+        with self.assertRaises(PhotoUnavailable):
+            _square_photo(b"pas une image")
+
+    def test_cv_embeds_the_profile_photo(self):
+        from io import BytesIO
+        from unittest import mock
+
+        self.profil.user.photo = "profile_photos/moi.jpg"
+        self.profil.user.save()
+        storage = mock.Mock()
+        storage.open.return_value = BytesIO(self._jpeg())
+        with mock.patch("app.marketplace.services.cv_service.get_storage_service", return_value=storage):
+            data = cv_data(self.profil)
+        self.assertTrue(data["photo"].startswith(b"\x89PNG"))
+        self.assertIn(b"/Subtype /Image", render_cv_pdf(data))
+        storage.open.assert_called_once_with("profile_photos/moi.jpg")
+
+    def test_cv_without_photo_or_with_missing_file_still_works(self):
+        from unittest import mock
+
+        self.assertIsNone(cv_data(self.profil)["photo"])
+        self.assertTrue(render_cv_pdf(cv_data(self.profil)).startswith(b"%PDF"))
+        self.profil.user.photo = "profile_photos/absente.jpg"
+        self.profil.user.save()
+        storage = mock.Mock()
+        storage.open.side_effect = FileNotFoundError("absente")
+        with mock.patch("app.marketplace.services.cv_service.get_storage_service", return_value=storage):
+            data = cv_data(self.profil)
+        self.assertIsNone(data["photo"])
+        self.assertTrue(render_cv_pdf(data).startswith(b"%PDF"))
+
+
+class CvSettingsTests(ProfileBase):
+    URL = "/api/v1/marketplace/me/cv-settings"
+
+    def test_defaults_until_the_member_changes_something(self):
+        data = self.client.get(self.URL).data
+        self.assertEqual(data["settings"]["color"], "violet")
+        self.assertEqual(data["settings"]["font"], "sans")
+        self.assertEqual(data["settings"]["hidden_sections"], [])
+        self.assertIn("bleu", data["presets"])
+
+    def test_patch_saves_and_keeps_the_other_settings(self):
+        self.assertEqual(self.client.patch(self.URL, {"color": "bleu", "font": "serif"}, format="json").status_code, 200)
+        self.client.patch(self.URL, {"density": "compact"}, format="json")
+        settings = self.client.get(self.URL).data["settings"]
+        self.assertEqual((settings["color"], settings["font"], settings["density"]), ("bleu", "serif", "compact"))
+        self.profil.refresh_from_db()
+        self.assertEqual(self.profil.cv_settings["color"], "bleu")
+
+    def test_custom_hex_color_is_accepted_and_normalized(self):
+        self.client.patch(self.URL, {"color": "#1a2b3c"}, format="json")
+        self.assertEqual(self.client.get(self.URL).data["settings"]["color"], "#1A2B3C")
+
+    def test_invalid_values_are_refused(self):
+        for payload in ({"color": "bleu clair"}, {"color": "#12345"}, {"font": "comic"}, {"hidden_sections": ["nope"]},
+                        {"sidebar": "top"}):
+            self.assertEqual(self.client.patch(self.URL, payload, format="json").status_code, 400, payload)
+
+    def test_delete_resets_to_defaults(self):
+        self.client.patch(self.URL, {"color": "rouge"}, format="json")
+        self.assertEqual(self.client.delete(self.URL).data["settings"]["color"], "violet")
+
+    def test_requires_a_dev_profile(self):
+        login(self.client, make_user())
+        self.assertEqual(self.client.get(self.URL).status_code, 403)
+
+    def test_every_style_combination_renders_a_pdf(self):
+        from app.marketplace.cv_settings import (
+            DENSITIES, FONTS, PHOTOS, SIDEBAR_STYLES, SIDEBARS, SKILL_STYLES,
+        )
+
+        skill = make_skill(self.by, name="Django Z", slug="django-z")
+        make_profil_skill(self.by, profil=self.profil, skill=skill, level=3)
+        make_experience(self.by, profil=self.profil, title="Dev", company_name="Acme")
+        for font in FONTS:
+            for sidebar in SIDEBARS:
+                for style in SIDEBAR_STYLES:
+                    for photo in PHOTOS:
+                        for skills in SKILL_STYLES:
+                            for density in DENSITIES:
+                                settings = {"color": "#FFE066", "font": font, "sidebar": sidebar, "sidebar_style": style,
+                                            "photo": photo, "skills": skills, "density": density}
+                                data = cv_data(self.profil)
+                                data["settings"] = {**data["settings"], **settings}
+                                self.assertTrue(render_cv_pdf(data).startswith(b"%PDF"), settings)
+
+    def test_hidden_sections_are_left_out(self):
+        from app.marketplace.cv_settings import SECTIONS
+
+        make_experience(self.by, profil=self.profil, title="Dev", company_name="Acme")
+        full = render_cv_pdf(cv_data(self.profil))
+        data = cv_data(self.profil)
+        data["settings"] = {**data["settings"], "hidden_sections": list(SECTIONS)}
+        self.assertLess(len(render_cv_pdf(data)), len(full))
+
+    def test_preview_uses_query_settings_without_saving_them(self):
+        saved = self.client.get("/api/v1/marketplace/me/cv").content
+        preview = self.client.get("/api/v1/marketplace/me/cv?color=rouge&font=mono&hidden_sections=bio,skills")
+        self.assertEqual(preview.status_code, 200)
+        self.assertNotEqual(preview.content, saved)
+        self.profil.refresh_from_db()
+        self.assertEqual(self.profil.cv_settings, {})
+        self.assertEqual(self.client.get("/api/v1/marketplace/me/cv?color=pas-une-couleur").status_code, 400)
+
+    def test_someone_else_cv_follows_the_owner_settings_not_the_query(self):
+        target = make_profil(self.by, cv_visibility="public")
+        url = f"/api/v1/marketplace/profils/{target.id}/cv"
+        plain = self.client.get(url).content
+        self.assertEqual(self.client.get(url + "?color=rouge&font=mono").content, plain)

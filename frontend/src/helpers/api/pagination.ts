@@ -28,7 +28,7 @@ export type CursorPaginated<T> = {
   results: T[];
 };
 
-/** Paramètres de liste acceptés par le backend. */
+/** Paramètres de liste acceptés par le backend (clés métier optionnelles + index ouvert). */
 export type ListParams = {
   page?: number;
   page_size?: number;
@@ -44,9 +44,11 @@ export type ListParams = {
   espace?: number | string;
   invite?: string;
   q?: string;
-  limit?: number;
+  limit?: number | string;
   ref?: string;
   path?: string;
+  tag?: string;
+  [key: string]: string | number | boolean | null | undefined;
 };
 
 /** Extrait le paramètre `cursor` d'une URL `next` / `previous` DRF. */
@@ -62,7 +64,7 @@ export const cursorFromUrl = (url: string | null | undefined): string | undefine
 };
 
 /** Chaîne de requête (« ?page=2&search=abc ») sans les paramètres vides ; chaîne vide s'il n'y en a aucun. */
-export const toQueryString = (params?: ListParams | void): string => {
+export const toQueryString = (params?: ListParams | Record<string, string | number | boolean | null | undefined> | void): string => {
   if (!params) return "";
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

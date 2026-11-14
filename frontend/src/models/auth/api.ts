@@ -92,6 +92,21 @@ export const authApi = createApi({
         };
       },
     }),
+    /** Profil complet du membre connecté, relu à la demande (prénom, nom, e-mail…). */
+    getMyProfile: builder.query<User, void>({
+      query: () => "/auth/profile",
+    }),
+    /** Prénom, nom et nom d'utilisateur du membre connecté. */
+    updateMyProfile: builder.mutation<
+      User,
+      { first_name: string; last_name: string; username: string }
+    >({
+      query: (body) => ({
+        url: "/auth/profile",
+        method: "PATCH",
+        body,
+      }),
+    }),
     deleteProfileBanner: builder.mutation<User, void>({
       query: () => ({
         url: "/auth/profile/banner",
@@ -135,6 +150,8 @@ export const {
   useDeleteProfilePhotoMutation,
   useUploadProfileBannerMutation,
   useDeleteProfileBannerMutation,
+  useUpdateMyProfileMutation,
+  useGetMyProfileQuery,
   useForgotPasswordMutation,
   useVerifyResetCodeMutation,
   useConfirmPasswordResetMutation,

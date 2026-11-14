@@ -104,7 +104,13 @@ export function MonthCalendar({ month, onMonthChange, periods }: MonthCalendarPr
         })}
       </div>
       <div className="flex flex-wrap gap-4 text-xs text-foreground">
-        {(Object.keys(STATUS_CLASSES) as AvailabilityStatus[]).map((status) => (
+        <span className="flex items-center gap-1.5">
+          <span className="size-3 rounded-sm border border-border" aria-hidden />
+          Disponible (sans période)
+        </span>
+        {(Object.keys(STATUS_CLASSES) as AvailabilityStatus[])
+          .filter((status) => status !== "available")
+          .map((status) => (
           <span key={status} className="flex items-center gap-1.5">
             <span className={`size-3 rounded-sm ${STATUS_CLASSES[status]}`} aria-hidden />
             {AVAILABILITY_LABELS[status]}

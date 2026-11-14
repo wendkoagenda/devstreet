@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
+  Building2,
+  Code2,
   FolderKanban,
   ImageIcon,
   Mail,
   MessageSquareText,
-  Settings,
+  Pencil,
   Sparkles,
-  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PAGE_SIZE } from "@/helpers/api/pagination";
+import { profilePath, type ProfileSection } from "@/helpers/routes/profile-path";
 import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
 import { cn } from "@/lib/utils";
+import { OpenToWorkRing } from "@/components/ui/open-to-work-ring";
+import { EditProfileDialog } from "@/models/auth/components/edit-profile-dialog";
+import { ProfileImageEditButton } from "@/models/auth/components/profile-image-edit-button";
 import { useAuthSlice } from "@/models/auth/slice";
 import {
   useGetContributionsQuery,
@@ -21,19 +26,26 @@ import {
 } from "@/models/devstreet-hub/api";
 import {
   useGetPublicationsInfiniteQuery,
-  useGetPublicProfileQuery,
+  useGetPublicProfileByUsernameQuery,
   useOpenConversationMutation,
   useToggleSuivreMembreMutation,
 } from "../api";
 import { FeedComposer } from "../components/feed-composer";
 import { ForumAvatar } from "../components/forum-avatar";
+import { ProfileCompanySection } from "../components/profile-company-section";
+import { ProfileDevSection } from "../components/profile-dev-section";
 import { PublicationCard } from "../components/publication-card";
 
-type ProfileSection = "publications" | "projets" | "contributions";
+const SECTIONS: ProfileSection[] = [
+  "publications",
+  "projets",
+  "contributions",
+  "dev",
+  "entreprise",
+];
 
 function parseSection(raw: string | null): ProfileSection {
-  if (raw === "projets" || raw === "contributions") return raw;
-  return "publications";
+  return SECTIONS.find((item) => item === raw) ?? "publications";
 }
 
 const NAV_ITEMS: {
@@ -44,7 +56,11 @@ const NAV_ITEMS: {
   { id: "publications", label: "Publications", icon: MessageSquareText },
   { id: "projets", label: "Mes projets", icon: FolderKanban },
   { id: "contributions", label: "Contributions", icon: Sparkles },
+  { id: "dev", label: "Profil dev", icon: Code2 },
+  { id: "entreprise", label: "Entreprise", icon: Building2 },
 ];
+
+const ME_ALIASES = ["me", "moi"];
 
 export default function MemberProfilePage() {
   const navigate = useNavigate();
@@ -53,12 +69,10 @@ export default function MemberProfilePage() {
   const currentUser = useAuthSlice((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
 
-  const rawId = params.userId;
-  const isMeAlias = rawId === "me" || rawId === "moi";
-  const userId = isMeAlias ? Number(currentUserId) : Number(rawId);
-  const validUserId = Number.isFinite(userId) && userId > 0;
+  const rawUsername = (params.username ?? "").trim();
+  const isMeAlias = ME_ALIASES.includes(rawUsername.toLowerCase());
   const section = parseSection(searchParams.get("section"));
-  const isOwnProfile = currentUserId != null && currentUserId === userId;
+  const [editOpen, setEditOpen] = useState(false);
 
   const setSection = (next: ProfileSection) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -71,37 +85,55 @@ export default function MemberProfilePage() {
     data: profile,
     isLoading: profileLoading,
     isError: profileError,
-  } = useGetPublicProfileQuery(userId, { skip: !validUserId || isMeAlias });
+    refetch: refetchProfile,
+  } = useGetPublicProfileByUsernameQuery(rawUsername, {
+    skip: !rawUsername || isMeAlias,
+  });
+
+  // ?edit=1 : ouvre « Modifier le profil » sur mon propre profil (le paramètre est ensuite retiré de l'adresse)
+  useEffect(() => {
+    if (searchParams.get("edit") !== "1" || !profile || !currentUserId) return;
+    if (Number(currentUserId) === profile.id) setEditOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("edit");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, profile, currentUserId, setSearchParams]);
+
+  // Adresse canonique : /profil/<nom> avec la casse exacte du nom d'utilisateur
+  useEffect(() => {
+    if (profile?.username && profile.username !== rawUsername) {
+      navigate(
+        {
+          pathname: `/profil/${encodeURIComponent(profile.username)}`,
+          search: searchParams.toString() ? `?${searchParams.toString()}` : "",
+        },
+        { replace: true }
+      );
+    }
+  }, [profile?.username, rawUsername, navigate, searchParams]);
 
   if (isMeAlias) {
-    if (currentUserId) {
-      return <Navigate to={`/forum/profil/${currentUserId}`} replace />;
+    if (currentUser?.username) {
+      return (
+        <Navigate
+          to={{
+            pathname: `/profil/${encodeURIComponent(currentUser.username)}`,
+            search: searchParams.toString() ? `?${searchParams.toString()}` : "",
+          }}
+          replace
+        />
+      );
     }
     return <Navigate to="/welcome" replace />;
   }
 
-  if (!validUserId) {
+  if (!rawUsername) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center text-sm text-muted-foreground">
         Profil introuvable.
       </div>
     );
   }
-
-  const displayName =
-    profile?.full_name ||
-    profile?.username ||
-    (isOwnProfile ? currentUser?.full_name : null) ||
-    "Membre";
-  const handle = profile?.username
-    ? `@${profile.username}`
-    : isOwnProfile && currentUser?.username
-      ? `@${currentUser.username}`
-      : "";
-  const photo = profile?.photo || (isOwnProfile ? currentUser?.photo : "") || "";
-  const banner =
-    profile?.banner || (isOwnProfile ? currentUser?.banner : "") || "";
-  const bannerUrl = banner ? buildMediaUrl(banner) : null;
 
   if (profileLoading && !profile) {
     return (
@@ -111,13 +143,23 @@ export default function MemberProfilePage() {
     );
   }
 
-  if (profileError && !profile) {
+  if (profileError || !profile) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center text-sm text-muted-foreground">
         Profil introuvable.
       </div>
     );
   }
+
+  const userId = profile.id;
+  const isOwnProfile =
+    currentUserId != null && Number(currentUserId) === userId;
+  const displayName = profile.full_name || profile.username || "Membre";
+  const handle = profile.username ? `@${profile.username}` : "";
+  const photo = profile.photo || (isOwnProfile ? currentUser?.photo : "") || "";
+  const banner =
+    profile.banner || (isOwnProfile ? currentUser?.banner : "") || "";
+  const bannerUrl = banner ? buildMediaUrl(banner) : null;
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5">
@@ -134,18 +176,36 @@ export default function MemberProfilePage() {
               <ImageIcon className="h-10 w-10" aria-hidden />
             </div>
           )}
+          {isOwnProfile ? (
+            <ProfileImageEditButton
+              kind="banner"
+              hasImage={Boolean(bannerUrl)}
+              onUpdated={() => void refetchProfile()}
+              className="absolute right-3 top-3"
+            />
+          ) : null}
         </div>
 
         <div className="relative px-4 pb-4 sm:px-6">
           <div className="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">
-              <div className="rounded-full border-4 border-card bg-card">
+              <div className="relative rounded-full border-4 border-card bg-card">
                 <ForumAvatar
                   name={displayName}
                   photo={photo}
                   tone="soft"
                   className="!h-24 !w-24 !text-lg sm:!h-28 sm:!w-28"
                 />
+                {isOwnProfile ? (
+                  <ProfileImageEditButton
+                    kind="photo"
+                    hasImage={Boolean(photo)}
+                    onUpdated={() => void refetchProfile()}
+                    // Sur le côté : le bas de la photo porte l'arc « Open to work »
+                    className="absolute -right-4 top-1/2 -translate-y-1/2 flex-col"
+                  />
+                ) : null}
+                {profile.profil_dev?.is_open_to_work ? <OpenToWorkRing /> : null}
               </div>
               <div className="min-w-0 pb-1">
                 <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
@@ -156,6 +216,12 @@ export default function MemberProfilePage() {
                     {handle}
                   </p>
                 ) : null}
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">
+                    {profile.connections_count}
+                  </span>{" "}
+                  {profile.connections_count > 1 ? "connexions" : "connexion"}
+                </p>
               </div>
             </div>
 
@@ -164,9 +230,9 @@ export default function MemberProfilePage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/my-account")}
+                  onClick={() => setEditOpen(true)}
                 >
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Pencil className="mr-2 h-4 w-4" />
                   Modifier le profil
                 </Button>
               ) : (
@@ -186,7 +252,14 @@ export default function MemberProfilePage() {
       <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="space-y-2 lg:sticky lg:top-4 lg:self-start">
           <nav className="rounded-2xl border border-border bg-card p-2 shadow-sm">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS.filter((item) => {
+              // Les onglets Profil dev et Entreprise n'apparaissent que si le profil existe
+              // (ou, sur son propre profil, pour proposer de le créer)
+              if (item.id === "dev") return Boolean(profile.profil_dev) || isOwnProfile;
+              if (item.id === "entreprise")
+                return Boolean(profile.profil_entreprise) || isOwnProfile;
+              return true;
+            }).map((item) => {
               const Icon = item.icon;
               const active = section === item.id;
               const label =
@@ -213,19 +286,6 @@ export default function MemberProfilePage() {
               );
             })}
           </nav>
-
-          {isOwnProfile ? (
-            <Button
-              asChild
-              variant="ghost"
-              className="w-full justify-start rounded-xl px-3"
-            >
-              <Link to="/my-account">
-                <UserRound className="mr-2 h-4 w-4" />
-                Paramètres du compte
-              </Link>
-            </Button>
-          ) : null}
         </aside>
 
         <div className="min-w-0 space-y-4">
@@ -239,8 +299,34 @@ export default function MemberProfilePage() {
           {section === "contributions" ? (
             <ProfileContributions userId={userId} />
           ) : null}
+          {section === "dev" ? (
+            <ProfileDevSection
+              profilDev={profile.profil_dev}
+              isOwnProfile={isOwnProfile}
+              photo={photo}
+            />
+          ) : null}
+          {section === "entreprise" ? (
+            <ProfileCompanySection
+              profilEntreprise={profile.profil_entreprise}
+              isOwnProfile={isOwnProfile}
+              onCreated={() => void refetchProfile()}
+            />
+          ) : null}
         </div>
       </div>
+
+      {isOwnProfile ? (
+        <EditProfileDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          onUpdated={() => void refetchProfile()}
+          // Un nouveau nom d'utilisateur change l'adresse du profil
+          onUsernameChanged={(username) =>
+            navigate(profilePath(username), { replace: true })
+          }
+        />
+      ) : null}
     </div>
   );
 }
@@ -448,9 +534,6 @@ function ProfileProjects({ userId }: { userId: number }) {
           </div>
         </Link>
       ))}
-      <Button asChild variant="outline" className="w-full">
-        <Link to={`/hub/profiles/${userId}`}>Voir le profil Hub complet</Link>
-      </Button>
     </div>
   );
 }

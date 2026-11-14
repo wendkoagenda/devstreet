@@ -1,3 +1,4 @@
+import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -762,9 +763,9 @@ export function PublicationCard({
       )}
     >
       <div className="flex items-start gap-2.5 px-3 pt-3 sm:gap-3 sm:px-5 sm:pt-5">
-        {publication.auteur?.id ? (
+        {publication.auteur?.username ? (
           <Link
-            to={`/forum/profil/${publication.auteur.id}`}
+            to={profilePath(publication.auteur.username)}
             className="shrink-0"
             aria-label={`Profil de ${authorName}`}
           >
@@ -790,9 +791,9 @@ export function PublicationCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                {publication.auteur?.id ? (
+                {publication.auteur?.username ? (
                   <Link
-                    to={`/forum/profil/${publication.auteur.id}`}
+                    to={profilePath(publication.auteur.username)}
                     className="truncate text-[13px] font-semibold text-foreground hover:text-brand hover:underline sm:text-sm"
                   >
                     {authorName}

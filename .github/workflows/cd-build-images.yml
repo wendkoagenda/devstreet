@@ -144,8 +144,7 @@ jobs:
           set -eu
           api_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_URL" '.[$k] // empty')"
           api_v1_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_V1_URL" '.[$k] // empty')"
-          gcs_bucket="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_GCS_BUCKET_NAME" '.[$k] // empty')"
-          s3_bucket_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_S3_BUCKET_URL" '.[$k] // empty')"
+          use_s3="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_USE_S3" '.[$k] // empty')"
           for pair in "VITE_API_URL=$api_url" "VITE_API_V1_URL=$api_v1_url"; do
             if [ -z "${pair#*=}" ]; then
               echo "::error::Variable ${pair%%=*} absente (voir deploy/README.md)."

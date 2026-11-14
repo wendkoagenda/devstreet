@@ -1,3 +1,4 @@
+import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut, Search, SendHorizontal, Terminal, UserRound } from "lucide-react";
@@ -66,8 +67,8 @@ export function AppTopbar() {
   };
 
   const handleGoToProfile = () => {
-    if (user?.id) navigate(`/forum/profil/${user.id}`);
-    else navigate("/forum/profil/me");
+    if (user?.username) navigate(profilePath(user.username));
+    else navigate("/profil/me");
   };
 
   return (
@@ -101,6 +102,7 @@ export function AppTopbar() {
 
           <button
             type="button"
+            data-tour="topbar-search"
             onClick={() => setSearchOpen(true)}
             className={cn(
               "group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-muted/60 px-2.5 py-2 text-left transition-colors sm:px-3",
@@ -129,6 +131,7 @@ export function AppTopbar() {
             <Button
               type="button"
               size="sm"
+              data-tour="topbar-publish"
               onClick={handlePublish}
               aria-label="Publier"
               className="h-9 gap-1.5 rounded-xl bg-brand px-2.5 text-brand-foreground hover:bg-brand-strong sm:px-3"
@@ -170,13 +173,6 @@ export function AppTopbar() {
                   >
                     <UserRound className="size-4" />
                     Mon profil
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigate("/my-account")}
-                    className="gap-2"
-                  >
-                    <UserRound className="size-4" />
-                    {t("sidebar.my_account")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="gap-2">

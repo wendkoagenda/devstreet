@@ -141,16 +141,21 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEVSTREET_HUB_PRIVATE_IMAGE_ROOT = BASE_DIR / 'private_uploads' / 'project_images'
 
-# Google Cloud Storage : USE_GCS est obligatoire ; les réglages GCS ne sont exigés que s'il est actif
-USE_GCS = required_bool('USE_GCS')
-if USE_GCS:
-    GS_BUCKET_NAME = required('GS_BUCKET_NAME')
-    GS_PROJECT_ID = required('GS_PROJECT_ID')
-    GCS_UPLOADER_SA = required('GCS_UPLOADER_SA')  # clé de service account GCP (JSON sur une ligne)
+# Stockage objet S3/MinIO : USE_S3 est obligatoire ; les réglages S3 ne sont exigés que s'il est actif.
+# Sans USE_S3, les fichiers vont sur le disque local (MEDIA_ROOT). Le bucket est privé : les fichiers ne sont lus
+# que par l'endpoint authentifié /api/v1/files/<chemin> (voir app/metier/views/file_views.py).
+USE_S3 = required_bool('USE_S3')
+if USE_S3:
+    S3_ENDPOINT_URL = required('S3_ENDPOINT_URL')  # adresse interne de MinIO, ex. http://minio-serveur:9000
+    S3_BUCKET_NAME = required('S3_BUCKET_NAME')
+    S3_ACCESS_KEY = required('S3_ACCESS_KEY')
+    S3_SECRET_KEY = required('S3_SECRET_KEY')
 else:
-    GS_BUCKET_NAME = None
-    GS_PROJECT_ID = None
-    GCS_UPLOADER_SA = None
+    S3_ENDPOINT_URL = None
+    S3_BUCKET_NAME = None
+    S3_ACCESS_KEY = None
+    S3_SECRET_KEY = None
+FILES_URL = '/api/v1/files/'  # URL de lecture authentifiée des fichiers stockés sur S3
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -182,6 +187,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '60/minute',
         'user': '600/minute',
+        'files': '3000/minute',  # lecture des fichiers stockés (/api/v1/files/) : une page charge beaucoup d'images
         # Limites propres des routes publiques (par IP)
         'password_reset_request': '5/hour',
         'password_reset_verify': '20/hour',

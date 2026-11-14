@@ -98,15 +98,18 @@ class MeCompanyTests(MeBase):
         super().setUp()
         self.client.post("/api/v1/marketplace/me/profil", PROFIL, format="json")
 
-    def test_company_requires_profil(self):
-        self.login(make_user("sans-profil@example.com"))
+    def test_company_does_not_require_dev_profil(self):
+        user = make_user("sans-profil@example.com")
+        self.login(user)
         response = self.client.post("/api/v1/marketplace/me/company", COMPANY, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertFalse(Profil.objects.filter(user=user, type="dev").exists())
+        self.assertTrue(Profil.objects.get(user=user, type="entreprise").is_company_owner)
 
     def test_create_company_attaches_owner_profil(self):
         response = self.client.post("/api/v1/marketplace/me/company", COMPANY, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-        profil = Profil.objects.get(user=self.user)
+        profil = Profil.objects.get(user=self.user, type="entreprise")
         self.assertEqual(profil.company.name, "Resto Express")
         self.assertTrue(profil.is_company_owner)
         self.assertEqual(profil.company.slug, "resto-express")
@@ -134,7 +137,8 @@ class MeCompanyTests(MeBase):
         company = Company.objects.get()
         colleague = make_user("collegue@example.com")
         Profil.objects.create(
-            user=colleague, slug="collegue", country="TG", company=company, created_by=colleague.id, updated_by=colleague.id
+            user=colleague, type="entreprise", slug="collegue", country="TG", company=company,
+            created_by=colleague.id, updated_by=colleague.id
         )
         self.login(colleague)
         response = self.client.patch("/api/v1/marketplace/me/company", {"city": "Kara"}, format="json")

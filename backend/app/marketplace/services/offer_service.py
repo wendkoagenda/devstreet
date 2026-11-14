@@ -115,7 +115,7 @@ class OfferService:
             if offer_data['type'] not in _valid_type:
                 raise ValidationError("Valeur invalide pour le champ type")
         if 'experience_level' in offer_data:
-            _valid_experience_level = ['junior', 'mid', 'senior']
+            _valid_experience_level = ['junior', 'mid', 'senior', 'expert']
             if offer_data['experience_level'] not in _valid_experience_level:
                 raise ValidationError("Valeur invalide pour le champ experience_level")
         if 'budget_period' in offer_data:

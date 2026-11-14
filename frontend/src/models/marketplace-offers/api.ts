@@ -4,6 +4,7 @@ import type {
   CandidatureStatus,
   MySkill,
   Offer,
+  OfferAiGenerateResult,
   OfferFilters,
   SkillOption,
   TalentCard,
@@ -73,6 +74,13 @@ export const marketplaceOffersApi = marketplaceSpaceApi.injectEndpoints({
       query: (body) => ({ url: "/marketplace/me/offers", method: "POST", body }),
       invalidatesTags: ["MyOffers", "Offers"],
     }),
+    generateMyOffer: builder.mutation<OfferAiGenerateResult, { brief: string }>({
+      query: (body) => ({
+        url: "/marketplace/me/offers/generate",
+        method: "POST",
+        body,
+      }),
+    }),
     updateMyOffer: builder.mutation<Offer, { id: number } & Record<string, unknown>>({
       query: ({ id, ...body }) => ({
         url: `/marketplace/me/offers/${id}`,
@@ -113,6 +121,7 @@ export const {
   useGetMyOffersQuery,
   useGetMyOfferQuery,
   useCreateMyOfferMutation,
+  useGenerateMyOfferMutation,
   useUpdateMyOfferMutation,
   useGetOfferCandidaturesQuery,
   useGetRecommendedProfilsQuery,

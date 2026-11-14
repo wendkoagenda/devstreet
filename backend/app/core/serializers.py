@@ -4,6 +4,7 @@ Serializers for the core application API.
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from app.core.models import Role, Permission
+from app.core.username_rules import check_username
 
 User = get_user_model()
 
@@ -118,12 +119,47 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def validate_username(self, value):
-        """Validate username uniqueness."""
+        """Valide le nom d'utilisateur : unique à la casse près et non réservé."""
         if self.instance and self.instance.username == value:
             return value
-        
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("User with this username already exists.")
+
+        error = check_username(
+            value, exclude_pk=self.instance.pk if self.instance else None
+        )
+        if error:
+            raise serializers.ValidationError(error)
+        return value
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Modification, par le membre lui-même, de son identité : prénom, nom et nom d'utilisateur."""
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username']
+
+    def validate_first_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Le prénom est obligatoire.")
+        return value
+
+    def validate_last_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Le nom est obligatoire.")
+        return value
+
+    def validate_username(self, value):
+        """Unique à la casse près et non réservé ; le nom actuel reste valide."""
+        value = value.strip()
+        if len(value) < 3:
+            raise serializers.ValidationError("Le nom d'utilisateur doit contenir au moins 3 caractères.")
+        if self.instance and self.instance.username == value:
+            return value
+        error = check_username(value, exclude_pk=self.instance.pk if self.instance else None)
+        if error:
+            raise serializers.ValidationError(error)
         return value
 
 
@@ -160,9 +196,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_username(self, value):
-        """Validate username uniqueness."""
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("User with this username already exists.")
+        """Valide le nom d'utilisateur : unique à la casse près et non réservé."""
+        error = check_username(value)
+        if error:
+            raise serializers.ValidationError(error)
         return value
 
 
@@ -194,12 +231,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_username(self, value):
-        """Validate username uniqueness."""
+        """Valide le nom d'utilisateur : unique à la casse près et non réservé."""
         if self.instance and self.instance.username == value:
             return value
-        
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("User with this username already exists.")
+
+        error = check_username(
+            value, exclude_pk=self.instance.pk if self.instance else None
+        )
+        if error:
+            raise serializers.ValidationError(error)
         return value
 
 
@@ -234,8 +274,9 @@ class PublicRegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Le nom d'utilisateur doit contenir au moins 3 caractères."
             )
-        if User.objects.filter(username__iexact=username).exists():
-            raise serializers.ValidationError("Ce nom d'utilisateur est déjà pris.")
+        error = check_username(username)
+        if error:
+            raise serializers.ValidationError(error)
         return username
 
 
@@ -320,7 +361,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "email", "username", "full_name", "photo", "banner", "roles")
+        fields = ("id", "email", "username", "first_name", "last_name", "full_name", "photo", "banner", "roles")
         read_only_fields = fields
 
     def get_roles(self, obj):

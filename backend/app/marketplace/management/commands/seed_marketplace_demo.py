@@ -151,13 +151,16 @@ class Command(BaseCommand):
     def _profils(self) -> dict:
         profils = {}
         for person in demo.RECRUITERS:
+            base = {
+                "headline": person["headline"], "country": person["country"], "city": person["city"], "timezone": person["tz"],
+                "bio": "", "is_open_to_work": False, "cv_visibility": "private", "years_of_experience": 0,
+            }
+            # Comme après la migration des profils existants : un profil dev (vide) et un profil entreprise
+            self._save_profil(person, {**base, "company": None, "is_company_owner": False})
             profils[person["key"]] = self._save_profil(
                 person,
-                {
-                    "headline": person["headline"], "country": person["country"], "city": person["city"], "timezone": person["tz"],
-                    "company": self.companies[person["company"]], "is_company_owner": person["owner"],
-                    "bio": "", "is_open_to_work": False, "cv_visibility": "private", "years_of_experience": 0,
-                },
+                {**base, "company": self.companies[person["company"]], "is_company_owner": person["owner"]},
+                type="entreprise",
             )
         for dev in demo.DEVS:
             profils[dev["key"]] = self._save_profil(
@@ -172,13 +175,15 @@ class Command(BaseCommand):
             )
         return profils
 
-    def _save_profil(self, person: dict, fields: dict) -> Profil:
+    def _save_profil(self, person: dict, fields: dict, type: str = "dev") -> Profil:
         user = self.users[person["key"]]
         slug = f"{slugify(person['first'])}-{slugify(person['last'])}"
-        if Profil.objects.filter(slug=slug).exclude(user=user).exists():
+        if type == "entreprise":
+            slug += "-entreprise"
+        if Profil.objects.filter(slug=slug).exclude(user=user, type=type).exists():
             slug += "-demo"  # le slug est déjà pris par un vrai profil
         profil, _ = Profil.objects.update_or_create(
-            user=user, defaults={"slug": slug, "created_by": user.id, "updated_by": user.id, **fields}
+            user=user, type=type, defaults={"slug": slug, "created_by": user.id, "updated_by": user.id, **fields}
         )
         return profil
 

@@ -147,7 +147,7 @@ class ProfilSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profil
         # Champs listés explicitement : un champ ajouté plus tard au modèle n'est jamais exposé automatiquement
-        fields = ['id', 'user_id', 'is_company_owner', 'slug', 'photo', 'headline', 'bio', 'phone', 'country', 'city', 'remote', 'timezone', 'default_hours_per_week', 'is_open_to_work', 'daily_rate', 'currency', 'years_of_experience', 'languages', 'github_url', 'linkedin_url', 'portfolio_url', 'cv_visibility', 'embedding', 'created_by', 'updated_by', 'created_at', 'updated_at', 'company']
+        fields = ['id', 'user_id', 'type', 'is_company_owner', 'slug', 'photo', 'headline', 'bio', 'phone', 'country', 'city', 'remote', 'timezone', 'default_hours_per_week', 'is_open_to_work', 'daily_rate', 'currency', 'years_of_experience', 'languages', 'github_url', 'linkedin_url', 'portfolio_url', 'cv_visibility', 'embedding', 'created_by', 'updated_by', 'created_at', 'updated_at', 'company']
         depth = 1
 
     def _resolve_relations(self, validated_data):
@@ -391,7 +391,7 @@ class OfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         # Champs listés explicitement : un champ ajouté plus tard au modèle n'est jamais exposé automatiquement
-        fields = ['id', 'title', 'slug', 'description', 'type', 'contract_duration', 'experience_level', 'budget_min', 'budget_max', 'currency', 'budget_period', 'country', 'city', 'work_mode', 'start_date', 'deadline', 'status', 'published_at', 'views_count', 'embedding', 'created_by', 'updated_by', 'created_at', 'updated_at', 'company', 'recruiter', 'required_skills']
+        fields = ['id', 'title', 'slug', 'description', 'type', 'contract_duration', 'contract_duration_unit', 'experience_level', 'budget_min', 'budget_max', 'currency', 'budget_period', 'country', 'city', 'work_mode', 'start_date', 'deadline', 'status', 'published_at', 'views_count', 'embedding', 'created_by', 'updated_by', 'created_at', 'updated_at', 'company', 'recruiter', 'required_skills']
         depth = 1
 
     def _resolve_relations(self, validated_data):

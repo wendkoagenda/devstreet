@@ -53,6 +53,7 @@ export default function CommunitiesPage() {
         description: description.trim(),
         type: "COMMUNAUTE",
         membres_peuvent_publier: true,
+        commentaires_ouverts: true,
         acces,
       }).unwrap();
       toast.success("Communauté créée");

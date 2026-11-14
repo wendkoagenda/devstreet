@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from app.communaute.services.suiviutilisateur_service import SuiviUtilisateurService
 from app.core.serializers import PublicProfileSerializer
+from app.marketplace.services.member_profiles_service import member_profiles_payload
 
 User = get_user_model()
 
@@ -73,6 +74,8 @@ def membre_suivis_view(request):
 
 def _profile_payload(request, user):
     data = PublicProfileSerializer(user).data
+    # Profils marketplace du membre : onglets « Profil dev » et « Entreprise » de la page de profil
+    data.update(member_profiles_payload(request.user, user))
     data['is_following'] = False
     if request.user.id != user.id:
         data['is_following'] = SuiviUtilisateurService().est_suivi(

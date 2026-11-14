@@ -1,5 +1,7 @@
+import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/redux/store";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -777,7 +779,7 @@ function ConversationThread({
           </Link>
         </Button>
         <Link
-          to={peer?.id ? `/forum/profil/${peer.id}` : "/messages"}
+          to={peer?.username ? profilePath(peer.username) : "/messages"}
           className="flex min-w-0 items-center gap-3"
         >
           <ForumAvatar

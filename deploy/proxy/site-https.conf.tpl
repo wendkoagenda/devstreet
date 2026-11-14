@@ -57,23 +57,6 @@ server {
         add_header Content-Security-Policy "default-src 'none'; sandbox" always;
     }
 
-    # Objets MinIO / S3 en lecture seule (GET/HEAD). Variable = resolution a la requete (502 si MinIO absent).
-    set $minio_upstream http://minio-serveur:9000;
-    location /stockage/ {
-        limit_except GET HEAD {
-            deny all;
-        }
-        rewrite ^/stockage/(.*)$ /$1 break;
-        proxy_pass $minio_upstream;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        add_header Content-Disposition "attachment" always;
-        add_header X-Content-Type-Options nosniff always;
-        add_header X-Frame-Options DENY always;
-        add_header Content-Security-Policy "default-src 'none'; sandbox" always;
-    }
-
     location / {
         proxy_pass $frontend_upstream;
     }

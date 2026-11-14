@@ -19,7 +19,6 @@ import ForgotPasswordPage from "./models/auth/pages/forgot-password-page";
 import LandingPage from "./models/landing/pages/landing-page";
 import AppLayout from "./components/layouts/app-layout";
 import UsersList from "./models/user/pages/users-list";
-import MyAccount from "./models/auth/pages/my-account";
 import RolePermissionManagement from "./models/roles-permissions/pages/role-permissions-page";
 import ExploreProjectsPage from "./models/devstreet-hub/pages/explore-projects-page";
 import CreateProjectPage from "./models/devstreet-hub/pages/create-project-page";
@@ -27,7 +26,6 @@ import ProjectDetailPage from "./models/devstreet-hub/pages/project-detail-page"
 import TaskContributionPage from "./models/devstreet-hub/pages/task-contribution-page";
 import ContributionReviewPage from "./models/devstreet-hub/pages/contribution-review-page";
 import AiWorkshopPage from "./models/devstreet-hub/pages/ai-workshop-page";
-import ProjectProfilePage from "./models/devstreet-hub/pages/project-profile-page";
 import GitAuthAuthorizePage from "./models/devstreet-hub/pages/git-auth-authorize-page";
 import GitOAuthAuthorizePage from "./models/devstreet-hub/pages/git-oauth-authorize-page";
 import OffersPage from "./models/marketplace-offers/pages/offers-page";
@@ -38,13 +36,12 @@ import MyOffersPage from "./models/marketplace-offers/pages/my-offers-page";
 import OfferFormPage from "./models/marketplace-offers/pages/offer-form-page";
 import OfferManagePage from "./models/marketplace-offers/pages/offer-manage-page";
 import TalentsPage from "./models/marketplace-network/pages/talents-page";
+import TalentsDiscoverPage from "./models/marketplace-network/pages/talents-discover-page";
 import PoolPage from "./models/marketplace-network/pages/pool-page";
 import NetworkPage from "./models/marketplace-network/pages/network-page";
 import ProfileViewPage from "./models/marketplace-network/pages/profile-view-page";
 import AvailabilityPage from "./models/marketplace-profile/pages/availability-page";
 import MyCvPage from "./models/marketplace-profile/pages/my-cv-page";
-import DashboardPage from "./models/marketplace-dashboard/pages/dashboard-page";
-import MyProfilePage from "./models/marketplace-space/pages/my-profile-page";
 import MarketplaceAdminPage from "./models/marketplace-space/pages/marketplace-admin-page";
 import ChannelsPage from "./models/forum/pages/channels-page";
 import CommunitiesPage from "./models/forum/pages/communities-page";
@@ -53,6 +50,8 @@ import CommunityInvitePage from "./models/forum/pages/community-invite-page";
 import FeedPage from "./models/forum/pages/feed-page";
 import MemberProfilePage from "./models/forum/pages/member-profile-page";
 import UsernameProfileRedirectPage from "./models/forum/pages/username-profile-redirect-page";
+import LegacyProfileRedirectPage from "./models/forum/pages/legacy-profile-redirect-page";
+import EntrepriseInvitationPage from "./models/marketplace-space/pages/entreprise-invitation-page";
 import FavoritesPage from "./models/forum/pages/favorites-page";
 import MessagesPage from "./models/forum/pages/messages-page";
 import PublicationDetailPage from "./models/forum/pages/publication-detail-page";
@@ -87,7 +86,7 @@ function App() {
           />
           <Route element={<AiWorkshopPage />} path="/hub/projects/:id/ai" />
           <Route
-            element={<ProjectProfilePage />}
+            element={<LegacyProfileRedirectPage section="projets" />}
             path="/hub/profiles/:userId"
           />
           <Route
@@ -106,8 +105,9 @@ function App() {
               path="/forum/publications/:id"
             />
             <Route element={<FavoritesPage />} path="/forum/favoris" />
+            <Route element={<MemberProfilePage />} path="/profil/:username" />
             <Route
-              element={<MemberProfilePage />}
+              element={<LegacyProfileRedirectPage />}
               path="/forum/profil/:userId"
             />
             <Route
@@ -161,17 +161,30 @@ function App() {
 
           <Route element={<ConnectionList />} path="/admin/marketplace/connections" />
 
-<Route element={<DashboardPage />} path="/marketplace" />
-          <Route element={<MyProfilePage />} path="/marketplace/profile" />
+{/* Plus de tableau de bord : les statistiques sont en haut de chaque page */}
+          <Route
+            element={<Navigate to="/marketplace/offers" replace />}
+            path="/marketplace"
+          />
+          {/* Ancienne page « Mon profil pro » : elle vit désormais dans l'onglet « Profil dev » de ma page de profil */}
+          <Route
+            element={<Navigate to="/profil/me?section=dev" replace />}
+            path="/marketplace/profile"
+          />
           <Route element={<OffersPage />} path="/marketplace/offers" />
           <Route element={<OfferDetailPage />} path="/marketplace/offers/:id" />
           <Route element={<OfferApplyPage />} path="/marketplace/offers/:id/apply" />
           <Route element={<MyApplicationsPage />} path="/marketplace/applications" />
           <Route element={<MyOffersPage />} path="/marketplace/my-offers" />
-          <Route element={<OfferFormPage />} path="/marketplace/my-offers/new" />
+          {/* La création d'une offre se fait dans une boîte de dialogue : l'ancienne page redirige vers la liste */}
+          <Route
+            element={<Navigate to="/marketplace/my-offers" replace />}
+            path="/marketplace/my-offers/new"
+          />
           <Route element={<OfferManagePage />} path="/marketplace/my-offers/:id" />
           <Route element={<OfferFormPage />} path="/marketplace/my-offers/:id/edit" />
           <Route element={<TalentsPage />} path="/marketplace/talents" />
+          <Route element={<TalentsDiscoverPage />} path="/marketplace/talents/discover" />
           <Route element={<PoolPage />} path="/marketplace/talents/pool" />
           <Route element={<NetworkPage />} path="/marketplace/network" />
           <Route element={<ProfileViewPage />} path="/marketplace/profiles/:id" />
@@ -183,11 +196,19 @@ function App() {
             path="/admin/marketplace"
           />
 
-<Route element={<MyAccount />} path="/my-account" />
+{/* Plus de page « Mon compte » : tout se modifie dans la boîte « Modifier le profil » */}
+          <Route
+            element={<Navigate to="/profil/me?edit=1" replace />}
+            path="/my-account"
+          />
           </Route>
         </Route>
 
         <Route element={<LandingPage />} path="/welcome" />
+        <Route
+          element={<EntrepriseInvitationPage />}
+          path="/entreprise/invitation/:token"
+        />
 
         <Route element={<PublicRoute />}>
           <Route element={<LoginPage />} path="/login" />

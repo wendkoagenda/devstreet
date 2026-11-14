@@ -1,3 +1,4 @@
+import { profilePath } from "@/helpers/routes/profile-path";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Check, Copy, Terminal } from "lucide-react";
@@ -104,7 +105,7 @@ function renderTextWithMentions(value: string, keyPrefix: string): ReactNode[] {
     nodes.push(
       <Link
         key={`${keyPrefix}-m-${part++}`}
-        to={`/forum/u/${encodeURIComponent(username)}`}
+        to={profilePath(username)}
         className="font-medium text-brand hover:underline"
       >
         @{username}

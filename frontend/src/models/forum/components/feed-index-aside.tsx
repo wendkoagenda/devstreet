@@ -1,3 +1,4 @@
+import { profilePath } from "@/helpers/routes/profile-path";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export function FeedIndexAside({
                   tone="soft"
                 />
                 <Link
-                  to={`/forum/profil/${peer.id}`}
+                  to={profilePath(peer.username)}
                   className="min-w-0 flex-1 truncate text-xs font-medium hover:text-brand"
                 >
                   {peer.full_name || peer.username}

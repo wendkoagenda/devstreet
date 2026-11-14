@@ -47,9 +47,15 @@
 - **Easing** : enter(ease-out) exit(ease-in) move(ease-in-out)
 - **Duration** : micro(50-100ms) court(150-250ms) moyen(250-400ms)
 
+## Charte PDF
+Document livrable (même format que App Photo) :
+`docs/charte-graphique/DevStreet-Charte-graphique.pdf`
+(source HTML : `docs/charte-graphique/devstreet-charte-graphique.html`).
+
 ## Decisions Log
 | Date | Décision | Rationale |
 |------|----------|-----------|
 | 2026-03-13 | Soft Violet remplace Kinetic orange + `#220147` | User : Kinetic pas pour nous ; violet à adoucir |
 | 2026-03-13 | Primary = slate, brand = violet soft | Un seul accent coloré ; structure neutre |
 | 2026-03-13 | Fil « stream soft » | Header sans ALL CAPS, onglets pastilles, cartes à rail type, méta mono |
+| 2026-11-14 | Charte PDF Soft Violet (7 pages) | Alignée sur le modèle App Photo |

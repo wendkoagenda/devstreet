@@ -14,7 +14,7 @@ class OfferRepository(OfferRepositoryInterface):
 
     # Champs sur lesquels porte la recherche textuelle (?search=) et champs autorisés pour le tri (?ordering=)
     SEARCH_FIELDS = ('title', 'slug', 'description', 'type', 'experience_level', 'currency', 'budget_period', 'country', 'city', 'work_mode', 'status',)
-    ORDERING_FIELDS = ('id', 'title', 'slug', 'description', 'type', 'contract_duration', 'experience_level', 'budget_min', 'budget_max', 'currency', 'budget_period', 'country', 'city', 'work_mode', 'start_date', 'deadline', 'status', 'published_at', 'views_count', 'created_at', 'updated_at',)
+    ORDERING_FIELDS = ('id', 'title', 'slug', 'description', 'type', 'contract_duration', 'contract_duration_unit', 'experience_level', 'budget_min', 'budget_max', 'currency', 'budget_period', 'country', 'city', 'work_mode', 'start_date', 'deadline', 'status', 'published_at', 'views_count', 'created_at', 'updated_at',)
 
     def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
         """

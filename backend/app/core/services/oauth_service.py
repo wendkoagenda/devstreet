@@ -19,6 +19,7 @@ from django.core import signing
 from django.db import transaction
 
 from app.core.models import Role, SocialAccount
+from app.core.username_rules import check_username
 
 logger = logging.getLogger(__name__)
 
@@ -243,7 +244,7 @@ def _unique_username(base: str) -> str:
     cleaned = re.sub(r'[^a-zA-Z0-9._-]', '', base)[:24] or 'user'
     candidate = cleaned
     n = 0
-    while User.objects.filter(username=candidate).exists():
+    while check_username(candidate) is not None:
         n += 1
         suffix = str(n)
         candidate = f'{cleaned[: 24 - len(suffix)]}{suffix}'

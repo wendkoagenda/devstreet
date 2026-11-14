@@ -30,7 +30,7 @@ LABELS = {
     "reputation": "Réputation",
 }
 # Années d'expérience attendues par niveau (minimum)
-LEVEL_MIN_YEARS = {"junior": 0, "mid": 2, "senior": 5}
+LEVEL_MIN_YEARS = {"junior": 0, "mid": 2, "senior": 5, "expert": 8}
 WORKING_DAYS_PER_MONTH = 22
 
 
@@ -51,9 +51,24 @@ def add_months(start: date, months: int) -> date:
     return date(year, month, min(start.day, calendar.monthrange(year, month)[1]))
 
 
-def mission_period(start: date, duration_months: Optional[int], offer_type: str) -> tuple:
-    """Période (début, fin incluse) d'une mission ; sans durée : 12 mois pour un CDI/CDD, 1 mois sinon."""
-    months = duration_months or (12 if offer_type in ("cdi", "cdd") else 1)
+HOURS_PER_DAY = 8
+
+
+def mission_period(start: date, duration: Optional[int], offer_type: str, unit: str = "month") -> tuple:
+    """
+    Période (début, fin incluse) d'une mission selon sa durée et son unité (heures, jours, mois, années).
+
+    Les heures sont converties en jours de travail (8 h par jour, arrondi au jour supérieur).
+    Sans durée : 12 mois pour un CDI/CDD, 1 mois sinon.
+    """
+    if not duration:
+        duration, unit = (12 if offer_type in ("cdi", "cdd") else 1), "month"
+    if unit == "hour":
+        days = max(1, -(-duration // HOURS_PER_DAY))
+        return start, start + timedelta(days=days - 1)
+    if unit == "day":
+        return start, start + timedelta(days=duration - 1)
+    months = duration * 12 if unit == "year" else duration
     return start, add_months(start, months) - timedelta(days=1)
 
 
@@ -61,7 +76,7 @@ def offer_period(offer: Offer) -> Optional[tuple]:
     """Période de mission de l'offre ; None si elle n'a pas de date de début."""
     if not offer.start_date:
         return None
-    return mission_period(offer.start_date, offer.contract_duration, offer.type)
+    return mission_period(offer.start_date, offer.contract_duration, offer.type, offer.contract_duration_unit)
 
 
 def build_contexts(profils: Iterable[Profil]) -> Dict[int, ProfilContext]:
@@ -155,11 +170,10 @@ def _availability(offer: Offer, profil: Profil, ctx: ProfilContext):
     overlapping = [a for a in ctx.availabilities if a.start_date <= end and a.end_date >= start]
     if any(a.status in ("busy", "leave") for a in overlapping):
         return 0, "Occupé sur la période"
-    if any(a.status == "available" for a in overlapping):
-        return max_points, "Disponible sur la période"
     if any(a.status == "partial" for a in overlapping):
         return 6, "Partiellement disponible"
-    return (7, "Aucun calendrier renseigné") if profil.is_open_to_work else (0, "Non disponible")
+    # Aucune période occupée sur ces dates : le membre est disponible (c'est l'état par défaut)
+    return (max_points, "Disponible sur la période") if profil.is_open_to_work else (0, "Non disponible")
 
 
 def _reputation(offer: Offer, profil: Profil, ctx: ProfilContext):

@@ -40,4 +40,5 @@ rounded:
 Soft Violet : neutres calmes + un violet désaturé. Remplace l’ancien Graphite `#220147` (trop sombre / saturé) et abandonne Kinetic orange.
 
 Voir le détail canonique : `docs/DESIGN.md`.
+Charte PDF (format App Photo) : `docs/charte-graphique/DevStreet-Charte-graphique.pdf`.
 Tokens CSS : `frontend/src/index.css` (`--brand`, `--brand-soft`, `--primary`).
