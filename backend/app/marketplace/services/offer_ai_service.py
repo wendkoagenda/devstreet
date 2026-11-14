@@ -72,6 +72,17 @@ def _extract_json(raw: str) -> dict:
     return data
 
 
+_NUMBER = re.compile(r"[+-]?\d+(?:\.\d+)?")
+
+
+def _number(value) -> Optional[float]:
+    """Nombre lu dans une valeur de l'IA (nombre ou texte comme « 12 » / « 3500.5 ») ; None si absente ou illisible."""
+    if isinstance(value, bool) or value is None:
+        return None
+    text = str(value).strip()
+    return float(text) if _NUMBER.fullmatch(text) else None
+
+
 def _match_skills(names: List[str]) -> List[dict]:
     """Rattache les noms renvoyés par l'IA aux Skill en base (création soft interdite)."""
     if not names:
@@ -119,23 +130,16 @@ def _normalize_draft(data: dict, *, country: str, city: str) -> Dict[str, Any]:
     if period not in PERIODS:
         period = "month"
 
-    duration = data.get("contract_duration")
-    try:
-        duration = int(duration) if duration is not None else None
-    except (TypeError, ValueError):
-        duration = None
+    duration_number = _number(data.get("contract_duration"))
+    duration = int(duration_number) if duration_number is not None else None
     if offer_type == "cdi":
         duration = None
     elif duration is not None:
         duration = max(1, min(36, duration))
 
     def _money(value) -> Optional[float]:
-        if value is None or value == "":
-            return None
-        try:
-            return round(float(value), 2)
-        except (TypeError, ValueError):
-            return None
+        number = _number(value)
+        return round(number, 2) if number is not None else None
 
     skills_raw = data.get("skills") or []
     if not isinstance(skills_raw, list):

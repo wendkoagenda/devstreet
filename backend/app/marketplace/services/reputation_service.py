@@ -123,28 +123,19 @@ class ReputationService:
 
     @staticmethod
     def _forum(user) -> dict:
-        try:
-            from app.communaute.models import ConfirmationAide, Publication
-        except Exception:
-            return {"accepted_answers": 0, "help_confirmations": 0}
+        from app.communaute.models import ConfirmationAide, Publication
         accepted = Publication.objects.filter(reponse_acceptee__auteur=user).count()
         helps = ConfirmationAide.objects.filter(commentaire__auteur=user).exclude(membre=user).count()
         return {"accepted_answers": accepted, "help_confirmations": helps}
 
     @staticmethod
     def _hub(user) -> dict:
-        try:
-            from app.devstreet_hub.models import Contribution
-        except Exception:
-            return {"accepted_contributions": 0}
+        from app.devstreet_hub.models import Contribution
         count = Contribution.objects.filter(author=user, status="accepted").count()
         return {"accepted_contributions": count}
 
     @staticmethod
     def _code_shares(user) -> dict:
-        try:
-            from app.communaute.models import Publication
-        except Exception:
-            return {"applications": 0}
+        from app.communaute.models import Publication
         apps = Publication.objects.filter(auteur=user, type="APPLICATION").count()
         return {"applications": apps}

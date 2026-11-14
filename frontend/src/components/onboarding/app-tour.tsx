@@ -17,20 +17,24 @@ import { APP_TOUR_STEPS, tourStorageKey, type TourStep } from "./tour-steps";
 type Spot = { top: number; left: number; width: number; height: number };
 
 const PAD = 6;
+// Sans stockage local (navigation privée, accès bloqué), le tour est considéré terminé : il ne se rouvre pas à chaque page.
+const COMPLETED_WHEN_STORAGE_UNAVAILABLE = true;
 
 function readCompleted(userId: number): boolean {
   try {
     return window.localStorage.getItem(tourStorageKey(userId)) === "1";
-  } catch {
-    return true;
+  } catch (error) {
+    console.warn("Tour guidé : lecture du stockage local impossible", error);
+    return COMPLETED_WHEN_STORAGE_UNAVAILABLE;
   }
 }
 
 function markCompleted(userId: number) {
   try {
     window.localStorage.setItem(tourStorageKey(userId), "1");
-  } catch {
+  } catch (error) {
     // stockage indisponible : le tour pourra se réafficher
+    console.warn("Tour guidé : enregistrement dans le stockage local impossible", error);
   }
 }
 
