@@ -5,7 +5,7 @@ from pathlib import Path
 
 from django.test import SimpleTestCase
 
-from scripts.deploy_env import render, spec, verifier
+from scripts.deploy_env import render, render_gitea, spec, verifier
 
 BACKEND_EXAMPLE = """\
 # Prose avec NOM=valeur au milieu d'une ligne : ignorée
@@ -415,3 +415,43 @@ class VmOptionsTests(SimpleTestCase):
         self._fichier('VM_HOTE=203.0.113.10\nVM_ADMIN_USER=ubuntu\nSECRET_KEY=x\n')
         with self.assertRaisesMessage(self.cli.Failure, 'noms inconnus SECRET_KEY'):
             self.cli.resolve_vm_options(self._args())
+
+
+class GiteaTests(SimpleTestCase):
+    VALEURS = {
+        'GITEA_DOMAIN': 'git.exemple.fr', 'GITEA_DB_PASSWORD': 'a' * 16,
+        'GITEA_ADMIN_USER': 'gitea-root', 'GITEA_ADMIN_PASSWORD': 'b' * 16,
+        'GITEA_ADMIN_EMAIL': 'ops@exemple.fr',
+    }
+
+    def test_ecrit_gitea_env(self):
+        fichiers, erreurs = render_gitea.render_gitea('prod', self.VALEURS)
+        self.assertEqual(erreurs, [])
+        self.assertIn("GITEA_DOMAIN='git.exemple.fr'\n", fichiers['gitea.env'])
+        self.assertIn("GITEA_DB_PASSWORD='" + 'a' * 16 + "'\n", fichiers['gitea.env'])
+
+    def test_nom_prefixe_par_la_branche(self):
+        valeurs = {spec.gh_name(nom, 'prod'): v for nom, v in self.VALEURS.items()}
+        _, erreurs = render_gitea.render_gitea('prod', valeurs)
+        self.assertEqual(erreurs, [])
+
+    def test_refuse_une_valeur_manquante(self):
+        valeurs = {**self.VALEURS}
+        del valeurs['GITEA_ADMIN_PASSWORD']
+        _, erreurs = render_gitea.render_gitea('prod', valeurs)
+        self.assertEqual(erreurs, ['GITEA_ADMIN_PASSWORD : manquant.'])
+
+    def test_refuse_le_compte_admin_reserve_et_les_mots_de_passe_courts(self):
+        for nom, valeur in (('GITEA_ADMIN_USER', 'admin'), ('GITEA_DB_PASSWORD', 'court'),
+                            ('GITEA_DOMAIN', 'https://git.exemple.fr'), ('GITEA_ADMIN_EMAIL', 'pas-un-mail')):
+            _, erreurs = render_gitea.render_gitea('prod', {**self.VALEURS, nom: valeur})
+            self.assertEqual(len(erreurs), 1, nom)
+            self.assertIn(nom, erreurs[0])
+
+    def test_refuse_une_apostrophe(self):
+        _, erreurs = render_gitea.render_gitea('prod', {**self.VALEURS, 'GITEA_ADMIN_PASSWORD': "a'" + 'b' * 16})
+        self.assertEqual(len(erreurs), 1)
+
+    def test_les_variables_gitea_sont_facultatives_pour_etat(self):
+        definitions = [v for v in spec.GITEA_VARS]
+        self.assertEqual(spec.check_environment(definitions, 'prod', set(), set(), None), [])

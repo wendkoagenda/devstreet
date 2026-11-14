@@ -22,6 +22,9 @@ from app.devstreet_hub.services.forge_identity_tokens import (
 )
 
 
+INTERNAL_HTTP_HOSTS = frozenset({"gitea"})
+
+
 @lru_cache(maxsize=1)
 def _gitea_tls_context():
     """Charger une fois les autorites de confiance, sans desactiver la verification TLS."""
@@ -42,11 +45,15 @@ class GiteaClient:
             or parsed.fragment
         ):
             raise ExternalUnavailable("Gitea doit être configuré côté serveur.")
-        if parsed.scheme != "https" and not (
+        local_dev = (
             settings.DEBUG
             and parsed.scheme == "http"
             and parsed.hostname in ("127.0.0.1", "localhost")
-        ):
+        )
+        # Gitea sur la même VM : le nom « gitea » n'existe que dans le réseau Docker partagé,
+        # le jeton ne circule donc jamais sur Internet.
+        internal_docker = parsed.scheme == "http" and parsed.hostname in INTERNAL_HTTP_HOSTS
+        if parsed.scheme != "https" and not (local_dev or internal_docker):
             raise ExternalUnavailable("Gitea exige HTTPS hors développement local.")
 
     def request(self, method, path, data=None, *, missing_ok=False, raw=False):

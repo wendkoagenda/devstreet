@@ -11,7 +11,7 @@ type ComposerTagPickerProps = {
 };
 
 /** Normalise une saisie libre (# ia, AI Infra…) vers un libellé stable. */
-export function normalizeTagInput(raw: string): string {
+function normalizeTagInput(raw: string): string {
   return raw
     .trim()
     .replace(/^#+/, "")

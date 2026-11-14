@@ -32,10 +32,7 @@ import {
   type ConversationMember,
 } from "../api";
 import { ChatAttachMenu } from "../components/chat-attach-menu";
-import {
-  ChatMessageBody,
-  isMediaBubble,
-} from "../components/chat-message-body";
+import { ChatMessageBody } from "../components/chat-message-body";
 import { EspaceChat } from "../components/espace-chat";
 import { FeedComposer } from "../components/feed-composer";
 import { ForumAvatar } from "../components/forum-avatar";
@@ -48,7 +45,11 @@ import {
   subscribeToNewMessages,
 } from "../lib/messaging-socket";
 import { looksLikeCodeBlock } from "../lib/parse-mixed-content";
-import { encodeVocalMessage, parseRichMessage } from "../lib/rich-message";
+import {
+  encodeVocalMessage,
+  isMediaBubble,
+  parseRichMessage,
+} from "../lib/rich-message";
 import type { Espace } from "../schema";
 import type { AppDispatch } from "@/redux/store";
 

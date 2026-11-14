@@ -69,22 +69,23 @@ function childPosition(parent: Point, index: number, count: number): Point {
 
 function loadPositions(storageKey?: string): Record<string, Point> {
   if (!storageKey || typeof window === "undefined") return {};
+  let parsed: unknown = null;
   try {
     const raw = window.localStorage.getItem(storageKey);
     if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, Point>;
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    console.warn("Positions de l'orbite illisibles, valeurs par défaut utilisées", error);
   }
+  return parsed && typeof parsed === "object" ? (parsed as Record<string, Point>) : {};
 }
 
 function savePositions(storageKey: string | undefined, positions: Record<string, Point>) {
   if (!storageKey || typeof window === "undefined") return;
   try {
     window.localStorage.setItem(storageKey, JSON.stringify(positions));
-  } catch {
-    // ignore quota
+  } catch (error) {
+    console.warn("Positions de l'orbite non enregistrées (stockage plein ou bloqué)", error);
   }
 }
 
@@ -223,10 +224,8 @@ export function ProfileOrbit({ center, nodes, storageKey }: ProfileOrbitProps) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     dragRef.current = null;
-    try {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
-    } catch {
-      // déjà libéré
     }
   }, []);
 
