@@ -7,7 +7,6 @@ import {
   Code2,
   Expand,
   ExternalLink,
-  FolderKanban,
   Heart,
   HelpCircle,
   MessageCircle,

@@ -39,8 +39,8 @@ export function ResumeNotificationBell({
     if (!resume) return;
     try {
       await markLire(resume.id).unwrap();
-    } catch {
-      // naviguer quand même
+    } catch (error) {
+      console.warn("Résumé non marqué comme lu, navigation poursuivie", error);
     }
     navigate("/?tab=abonnements");
   };
@@ -49,8 +49,8 @@ export function ResumeNotificationBell({
     if (!resume) return;
     try {
       await markLire(resume.id).unwrap();
-    } catch {
-      // ignore
+    } catch (error) {
+      console.warn("Résumé non marqué comme lu", error);
     }
   };
 

@@ -25,12 +25,9 @@ import {
   useReactEspaceMessageMutation,
   useSendEspaceMessageMutation,
 } from "../api";
-import { encodeVocalMessage } from "../lib/rich-message";
+import { encodeVocalMessage, richMessagePreview } from "../lib/rich-message";
 import { ChatAttachMenu } from "./chat-attach-menu";
-import {
-  ChatMessageBody,
-  richMessagePreview,
-} from "./chat-message-body";
+import { ChatMessageBody } from "./chat-message-body";
 import { ForumAvatar } from "./forum-avatar";
 import { VoiceRecorderButton } from "./voice-recorder-button";
 

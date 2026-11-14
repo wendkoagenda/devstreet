@@ -244,6 +244,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Sans ça, les POST (like, commentaire, message) renvoient 403 CSRF.
 if DEBUG:
     import socket
+    import sys
     from ipaddress import ip_address
 
     _lan_origins: list[str] = []
@@ -254,11 +255,12 @@ if DEBUG:
             try:
                 _addr = ip_address(_ip)
             except ValueError:
+                print(f'CORS LAN : adresse ignorée ({_ip})', file=sys.stderr)
                 continue
             if _addr.is_private and not _addr.is_loopback:
                 _lan_origins.append(f'http://{_ip}:5173')
-    except OSError:
-        pass
+    except OSError as _error:
+        print(f'CORS LAN : détection des adresses impossible ({_error})', file=sys.stderr)
 
     CORS_ALLOWED_ORIGINS = list(
         dict.fromkeys([*CORS_ALLOWED_ORIGINS, *_lan_origins])

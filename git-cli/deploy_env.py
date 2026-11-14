@@ -11,7 +11,7 @@ Variables et secrets de deploiement (GitHub Actions) et preparation des VM.
     # tunnel : lit .env.vm.<branche>, n'exige ni master ni branche locale.
 
 Fichiers locaux (a la racine, ignores par Git, format .env sans commentaire en fin de ligne) :
-    backend.env.<branche>, frontend.env.<branche>, .env.deploy.<branche>, observabilite.env.<branche>, minio.env.<branche>
+    backend.env.<branche>, frontend.env.<branche>, .env.deploy.<branche>, observabilite.env.<branche>, minio.env.<branche>, gitea.env.<branche>
 Les noms attendus viennent de backend/.env.example, frontend/.env.example et de backend/scripts/deploy_env/spec.py.
 Les valeurs vont dans l'environnement GitHub qui porte le nom de la branche, reserve a cette seule branche.
 Reserve aux emails de GIT_MASTER_EMAILS (git-cli/access_control.conf), sauf tunnel. Voir 00readme/PLAN_CD.md.
@@ -41,6 +41,7 @@ LOCAL_FILES = {
     "deploy": ".env.deploy.{branche}",
     "observabilite": "observabilite.env.{branche}",
     "minio": "minio.env.{branche}",
+    "gitea": "gitea.env.{branche}",
 }
 # Infos de connexion admin a la VM pour preparer-vm : restent sur le poste, jamais envoyees a GitHub
 LOCAL_VM_FILE = ".env.vm.{branche}"
@@ -252,9 +253,14 @@ def cmd_definir(args):
     ensure_branche_locale(args.branche)
     definitions = reference.load_spec(REPO_ROOT)
     entries, errors = [], []
-    for source in ("backend", "frontend", "deploy", "observabilite", "minio"):
+    for source in ("backend", "frontend", "deploy", "observabilite", "minio", "gitea"):
+        if source == "gitea" and not (REPO_ROOT / LOCAL_FILES[source].format(branche=args.branche)).is_file():
+            continue  # forge facultative : un environnement sans gitea.env.<branche> n'en a pas
         values = read_local(source, args.branche)
         problems = reference.check_values(definitions, source, values)
+        if source == "gitea":
+            problems += [f"{var.name} : obligatoire quand le fichier existe." for var in definitions
+                         if var.source == "gitea" and not values.get(var.name)]
         errors.extend(f"{LOCAL_FILES[source].format(branche=args.branche)} : {p}" for p in problems)
         for var in definitions:
             if var.source == source and values.get(var.name):

@@ -6,12 +6,24 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from app.communaute.models import Tag
 from app.communaute.serializers import TagSerializer
 from app.communaute.services.tag_service import TagService
+
+
+class TagLimitPagination(LimitOffsetPagination):
+    """Borne la taille des listes de tags (paramètre ?limit=, 100 au plus) ; la réponse reste un tableau."""
+
+    default_limit = 30
+    max_limit = 100
+
+
+class TagSuivisPagination(TagLimitPagination):
+    default_limit = 100
 
 
 class TagViewSet(viewsets.ViewSet):
@@ -47,17 +59,14 @@ class TagViewSet(viewsets.ViewSet):
         tags=['V1 - Tag'],
     )
     def list(self, request):
-        limit_raw = request.query_params.get('limit') or 30
-        try:
-            limit = int(limit_raw)
-        except (TypeError, ValueError):
-            limit = 30
         tags = self.tag_service.list_tags(
             search=request.query_params.get('search'),
-            limit=limit,
+            limit=TagLimitPagination.max_limit,
         )
+        paginator = TagLimitPagination()
+        page = paginator.paginate_queryset(tags, request, view=self)
         serializer = TagSerializer(
-            tags, many=True, context=self.get_serializer_context()
+            page, many=True, context=self.get_serializer_context()
         )
         return Response(serializer.data)
 
@@ -70,8 +79,10 @@ class TagViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='suivis')
     def suivis(self, request):
         tags = self.tag_service.list_suivis(request.user)
+        paginator = TagSuivisPagination()
+        page = paginator.paginate_queryset(tags, request, view=self)
         serializer = TagSerializer(
-            tags, many=True, context=self.get_serializer_context()
+            page, many=True, context=self.get_serializer_context()
         )
         return Response(serializer.data)
 

@@ -17,7 +17,7 @@ from pathlib import Path
 BRANCHES = ('sandbox', 'main', 'prod')
 
 # Origine d'une valeur : backend, frontend, déploiement, observabilité, ou généré par `preparer-vm`
-SOURCES = ('backend', 'frontend', 'deploy', 'observabilite', 'minio', 'vm')
+SOURCES = ('backend', 'frontend', 'deploy', 'observabilite', 'minio', 'gitea', 'vm')
 
 _LINE = re.compile(r'^(?P<commented>#\s*)?(?P<name>[A-Z][A-Z0-9_]*)=(?P<rest>.*)$')
 _SECRET_MARKER = re.compile(r'#\s*@secret\b')
@@ -83,6 +83,17 @@ MINIO_VARS = (
     Var('MINIO_ROOT_PASSWORD', secret=True, required=True, source='minio'),
 )
 
+# Fichier local gitea.env.<branche> : forge Gitea de la VM (CD - GITEA SSH). Facultatif par environnement ;
+# s'il existe, `definir` et le rendu exigent les cinq valeurs.
+# Le jeton API et le secret du webhook (DEVSTREET_HUB_GITEA_*) restent dans backend.env.<branche>.
+GITEA_VARS = (
+    Var('GITEA_DOMAIN', secret=False, required=False, source='gitea'),
+    Var('GITEA_DB_PASSWORD', secret=True, required=False, source='gitea'),
+    Var('GITEA_ADMIN_USER', secret=False, required=False, source='gitea'),
+    Var('GITEA_ADMIN_PASSWORD', secret=True, required=False, source='gitea'),
+    Var('GITEA_ADMIN_EMAIL', secret=False, required=False, source='gitea'),
+)
+
 ACCES_MODES = ('ssh', 'gcp')
 
 _ENUMS = {
@@ -91,6 +102,10 @@ _ENUMS = {
 }
 _GRAFANA_PASSWORD_MIN = 16
 _MINIO_PASSWORD_MIN = 16
+_GITEA_PASSWORD_MIN = 16
+# Gitea réserve certains noms (dont « admin ») : le compte administrateur doit en porter un autre
+_GITEA_USER = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{2,39}$')
+_GITEA_RESERVED_USERS = ('admin', 'administrator', 'root', 'api', 'user', 'org', 'assets', 'devtest')
 _MINIO_KEY_MIN = 16
 _MINIO_KEY_MAX = 40
 _GRAFANA_USER = re.compile(r'^[A-Za-z0-9._-]{1,64}$')
@@ -147,6 +162,7 @@ def load_spec(repo_root):
     spec.extend(DEPLOY_VARS)
     spec.extend(OBSERVABILITE_VARS)
     spec.extend(MINIO_VARS)
+    spec.extend(GITEA_VARS)
     seen = set()
     for var in spec:
         if var.name in seen:
@@ -215,6 +231,15 @@ def validate_value(name, value):
         return f"{name} : 3 à 64 caractères (lettres, chiffres, point, tiret, underscore)."
     if name == 'MINIO_ROOT_PASSWORD' and len(value) < _MINIO_PASSWORD_MIN:
         return f"{name} : au moins {_MINIO_PASSWORD_MIN} caractères."
+    if name == 'GITEA_DOMAIN' and not _DOMAIN.match(value):
+        return f"{name} : nom de domaine attendu en minuscules, sans schéma ni chemin (ex. git.monapp.com)."
+    if name == 'GITEA_ADMIN_USER':
+        if not _GITEA_USER.match(value) or value.lower() in _GITEA_RESERVED_USERS:
+            return f"{name} : 3 à 40 caractères (lettres, chiffres, point, tiret, underscore), pas un nom réservé par Gitea (admin, root, api...)."
+    if name == 'GITEA_ADMIN_EMAIL' and not _EMAIL.match(value):
+        return f"{name} : adresse e-mail attendue."
+    if name in ('GITEA_DB_PASSWORD', 'GITEA_ADMIN_PASSWORD') and len(value) < _GITEA_PASSWORD_MIN:
+        return f"{name} : au moins {_GITEA_PASSWORD_MIN} caractères."
     if name == 'S3_BUCKET_NAME' and not _S3_BUCKET.match(value):
         return f"{name} : nom de bucket S3 (minuscules, 3–63, ex. boilerplate-sandbox)."
     if name in ('S3_ACCESS_KEY', 'S3_SECRET_KEY'):

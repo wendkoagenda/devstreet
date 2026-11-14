@@ -127,31 +127,3 @@ export function ChatMessageBody({
     />
   );
 }
-
-/** Indique si le message doit s'afficher en bulle « média » (pas de fond texte dense). */
-export function isMediaBubble(texte: string) {
-  const kind = parseRichMessage(texte).kind;
-  return (
-    kind === "vocal" ||
-    kind === "image" ||
-    kind === "file" ||
-    kind === "project"
-  );
-}
-
-/** Libellé court pour aperçus (réponse, liste…). */
-export function richMessagePreview(texte: string) {
-  const parsed = parseRichMessage(texte);
-  switch (parsed.kind) {
-    case "vocal":
-      return "Message vocal";
-    case "image":
-      return `Image · ${parsed.name}`;
-    case "file":
-      return `Fichier · ${parsed.name}`;
-    case "project":
-      return `Projet · ${parsed.title}`;
-    default:
-      return parsed.texte;
-  }
-}

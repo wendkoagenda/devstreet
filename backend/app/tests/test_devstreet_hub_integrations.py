@@ -319,6 +319,15 @@ class GiteaAdapterTests(SimpleTestCase):
         with self.assertRaises(ExternalUnavailable):
             GiteaClient()
 
+    @override_settings(DEBUG=False, DEVSTREET_HUB_GITEA_URL="http://gitea:3000")
+    def test_production_accepts_http_to_docker_internal_gitea(self):
+        self.assertEqual(GiteaClient().url, "http://gitea:3000")
+
+    @override_settings(DEBUG=False, DEVSTREET_HUB_GITEA_URL="http://git.exemple.com:3000")
+    def test_production_rejects_http_to_other_hosts(self):
+        with self.assertRaises(ExternalUnavailable):
+            GiteaClient()
+
     def test_source_collector_excludes_sensitive_files_and_preserves_lines(self):
         entries = [
             {"path": ".env", "type": "blob", "sha": "1", "size": 10},

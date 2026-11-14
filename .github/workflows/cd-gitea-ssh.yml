@@ -1,0 +1,183 @@
+name: CD - GITEA SSH
+
+# Description du workflow :
+# - Installe ou met a jour la forge Gitea (+ sa base Postgres) sur la VM (SSH), avec son site HTTPS dans le proxy partage.
+# - Lancement MANUEL uniquement (workflow_dispatch), jamais par cd-orchestrateur : la forge porte des donnees,
+#   elle ne se redeploie pas a chaque commit. Reserve aux GIT_MASTER_USERS. DEPLOY_ACCES=ssh uniquement.
+# - Prerequis : un deploiement app SSH deja fait (reseau « proxy »), le DNS de GITEA_DOMAIN vers la VM,
+#   et gitea.env.<branche> envoye par « definir ».
+# - Variables : GITEA_DOMAIN, GITEA_ADMIN_USER, GITEA_ADMIN_EMAIL. Secrets : GITEA_DB_PASSWORD, GITEA_ADMIN_PASSWORD.
+# - Le jeton admin API n'est pas cree ici (il apparaitrait dans les journaux) : voir docs/devstreet_hub/gitea-deploy.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit complet (40 caracteres). Vide = dernier commit de la branche
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-deploiement-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  autorisation:
+    name: autorisation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      branche: ${{ steps.autorisation.outputs.branche }}
+      sha: ${{ steps.autorisation.outputs.sha }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Branche, auteur et commit
+        id: autorisation
+        env:
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          set -eu
+          branche="$GITHUB_REF_NAME"
+          case "$branche" in
+            sandbox|main|prod) ;;
+            *) echo "::error::Lancer depuis sandbox, main ou prod (« Use workflow from ») : $branche n'a pas d'environnement."; exit 1 ;;
+          esac
+          masters="$(git show origin/develop:git-cli/access_control.conf | sed -n 's/^GIT_MASTER_USERS="\(.*\)"/\1/p')"
+          case ",$masters," in
+            *",$GITHUB_ACTOR,"*) ;;
+            *) echo "::error::$GITHUB_ACTOR n'est pas dans GIT_MASTER_USERS : lancement manuel refuse."; exit 1 ;;
+          esac
+          if [ -n "$INPUT_SHA" ]; then
+            sha="$INPUT_SHA"
+          else
+            sha="$GITHUB_SHA"
+          fi
+          if ! printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::sha doit etre un commit complet de 40 caracteres hexadecimaux."
+            exit 1
+          fi
+          {
+            echo "branche=$branche"
+            echo "sha=$sha"
+          } >> "$GITHUB_OUTPUT"
+
+  cible:
+    name: cible
+    needs: [autorisation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: ${{ needs.autorisation.outputs.branche }}
+    steps:
+      - name: Verifier le mode d'acces SSH
+        env:
+          ACCES: ${{ vars.DEPLOY_ACCES }}
+          BRANCHE: ${{ needs.autorisation.outputs.branche }}
+        run: |
+          set -eu
+          case "$ACCES" in
+            ssh) ;;
+            gcp)
+              echo "::error::CD - GITEA SSH refuse DEPLOY_ACCES=gcp (prevu plus tard). Branche : $BRANCHE."
+              exit 1
+              ;;
+            *)
+              echo "::error::DEPLOY_ACCES absent ou inconnu dans l'environnement $BRANCHE (« $ACCES »)."
+              exit 1
+              ;;
+          esac
+
+  gitea:
+    name: gitea
+    needs: [autorisation, cible]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: ${{ needs.autorisation.outputs.branche }}
+    permissions:
+      contents: read
+    env:
+      BRANCHE: ${{ needs.autorisation.outputs.branche }}
+      DEPLOY_SHA: ${{ needs.autorisation.outputs.sha }}
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.autorisation.outputs.sha }}
+          persist-credentials: false
+
+      - name: Rendre gitea.env
+        working-directory: backend
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          python3 -m scripts.deploy_env.render_gitea --sortie "$RUNNER_TEMP/rendu"
+
+      - name: Preparer l'acces SSH
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+        run: |
+          set -eu
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_PRIVATE_KEY" '.[$k]' > "$RUNNER_TEMP/ssh/key"
+          printf '%s' "$VARS_JSON" | jq -r --arg k "VM_SSH_KNOWN_HOSTS" '.[$k]' > "$RUNNER_TEMP/ssh/known_hosts"
+          host="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_HOST" '.[$k]')"
+          user="$(printf '%s' "$SECRETS_JSON" | jq -r --arg k "VM_SSH_USER" '.[$k]')"
+          echo "::add-mask::$host"
+          {
+            echo "SSH_HOST=$host"
+            echo "SSH_USER=$user"
+          } >> "$GITHUB_ENV"
+
+      - name: Envoyer et installer la stack
+        env:
+          LETSENCRYPT_EMAIL: ${{ vars.DEPLOY_LETSENCRYPT_EMAIL }}
+        run: |
+          set -eu
+          printf '%s' "$LETSENCRYPT_EMAIL" | grep -Eq '^[A-Za-z0-9._+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' \
+            || { echo "::error::DEPLOY_LETSENCRYPT_EMAIL absent ou invalide."; exit 1; }
+          ssh_vm() {
+            ssh -i "$RUNNER_TEMP/ssh/key" \
+              -o UserKnownHostsFile="$RUNNER_TEMP/ssh/known_hosts" \
+              -o StrictHostKeyChecking=yes \
+              -o HostKeyAlgorithms=ssh-ed25519 \
+              -o BatchMode=yes \
+              -o IdentitiesOnly=yes \
+              -o ConnectTimeout=15 \
+              -o ServerAliveInterval=30 \
+              "$SSH_USER@$SSH_HOST" "$@"
+          }
+          remote_src="/tmp/gitea-src-$$"
+          pack="$RUNNER_TEMP/gitea-pack"
+          mkdir -p "$pack/deploy/vm" "$pack/deploy/proxy"
+          cp -a deploy/gitea "$pack/deploy/"
+          cp deploy/proxy/site-gitea-http.conf.tpl deploy/proxy/site-gitea-https.conf.tpl "$pack/deploy/proxy/"
+          cp deploy/vm/gitea.sh "$pack/deploy/vm/"
+          cp "$RUNNER_TEMP/rendu/gitea.env" "$pack/"
+
+          echo "== Envoi de deploy/gitea et de la config"
+          tar -czf - -C "$pack" . | ssh_vm "set -eu; umask 077; rm -rf $remote_src; mkdir -p $remote_src; tar -xzf - -C $remote_src"
+
+          echo "== Installation"
+          ssh_vm "set -eu; DEPLOY_LETSENCRYPT_EMAIL='$LETSENCRYPT_EMAIL' sh $remote_src/deploy/vm/gitea.sh $remote_src; rm -rf $remote_src"
+
+          {
+            echo "### Gitea $BRANCHE"
+            echo "- Commit : $DEPLOY_SHA"
+            echo "- Suite manuelle : creer le jeton admin API puis DEVSTREET_HUB_GITEA_* dans backend.env.$BRANCHE (docs/devstreet_hub/gitea-deploy.md)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Supprimer la cle SSH et les fichiers rendus
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh" "$RUNNER_TEMP/rendu" "$RUNNER_TEMP/gitea-pack"
