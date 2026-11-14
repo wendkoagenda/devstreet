@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Building2,
@@ -201,8 +201,9 @@ export default function MemberProfilePage() {
                     kind="photo"
                     hasImage={Boolean(photo)}
                     onUpdated={() => void refetchProfile()}
-                    // Sur le côté : le bas de la photo porte l'arc « Open to work »
-                    className="absolute -right-4 top-1/2 -translate-y-1/2 flex-col"
+                    // En haut de la photo, au-dessus de tout (le bas et les côtés portent l'arc « Open to work ») :
+                    // « supprimer » à gauche, « changer » à droite. La bande ne capte pas les clics, seuls les boutons.
+                    className="pointer-events-none absolute -left-3 -right-3 -top-2 z-10 flex-row-reverse justify-between [&>button]:pointer-events-auto"
                   />
                 ) : null}
                 {profile.profil_dev?.is_open_to_work ? <OpenToWorkRing /> : null}
