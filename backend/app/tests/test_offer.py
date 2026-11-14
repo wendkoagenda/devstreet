@@ -22,7 +22,7 @@ class _OfferConfig:
 
     @staticmethod
     def payload(by):
-        return {'company_id': make_company(by).id, 'recruiter_id': make_profil(by).id, 'title': 'Nouvelle offre', 'slug': f'offre-{uuid4().hex[:8]}', 'description': 'Description', 'type': 'mission', 'experience_level': 'mid', 'country': 'BF'}
+        return {'company_id': make_company(by).id, 'recruiter_id': make_profil(by, type='entreprise').id, 'title': 'Nouvelle offre', 'slug': f'offre-{uuid4().hex[:8]}', 'description': 'Description', 'type': 'mission', 'experience_level': 'mid', 'country': 'BF'}
 
 
 class OfferModelTests(_OfferConfig, ModelTestsMixin, TestCase):

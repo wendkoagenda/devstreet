@@ -101,8 +101,16 @@ class Skill(models.Model):
 class Profil(models.Model):
     """
     Profil model.
+
+    Un membre peut avoir un profil `dev` et un profil `entreprise` (au plus un de chaque type).
+    Le profil `entreprise` est toujours rattaché à une entreprise ; le profil `dev` n'en a pas.
     """
-    
+
+    TYPE_DEV = 'dev'
+    TYPE_ENTREPRISE = 'entreprise'
+    TYPE_CHOICES = [(TYPE_DEV, 'Dev'), (TYPE_ENTREPRISE, 'Entreprise')]
+
+    type = models.CharField(help_text="Profil de développeur ou profil d'entreprise", max_length=10, choices=TYPE_CHOICES, default=TYPE_DEV)
     is_company_owner = models.BooleanField(help_text="Propriétaire de l'entreprise rattachée", default=False)
     slug = models.SlugField(help_text='URL publique du profil', max_length=160, unique=True)
     photo = models.CharField(help_text='Photo, affichée sur le CV', max_length=512, blank=True, default='')
@@ -123,6 +131,7 @@ class Profil(models.Model):
     linkedin_url = models.URLField(help_text='Profil LinkedIn', blank=True, default='')
     portfolio_url = models.URLField(help_text='Portfolio', blank=True, default='')
     cv_visibility = models.CharField(help_text='Qui peut télécharger le CV', max_length=10, default='companies', choices=[('public', 'Public'), ('companies', 'Entreprises'), ('private', 'Privé')])
+    cv_settings = models.JSONField(help_text='Réglages de style du CV (couleur, police, mise en page…)', blank=True, default=dict)
     embedding = models.JSONField(help_text="Vecteur pour le matching IA (pgvector), dimension selon le modèle d'embeddings retenu (JSON provisoire, futur VectorField pgvector)", blank=True, null=True)
     created_by = models.IntegerField(
         verbose_name="Créé par",
@@ -143,7 +152,7 @@ class Profil(models.Model):
         auto_now=True
     )
     company = models.ForeignKey('marketplace.Company', on_delete=models.SET_NULL, related_name='profils', null=True, blank=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='marketplace_profil')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='marketplace_profils')
     skills = models.ManyToManyField('marketplace.Skill', through='marketplace.ProfilSkill', related_name='profils')
 
 
@@ -152,6 +161,18 @@ class Profil(models.Model):
         verbose_name = 'Profil'
         verbose_name_plural = 'Profils'
         ordering = ['-created_at']
+        constraints = [
+            # Au plus un profil de chaque type par membre
+            models.UniqueConstraint(fields=['user', 'type'], name='uniq_profil_user_type'),
+            # Profil entreprise : entreprise obligatoire ; profil dev : jamais d'entreprise
+            models.CheckConstraint(
+                condition=(
+                    (models.Q(type='entreprise') & models.Q(company__isnull=False))
+                    | (models.Q(type='dev') & models.Q(company__isnull=True))
+                ),
+                name='profil_type_company_coherent',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.headline}"
@@ -160,17 +181,51 @@ class Profil(models.Model):
         return f"/marketplace/profils/{self.id}/"
 
 
-class Offer(models.Model):
+class ProfilTypeRulesMixin:
+    """
+    Vérifie que chaque relation vers un profil pointe vers le bon type (dev ou entreprise).
+
+    Les modèles déclarent `PROFIL_TYPE_RULES` : nom du champ -> type attendu. Un modèle dont la règle dépend
+    de ses données (ex. le swipe, selon son contexte) redéfinit `profil_type_rules()`.
+    Le contrôle s'applique à toute écriture (administration, services, scripts).
+    """
+
+    PROFIL_TYPE_RULES = {}
+
+    def profil_type_rules(self):
+        return self.PROFIL_TYPE_RULES
+
+    def check_profil_types(self):
+        from django.core.exceptions import ValidationError
+
+        for field, expected in self.profil_type_rules().items():
+            profil_id = getattr(self, f'{field}_id', None)
+            if profil_id is None:
+                continue
+            actual = Profil.objects.filter(pk=profil_id).values_list('type', flat=True).first()
+            if actual is not None and actual != expected:
+                label = 'dev' if expected == Profil.TYPE_DEV else 'entreprise'
+                raise ValidationError({field: f"Un profil {label} est attendu pour ce champ."})
+
+    def save(self, *args, **kwargs):
+        self.check_profil_types()
+        super().save(*args, **kwargs)
+
+
+class Offer(ProfilTypeRulesMixin, models.Model):
     """
     Offer model.
     """
+
+    PROFIL_TYPE_RULES = {'recruiter': 'entreprise'}
     
     title = models.CharField(help_text="Titre de l'offre", max_length=200)
     slug = models.SlugField(help_text='URL publique', max_length=220, unique=True)
     description = models.TextField(help_text="Description, peut être générée par l'IA")
     type = models.CharField(help_text='Type de contrat', max_length=10, choices=[('mission', 'Mission'), ('cdd', 'CDD'), ('cdi', 'CDI'), ('stage', 'Stage')])
-    contract_duration = models.PositiveSmallIntegerField(help_text='Durée en mois (mission, CDD, stage)', blank=True, null=True)
-    experience_level = models.CharField(help_text='Niveau attendu', max_length=10, choices=[('junior', 'Junior'), ('mid', 'Confirmé'), ('senior', 'Sénior')])
+    contract_duration = models.PositiveSmallIntegerField(help_text="Durée (mission, CDD, stage), exprimée dans l'unité `contract_duration_unit`", blank=True, null=True)
+    contract_duration_unit = models.CharField(help_text='Unité de la durée : heures, jours, mois ou années', max_length=5, default='month', choices=[('hour', 'Heures'), ('day', 'Jours'), ('month', 'Mois'), ('year', 'Années')])
+    experience_level = models.CharField(help_text='Niveau attendu', max_length=10, choices=[('junior', 'Junior'), ('mid', 'Intermédiaire'), ('senior', 'Senior'), ('expert', 'Expert')])
     budget_min = models.DecimalField(help_text='Budget ou salaire minimum', blank=True, null=True, max_digits=12, decimal_places=2)
     budget_max = models.DecimalField(help_text='Budget ou salaire maximum', blank=True, null=True, max_digits=12, decimal_places=2)
     currency = models.CharField(help_text='Devise ISO 4217', max_length=3, default='XOF')
@@ -223,10 +278,12 @@ class Offer(models.Model):
         return f"/marketplace/offers/{self.id}/"
 
 
-class Candidature(models.Model):
+class Candidature(ProfilTypeRulesMixin, models.Model):
     """
     Candidature model.
     """
+
+    PROFIL_TYPE_RULES = {'profil': 'dev'}
     
     message = models.TextField(help_text='Message de motivation', blank=True, default='')
     status = models.CharField(help_text='Statut de la candidature', max_length=15, default='sent', choices=[('sent', 'Envoyée'), ('shortlisted', 'Présélectionnée'), ('rejected', 'Refusée'), ('accepted', 'Acceptée')])
@@ -272,10 +329,12 @@ class Candidature(models.Model):
         return f"/marketplace/candidatures/{self.id}/"
 
 
-class ProfilSkill(models.Model):
+class ProfilSkill(ProfilTypeRulesMixin, models.Model):
     """
     ProfilSkill model.
     """
+
+    PROFIL_TYPE_RULES = {'profil': 'dev'}
     
     level = models.PositiveSmallIntegerField(help_text='Niveau déclaré, de 1 à 5', validators=[MinValueValidator(1), MaxValueValidator(5)])
     years = models.PositiveSmallIntegerField(help_text='Années de pratique', default=0)
@@ -318,10 +377,12 @@ class ProfilSkill(models.Model):
         return f"/marketplace/profil-skills/{self.id}/"
 
 
-class Experience(models.Model):
+class Experience(ProfilTypeRulesMixin, models.Model):
     """
     Experience model.
     """
+
+    PROFIL_TYPE_RULES = {'profil': 'dev'}
     
     title = models.CharField(help_text='Poste occupé', max_length=150)
     company_name = models.CharField(help_text='Employeur ou client', max_length=150)
@@ -366,10 +427,12 @@ class Experience(models.Model):
         return f"/marketplace/experiences/{self.id}/"
 
 
-class Prestation(models.Model):
+class Prestation(ProfilTypeRulesMixin, models.Model):
     """
     Prestation model.
     """
+
+    PROFIL_TYPE_RULES = {'profil': 'dev'}
     
     title = models.CharField(help_text='Titre de la prestation', max_length=150)
     slug = models.SlugField(help_text='URL publique', max_length=160, unique=True)
@@ -415,10 +478,12 @@ class Prestation(models.Model):
         return f"/marketplace/prestations/{self.id}/"
 
 
-class ProfilHistory(models.Model):
+class ProfilHistory(ProfilTypeRulesMixin, models.Model):
     """
     ProfilHistory model.
     """
+
+    PROFIL_TYPE_RULES = {'profil': 'dev'}
     
     field = models.CharField(help_text='Nom du champ modifié', max_length=100)
     old_value = models.TextField(help_text='Valeur avant modification', blank=True, default='')
@@ -459,10 +524,12 @@ class ProfilHistory(models.Model):
         return f"/marketplace/profil-histories/{self.id}/"
 
 
-class Availability(models.Model):
+class Availability(ProfilTypeRulesMixin, models.Model):
     """
     Availability model.
     """
+
+    PROFIL_TYPE_RULES = {'profil': 'dev'}
     
     start_date = models.DateField(help_text='Début de la période')
     end_date = models.DateField(help_text='Fin de la période (incluse)')
@@ -504,10 +571,12 @@ class Availability(models.Model):
         return f"/marketplace/availabilities/{self.id}/"
 
 
-class Review(models.Model):
+class Review(ProfilTypeRulesMixin, models.Model):
     """
     Review model.
     """
+
+    PROFIL_TYPE_RULES = {'target': 'dev', 'author': 'dev'}
     
     rating = models.PositiveSmallIntegerField(help_text='Note de 1 à 5', validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(help_text='Commentaire', blank=True, default='')
@@ -550,10 +619,12 @@ class Review(models.Model):
         return f"/marketplace/reviews/{self.id}/"
 
 
-class Swipe(models.Model):
+class Swipe(ProfilTypeRulesMixin, models.Model):
     """
     Swipe model.
     """
+
+    PROFIL_TYPE_RULES = {}
     
     direction = models.CharField(help_text='Swipe à droite (like) ou à gauche (pass)', max_length=4, choices=[('like', 'Like'), ('pass', 'Passer')])
     context = models.CharField(help_text='Recrutement (entreprise vers dev) ou réseau (dev vers dev)', max_length=10, choices=[('recruit', 'Recrutement'), ('network', 'Réseau')])
@@ -589,6 +660,12 @@ class Swipe(models.Model):
             models.UniqueConstraint(fields=['author', 'target', 'context'], name='uniq_swipe_author_target_context'),
         ]
 
+    def profil_type_rules(self):
+        """Recrutement : entreprise vers dev. Réseau : tout profil (dev ou entreprise) vers tout profil."""
+        if self.context == 'recruit':
+            return {'author': 'entreprise', 'target': 'dev'}
+        return {}
+
     def __str__(self):
         return f"{self.direction}"
 
@@ -596,10 +673,13 @@ class Swipe(models.Model):
         return f"/marketplace/swipes/{self.id}/"
 
 
-class Connection(models.Model):
+class Connection(ProfilTypeRulesMixin, models.Model):
     """
     Connection model.
     """
+
+    # Le réseau est général : un profil dev ou entreprise peut se connecter à n'importe quel autre profil
+    PROFIL_TYPE_RULES = {}
     
     status = models.CharField(help_text='Connexion active ou bloquée', max_length=10, default='matched', choices=[('matched', 'Connectés'), ('blocked', 'Bloquée')])
     matched_at = models.DateTimeField(help_text='Date du like mutuel')
@@ -640,3 +720,36 @@ class Connection(models.Model):
 
     def get_absolute_url(self):
         return f"/marketplace/connections/{self.id}/" 
+
+
+class InvitationEntreprise(models.Model):
+    """
+    Invitation à rejoindre une entreprise : à usage unique, révocable, avec expiration.
+
+    Seul le hash du jeton est conservé ; le lien complet n'est montré qu'à la création.
+    """
+
+    STATUS_PENDING = 'pending'
+    STATUS_ACCEPTED = 'accepted'
+    STATUS_REVOKED = 'revoked'
+    STATUS_CHOICES = [(STATUS_PENDING, 'En attente'), (STATUS_ACCEPTED, 'Acceptée'), (STATUS_REVOKED, 'Révoquée')]
+
+    company = models.ForeignKey('marketplace.Company', on_delete=models.CASCADE, related_name='invitations')
+    invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='entreprise_invitations_sent', null=True, blank=True)
+    email = models.EmailField(help_text="Adresse de la personne invitée (facultative : le lien peut être partagé)", blank=True, default='')
+    token_hash = models.CharField(help_text='Hash du jeton du lien', max_length=64, unique=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    expires_at = models.DateTimeField(help_text="Date d'expiration du lien")
+    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='entreprise_invitations_accepted', null=True, blank=True)
+    accepted_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'marketplace_invitation_entreprise'
+        verbose_name = "Invitation d'entreprise"
+        verbose_name_plural = "Invitations d'entreprise"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.company_id} · {self.status}"

@@ -112,6 +112,7 @@ _GRAFANA_USER = re.compile(r'^[A-Za-z0-9._-]{1,64}$')
 _MINIO_USER = re.compile(r'^[A-Za-z0-9._-]{3,64}$')
 _S3_BUCKET = re.compile(r'^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$')
 _PATTERNS = {
+    'S3_ENDPOINT_URL': (re.compile(r'^https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?$'), "URL interne du serveur S3, sans chemin (ex. http://minio-serveur:9000)"),
     'GCP_PROJECT_ID': (re.compile(r'^[a-z][a-z0-9-]{4,28}[a-z0-9]$'), "identifiant de projet GCP (ex. mon-projet-123)"),
     'GCP_ZONE': (re.compile(r'^[a-z]+-[a-z]+[0-9]+-[a-z]$'), "zone GCP (ex. europe-west1-b)"),
     'GCP_INSTANCE': (re.compile(r'^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$'), "nom d'instance GCP"),

@@ -32,6 +32,7 @@ def offer_dict(offer: Offer, scoring: Optional[dict] = None, candidature: Option
         "title": offer.title,
         "type": offer.type,
         "contract_duration": offer.contract_duration,
+        "contract_duration_unit": offer.contract_duration_unit,
         "experience_level": offer.experience_level,
         "budget_min": _money(offer.budget_min),
         "budget_max": _money(offer.budget_max),
@@ -74,7 +75,8 @@ def profil_card(profil: Profil, context=None, with_email: bool = False) -> dict:
     data = {
         "id": profil.id,
         "name": profil_name(profil),
-        "headline": profil.headline,
+        "headline": profil.headline
+        or (profil.company.name if profil.type == Profil.TYPE_ENTREPRISE and profil.company_id else ""),
         "city": profil.city,
         "country": profil.country,
         "remote": profil.remote,
@@ -83,6 +85,14 @@ def profil_card(profil: Profil, context=None, with_email: bool = False) -> dict:
         "skills": [item.skill.name for item in levels[:6]],
         "rating_avg": round(context.rating_avg, 1) if context and context.rating_avg is not None else None,
         "reviews_count": context.reviews_count if context else 0,
+        # Un profil entreprise est présenté avec sa société ; `type` et `username` servent aux liens vers la page de profil
+        "type": profil.type,
+        "username": profil.user.username,
+        "company": (
+            {"id": profil.company_id, "name": profil.company.name, "is_verified": profil.company.is_verified}
+            if profil.type == Profil.TYPE_ENTREPRISE and profil.company_id
+            else None
+        ),
     }
     if with_email:
         data["email"] = profil.user.email

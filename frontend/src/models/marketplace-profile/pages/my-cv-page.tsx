@@ -17,6 +17,7 @@ import { CreationErrorSonner, CreationSuccessSonner } from "@/helpers/api/feed-b
 import { useGetPublicProfileQuery } from "@/models/marketplace-network/api";
 import { formatDate } from "@/models/marketplace-offers/labels";
 import { useUpdateMyProfilMutation } from "@/models/marketplace-space/api";
+import { CvStatsStrip } from "@/models/marketplace-stats/components/page-stats";
 import { RequireProfil } from "@/models/marketplace-space/components/guards";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 import { CV_VISIBILITIES } from "@/models/marketplace-space/options";
@@ -50,6 +51,9 @@ function MyCvContent() {
 
   return (
     <div className="mx-auto grid w-full max-w-5xl items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="lg:col-span-2">
+        <CvStatsStrip />
+      </div>
       <Card>
         <CardContent className="flex flex-col gap-5 p-8">
           {isLoading || !data ? (
@@ -78,7 +82,7 @@ function MyCvContent() {
                 {data.experiences.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
                     Aucune expérience :{" "}
-                    <Link to="/marketplace/profile" className="underline">
+                    <Link to="/profil/me?section=dev" className="underline">
                       ajoutez-en depuis votre profil
                     </Link>
                     .

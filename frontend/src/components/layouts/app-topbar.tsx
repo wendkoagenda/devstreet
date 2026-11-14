@@ -1,3 +1,4 @@
+import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogOut, Search, SendHorizontal, Terminal, UserRound } from "lucide-react";
@@ -66,8 +67,8 @@ export function AppTopbar() {
   };
 
   const handleGoToProfile = () => {
-    if (user?.id) navigate(`/forum/profil/${user.id}`);
-    else navigate("/forum/profil/me");
+    if (user?.username) navigate(profilePath(user.username));
+    else navigate("/profil/me");
   };
 
   return (
@@ -170,13 +171,6 @@ export function AppTopbar() {
                   >
                     <UserRound className="size-4" />
                     Mon profil
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigate("/my-account")}
-                    className="gap-2"
-                  >
-                    <UserRound className="size-4" />
-                    {t("sidebar.my_account")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="gap-2">

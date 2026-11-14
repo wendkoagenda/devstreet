@@ -48,7 +48,7 @@ export type AvailabilityFormValues = z.infer<typeof availabilityFormSchema>;
 
 export const AVAILABILITY_LABELS: Record<AvailabilityStatus, string> = {
   available: "Disponible",
-  partial: "Partiel",
+  partial: "Partiellement occupé",
   busy: "Occupé",
   leave: "Congé",
 };
@@ -57,7 +57,8 @@ export function availabilityToForm(row: Availability | null): AvailabilityFormVa
   return {
     start_date: row?.start_date ?? "",
     end_date: row?.end_date ?? "",
-    status: row?.status ?? "available",
+    // Sans période on est disponible : une nouvelle période est une plage occupée
+    status: row?.status ?? "busy",
     hours_per_week: row?.hours_per_week != null ? String(row.hours_per_week) : "",
     note: row?.note ?? "",
   };

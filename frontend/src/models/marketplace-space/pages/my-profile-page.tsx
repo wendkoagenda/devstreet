@@ -1,3 +1,4 @@
+import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -26,20 +27,22 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { profilePath } from "@/helpers/routes/profile-path";
 import { useAuthSlice } from "@/models/auth/slice";
-import { useGetDashboardQuery } from "@/models/marketplace-dashboard/api";
+import { useStats } from "@/models/marketplace-stats/api";
 import {
   useGetConnectionsQuery,
   useGetPublicProfileQuery,
 } from "@/models/marketplace-network/api";
 import { useGetMySkillsQuery } from "@/models/marketplace-offers/api";
 import { SkillsCard } from "@/models/marketplace-offers/components/skills-card";
-import { formatDate, initialsOf } from "@/models/marketplace-offers/labels";
+import { formatDate } from "@/models/marketplace-offers/labels";
 import { useGetMyExperiencesQuery } from "@/models/marketplace-profile/api";
 import { ExperiencesCard } from "@/models/marketplace-profile/components/experiences-card";
 import { AVAILABILITY_LABELS } from "@/models/marketplace-profile/schema";
 import { CompanyForm } from "../components/company-form";
-import { ProfileOrbit, type OrbitNode } from "../components/profile-orbit";
+import { CompanyInvitations } from "../components/company-invitations";
+import { ProfileOrbit, ProfileOrbitCenter, type OrbitNode } from "../components/profile-orbit";
 import { ProfilForm } from "../components/profil-form";
 import { useMySpace } from "../hooks/use-my-space";
 import { CV_VISIBILITIES, countryName } from "../options";
@@ -60,38 +63,6 @@ const PANEL_TITLES: Record<PanelKey, string> = {
   reviews: "Mes avis",
   friends: "Mes amis",
 };
-
-/** Anneau de progression autour de l'avatar : la part du profil déjà complétée. */
-function CompletionAvatar({ name, percent }: { name: string; percent: number }) {
-  const radius = 52;
-  const circumference = 2 * Math.PI * radius;
-  return (
-    <div className="relative size-28 shrink-0">
-      <svg viewBox="0 0 120 120" className="size-full -rotate-90" aria-hidden>
-        <circle cx="60" cy="60" r={radius} fill="none" strokeWidth="6" className="stroke-muted" />
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          fill="none"
-          strokeWidth="6"
-          strokeLinecap="round"
-          className="stroke-primary transition-[stroke-dashoffset] duration-700"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - percent / 100)}
-        />
-      </svg>
-      <div
-        className="absolute inset-3 flex items-center justify-center rounded-full border border-border bg-muted text-xl font-semibold text-foreground"
-        role="img"
-        aria-label={`Profil complété à ${percent} %`}
-      >
-        {initialsOf(name)}
-      </div>
-      <Badge className="absolute -bottom-1 left-1/2 -translate-x-1/2">{percent} %</Badge>
-    </div>
-  );
-}
 
 function ReviewsPanel({ profilId }: { profilId: number }) {
   const { data, isLoading } = useGetPublicProfileQuery(profilId);
@@ -166,12 +137,18 @@ function FriendsPanel() {
             {friends.map((friend) => (
               <li key={friend.id}>
                 <Link
-                  to={`/marketplace/profiles/${friend.id}`}
+                  to={
+                    friend.username
+                      ? profilePath(friend.username, friend.type === "entreprise" ? "entreprise" : "dev")
+                      : `/marketplace/profiles/${friend.id}`
+                  }
                   className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 transition-colors hover:bg-muted/40"
                 >
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-                    {initialsOf(friend.name)}
-                  </span>
+                  <ProfileInitialsAvatar
+                    name={friend.name}
+                    kind={friend.type === "entreprise" ? "entreprise" : "dev"}
+                    openToWork={friend.type !== "entreprise" && friend.is_open_to_work}
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-foreground">
                       {friend.name}
@@ -196,11 +173,14 @@ function FriendsPanel() {
   );
 }
 
-/** « Mon profil pro » : le profil au centre, ses éléments liés (compétences, expériences, entreprise…) en orbite autour. */
-export default function MyProfilePage() {
+/**
+ * « Mon profil pro », affiché dans l'onglet « Profil dev » de ma page de profil : le profil au centre,
+ * ses éléments liés (compétences, expériences, entreprise…) en orbite autour.
+ */
+export function MyProfilePro({ photo }: { photo?: string | null }) {
   const user = useAuthSlice((state) => state.user);
   const { profil, company, isRecruiter, isLoading, isError } = useMySpace();
-  const dashboard = useGetDashboardQuery(undefined, { skip: !profil });
+  const stats = useStats("profile", { skip: !profil });
   const skills = useGetMySkillsQuery(undefined, { skip: !profil });
   const experiences = useGetMyExperiencesQuery(undefined, { skip: !profil });
   const connections = useGetConnectionsQuery(undefined, { skip: !profil });
@@ -252,8 +232,7 @@ export default function MyProfilePage() {
     );
   }
 
-  const summary = dashboard.data;
-  const percent = summary?.completeness.percent ?? 0;
+  const summary = stats.data;
   const skillCount = skills.data?.length ?? 0;
   const experienceCount = experiences.data?.length ?? 0;
   const periodsCount = summary?.availability.periods_count ?? 0;
@@ -273,12 +252,6 @@ export default function MyProfilePage() {
       icon: <Sparkles className="size-4" />,
       todo: skillCount < 3,
       onSelect: () => setPanel("skills"),
-      children: (skills.data ?? []).map((skill) => ({
-        key: String(skill.skill_id),
-        title: skill.name,
-        summary: `Niveau ${skill.level}`,
-        onSelect: () => setPanel("skills"),
-      })),
     },
     {
       key: "experiences",
@@ -290,12 +263,6 @@ export default function MyProfilePage() {
       icon: <Briefcase className="size-4" />,
       todo: experienceCount === 0,
       onSelect: () => setPanel("experiences"),
-      children: (experiences.data ?? []).map((exp) => ({
-        key: String(exp.id),
-        title: exp.title,
-        summary: exp.company_name,
-        onSelect: () => setPanel("experiences"),
-      })),
     },
     {
       key: "company",
@@ -306,16 +273,6 @@ export default function MyProfilePage() {
       icon: <Building2 className="size-4" />,
       todo: !company,
       onSelect: () => setPanel("company"),
-      children: company
-        ? [
-            {
-              key: String(company.id),
-              title: company.name,
-              summary: profil.is_company_owner ? "Propriétaire" : "Membre",
-              onSelect: () => setPanel("company"),
-            },
-          ]
-        : undefined,
     },
     {
       key: "availability",
@@ -324,9 +281,8 @@ export default function MyProfilePage() {
         ? `${AVAILABILITY_LABELS[current.status]} jusqu'au ${formatDate(current.end_date)}`
         : periodsCount > 0
           ? "Calendrier renseigné"
-          : "Aucune période",
+          : "Disponible (aucune période occupée)",
       icon: <CalendarDays className="size-4" />,
-      todo: periodsCount === 0,
       to: "/marketplace/availability",
     },
     {
@@ -346,12 +302,6 @@ export default function MyProfilePage() {
       icon: <Handshake className="size-4" />,
       todo: (connections.data?.length ?? summary?.connections_count ?? 0) === 0,
       onSelect: () => setPanel("friends"),
-      children: (connections.data ?? []).map((friend) => ({
-        key: String(friend.id),
-        title: friend.name,
-        summary: friend.headline || undefined,
-        onSelect: () => setPanel("friends"),
-      })),
     },
     {
       key: "reviews",
@@ -374,32 +324,13 @@ export default function MyProfilePage() {
   ];
 
   const center = (
-    <section
-      aria-label="Mon profil"
-      className="flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-card p-4 text-center shadow-md"
-    >
-      <CompletionAvatar name={fullName} percent={percent} />
-      <div className="flex min-w-0 flex-col gap-1 pt-1">
-        <h1 className="truncate text-lg font-semibold text-foreground">{fullName}</h1>
-        <p className="text-xs text-muted-foreground">
-          {profil.headline || "Ajoutez une accroche pour être mieux repéré."}
-        </p>
-      </div>
-      <div className="flex flex-wrap justify-center gap-1.5">
-        <Badge variant={profil.is_open_to_work ? "default" : "secondary"}>
-          {profil.is_open_to_work ? "Ouvert aux opportunités" : "Non disponible"}
-        </Badge>
-        {isRecruiter ? <Badge variant="outline">Recruteur · {company?.name}</Badge> : null}
-      </div>
-      <div className="flex flex-wrap justify-center gap-2">
-        <Button size="sm" onClick={() => setPanel("infos")}>
-          Modifier
-        </Button>
-        <Button asChild size="sm" variant="outline">
-          <Link to={`/marketplace/profiles/${profil.id}`}>Fiche publique</Link>
-        </Button>
-      </div>
-    </section>
+    <ProfileOrbitCenter
+      name={fullName}
+      photo={photo ?? user?.photo}
+      headline={profil.headline}
+      headlinePlaceholder="Ajoutez une accroche pour être mieux repéré."
+      openToWork={profil.is_open_to_work}
+    />
   );
 
   return (
@@ -455,6 +386,7 @@ export default function MyProfilePage() {
                     company={company}
                     canEdit={profil.is_company_owner}
                   />
+                  {company && profil.is_company_owner ? <CompanyInvitations /> : null}
                 </CardContent>
               </Card>
             ) : null}

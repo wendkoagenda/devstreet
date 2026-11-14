@@ -17,7 +17,15 @@ import {
   type AvailabilityFormValues,
 } from "../schema";
 
-const statusOptions = Object.entries(AVAILABILITY_LABELS).map(([value, label]) => ({ value, label }));
+/**
+ * Statuts proposés pour une période. Sans période on est disponible : on n'ajoute donc que des plages occupées
+ * (occupé, partiellement occupé, congé). « Disponible » n'est proposé que pour modifier une ancienne période qui l'avait.
+ */
+function statusOptionsFor(period: { status: string } | null) {
+  return Object.entries(AVAILABILITY_LABELS)
+    .filter(([value]) => value !== "available" || period?.status === "available")
+    .map(([value, label]) => ({ value, label }));
+}
 
 type AvailabilityFormProps = {
   /** Période à modifier ; null pour en ajouter une. */
@@ -60,14 +68,18 @@ export function AvailabilityForm({ period, onDone }: AvailabilityFormProps) {
         <div className="grid gap-3 sm:grid-cols-2">
           <TextField control={form.control} name="start_date" label="Du" type="date" />
           <TextField control={form.control} name="end_date" label="Au" type="date" />
-          <SelectField control={form.control} name="status" label="Statut" options={statusOptions} />
+          <SelectField
+            control={form.control}
+            name="status"
+            label="Statut"
+            options={statusOptionsFor(period)}
+          />
           <TextField
             control={form.control}
             name="hours_per_week"
             label="Heures par semaine"
             type="number"
           />
-          <TextField control={form.control} name="note" label="Note" className="sm:col-span-2" />
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onDone}>

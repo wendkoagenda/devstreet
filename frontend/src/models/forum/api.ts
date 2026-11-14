@@ -47,6 +47,64 @@ export type FeedListArg = {
     | "tags-suivis";
 };
 
+/** Résumé du profil dev d'un membre (le détail passe par la fiche marketplace). */
+export type MemberProfilDev = {
+  id: number;
+  headline: string;
+  city: string;
+  country: string;
+  is_open_to_work: boolean;
+};
+
+export type MemberOffer = {
+  id: number;
+  title: string;
+  type: string;
+  work_mode: string;
+  city: string;
+  country: string;
+  status: string;
+  published_at: string | null;
+};
+
+/** Profil entreprise d'un membre : sa société et les offres qu'il a publiées. */
+export type MemberProfilEntreprise = {
+  id: number;
+  is_owner: boolean;
+  is_member: boolean;
+  company: {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    sector: string;
+    size: string;
+    website: string;
+    country: string;
+    city: string;
+    is_verified: boolean;
+    // Réservés aux membres de l'entreprise
+    contact_email?: string;
+    phone?: string;
+    address?: string;
+  };
+  offers: MemberOffer[];
+};
+
+/** Page de profil d'un membre : identité + profils dev / entreprise éventuels. */
+export type MemberProfile = {
+  id: number;
+  username: string;
+  full_name: string;
+  photo?: string;
+  banner?: string;
+  is_following?: boolean;
+  /** Connexions du membre (profil dev et profil entreprise confondus), visibles sur sa page de profil. */
+  connections_count: number;
+  profil_dev: MemberProfilDev | null;
+  profil_entreprise: MemberProfilEntreprise | null;
+};
+
 export type ConversationMember = {
   id: number;
   username: string;
@@ -181,14 +239,7 @@ export const forumApi = createApi({
     }),
 
     getPublicProfile: builder.query<
-      {
-        id: number;
-        username: string;
-        full_name: string;
-        photo?: string;
-        banner?: string;
-        is_following?: boolean;
-      },
+      MemberProfile,
       number
     >({
       query: (userId) => `/membres/${userId}`,
@@ -198,14 +249,7 @@ export const forumApi = createApi({
     }),
 
     getPublicProfileByUsername: builder.query<
-      {
-        id: number;
-        username: string;
-        full_name: string;
-        photo?: string;
-        banner?: string;
-        is_following?: boolean;
-      },
+      MemberProfile,
       string
     >({
       query: (username) => `/membres/u/${encodeURIComponent(username)}`,

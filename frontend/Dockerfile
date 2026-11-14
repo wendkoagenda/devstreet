@@ -11,13 +11,11 @@ COPY . .
 # Ce sont des chemins ou URL publics (integres au JavaScript), jamais des secrets.
 ARG VITE_API_URL
 ARG VITE_API_V1_URL
-# Facultatives : absentes = pas de stockage GCS / S3 côté front
-ARG VITE_GCS_BUCKET_NAME
-ARG VITE_S3_BUCKET_URL
+# Facultative : absente = fichiers servis depuis /media/ ; true = fichiers lus via /api/v1/files/ (stockage S3/MinIO)
+ARG VITE_USE_S3
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_API_V1_URL=$VITE_API_V1_URL
-ENV VITE_GCS_BUCKET_NAME=$VITE_GCS_BUCKET_NAME
-ENV VITE_S3_BUCKET_URL=$VITE_S3_BUCKET_URL
+ENV VITE_USE_S3=$VITE_USE_S3
 
 RUN test -n "$VITE_API_URL" || (echo "ERROR: VITE_API_URL is empty. Pass it as a build argument." && exit 1)
 RUN test -n "$VITE_API_V1_URL" || (echo "ERROR: VITE_API_V1_URL is empty. Pass it as a build argument." && exit 1)

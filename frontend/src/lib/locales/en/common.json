@@ -12,6 +12,7 @@
   "is_active": "Is Active",
   "create_user": "Create User",
   "username": "Username",
+  "username_change_warning": "Changing the username changes the profile address: old links (/profil/<old name>) will stop working.",
   "personal_information": "Personal Information",
   "account_information": "Account Information",
   "security": "Security",

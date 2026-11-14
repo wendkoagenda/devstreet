@@ -1,3 +1,4 @@
+import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
 import { Link, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,6 @@ import {
   CANDIDATURE_STATUS_LABELS,
   OFFER_STATUS_LABELS,
   formatDate,
-  initialsOf,
   offerFacts,
 } from "../labels";
 import type { CandidatureStatus, OfferStatus } from "../schema";
@@ -75,12 +75,11 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
               <TableRow key={candidature.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <span
-                      className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold"
-                      aria-hidden
-                    >
-                      {initialsOf(profil?.name ?? "")}
-                    </span>
+                    <ProfileInitialsAvatar
+                      name={profil?.name ?? ""}
+                      openToWork={Boolean(profil?.is_open_to_work)}
+                      size="sm"
+                    />
                     <span className="flex flex-col">
                       <Link
                         to={`/marketplace/profiles/${profil?.id}`}
@@ -172,12 +171,7 @@ function RecommendedProfils({ offerId }: { offerId: number }) {
         <Link key={talent.id} to={`/marketplace/profiles/${talent.id}`} className="group block">
           <Card className="h-full transition-colors group-hover:bg-muted">
             <CardContent className="flex items-start gap-3 p-4">
-              <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold"
-                aria-hidden
-              >
-                {initialsOf(talent.name)}
-              </span>
+              <ProfileInitialsAvatar name={talent.name} openToWork={talent.is_open_to_work} />
               <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <span className="text-sm font-semibold text-foreground">{talent.name}</span>
                 <span className="text-xs text-muted-foreground">

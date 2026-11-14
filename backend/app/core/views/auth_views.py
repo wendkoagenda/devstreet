@@ -24,6 +24,7 @@ from app.core.serializers import (
     UserSerializer,
     PasswordChangeSerializer,
     UserLoginSerializer,
+    ProfileUpdateSerializer,
     PublicProfileSerializer,
     PublicRegisterSerializer,
     ForgotPasswordSerializer,
@@ -273,18 +274,27 @@ def me_view(request):
     },
     tags=['Auth']
 )
-@api_view(['GET'])
+@swagger_auto_schema(
+    method='patch',
+    operation_description="Modifier son prénom, son nom et son nom d'utilisateur (l'adresse du profil change avec lui)",
+    request_body=ProfileUpdateSerializer,
+    responses={200: UserLoginSerializer, 400: "Données invalides", 401: "Non authentifié"},
+    tags=['Auth']
+)
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     """
-    Retourne les informations du profil de l'utilisateur authentifié.
-    
-    Args:
-        request: La requête HTTP
-        
-    Returns:
-        Response: Les informations du profil utilisateur
+    Retourne (GET) ou met à jour (PATCH) le profil de l'utilisateur authentifié.
+
+    Le PATCH ne touche que le prénom, le nom et le nom d'utilisateur ; la photo et la bannière
+    passent par leurs propres endpoints.
     """
+    if request.method == 'PATCH':
+        serializer = ProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(UserLoginSerializer(request.user).data, status=status.HTTP_200_OK)
     serializer = UserSerializer(request.user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -321,7 +321,7 @@ Les champs `UUIDField` et `AutoField` ne sont pas proposés dans les formulaires
 
 #### Champs fichier (`FileField`)
 
-Le type `FileField` stocke en base un **chemin relatif** (`CharField` max 512) et délègue le binaire à `StorageService` (local ou GCS). Voir aussi [`00readme/README_STORAGE_FILE_MANAGEMENT.md`](../../00readme/README_STORAGE_FILE_MANAGEMENT.md).
+Le type `FileField` stocke en base un **chemin relatif** (`CharField` max 512) et délègue le binaire à `StorageService` (disque local ou S3/MinIO). Voir aussi [`00readme/README_STORAGE_FILE_MANAGEMENT.md`](../../00readme/README_STORAGE_FILE_MANAGEMENT.md).
 
 **Comportement :**
 
@@ -348,7 +348,7 @@ Le type `FileField` stocke en base un **chemin relatif** (`CharField` max 512) e
 
 Si `upload_folder` est omis, la valeur par défaut est `{resource_plural}/{field_name}` (ex. `elitests/document`).
 
-**Prérequis infra :** `USE_GCS`, `GS_*` dans `backend/.env` ; `VITE_GCS_BUCKET_NAME` dans `frontend/.env` ; parsers multipart activés dans `REST_FRAMEWORK`.
+**Prérequis infra :** `USE_S3` (et `S3_*` si activé) dans `backend/.env` ; `VITE_USE_S3` dans `frontend/.env` ; parsers multipart activés dans `REST_FRAMEWORK`.
 
 #### Champs système ajoutés automatiquement
 

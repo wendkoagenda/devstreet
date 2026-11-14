@@ -8,6 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -48,6 +49,42 @@ export function TextField<T extends FieldValues>({
               placeholder={placeholder}
               {...field}
               value={field.value ?? ""}
+            />
+          </FormControl>
+          {description ? <FormDescription>{description}</FormDescription> : null}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+/** Champ date avec calendrier ; la valeur du formulaire reste au format « AAAA-MM-JJ ». */
+export function DateField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  description,
+  className,
+  placeholder,
+  min,
+  max,
+}: FieldProps<T> & { placeholder?: string; min?: string; max?: string }) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={className}>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <DatePicker
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              placeholder={placeholder}
+              min={min}
+              max={max}
             />
           </FormControl>
           {description ? <FormDescription>{description}</FormDescription> : null}

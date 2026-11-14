@@ -330,8 +330,9 @@ Arrêt manuel sur la VM : `docker compose -p observabilite --project-directory /
 |---|---|
 | Installer / mettre à jour la stack | Auto après chaque deploy SSH (`minio-ssh`), ou Actions → **CD - MINIO SSH** |
 | Console admin | Tunnel → http://localhost:19001 (`MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`) |
-| Lecture publique des objets | Nginx `location /stockage/` → `minio-serveur:9000` (GET/HEAD) |
-| Activer l’app Django/frontend | `USE_S3=True` + `S3_*` dans `backend.env` ; `VITE_S3_BUCKET_URL=/stockage/<bucket>` côté frontend |
+| Lecture des objets | Bucket **privé**, aucune route Nginx vers MinIO : seule l’application lit les objets (`GET /api/v1/files/<chemin>`, utilisateur connecté) |
+| Activer l’app Django/frontend | `USE_S3=True` + `S3_ENDPOINT_URL` (`http://minio-serveur:9000`), `S3_BUCKET_NAME`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` dans `backend.env` ; `VITE_USE_S3=true` côté frontend |
+| Vérifier | `docker exec <conteneur backend> python manage.py check_storage` |
 | Logs d’urgence | **CD - MAINTENANCE logs-urgence** → `minio.log` |
 
 Stack partagée `/opt/apps/_minio` (réseau `proxy`), volume `minio-data` préservé. Si `USE_S3=False`, le serveur tourne quand même (console) sans provisionner de bucket applicatif.

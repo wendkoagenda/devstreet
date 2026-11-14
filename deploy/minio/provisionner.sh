@@ -20,8 +20,9 @@ echo "== Provision MinIO bucket=$S3_BUCKET_NAME"
 mc alias set local "$ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
 
 mc mb --ignore-existing "local/${S3_BUCKET_NAME}"
-# Lecture publique des objets (pas de listing) : meme modele que GCS public-read objet
-mc anonymous set download "local/${S3_BUCKET_NAME}"
+# Bucket PRIVE : aucune lecture anonyme (retire aussi un ancien acces public). Les fichiers ne sont lus que par
+# l'application (compte applicatif S3_ACCESS_KEY), qui les sert a un utilisateur connecte via /api/v1/files/.
+mc anonymous set none "local/${S3_BUCKET_NAME}"
 
 POLICY_FILE="/tmp/policy-${S3_BUCKET_NAME}.json"
 cat > "$POLICY_FILE" <<EOF

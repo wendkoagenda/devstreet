@@ -1,6 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "@/helpers/api/base-query";
-import type { MySpace } from "./schema";
+import type { EntrepriseInvitation, InvitationDetail, MySpace } from "./schema";
 
 /** Profil et entreprise de l'utilisateur connecté (aucune permission RBAC : chacun gère ses propres données). */
 export const marketplaceSpaceApi = createApi({
@@ -18,6 +18,7 @@ export const marketplaceSpaceApi = createApi({
     "Connections",
     "Availabilities",
     "Experiences",
+    "Invitations",
   ],
   endpoints: (builder) => ({
     getMySpace: builder.query<MySpace, void>({
@@ -56,6 +57,35 @@ export const marketplaceSpaceApi = createApi({
       }),
       invalidatesTags: ["MySpace"],
     }),
+    getMyInvitations: builder.query<EntrepriseInvitation[], void>({
+      query: () => "/marketplace/me/invitations",
+      providesTags: ["Invitations"],
+    }),
+    createInvitation: builder.mutation<EntrepriseInvitation, { email?: string }>({
+      query: (body) => ({
+        url: "/marketplace/me/invitations",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Invitations"],
+    }),
+    revokeInvitation: builder.mutation<EntrepriseInvitation, number>({
+      query: (id) => ({
+        url: `/marketplace/me/invitations/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Invitations"],
+    }),
+    getInvitation: builder.query<InvitationDetail, string>({
+      query: (token) => `/marketplace/invitations/${encodeURIComponent(token)}`,
+    }),
+    acceptInvitation: builder.mutation<{ company: { id: number; name: string } }, string>({
+      query: (token) => ({
+        url: `/marketplace/invitations/${encodeURIComponent(token)}/accept`,
+        method: "POST",
+      }),
+      invalidatesTags: ["MySpace", "Invitations"],
+    }),
   }),
 });
 
@@ -65,4 +95,9 @@ export const {
   useUpdateMyProfilMutation,
   useCreateMyCompanyMutation,
   useUpdateMyCompanyMutation,
+  useGetMyInvitationsQuery,
+  useCreateInvitationMutation,
+  useRevokeInvitationMutation,
+  useGetInvitationQuery,
+  useAcceptInvitationMutation,
 } = marketplaceSpaceApi;

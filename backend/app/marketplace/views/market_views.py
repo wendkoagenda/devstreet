@@ -11,7 +11,7 @@ from app.marketplace.market_serializers import (
     OfferWriteSerializer,
     ProfilSkillsSerializer,
 )
-from app.marketplace.services.dashboard_service import DashboardService
+from app.marketplace.services.stats_service import StatsService
 from app.marketplace.services.market_service import MarketService
 
 
@@ -129,6 +129,9 @@ def candidature_decision(request, candidature_id):
 @swagger_auto_schema(method="get", tags=["V1 - Marketplace offres"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def dashboard(request):
-    """GET /marketplace/me/dashboard : indicateurs de mon profil, de mes candidatures et, si je recrute, de mon entreprise."""
-    return Response(DashboardService.build(request.user))
+def stats(request):
+    """
+    GET /marketplace/me/stats?scope=… : petites statistiques de la page demandée (offers, talents, pool, applications,
+    availability, cv, profile, explore, network).
+    """
+    return Response(StatsService.get(request.user, request.query_params.get("scope")))

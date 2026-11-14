@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreationErrorSonner } from "@/helpers/api/feed-backs";
@@ -24,7 +25,7 @@ function describe(card: DeckCard): CardFacts {
 }
 
 function TalentsContent() {
-  const { data, isLoading, isError } = useGetDeckQuery("recruit", {
+  const { data, isLoading, isError } = useGetDeckQuery({ context: "recruit" }, {
     refetchOnMountOrArgChange: true,
   });
   const [swipe] = useSwipeMutation();
@@ -46,7 +47,6 @@ function TalentsContent() {
       likeVerb="garder le profil dans votre vivier"
       likeStamp="Vivier"
       likeAria="Garder dans le vivier"
-      keptLabel={(kept) => `Vivier : ${kept}`}
       describe={describe}
       matchedText={(name) => name}
       emptyAction={
@@ -64,7 +64,7 @@ function TalentsContent() {
       }}
       onUndo={async () => {
         try {
-          await undo("recruit").unwrap();
+          await undo({ context: "recruit" }).unwrap();
           return true;
         } catch {
           CreationErrorSonner("Impossible d'annuler le dernier choix");
@@ -79,7 +79,15 @@ function TalentsContent() {
 export default function TalentsPage() {
   return (
     <RequireRecruiter>
-      <TalentsContent />
+      <div className="flex flex-col gap-6">
+        <Button asChild variant="outline" size="sm" className="mx-auto">
+          <Link to="/marketplace/talents/pool">
+            <Users className="mr-1.5 size-4" aria-hidden />
+            Voir le vivier
+          </Link>
+        </Button>
+        <TalentsContent />
+      </div>
     </RequireRecruiter>
   );
 }

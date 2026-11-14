@@ -14,7 +14,7 @@ class ProfilRepository(ProfilRepositoryInterface):
 
     # Champs sur lesquels porte la recherche textuelle (?search=) et champs autorisés pour le tri (?ordering=)
     SEARCH_FIELDS = ('slug', 'headline', 'bio', 'phone', 'country', 'city', 'timezone', 'currency', 'github_url', 'linkedin_url', 'portfolio_url', 'cv_visibility',)
-    ORDERING_FIELDS = ('id', 'is_company_owner', 'slug', 'photo', 'headline', 'bio', 'phone', 'country', 'city', 'remote', 'timezone', 'default_hours_per_week', 'is_open_to_work', 'daily_rate', 'currency', 'years_of_experience', 'github_url', 'linkedin_url', 'portfolio_url', 'cv_visibility', 'created_at', 'updated_at',)
+    ORDERING_FIELDS = ('id', 'type', 'is_company_owner', 'slug', 'photo', 'headline', 'bio', 'phone', 'country', 'city', 'remote', 'timezone', 'default_hours_per_week', 'is_open_to_work', 'daily_rate', 'currency', 'years_of_experience', 'github_url', 'linkedin_url', 'portfolio_url', 'cv_visibility', 'created_at', 'updated_at',)
 
     def get_all(self, search: Optional[str] = None, ordering: Optional[str] = None) -> QuerySet:
         """

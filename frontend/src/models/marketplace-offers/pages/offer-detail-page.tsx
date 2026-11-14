@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RequireProfil } from "@/models/marketplace-space/components/guards";
+import { RequireMarketplaceMember } from "@/models/marketplace-space/components/guards";
 import { countryName } from "@/models/marketplace-space/options";
 import { useGetOfferQuery } from "../api";
 import { ScoreBreakdown } from "../components/score";
@@ -135,8 +135,8 @@ function OfferDetailContent() {
 /** Fiche d'une offre : description, compétences et détail du score pour le profil connecté. */
 export default function OfferDetailPage() {
   return (
-    <RequireProfil>
+    <RequireMarketplaceMember>
       <OfferDetailContent />
-    </RequireProfil>
+    </RequireMarketplaceMember>
   );
 }

@@ -64,7 +64,7 @@ export default function ShowOfferDialogContent() {
             <Label className="text-sm font-medium">Experience level</Label>
             <p className="mt-1">
               {(() => {
-                const labels = {"junior": "Junior", "mid": "Confirmé", "senior": "Sénior"} as Record<string, string>;
+                const labels = {"junior": "Junior", "mid": "Intermédiaire", "senior": "Senior", "expert": "Expert"} as Record<string, string>;
                 const value = selectedOffer.experience_level;
                 return labels[String(value ?? "")] ?? String(value ?? "—");
               })()}

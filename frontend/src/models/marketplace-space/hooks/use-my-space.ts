@@ -15,6 +15,8 @@ export function useMySpace() {
     company,
     hasProfil: profil !== null,
     isRecruiter: company !== null,
+    /** Au moins un profil : dev ou entreprise. */
+    hasAnyProfile: profil !== null || company !== null,
     isLoading,
     isError,
     refetch,

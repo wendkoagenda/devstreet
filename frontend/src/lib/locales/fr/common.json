@@ -22,6 +22,7 @@
   "is_active": "Actif",
   "create_user": "Créer un utilisateur",
   "username": "Nom d'utilisateur",
+  "username_change_warning": "Changer le nom d'utilisateur modifie l'adresse du profil : les anciens liens (/profil/<ancien nom>) ne fonctionneront plus.",
   "personal_information": "Informations personnelles",
   "account_information": "Informations de compte",
   "security": "Sécurité",
