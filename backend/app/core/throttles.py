@@ -56,3 +56,13 @@ class CsrfThrottle(AnonRateThrottle):
 class HealthThrottle(AnonRateThrottle):
     """Route de santé : chaque appel interroge la base, donc la fréquence est bornée."""
     scope = 'health'
+
+
+class OAuthStartThrottle(AnonRateThrottle):
+    """Démarrage du flux OAuth (redirection IdP)."""
+    scope = 'oauth_start'
+
+
+class OAuthCallbackThrottle(AnonRateThrottle):
+    """Callback OAuth (échange de code)."""
+    scope = 'oauth_callback'

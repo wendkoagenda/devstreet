@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from config.env import required, required_bool, required_list  # noqa: E402 (après load_dotenv)
+from config.env import optional, required, required_bool, required_list  # noqa: E402 (après load_dotenv)
 from config.env_secrets import read_admin_credentials, read_signing_secrets  # noqa: E402
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -194,6 +194,8 @@ REST_FRAMEWORK = {
         'logout': '30/minute',
         'csrf': '60/minute',
         'health': '60/minute',
+        'oauth_start': '20/minute',
+        'oauth_callback': '20/minute',
     },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -388,6 +390,13 @@ DEFAULT_FROM_EMAIL = required('DEFAULT_FROM_EMAIL')
 
 # URL publique du frontend (liens présents dans les e-mails)
 FRONTEND_URL = required('FRONTEND_URL').rstrip('/')
+
+# OAuth social (Google / GitHub) : facultatif. Absent → routes start en 503, boutons front masqués.
+# Callback à déclarer chez le provider : {origine API}/api/auth/oauth/{google|github}/callback
+GOOGLE_OAUTH_CLIENT_ID = optional('GOOGLE_OAUTH_CLIENT_ID')
+GOOGLE_OAUTH_CLIENT_SECRET = optional('GOOGLE_OAUTH_CLIENT_SECRET')
+GITHUB_OAUTH_CLIENT_ID = optional('GITHUB_OAUTH_CLIENT_ID')
+GITHUB_OAUTH_CLIENT_SECRET = optional('GITHUB_OAUTH_CLIENT_SECRET')
 
 # Sécurité HTTP : actif hors DEBUG
 SESSION_COOKIE_SECURE = not DEBUG

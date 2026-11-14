@@ -1103,7 +1103,17 @@
     "panel_register_description": "Create your account to publish, apply and collaborate.",
     "panel_register_point_1": "Pro profile and skills",
     "panel_register_point_2": "Messaging and communities",
-    "panel_register_point_3": "Marketplace & hub access"
+    "panel_register_point_3": "Marketplace & hub access",
+    "oauth_google": "Continue with Google",
+    "oauth_github": "Continue with GitHub",
+    "oauth_or": "or",
+    "oauth_error_denied": "Social sign-in was cancelled",
+    "oauth_error_inactive": "This account is disabled",
+    "oauth_error_invalid_state": "OAuth session invalid or expired, try again",
+    "oauth_error_exchange": "Could not complete social sign-in",
+    "oauth_error_email": "No verified email was provided by the provider",
+    "oauth_error_not_configured": "This sign-in method is not configured",
+    "oauth_error_generic": "Social sign-in failed"
   },
   "my_account": {
     "title": "My Account",

@@ -1156,7 +1156,17 @@
     "panel_register_description": "Créez votre compte pour publier, postuler et collaborer.",
     "panel_register_point_1": "Profil pro et compétences",
     "panel_register_point_2": "Messagerie et communautés",
-    "panel_register_point_3": "Accès marketplace & hub"
+    "panel_register_point_3": "Accès marketplace & hub",
+    "oauth_google": "Continuer avec Google",
+    "oauth_github": "Continuer avec GitHub",
+    "oauth_or": "ou",
+    "oauth_error_denied": "Connexion sociale annulée",
+    "oauth_error_inactive": "Ce compte est désactivé",
+    "oauth_error_invalid_state": "Session OAuth invalide ou expirée, réessayez",
+    "oauth_error_exchange": "Impossible de finaliser la connexion sociale",
+    "oauth_error_email": "Aucun e-mail vérifié n'a été fourni par le provider",
+    "oauth_error_not_configured": "Ce mode de connexion n'est pas configuré",
+    "oauth_error_generic": "La connexion sociale a échoué"
   },
   "my_account": {
     "title": "Mon compte",
