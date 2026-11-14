@@ -220,3 +220,60 @@ class AuditLog(models.Model):
         if not self._state.adding:
             raise ValueError("Une entrée du journal d'audit ne se modifie pas")
         super().save(*args, **kwargs)
+
+
+class SocialAccount(models.Model):
+    """
+    Compte OAuth lié à un utilisateur DevStreet (Google, GitHub).
+    Un même utilisateur peut avoir plusieurs providers ; un couple
+    (provider, provider_user_id) n'appartient qu'à un seul compte.
+    """
+
+    PROVIDER_GOOGLE = 'google'
+    PROVIDER_GITHUB = 'github'
+    PROVIDER_CHOICES = (
+        (PROVIDER_GOOGLE, 'Google'),
+        (PROVIDER_GITHUB, 'GitHub'),
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='social_accounts',
+        help_text="Utilisateur DevStreet lié à ce compte social",
+    )
+    provider = models.CharField(
+        max_length=20,
+        choices=PROVIDER_CHOICES,
+        help_text="Fournisseur OAuth (google, github)",
+    )
+    provider_user_id = models.CharField(
+        max_length=255,
+        help_text="Identifiant stable chez le fournisseur",
+    )
+    email = models.EmailField(
+        blank=True,
+        default='',
+        help_text="E-mail renvoyé par le fournisseur au moment de la liaison",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'core_social_account'
+        ordering = ['provider', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['provider', 'provider_user_id'],
+                name='core_social_provider_uid_uniq',
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=['user', 'provider'],
+                name='core_social_user_id_5f0e0c_idx',
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.provider}:{self.provider_user_id} -> user {self.user_id}"

@@ -38,6 +38,7 @@ import {
   useUploadForumImageMutation,
   useUploadForumMediaMutation,
 } from "../api";
+import { ComposerTagPicker } from "./composer-tag-picker";
 import { ForumAvatar } from "./forum-avatar";
 
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/gif,image/webp";
@@ -47,8 +48,13 @@ const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 type FeedComposerProps = {
   onCreated?: (id: number) => void;
+  onCancel?: () => void;
   espaceId?: number | null;
   discussionOnly?: boolean;
+  /** Ouvre directement le formulaire (ex. dans une modale). */
+  forceExpanded?: boolean;
+  /** Retire le cadre carte (ex. déjà dans un Dialog). */
+  bare?: boolean;
 };
 
 type ComposerMode =
@@ -130,6 +136,7 @@ function ComposerForm({
       titre: "",
       description: "",
       images_data: [],
+      tags_data: [],
       lien_app: "",
       plateforme_app: "WEB",
       contraintes: "",
@@ -142,6 +149,7 @@ function ComposerForm({
 
   const descriptionRegister = register("description");
   const images = watch("images_data") ?? [];
+  const tagsData = watch("tags_data") ?? [];
   const optionsData = watch("options_data") ?? [];
 
   useEffect(() => {
@@ -186,6 +194,7 @@ function ComposerForm({
       titre: "",
       description: "",
       images_data: [],
+      tags_data: [],
       lien_app: "",
       plateforme_app: "WEB",
       contraintes: "",
@@ -333,6 +342,7 @@ function ComposerForm({
   };
 
   const onSubmit = handleSubmit(async (values) => {
+    const tags_data = (values.tags_data ?? []).slice(0, 3);
     try {
       if (mode === "APPLICATION") {
         const created = await createApplication({
@@ -341,6 +351,7 @@ function ComposerForm({
           lien_app: values.lien_app || "",
           plateforme_app: values.plateforme_app || "WEB",
           images_data: values.images_data ?? [],
+          tags_data,
         }).unwrap();
         toast.success("Application publiée");
         resetForm();
@@ -353,6 +364,7 @@ function ComposerForm({
           titre: values.titre,
           description: values.description,
           images_data: values.images_data ?? [],
+          tags_data,
         }).unwrap();
         toast.success("Demande d'entraide publiée");
         resetForm();
@@ -372,6 +384,7 @@ function ComposerForm({
             position,
           })),
           images_data: values.images_data ?? [],
+          tags_data,
         }).unwrap();
         toast.success("Aide au choix publiée");
         resetForm();
@@ -383,6 +396,7 @@ function ComposerForm({
         titre: values.titre,
         description: values.description,
         images_data: values.images_data ?? [],
+        tags_data,
         ...(espaceId ? { espace_id: espaceId } : {}),
       }).unwrap();
       toast.success("Discussion publiée");
@@ -560,6 +574,19 @@ function ComposerForm({
           </div>
         ) : null}
       </div>
+
+      <ComposerTagPicker
+        value={tagsData}
+        onChange={(labels) =>
+          setValue("tags_data", labels, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+      />
+      {errors.tags_data?.message ? (
+        <p className="text-xs text-destructive">{errors.tags_data.message}</p>
+      ) : null}
 
       {mode === "APPLICATION" ? (
         <div className="space-y-2">
@@ -817,16 +844,35 @@ function ComposerForm({
 
 export function FeedComposer({
   onCreated,
+  onCancel,
   espaceId = null,
   discussionOnly = false,
+  forceExpanded = false,
+  bare = false,
 }: FeedComposerProps) {
   const user = useAuthSlice((state) => state.user);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(forceExpanded);
   const [mode, setMode] = useState<ComposerMode>("DISCUSSION");
   const displayName = user?.full_name || user?.username || "Vous";
 
+  const handleCreated = (id: number) => {
+    if (!forceExpanded) setExpanded(false);
+    setMode("DISCUSSION");
+    onCreated?.(id);
+  };
+
+  const handleCancel = () => {
+    if (!forceExpanded) setExpanded(false);
+    setMode("DISCUSSION");
+    onCancel?.();
+  };
+
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+    <section
+      className={cn(
+        !bare && "rounded-xl border border-border/80 bg-card p-3.5 sm:p-4"
+      )}
+    >
       <div className="flex gap-3">
         <ForumAvatar
           name={displayName}
@@ -839,7 +885,7 @@ export function FeedComposer({
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="flex w-full items-center rounded-xl border border-border bg-muted/50 px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted"
+              className="flex w-full items-center rounded-lg border border-brand-soft-border bg-brand-soft/60 px-4 py-3 text-left text-sm text-muted-foreground transition-colors duration-150 hover:border-brand/30 hover:bg-brand-soft hover:text-foreground"
             >
               {espaceId
                 ? "Écrire une discussion dans cette communauté…"
@@ -852,15 +898,8 @@ export function FeedComposer({
               onModeChange={setMode}
               espaceId={espaceId}
               discussionOnly={discussionOnly || Boolean(espaceId)}
-              onCreated={(id) => {
-                setExpanded(false);
-                setMode("DISCUSSION");
-                onCreated?.(id);
-              }}
-              onCancel={() => {
-                setExpanded(false);
-                setMode("DISCUSSION");
-              }}
+              onCreated={handleCreated}
+              onCancel={handleCancel}
             />
           )}
         </div>

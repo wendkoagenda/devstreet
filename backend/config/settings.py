@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from config.env import required, required_bool, required_list  # noqa: E402 (après load_dotenv)
+from config.env import optional, required, required_bool, required_list  # noqa: E402 (après load_dotenv)
 from config.env_secrets import read_admin_credentials, read_signing_secrets  # noqa: E402
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -194,6 +194,9 @@ REST_FRAMEWORK = {
         'logout': '30/minute',
         'csrf': '60/minute',
         'health': '60/minute',
+        'oauth_providers': '60/minute',
+        'oauth_start': '20/minute',
+        'oauth_callback': '20/minute',
     },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -237,6 +240,37 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = required_list('CORS_ALLOWED_ORIGINS')
 
 CORS_ALLOW_CREDENTIALS = True
+
+# En DEBUG : téléphone sur le LAN / tunnel Cloudflare (Vite proxy).
+# Sans ça, les POST (like, commentaire, message) renvoient 403 CSRF.
+if DEBUG:
+    import socket
+    import sys
+    from ipaddress import ip_address
+
+    _lan_origins: list[str] = []
+    try:
+        _hostname = socket.gethostname()
+        for _info in socket.getaddrinfo(_hostname, None, socket.AF_INET):
+            _ip = _info[4][0]
+            try:
+                _addr = ip_address(_ip)
+            except ValueError:
+                print(f'CORS LAN : adresse ignorée ({_ip})', file=sys.stderr)
+                continue
+            if _addr.is_private and not _addr.is_loopback:
+                _lan_origins.append(f'http://{_ip}:5173')
+    except OSError as _error:
+        print(f'CORS LAN : détection des adresses impossible ({_error})', file=sys.stderr)
+
+    CORS_ALLOWED_ORIGINS = list(
+        dict.fromkeys([*CORS_ALLOWED_ORIGINS, *_lan_origins])
+    )
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r'^https://[a-z0-9-]+\.trycloudflare\.com$',
+        r'^https://[a-z0-9-]+\.ngrok-free\.app$',
+        r'^https://[a-z0-9-]+\.ngrok\.io$',
+    ]
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -354,6 +388,13 @@ DEFAULT_FROM_EMAIL = required('DEFAULT_FROM_EMAIL')
 # URL publique du frontend (liens présents dans les e-mails)
 FRONTEND_URL = required('FRONTEND_URL').rstrip('/')
 
+# OAuth social (Google / GitHub) : facultatif. Absent → routes start en 503, boutons front masqués.
+# Callback à déclarer chez le provider : {origine API}/api/auth/oauth/{google|github}/callback
+GOOGLE_OAUTH_CLIENT_ID = optional('GOOGLE_OAUTH_CLIENT_ID')
+GOOGLE_OAUTH_CLIENT_SECRET = optional('GOOGLE_OAUTH_CLIENT_SECRET')
+OAUTH_GITHUB_CLIENT_ID = optional('OAUTH_GITHUB_CLIENT_ID')
+OAUTH_GITHUB_CLIENT_SECRET = optional('OAUTH_GITHUB_CLIENT_SECRET')
+
 # Sécurité HTTP : actif hors DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -405,3 +446,16 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 # Origines exactes autorisées à envoyer des requêtes modifiantes (schéma + hôte + port)
 CSRF_TRUSTED_ORIGINS = required_list('CSRF_TRUSTED_ORIGINS')
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = list(
+        dict.fromkeys(
+            [
+                *CSRF_TRUSTED_ORIGINS,
+                *_lan_origins,
+                'https://*.trycloudflare.com',
+                'https://*.ngrok-free.app',
+                'https://*.ngrok.io',
+            ]
+        )
+    )

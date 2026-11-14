@@ -23,6 +23,11 @@ from app.core.views.auth_views import (
     user_roles_view,
     CustomTokenVerifyView
 )
+from app.core.views.oauth_views import (
+    oauth_callback_view,
+    oauth_providers_view,
+    oauth_start_view,
+)
 from app.core.views.health_views import health_view
 from app.core.views.user_viewset import UserViewSet
 from app.core.views.role_viewset import RoleViewSet
@@ -47,6 +52,11 @@ urlpatterns = [
 
     # Inscription publique (crée le compte + cookies de session)
     path('auth/register', register_view, name='register'),
+
+    # OAuth Google / GitHub (facultatif selon .env)
+    path('auth/oauth/providers', oauth_providers_view, name='oauth_providers'),
+    path('auth/oauth/<str:provider>/start', oauth_start_view, name='oauth_start'),
+    path('auth/oauth/<str:provider>/callback', oauth_callback_view, name='oauth_callback'),
     
     # Rafraîchir le token d'accès
     path('auth/token/refresh', CustomTokenRefreshView.as_view(), name='token_refresh'),

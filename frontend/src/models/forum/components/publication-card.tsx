@@ -7,7 +7,6 @@ import {
   Code2,
   Expand,
   ExternalLink,
-  FolderKanban,
   Heart,
   HelpCircle,
   MessageCircle,
@@ -36,8 +35,9 @@ import {
   useTogglePublicationFavoriMutation,
   useTogglePublicationLikeMutation,
   useToggleSuivreMembreMutation,
+  useToggleSuivreTagMutation,
 } from "../api";
-import type { Publication, PublicationImage } from "../schema";
+import type { ForumTag, Publication, PublicationImage } from "../schema";
 import { ChoixOptionsButtons } from "./choix-options-buttons";
 import { FeedVideoPlayer } from "./feed-video-player";
 import { ForumAvatar } from "./forum-avatar";
@@ -55,33 +55,27 @@ const TYPE_META: Record<
   {
     label: string;
     Icon: typeof MessagesSquare;
-    soft: string;
   }
 > = {
   DISCUSSION: {
     label: "Discussion",
     Icon: MessagesSquare,
-    soft: "bg-info/10 text-info",
   },
   APPLICATION: {
     label: "Showcase",
     Icon: Sparkles,
-    soft: "bg-brand-soft text-brand-strong",
   },
   ENTRAIDE: {
     label: "Code Review",
     Icon: Code2,
-    soft: "bg-warning-soft text-warning",
   },
   CHOIX: {
     label: "Débat",
     Icon: HelpCircle,
-    soft: "bg-success/10 text-success",
   },
   SONDAGE: {
     label: "Sondage",
     Icon: Vote,
-    soft: "bg-brand-soft text-brand-strong",
   },
 };
 
@@ -453,6 +447,24 @@ function FollowPublicationTarget({
   const busy = followBusy || joinBusy || leaveBusy;
 
   if (channelPublic && publication.espace?.id) {
+    const isCreator = publication.espace.mon_role === "SUPER_ADMIN";
+
+    if (isCreator) {
+      return (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 shrink-0 gap-1 px-2 text-[11px] sm:h-8 sm:gap-1.5 sm:px-3 sm:text-sm"
+          disabled
+          title="Tu es le créateur de cette chaîne"
+        >
+          <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden />
+          Créateur
+        </Button>
+      );
+    }
+
     const handleToggleChannel = async () => {
       const espaceId = publication.espace!.id;
       const prev = joined;
@@ -465,12 +477,22 @@ function FollowPublicationTarget({
           await rejoindre(espaceId).unwrap();
           toast.success("Tu suis cette chaîne");
         }
-      } catch {
+      } catch (error) {
         setJoined(prev);
+        const apiError =
+          error &&
+          typeof error === "object" &&
+          "data" in error &&
+          error.data &&
+          typeof error.data === "object" &&
+          "error" in error.data
+            ? String((error.data as { error: unknown }).error)
+            : null;
         toast.error(
-          prev
-            ? "Impossible de se désabonner"
-            : "Impossible de s'abonner à la chaîne"
+          apiError ||
+            (prev
+              ? "Impossible de se désabonner"
+              : "Impossible de s'abonner à la chaîne")
         );
       }
     };
@@ -480,12 +502,12 @@ function FollowPublicationTarget({
         type="button"
         size="sm"
         variant={joined ? "outline" : "default"}
-        className="h-8 shrink-0 gap-1.5"
+        className="h-7 shrink-0 gap-1 px-2 text-[11px] sm:h-8 sm:gap-1.5 sm:px-3 sm:text-sm"
         disabled={busy}
         onClick={() => void handleToggleChannel()}
       >
-        <Users className="h-3.5 w-3.5" aria-hidden />
-        {joined ? "Abonné" : "Suivre la chaîne"}
+        <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden />
+        {joined ? "Abonné" : "Suivre"}
       </Button>
     );
   }
@@ -513,17 +535,66 @@ function FollowPublicationTarget({
         type="button"
         size="sm"
         variant={following ? "outline" : "default"}
-        className="h-8 shrink-0 gap-1.5"
+        className="h-7 shrink-0 gap-1 px-2 text-[11px] sm:h-8 sm:gap-1.5 sm:px-3 sm:text-sm"
         disabled={busy}
         onClick={() => void handleToggleAuthor()}
       >
-        <UserPlus className="h-3.5 w-3.5" aria-hidden />
+        <UserPlus className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden />
         {following ? "Suivi" : "Suivre"}
       </Button>
     );
   }
 
   return null;
+}
+
+function PublicationTagChip({ tag }: { tag: ForumTag }) {
+  const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
+  const [toggleSuivreTag, { isLoading }] = useToggleSuivreTagMutation();
+  const [followed, setFollowed] = useState(Boolean(tag.followed_by_me));
+
+  useEffect(() => {
+    setFollowed(Boolean(tag.followed_by_me));
+  }, [tag.id, tag.followed_by_me]);
+
+  const handleToggleFollow = async () => {
+    if (!isAuthenticated || isLoading) return;
+    const prev = followed;
+    setFollowed(!prev);
+    try {
+      const result = await toggleSuivreTag(tag.slug).unwrap();
+      setFollowed(result.following);
+      toast.success(
+        result.following
+          ? `#${tag.slug} ajouté à Mes favoris`
+          : `#${tag.slug} retiré de Mes favoris`
+      );
+    } catch {
+      setFollowed(prev);
+      toast.error("Impossible de mettre à jour le thème");
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      disabled={!isAuthenticated || isLoading}
+      onClick={() => void handleToggleFollow()}
+      className={cn(
+        "rounded-md border px-2 py-0.5 font-mono text-[11px] transition-colors",
+        followed
+          ? "border-brand-soft-border bg-brand-soft text-brand"
+          : "border-border bg-muted/40 text-muted-foreground hover:border-brand-soft-border hover:bg-brand-soft hover:text-brand"
+      )}
+      aria-label={
+        followed ? `Ne plus suivre #${tag.slug}` : `Suivre #${tag.slug}`
+      }
+      aria-pressed={followed}
+      title={followed ? "Dans Tags suivis" : "Ajouter aux tags suivis"}
+    >
+      #{tag.slug}
+    </button>
+  );
 }
 
 function isInteractiveTarget(target: EventTarget | null) {
@@ -665,96 +736,13 @@ export function PublicationCard({
       .finally(() => setSaveBusy(false));
   };
 
-  const authorBlock = (
-    <div className="flex items-center gap-3">
-      {publication.auteur?.id ? (
-        <Link
-          to={`/forum/profil/${publication.auteur.id}`}
-          className="shrink-0"
-          aria-label={`Profil de ${authorName}`}
-        >
-          <ForumAvatar
-            name={authorName}
-            photo={publication.auteur?.photo}
-            tone="soft"
-            size={isApplication ? "sm" : "md"}
-          />
-        </Link>
-      ) : (
-        <ForumAvatar
-          name={authorName}
-          photo={publication.auteur?.photo}
-          tone="soft"
-          size={isApplication ? "sm" : "md"}
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          {publication.auteur?.id ? (
-            <Link
-              to={`/forum/profil/${publication.auteur.id}`}
-              className="truncate text-sm font-semibold text-foreground hover:underline"
-            >
-              {authorName}
-            </Link>
-          ) : (
-            <span className="truncate text-sm font-semibold text-foreground">
-              {authorName}
-            </span>
-          )}
-          <span className="truncate text-xs text-muted-foreground">
-            {handle}
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {formatRelativeDate(publication.created_at)}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium",
-            typeMeta.soft
-          )}
-        >
-          <TypeIcon className="h-3 w-3" aria-hidden />
-          {typeMeta.label}
-        </span>
-        <FollowPublicationTarget publication={publication} />
-      </div>
-    </div>
-  );
-
-  const contextLinks =
-    publication.espace?.id || publication.projet?.id ? (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        {publication.espace?.id ? (
-          <Link
-            to={
-              publication.espace.type === "CHAINE"
-                ? `/forum/chaines/${publication.espace.id}`
-                : `/forum/communautes/${publication.espace.id}`
-            }
-            className="inline-flex max-w-full items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-brand"
-          >
-            <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{publication.espace.nom}</span>
-          </Link>
-        ) : null}
-        {publication.projet?.id ? (
-          <Link
-            to={`/hub/projects/${publication.projet.id}`}
-            className="inline-flex max-w-full items-center gap-1 font-medium text-muted-foreground transition-colors hover:text-brand"
-          >
-            <FolderKanban className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="truncate">
-              {publication.projet.titre?.trim() ||
-                `Projet #${publication.projet.id}`}
-            </span>
-          </Link>
-        ) : null}
-      </div>
-    ) : null;
+  const contextSubtitle =
+    publication.espace?.nom ||
+    (publication.projet?.titre?.trim()
+      ? publication.projet.titre.trim()
+      : publication.projet?.id
+        ? `Projet #${publication.projet.id}`
+        : null);
 
   return (
     <article
@@ -768,66 +756,130 @@ export function PublicationCard({
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border bg-card transition duration-300",
-        "hover:border-border/80 hover:shadow-[0_12px_40px_-24px_hsl(var(--foreground)/0.35)]",
+        "overflow-hidden rounded-lg border border-border bg-card",
         !disableCardNav &&
-          "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          "cursor-pointer transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
       )}
     >
-      {isApplication && publication.images.length > 0 ? (
-        <div className="relative" data-no-card-nav>
-          <MediaMosaic
-            images={publication.images}
-            titre={publication.titre}
-          />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-card via-card/70 to-transparent" />
-        </div>
-      ) : null}
-
-      <div className="space-y-3 p-4 sm:p-5">
-        {authorBlock}
-        {contextLinks}
-
-        <div className="space-y-2.5">
-          <h2
-            className={cn(
-              "font-semibold tracking-tight text-foreground",
-              isApplication
-                ? "text-xl sm:text-2xl"
-                : "text-lg leading-snug sm:text-xl"
-            )}
+      <div className="flex items-start gap-2.5 px-3 pt-3 sm:gap-3 sm:px-5 sm:pt-5">
+        {publication.auteur?.id ? (
+          <Link
+            to={`/forum/profil/${publication.auteur.id}`}
+            className="shrink-0"
+            aria-label={`Profil de ${authorName}`}
           >
-            <Link
-              to={detailHref}
-              className="transition-colors hover:text-brand"
-            >
+            <ForumAvatar
+              name={authorName}
+              photo={publication.auteur?.photo}
+              tone="soft"
+              size="sm"
+              className="sm:h-10 sm:w-10 sm:text-xs"
+            />
+          </Link>
+        ) : (
+          <ForumAvatar
+            name={authorName}
+            photo={publication.auteur?.photo}
+            tone="soft"
+            size="sm"
+            className="sm:h-10 sm:w-10 sm:text-xs"
+          />
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                {publication.auteur?.id ? (
+                  <Link
+                    to={`/forum/profil/${publication.auteur.id}`}
+                    className="truncate text-[13px] font-semibold text-foreground hover:text-brand hover:underline sm:text-sm"
+                  >
+                    {authorName}
+                  </Link>
+                ) : (
+                  <span className="truncate text-[13px] font-semibold text-foreground sm:text-sm">
+                    {authorName}
+                  </span>
+                )}
+                <span className="text-muted-foreground">·</span>
+                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground sm:text-xs">
+                  <TypeIcon className="size-3" aria-hidden />
+                  {typeMeta.label}
+                </span>
+              </div>
+              <p className="mt-0.5 truncate text-[11px] text-muted-foreground sm:text-xs">
+                {handle}
+                {contextSubtitle ? (
+                  <>
+                    <span aria-hidden> · </span>
+                    {publication.espace?.id ? (
+                      <Link
+                        to={
+                          publication.espace.type === "CHAINE"
+                            ? `/forum/chaines/${publication.espace.id}`
+                            : `/forum/communautes/${publication.espace.id}`
+                        }
+                        className="hover:text-brand hover:underline"
+                      >
+                        {contextSubtitle}
+                      </Link>
+                    ) : publication.projet?.id ? (
+                      <Link
+                        to={`/hub/projects/${publication.projet.id}`}
+                        className="hover:text-brand hover:underline"
+                      >
+                        {contextSubtitle}
+                      </Link>
+                    ) : (
+                      contextSubtitle
+                    )}
+                  </>
+                ) : null}
+                <span aria-hidden> · </span>
+                <time dateTime={publication.created_at}>
+                  {formatRelativeDate(publication.created_at)}
+                </time>
+              </p>
+            </div>
+            <div className="shrink-0" data-no-card-nav>
+              <FollowPublicationTarget publication={publication} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2 px-3 pt-2.5 sm:space-y-3 sm:px-5 sm:pt-3">
+        <div className="space-y-1 sm:space-y-1.5">
+          <h2 className="text-[14px] font-semibold leading-snug text-foreground sm:text-[15px] md:text-base">
+            <Link to={detailHref} className="hover:text-brand hover:underline">
               {publication.titre}
             </Link>
           </h2>
-
           <div
             className={cn(
-              "text-sm leading-relaxed text-muted-foreground",
-              isApplication && "line-clamp-3"
+              "text-[13px] leading-relaxed text-foreground/90 sm:text-sm",
+              isApplication && !showFullBody && "line-clamp-3"
             )}
           >
-            <ForumRichText text={body} />
-          </div>
-        </div>
-
-        {!isApplication ? (
-          <div data-no-card-nav>
-            <MediaMosaic
-              images={publication.images}
-              titre={publication.titre}
+            <ForumRichText
+              text={body}
+              className="text-[13px] text-foreground/90 sm:text-sm"
             />
           </div>
-        ) : null}
+          {(publication.tags?.length ?? 0) > 0 ? (
+            <div className="flex flex-wrap gap-1.5 pt-1" data-no-card-nav>
+              {publication.tags.map((tag) => (
+                <PublicationTagChip key={tag.id} tag={tag} />
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         {isApplication ? (
-          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+          <div className="flex flex-wrap items-center gap-2" data-no-card-nav>
             {plateformeKey && plateformeKey in PLATEFORME_LABELS ? (
-              <span className="rounded-md border border-border bg-muted/80 px-2 py-1 text-xs font-medium text-foreground">
+              <span className="rounded-md bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
                 {PLATEFORME_LABELS[plateformeKey]}
               </span>
             ) : null}
@@ -835,10 +887,11 @@ export function PublicationCard({
               <Button
                 asChild
                 size="sm"
-                className="gap-2 bg-brand text-brand-foreground hover:bg-brand/90"
+                variant="outline"
+                className="h-8 gap-1.5"
               >
                 <a href={demoUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <ExternalLink className="size-3.5" />
                   Tester la démo
                 </a>
               </Button>
@@ -847,91 +900,101 @@ export function PublicationCard({
         ) : null}
 
         {publication.type === "CHOIX" ? (
-          <ChoixOptionsButtons
-            publication={publication}
-            showDescriptions={showFullBody}
-          />
+          <div data-no-card-nav>
+            <ChoixOptionsButtons
+              publication={publication}
+              showDescriptions={showFullBody}
+            />
+          </div>
         ) : null}
 
         {publication.type === "CHOIX" &&
         publication.decided_at &&
         publication.justification_finale ? (
-          <p className="border-l-2 border-success pl-3 text-sm text-foreground/90">
+          <p className="rounded-md bg-muted/60 px-3 py-2 text-sm text-foreground/90">
             <span className="font-medium text-success">Décision — </span>
             {publication.justification_finale}
           </p>
         ) : null}
+      </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-border/80 pt-3">
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              disabled={likeBusy}
-              onClick={handleToggleLike}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm transition-colors",
-                "hover:bg-muted",
-                liked
-                  ? "text-destructive"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              aria-label={liked ? "Retirer le like" : "Liker"}
-              aria-pressed={liked}
-              title={liked ? "Retirer le like" : "Liker"}
-            >
-              <Heart
-                className={cn(
-                  "h-4 w-4 transition-transform",
-                  liked && "fill-current",
-                  likePulse && "scale-125"
-                )}
-              />
-              <span className="tabular-nums">{likesCount}</span>
-            </button>
-            <Link
-              to={detailHref}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label={`${commentsCount} commentaire${commentsCount > 1 ? "s" : ""}`}
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className="tabular-nums">{commentsCount}</span>
-              <span className="hidden text-xs sm:inline">
-                {commentsCount > 1 ? "réponses" : "répondre"}
-              </span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => void handleShare()}
-              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Partager"
-              title="Partager"
-            >
-              <Share2 className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              disabled={saveBusy}
-              onClick={handleToggleFavori}
-              className={cn(
-                "rounded-lg p-2 transition-colors hover:bg-muted",
-                saved
-                  ? "text-brand"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              aria-label={
-                saved ? "Retirer des favoris" : "Ajouter aux favoris"
-              }
-              aria-pressed={saved}
-              title={saved ? "Retirer des favoris" : "Ajouter aux favoris"}
-            >
-              <Bookmark
-                className={cn("h-4 w-4", saved && "fill-current")}
-              />
-            </button>
-          </div>
+      {publication.images.length > 0 ? (
+        <div className="mt-3" data-no-card-nav>
+          <MediaMosaic images={publication.images} titre={publication.titre} />
         </div>
+      ) : null}
+
+      {(likesCount > 0 || commentsCount > 0) ? (
+        <div className="mt-2 flex items-center justify-between gap-2 px-3 text-[11px] text-muted-foreground sm:px-5 sm:text-xs">
+          <span className="tabular-nums">
+            {likesCount > 0
+              ? `${likesCount} j'aime${likesCount > 1 ? "s" : ""}`
+              : ""}
+          </span>
+          {commentsCount > 0 ? (
+            <Link to={detailHref} className="hover:text-brand hover:underline">
+              {commentsCount} commentaire{commentsCount > 1 ? "s" : ""}
+            </Link>
+          ) : (
+            <span />
+          )}
+        </div>
+      ) : null}
+
+      <div
+        className="mt-1 grid grid-cols-4 border-t border-border/80"
+        data-no-card-nav
+      >
+        <button
+          type="button"
+          disabled={likeBusy}
+          onClick={handleToggleLike}
+          className={cn(
+            "inline-flex items-center justify-center gap-1 py-2 text-xs font-medium transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm",
+            liked ? "text-destructive" : "text-muted-foreground"
+          )}
+          aria-label={liked ? "Retirer le like" : "J'aime"}
+          aria-pressed={liked}
+        >
+          <Heart
+            className={cn(
+              "size-3.5 sm:size-4",
+              liked && "fill-current",
+              likePulse && "scale-110"
+            )}
+          />
+          <span className="hidden sm:inline">J&apos;aime</span>
+        </button>
+        <Link
+          to={detailHref}
+          className="inline-flex items-center justify-center gap-1 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm"
+        >
+          <MessageCircle className="size-3.5 sm:size-4" />
+          <span className="hidden sm:inline">Commenter</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => void handleShare()}
+          className="inline-flex items-center justify-center gap-1 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm"
+          aria-label="Partager"
+        >
+          <Share2 className="size-3.5 sm:size-4" />
+          <span className="hidden sm:inline">Partager</span>
+        </button>
+        <button
+          type="button"
+          disabled={saveBusy}
+          onClick={handleToggleFavori}
+          className={cn(
+            "inline-flex items-center justify-center gap-1 py-2 text-xs font-medium transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm",
+            saved ? "text-brand" : "text-muted-foreground"
+          )}
+          aria-label={saved ? "Retirer des favoris" : "Enregistrer"}
+          aria-pressed={saved}
+        >
+          <Bookmark className={cn("size-3.5 sm:size-4", saved && "fill-current")} />
+          <span className="hidden sm:inline">Enregistrer</span>
+        </button>
       </div>
     </article>
   );

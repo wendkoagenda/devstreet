@@ -93,9 +93,18 @@ function OffersContent() {
           ))}
         </div>
       ) : (
-        <p className="rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-          Aucune offre ne correspond pour le moment.
-        </p>
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-input bg-card p-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            {isRecruiter
+              ? "Aucune offre d’une autre entreprise pour le moment. Vos propres offres sont dans « Mes offres » — vous ne pouvez pas postuler chez vous."
+              : "Aucune offre ne correspond pour le moment."}
+          </p>
+          {isRecruiter ? (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/marketplace/my-offers">Voir mes offres</Link>
+            </Button>
+          ) : null}
+        </div>
       )}
     </div>
   );

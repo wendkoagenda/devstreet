@@ -555,6 +555,94 @@ class LikePublication(models.Model):
         return f"/communaute/likes-publication/{self.id}/"
 
 
+class Tag(models.Model):
+    """
+    Thème / tag de publication (ex. typescript, rust). Optionnel à la création.
+    """
+
+    label = models.CharField(max_length=48)
+    slug = models.SlugField(max_length=64, unique=True, db_index=True)
+    created_by = models.IntegerField(
+        verbose_name="Créé par",
+        help_text="ID de l'utilisateur créateur",
+        default=0,
+    )
+    updated_by = models.IntegerField(
+        verbose_name="Modifié par",
+        help_text="ID de l'utilisateur ayant modifié",
+        default=0,
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Date de création",
+        auto_now_add=True,
+        auto_now=False,
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Date de modification",
+        auto_now_add=False,
+        auto_now=True,
+    )
+
+    class Meta:
+        db_table = 'communaute_tag'
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+        ordering = ['label']
+
+    def __str__(self):
+        return self.label
+
+
+class SuiviTag(models.Model):
+    """
+    Tag suivi par un membre (« Mes favoris » thèmes).
+    """
+
+    tag = models.ForeignKey(
+        Tag,
+        on_delete=models.CASCADE,
+        related_name='suivis',
+    )
+    membre = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='tags_suivis',
+    )
+    created_by = models.IntegerField(
+        verbose_name="Créé par",
+        help_text="ID de l'utilisateur créateur",
+    )
+    updated_by = models.IntegerField(
+        verbose_name="Modifié par",
+        help_text="ID de l'utilisateur ayant modifié",
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Date de création",
+        auto_now_add=True,
+        auto_now=False,
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Date de modification",
+        auto_now_add=False,
+        auto_now=True,
+    )
+
+    class Meta:
+        db_table = 'communaute_suivi_tag'
+        verbose_name = 'Suivi de tag'
+        verbose_name_plural = 'Suivis de tag'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tag', 'membre'],
+                name='unique_suivi_tag_membre',
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.membre_id}:{self.tag_id}"
+
+
 class FavoriPublication(models.Model):
     """
     Publication enregistrée (bookmark) par un membre.
@@ -981,6 +1069,11 @@ class Publication(models.Model):
         null=True,
         db_index=True,
         help_text="Projet Hub lié (dénormalisé depuis ProjectDiscussionLink)",
+    )
+    tags = models.ManyToManyField(
+        'Tag',
+        blank=True,
+        related_name='publications',
     )
     created_by = models.IntegerField(
         verbose_name="Créé par",

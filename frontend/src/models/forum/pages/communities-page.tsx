@@ -72,9 +72,6 @@ export default function CommunitiesPage() {
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Communautés
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Chat de groupe entre membres — pas un fil de publications.
-          </p>
         </div>
         <Button
           type="button"

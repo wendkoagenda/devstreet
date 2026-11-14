@@ -262,13 +262,18 @@ class Command(BaseCommand):
         self.stdout.write(f'👥 {created_count} rôles créés.')
 
     def _assign_marketplace_permissions(self):
-        """Attribue les permissions de la marketplace aux rôles Admin et Super Admin (rôles créés après la migration)."""
+        """Attribue les permissions marketplace aux membres et administrateurs."""
         from app.marketplace.permission_codes import MARKETPLACE_PERMISSION_CODES
 
         permissions = Permission.objects.filter(code__in=MARKETPLACE_PERMISSION_CODES)
-        for role in Role.objects.filter(name__in=['Admin', 'Super Admin']):
+        for role in Role.objects.filter(
+            name__in=['DevStreet Hub Developer', 'Admin', 'Super Admin']
+        ):
             role.permissions.add(*permissions)
-        self.stdout.write(f'  ✓ {permissions.count()} permissions marketplace attribuées à Admin / Super Admin')
+        self.stdout.write(
+            f'  ✓ {permissions.count()} permissions marketplace attribuées '
+            f'à DevStreet Hub Developer / Admin / Super Admin'
+        )
 
     def _ensure_and_assign_communaute_permissions(self):
         """Crée si besoin les permissions communauté/forum et les attribue aux membres et administrateurs."""

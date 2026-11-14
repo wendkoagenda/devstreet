@@ -16,6 +16,7 @@ from app.communaute.views.optionpublication_viewset import OptionPublicationView
 from app.communaute.views.participationespace_viewset import ParticipationEspaceViewSet
 from app.communaute.views.publication_viewset import PublicationViewSet
 from app.communaute.views.suiviutilisateur_viewset import SuiviUtilisateurViewSet
+from app.communaute.views.tag_viewset import TagViewSet
 from app.communaute.views.votesondage_viewset import VoteSondageViewSet
 from app.communaute.views.activity_view import activity_badges_view
 from app.communaute.views.membre_profile_view import (
@@ -42,6 +43,7 @@ router.register(r'options-publication', OptionPublicationViewSet, basename='opti
 router.register(r'participations-espace', ParticipationEspaceViewSet, basename='participations-espace')
 router.register(r'publications', PublicationViewSet, basename='publications')
 router.register(r'suivis-utilisateur', SuiviUtilisateurViewSet, basename='suivis-utilisateur')
+router.register(r'tags', TagViewSet, basename='tags')
 router.register(r'votes-sondage', VoteSondageViewSet, basename='votes-sondage')
 
 urlpatterns = [

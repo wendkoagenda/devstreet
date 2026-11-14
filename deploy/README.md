@@ -66,6 +66,7 @@ Noms = ceux de `backend/.env.example` et `frontend/.env.example` (pas de `DEPLOY
 
 - Si `DEPLOY_DB_MODE=interne` (dans `.env.deploy.sandbox`) : dans `backend.env.sandbox`, mettre `DB_HOST=db` et inclure le domaine (`DEPLOY_DOMAIN`) dans `ALLOWED_HOSTS`.
 - `frontend.env.sandbox` : au minimum `VITE_API_URL` et `VITE_API_V1_URL` (ex. `https://sandbox.monapp.com/api`).
+- Connexion sociale (facultative) : `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `OAUTH_GITHUB_CLIENT_ID`, `OAUTH_GITHUB_CLIENT_SECRET` dans `backend.env.sandbox`. Les deux `*_CLIENT_ID` sont des variables GitHub, les deux `*_CLIENT_SECRET` des secrets. Le nom GitHub est écrit `OAUTH_GITHUB_*` et non `GITHUB_OAUTH_*` : GitHub refuse tout nom de secret ou de variable commençant par `GITHUB_` (erreur HTTP 422). Un fournisseur n'est actif que si son identifiant **et** son secret sont renseignés ; sans eux, ses boutons restent masqués. L'URL de rappel à déclarer chez le fournisseur est `https://<DEPLOY_DOMAIN>/api/auth/oauth/google/callback` (ou `.../github/callback`) : elle est construite depuis `FRONTEND_URL`, qui doit donc être l'URL publique exacte (`https://...`).
 
 ### Renseigner `observabilite.env.sandbox`
 
@@ -336,6 +337,21 @@ Arrêt manuel sur la VM : `docker compose -p observabilite --project-directory /
 Stack partagée `/opt/apps/_minio` (réseau `proxy`), volume `minio-data` préservé. Si `USE_S3=False`, le serveur tourne quand même (console) sans provisionner de bucket applicatif.
 
 Images Docker : `pgsty/silo` + `pgsty/mc` (forks S3 compatibles). Les images officielles `minio/minio` / `minio/mc` ont été retirées de Docker Hub ; ne pas les rétablir.
+
+### Gitea (forge Git) — flow
+
+Gitea tourne sur la même VM que l'application (`/opt/apps/_gitea`, réseau `proxy`), avec son propre Postgres (`gitea-db`) et son domaine HTTPS (ex. `git.devstreet.ewo-soft.com`). Contrairement à MinIO, le workflow est **manuel** : la forge porte des données, elle n'est pas redéployée à chaque commit.
+
+| Étape | Où |
+|---|---|
+| Fichier local | `gitea.env.<branche>` (modèle : `gitea.env.example`) : `GITEA_DOMAIN`, `GITEA_DB_PASSWORD`, `GITEA_ADMIN_USER` (pas `admin`, nom réservé), `GITEA_ADMIN_PASSWORD`, `GITEA_ADMIN_EMAIL` |
+| Envoyer sur GitHub | `python git-cli/deploy_env.py definir --branche <branche>` (le fichier est facultatif : sans lui, l'environnement n'a pas de forge) |
+| DNS | Enregistrement A de `GITEA_DOMAIN` vers la VM, **avant** le workflow (certificat Let's Encrypt) |
+| Installer / mettre à jour | Actions → **CD - GITEA SSH** (après un déploiement app SSH, qui crée le réseau `proxy`) |
+| Jeton admin API | À la main, une fois (voir [gitea-deploy.md](../docs/devstreet_hub/gitea-deploy.md)) |
+| Raccorder Django | `DEVSTREET_HUB_GITEA_*` dans `backend.env.<branche>`, `definir`, puis redéployer l'app |
+
+Django appelle Gitea en interne (`DEVSTREET_HUB_GITEA_URL=http://gitea:3000`, accepté en HTTP pour ce seul hôte) ; les humains et `git clone` passent par `DEVSTREET_HUB_GITEA_PUBLIC_URL=https://<GITEA_DOMAIN>`. SSH de Gitea désactivé : Git par HTTPS uniquement. Le webhook push cible l'URL publique de l'API.
 
 ## Limites utiles
 

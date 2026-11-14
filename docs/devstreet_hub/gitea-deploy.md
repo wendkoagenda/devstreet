@@ -37,10 +37,10 @@ DEVSTREET_HUB_GITEA_TOKEN=<token_admin>
 DEVSTREET_HUB_GITEA_WEBHOOK_SECRET=<secret_long_aleatoire>
 ```
 
-Exemple prod :
+Exemple prod (Gitea sur la même VM, déployé par `CD - GITEA SSH`) :
 
 ```dotenv
-DEVSTREET_HUB_GITEA_URL=https://git.votre-domaine.example
+DEVSTREET_HUB_GITEA_URL=http://gitea:3000
 DEVSTREET_HUB_GITEA_PUBLIC_URL=https://git.votre-domaine.example
 DEVSTREET_HUB_GITEA_TOKEN=<token_admin>
 DEVSTREET_HUB_GITEA_WEBHOOK_SECRET=<secret_long_aleatoire>
@@ -72,6 +72,20 @@ docker run -d --name devstreet-chantier-gitea `
 - Relancer plus tard : `docker start devstreet-chantier-gitea`
 
 ### Staging / prod
+
+Sur une VM gérée par le CD du dépôt : workflow **CD - GITEA SSH** (voir `deploy/README.md`, section Gitea). Il installe Gitea et son Postgres, obtient le certificat, crée le compte administrateur (`GITEA_ADMIN_*`) et verrouille l'installation (`INSTALL_LOCK`, inscriptions fermées, SSH Gitea désactivé). L'assistant web n'est donc pas utilisé.
+
+L'URL interne `http://gitea:3000` n'est acceptée en HTTP que pour l'hôte `gitea` (réseau Docker de la VM) ; tout autre hôte exige HTTPS.
+
+Jeton admin API, à créer une fois sur la VM (le jeton ne passe pas par les journaux du CD) :
+
+```bash
+docker exec -u git gitea gitea admin user generate-access-token   --username <GITEA_ADMIN_USER> --token-name devstreet-hub-provisioning --scopes all --raw
+```
+
+Le copier dans `DEVSTREET_HUB_GITEA_TOKEN` de `backend.env.<branche>`, ajouter `DEVSTREET_HUB_GITEA_WEBHOOK_SECRET`, puis `definir` et redéployer l'app.
+
+Principes (installation manuelle ou autre hébergeur) :
 
 - Même image **épinglée** (ou tag équivalent validé).
 - Exposer Gitea derrière un reverse proxy **HTTPS**.

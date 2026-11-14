@@ -76,10 +76,6 @@ export default function ChannelsPage() {
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Chaînes
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Fil d&apos;annonces (admins publient) + chat lecture/réactions dans
-            Messages.
-          </p>
         </div>
         <Button
           type="button"

@@ -15,6 +15,13 @@
       "expires": "2027-04-01"
     },
     {
+      "rule": "DJ-005",
+      "path": "backend/app/core/views/oauth_views.py",
+      "reason": "Connexion sociale Google/GitHub (liste des providers, demarrage, retour du fournisseur) : elles servent a obtenir une session, donc elles ne peuvent pas l'exiger. Chacune a sa limitation de debit par IP ; l'etat OAuth est signe et expire en 10 minutes ; reponses a messages constants.",
+      "author": "wendkoagenda",
+      "expires": "2027-04-01"
+    },
+    {
       "rule": "FB-003",
       "path": "backend/app/core/auth.py",
       "reason": "Un cookie d'acces expire ou invalide laisse la requete anonyme (contrat DRF : authenticate renvoie None), ce qui permet au frontend de renouveler la session puis de rejouer la requete. Le refus est journalise (debug).",

@@ -1,0 +1,76 @@
+# Forge Gitea partagee d'une VM (comme deploy/minio et deploy/observabilite).
+# Installee dans /opt/apps/_gitea par deploy/vm/gitea.sh (job CD - GITEA SSH, lancement manuel : la forge porte des donnees,
+# elle n'est pas redeployee a chaque commit).
+# Aucun port publie : le proxy partage joint « gitea » (3000) par le reseau « proxy ». La base reste sur le reseau interne.
+# Le backend Django appelle http://gitea:3000 (DEVSTREET_HUB_GITEA_URL) sans quitter la VM.
+# Git par HTTPS uniquement (SSH de Gitea desactive). Pas de runners ni d'Actions.
+# Lance avec : docker compose -p gitea --project-directory /opt/apps/_gitea --env-file gitea.env -f compose.yml up -d --wait
+
+x-journaux: &journaux
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  gitea:
+    image: docker.gitea.com/gitea:28.3.0
+    container_name: gitea
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      USER_UID: "1000"
+      USER_GID: "1000"
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: gitea-db:5432
+      GITEA__database__NAME: gitea
+      GITEA__database__USER: gitea
+      GITEA__database__PASSWD: ${GITEA_DB_PASSWORD:?GITEA_DB_PASSWORD manquant}
+      GITEA__server__DOMAIN: ${GITEA_DOMAIN:?GITEA_DOMAIN manquant}
+      GITEA__server__ROOT_URL: https://${GITEA_DOMAIN}/
+      GITEA__server__DISABLE_SSH: "true"
+      GITEA__security__INSTALL_LOCK: "true"
+      GITEA__service__DISABLE_REGISTRATION: "true"
+      GITEA__actions__ENABLED: "false"
+    volumes:
+      - gitea-data:/data
+    networks: [interne, proxy]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    mem_limit: 1g
+    logging: *journaux
+
+  db:
+    image: postgres:16
+    container_name: gitea-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gitea
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD:?GITEA_DB_PASSWORD manquant}
+    volumes:
+      - gitea-db-data:/var/lib/postgresql/data
+    networks: [interne]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 512m
+    logging: *journaux
+
+networks:
+  interne: {}
+  proxy:
+    external: true
+    name: proxy
+
+volumes:
+  gitea-data: {}
+  gitea-db-data: {}

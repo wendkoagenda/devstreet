@@ -110,6 +110,8 @@ minio.env.*
 !minio.env.example
 observabilite.env.*
 !observabilite.env.example
+gitea.env.*
+!gitea.env.example
 
 # Cles SSH admin : tout le dossier est ignore sauf le guide de creation
 .ssh/*

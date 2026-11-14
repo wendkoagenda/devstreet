@@ -25,14 +25,10 @@ import {
   useReactEspaceMessageMutation,
   useSendEspaceMessageMutation,
 } from "../api";
-import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
-import {
-  encodeVocalMessage,
-  parseVocalUrl,
-} from "../lib/vocal-message";
-import { ForumAudioPlayer } from "./forum-audio-player";
+import { encodeVocalMessage, richMessagePreview } from "../lib/rich-message";
+import { ChatAttachMenu } from "./chat-attach-menu";
+import { ChatMessageBody } from "./chat-message-body";
 import { ForumAvatar } from "./forum-avatar";
-import { ForumRichText } from "./forum-rich-text";
 import { VoiceRecorderButton } from "./voice-recorder-button";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"] as const;
@@ -402,32 +398,15 @@ export function EspaceChat({
                       <span className="line-clamp-2 opacity-80">
                         {message.reply_to.supprime
                           ? "Message supprimé"
-                          : message.reply_to.texte || "…"}
+                          : richMessagePreview(message.reply_to.texte || "…")}
                       </span>
                     </button>
                   ) : null}
 
                   {message.supprime ? (
                     <p className="italic opacity-80">Message supprimé</p>
-                  ) : parseVocalUrl(message.texte) ? (
-                    <ForumAudioPlayer
-                      compact
-                      src={buildMediaUrl(parseVocalUrl(message.texte)!)}
-                      className={
-                        mine
-                          ? "border-brand-foreground/20 bg-brand-foreground/10"
-                          : undefined
-                      }
-                    />
                   ) : (
-                    <ForumRichText
-                      text={message.texte}
-                      className={
-                        mine
-                          ? "text-brand-foreground"
-                          : "text-foreground"
-                      }
-                    />
+                    <ChatMessageBody texte={message.texte} mine={mine} />
                   )}
 
                   {reactions.counts.length > 0 ? (
@@ -556,9 +535,7 @@ export function EspaceChat({
                 <p className="truncate text-xs text-muted-foreground">
                   {replyTo.supprime
                     ? "Message supprimé"
-                    : parseVocalUrl(replyTo.texte)
-                      ? "Message vocal"
-                      : truncate(replyTo.texte)}
+                    : truncate(richMessagePreview(replyTo.texte))}
                 </p>
               </div>
               <Button
@@ -593,6 +570,23 @@ export function EspaceChat({
                   ) {
                     event.preventDefault();
                     void handleSend();
+                  }
+                }}
+              />
+              <ChatAttachMenu
+                disabled={sending}
+                onSendEncoded={async (encoded) => {
+                  try {
+                    await sendMessage({
+                      espaceId,
+                      texte: encoded,
+                      reply_to_id: replyTo?.id ?? null,
+                    }).unwrap();
+                    setReplyTo(null);
+                    void refetch();
+                  } catch {
+                    toast.error("Impossible d'envoyer la pièce jointe");
+                    throw new Error("send attachment failed");
                   }
                 }}
               />

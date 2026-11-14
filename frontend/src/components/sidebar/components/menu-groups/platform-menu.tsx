@@ -35,6 +35,7 @@ import { useAuthSlice } from "@/models/auth/slice";
 import { MARKETPLACE_ADMIN_PAGES } from "@/models/marketplace-space/admin-pages";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 import { useGetActivityBadgesQuery } from "@/models/forum/api";
+import { FavorisTagQuickSelect } from "@/models/forum/components/favoris-tag-quick-select";
 
 function formatBadge(count: number | undefined) {
   if (!count || count <= 0) return null;
@@ -168,12 +169,6 @@ export default function PlatformMenu() {
       url: "/forum/favoris",
       icon: Bookmark,
     },
-    {
-      title: "Mon compte",
-      url: "/forum/profil/me",
-      icon: UserRound,
-      match: (p) => p.startsWith("/forum/profil"),
-    },
   ];
 
   const marketplaceItems: NavItem[] = [
@@ -274,6 +269,8 @@ export default function PlatformMenu() {
       : []),
   ];
 
+  const activeTag = new URLSearchParams(search).get("tag");
+
   return (
     <>
       <SidebarGroup className="p-0 px-1">
@@ -301,10 +298,48 @@ export default function PlatformMenu() {
 
       <SidebarGroup className="p-0 px-1">
         <SidebarGroupLabel className={sectionLabelClass}>
-          DevStreet Hub
+          Projets
         </SidebarGroupLabel>
         <NavList items={hubItems} path={path} search={search} onGo={go} />
       </SidebarGroup>
+
+      {isAuthenticated ? (
+        <>
+          <Separator className="mx-3 bg-sidebar-border/70" />
+          <SidebarGroup className="p-0 px-1">
+            <HubMesFavoris activeTag={activeTag} path={path} onGo={go} />
+          </SidebarGroup>
+        </>
+      ) : null}
     </>
+  );
+}
+
+function HubMesFavoris({
+  activeTag,
+  path,
+  onGo,
+}: {
+  activeTag: string | null;
+  path: string;
+  onGo: (url: string) => void;
+}) {
+  const selected = path === "/" ? activeTag : null;
+
+  return (
+    <div className="space-y-1 px-2.5">
+      <p className={sectionLabelClass}>Tags suivis</p>
+      <FavorisTagQuickSelect
+        variant="sidebar"
+        activeSlug={selected}
+        onSelect={(slug) => {
+          if (!slug) {
+            onGo("/");
+            return;
+          }
+          onGo(`/?tag=${encodeURIComponent(slug)}`);
+        }}
+      />
+    </div>
   );
 }

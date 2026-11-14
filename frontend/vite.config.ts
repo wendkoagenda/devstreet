@@ -24,6 +24,11 @@ export default defineConfig({
     },
   },
   server: {
+    // Accessible depuis le téléphone sur le même Wi‑Fi (http://<IP-PC>:5173).
+    host: true,
+    port: 5173,
+    // Tunnels Cloudflare / ngrok (URL publique pour tester hors Wi‑Fi).
+    allowedHosts: [".trycloudflare.com", ".ngrok-free.app", ".ngrok.io"],
     // Le navigateur ne parle qu'au serveur Vite : /api est relayé vers Django, donc même origine
     // et cookies HttpOnly envoyés sans configuration CORS (voir 00readme/README_SAME_ORIGIN_COOKIES.md).
     proxy: {

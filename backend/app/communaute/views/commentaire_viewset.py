@@ -14,12 +14,9 @@ from app.communaute.services.commentaire_service import CommentaireService
 from app.communaute.services.likecommentaire_service import LikeCommentaireService
 from app.communaute.services.confirmationaide_service import ConfirmationAideService
 from app.communaute.permissions.commentaire_permissions import (
-    CanViewCommentaire,
-    CanCreateCommentaire,
     CanUpdateCommentaire,
-    CanDeleteCommentaire
+    CanDeleteCommentaire,
 )
-from app.communaute.permissions.likecommentaire_permissions import CanCreateLikeCommentaire
 from app.communaute.permissions.confirmationaide_permissions import CanCreateConfirmationAide
 
 
@@ -43,12 +40,9 @@ class CommentaireViewSet(viewsets.ModelViewSet):
         """
         Retourne les permissions requises selon l'action.
         """
-        if self.action == 'list' or self.action == 'retrieve':
-            permission_classes = [CanViewCommentaire]
-        elif self.action == 'create':
-            permission_classes = [CanCreateCommentaire]
-        elif self.action == 'like':
-            permission_classes = [CanCreateLikeCommentaire]
+        # Création / like : membre connecté (appartenance à l'espace contrôlée au service).
+        if self.action in ('create', 'like', 'list', 'retrieve'):
+            permission_classes = [IsAuthenticated]
         elif self.action == 'confirmation_aide':
             permission_classes = [CanCreateConfirmationAide]
         elif self.action in ['update', 'partial_update']:
