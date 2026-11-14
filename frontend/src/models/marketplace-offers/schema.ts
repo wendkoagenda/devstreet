@@ -115,6 +115,31 @@ export type OfferFilters = {
   work_mode?: string;
 };
 
+/** Brouillon renvoyé par POST /marketplace/me/offers/generate (UC-09). */
+export type OfferAiDraft = {
+  title: string;
+  description: string;
+  type: OfferType;
+  experience_level: ExperienceLevel;
+  work_mode: WorkMode;
+  contract_duration: number | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  currency: string;
+  budget_period: "day" | "month" | "fixed";
+  country: string;
+  city: string;
+  required_skill_ids: number[];
+  skills: SkillOption[];
+};
+
+export type OfferAiGenerateResult = {
+  draft: OfferAiDraft;
+  suggested_profils: TalentCard[];
+  provider: string;
+  model: string;
+};
+
 const optionalDate = z
   .string()
   .refine((value) => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value), "Date invalide");
@@ -165,6 +190,27 @@ export function offerToForm(offer: Offer | null, defaults?: { country?: string; 
     start_date: offer?.start_date ?? "",
     deadline: offer?.deadline ?? "",
     required_skill_ids: offer?.skills.map((skill) => skill.id) ?? [],
+  };
+}
+
+/** Convertit le brouillon IA en valeurs de formulaire (dates laissées vides). */
+export function draftToForm(draft: OfferAiDraft): OfferFormValues {
+  return {
+    title: draft.title,
+    description: draft.description,
+    type: draft.type,
+    experience_level: draft.experience_level,
+    work_mode: draft.work_mode,
+    contract_duration: draft.contract_duration != null ? String(draft.contract_duration) : "",
+    budget_min: draft.budget_min != null ? String(draft.budget_min) : "",
+    budget_max: draft.budget_max != null ? String(draft.budget_max) : "",
+    currency: draft.currency || "XOF",
+    budget_period: draft.budget_period,
+    country: draft.country || "",
+    city: draft.city || "",
+    start_date: "",
+    deadline: "",
+    required_skill_ids: draft.required_skill_ids ?? [],
   };
 }
 

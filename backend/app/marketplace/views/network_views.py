@@ -73,6 +73,25 @@ def pool(request):
 @swagger_auto_schema(method="get", tags=["V1 - Marketplace réseau"])
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def talents_directory(request):
+    """GET /marketplace/talents : annuaire filtrable (compétence, pays, dispo, remote) — UC-08."""
+    return Response(
+        NetworkService.search_talents(
+            request.user,
+            {
+                "search": request.query_params.get("search"),
+                "skill": request.query_params.get("skill"),
+                "country": request.query_params.get("country"),
+                "remote": request.query_params.get("remote"),
+                "available": request.query_params.get("available"),
+            },
+        )
+    )
+
+
+@swagger_auto_schema(method="get", tags=["V1 - Marketplace réseau"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def connections(request):
     """GET /marketplace/me/connections : mes connexions."""
     return Response(NetworkService.connections(request.user))

@@ -102,6 +102,7 @@ export function AppTopbar() {
 
           <button
             type="button"
+            data-tour="topbar-search"
             onClick={() => setSearchOpen(true)}
             className={cn(
               "group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-muted/60 px-2.5 py-2 text-left transition-colors sm:px-3",
@@ -130,6 +131,7 @@ export function AppTopbar() {
             <Button
               type="button"
               size="sm"
+              data-tour="topbar-publish"
               onClick={handlePublish}
               aria-label="Publier"
               className="h-9 gap-1.5 rounded-xl bg-brand px-2.5 text-brand-foreground hover:bg-brand-strong sm:px-3"

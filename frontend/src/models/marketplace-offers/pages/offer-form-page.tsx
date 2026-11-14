@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+﻿import { Link, useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RequireRecruiter } from "@/models/marketplace-space/components/guards";

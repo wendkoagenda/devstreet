@@ -9,11 +9,25 @@ import type {
   SwipeContext,
   SwipeDirection,
   SwipeResult,
+  TalentDirectoryCard,
+  TalentDirectoryFilters,
 } from "./schema";
+
+const talentsQuery = (filters?: TalentDirectoryFilters | void): string => {
+  const query = new URLSearchParams();
+  Object.entries(filters ?? {}).forEach(([key, value]) => {
+    if (value) query.set(key, value);
+  });
+  const text = query.toString();
+  return text ? `?${text}` : "";
+};
 
 /** Découverte de profils, vivier, connexions et fiche publique : endpoints injectés dans l'API « espace marketplace ». */
 export const marketplaceNetworkApi = marketplaceSpaceApi.injectEndpoints({
   endpoints: (builder) => ({
+    getTalents: builder.query<TalentDirectoryCard[], TalentDirectoryFilters | void>({
+      query: (filters) => `/marketplace/talents${talentsQuery(filters)}`,
+    }),
     getDeck: builder.query<DeckCard[], { context: SwipeContext; acting?: ActingAs }>({
       query: ({ context, acting }) =>
         `/marketplace/me/deck?context=${context}${acting ? `&acting=${acting}` : ""}`,
@@ -54,6 +68,7 @@ export const marketplaceNetworkApi = marketplaceSpaceApi.injectEndpoints({
 });
 
 export const {
+  useGetTalentsQuery,
   useGetDeckQuery,
   useSwipeMutation,
   useUndoSwipeMutation,

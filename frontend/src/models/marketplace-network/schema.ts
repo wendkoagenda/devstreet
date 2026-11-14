@@ -22,6 +22,19 @@ export type PoolEntry = TalentCard & {
   liked_by: string;
 };
 
+/** Carte de l'annuaire talents (UC-08). */
+export type TalentDirectoryCard = TalentCard & {
+  available_from: string | null;
+};
+
+export type TalentDirectoryFilters = {
+  search?: string;
+  skill?: string;
+  country?: string;
+  remote?: string;
+  available?: string;
+};
+
 export type ConnectionEntry = TalentCard & {
   matched_at: string;
 };
@@ -57,6 +70,17 @@ export type PublicProfile = TalentCard & {
     is_current: boolean;
     description: string;
     technologies: string;
+  }[];
+  prestations: {
+    id: number;
+    title: string;
+    slug: string;
+    description: string;
+    category: string;
+    price: string;
+    currency: string;
+    delivery_days: number;
+    revisions: number;
   }[];
   reviews: { rating: number; comment: string; author: string; created_at: string }[];
 };

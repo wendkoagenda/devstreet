@@ -50,6 +50,8 @@ type NavItem = {
   icon: LucideIcon;
   exact?: boolean;
   badge?: string | null;
+  /** Ancre du tour guidé (data-tour). */
+  tourId?: string;
   match?: (path: string, search: string) => boolean;
 };
 
@@ -83,7 +85,10 @@ function NavList({
         const Icon = item.icon;
         const active = isItemActive(path, search, item);
         return (
-          <SidebarMenuItem key={`${item.title}-${item.url}`}>
+          <SidebarMenuItem
+            key={`${item.title}-${item.url}`}
+            data-tour={item.tourId}
+          >
             <SidebarMenuButton
               isActive={active}
               onClick={() => onGo(item.url)}
@@ -214,6 +219,7 @@ export default function PlatformMenu() {
       title: "Forum",
       url: "/",
       icon: Home,
+      tourId: "nav-forum",
       match: (p) =>
         p === "/" ||
         (p.startsWith("/forum/") &&
@@ -225,24 +231,28 @@ export default function PlatformMenu() {
       title: "Communautés",
       url: "/forum/communautes",
       icon: Users,
+      tourId: "nav-communities",
       badge: formatBadge(badges?.communautes),
     },
     {
       title: "Chaînes",
       url: "/forum/chaines",
       icon: Radio,
+      tourId: "nav-channels",
       badge: formatBadge(badges?.chaines),
     },
     {
       title: "Messages",
       url: "/messages",
       icon: Mail,
+      tourId: "nav-messages",
       badge: formatBadge(badges?.messages),
     },
     {
       title: "Favoris",
       url: "/forum/favoris",
       icon: Bookmark,
+      tourId: "nav-favorites",
     },
   ];
 
@@ -347,7 +357,7 @@ export default function PlatformMenu() {
 
       <Separator className="mx-3 bg-sidebar-border/70" />
 
-      <SidebarGroup className="p-0 px-1">
+      <SidebarGroup className="p-0 px-1" data-tour="nav-marketplace">
         <SidebarGroupLabel className={sectionLabelClass}>
           Marketplace
         </SidebarGroupLabel>
@@ -389,7 +399,7 @@ export default function PlatformMenu() {
 
       <Separator className="mx-3 bg-sidebar-border/70" />
 
-      <SidebarGroup className="p-0 px-1">
+      <SidebarGroup className="p-0 px-1" data-tour="nav-projects">
         <SidebarGroupLabel className={sectionLabelClass}>
           Projets
         </SidebarGroupLabel>

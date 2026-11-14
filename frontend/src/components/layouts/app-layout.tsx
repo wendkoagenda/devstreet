@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import React from "react";
+import { AppTour } from "../onboarding/app-tour";
 import { AppSidebar } from "../sidebar/app-sidebar";
 import { AppTopbar } from "./app-topbar";
 
@@ -20,6 +21,7 @@ export default function AppLayout() {
           </div>
         </SidebarInset>
       </div>
+      <AppTour />
     </SidebarProvider>
   );
 }

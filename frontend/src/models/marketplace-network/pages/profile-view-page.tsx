@@ -103,6 +103,26 @@ export function DevProfileView({
             </section>
           ) : null}
 
+          {(profil.prestations?.length ?? 0) > 0 ? (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-foreground">Prestations</h2>
+              {profil.prestations.map((prestation) => (
+                <div key={prestation.id} className="flex flex-col gap-0.5 border-l-2 border-border pl-3">
+                  <span className="text-sm font-medium text-foreground">{prestation.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {Number(prestation.price).toLocaleString("fr-FR")} {prestation.currency} ·{" "}
+                    {prestation.delivery_days} jour(s) · {prestation.revisions} retouche(s)
+                  </span>
+                  {prestation.description ? (
+                    <span className="text-xs leading-relaxed text-muted-foreground">
+                      {prestation.description}
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </section>
+          ) : null}
+
           {profil.skills_detail.length > 0 ? (
             <section id="dev-skills" className="flex scroll-mt-4 flex-col gap-2">
               <h2 className="text-sm font-semibold text-foreground">Compétences</h2>

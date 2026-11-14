@@ -77,7 +77,9 @@ export function ChoixOptionsButtons({
             publicationId: publication.id,
             body: {
               texte,
+              est_anonyme: false,
               nature: "COMMENTAIRE",
+              medias_data: [],
               option_id: pendingOptionId,
             },
           }).unwrap();

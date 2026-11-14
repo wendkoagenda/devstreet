@@ -1,6 +1,7 @@
 import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/redux/store";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,

@@ -36,6 +36,7 @@ import MyOffersPage from "./models/marketplace-offers/pages/my-offers-page";
 import OfferFormPage from "./models/marketplace-offers/pages/offer-form-page";
 import OfferManagePage from "./models/marketplace-offers/pages/offer-manage-page";
 import TalentsPage from "./models/marketplace-network/pages/talents-page";
+import TalentsDiscoverPage from "./models/marketplace-network/pages/talents-discover-page";
 import PoolPage from "./models/marketplace-network/pages/pool-page";
 import NetworkPage from "./models/marketplace-network/pages/network-page";
 import ProfileViewPage from "./models/marketplace-network/pages/profile-view-page";
@@ -183,6 +184,7 @@ function App() {
           <Route element={<OfferManagePage />} path="/marketplace/my-offers/:id" />
           <Route element={<OfferFormPage />} path="/marketplace/my-offers/:id/edit" />
           <Route element={<TalentsPage />} path="/marketplace/talents" />
+          <Route element={<TalentsDiscoverPage />} path="/marketplace/talents/discover" />
           <Route element={<PoolPage />} path="/marketplace/talents/pool" />
           <Route element={<NetworkPage />} path="/marketplace/network" />
           <Route element={<ProfileViewPage />} path="/marketplace/profiles/:id" />
