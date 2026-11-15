@@ -14,10 +14,10 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const itemClass =
-  "h-8 gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-border))]";
+  "h-8 gap-2.5 rounded-lg px-2.5 font-sans text-sm font-medium leading-5 text-sidebar-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-border))]";
 
 const sectionLabelClass =
-  "mb-0.5 h-auto px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80";
+  "mb-0.5 h-auto px-2.5 py-0.5 font-sans text-[10px] font-medium uppercase leading-4 tracking-[0.14em] text-muted-foreground";
 
 export default function UsersMenu() {
   const { t } = useTranslation();
@@ -71,10 +71,10 @@ export default function UsersMenu() {
                   <Icon
                     aria-hidden
                     className={cn(
-                      "size-4 stroke-[1.75]",
+                      "size-4 stroke-2",
                       isActive
                         ? "text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/55"
+                        : "text-muted-foreground"
                     )}
                   />
                   <span className="truncate">{item.title}</span>

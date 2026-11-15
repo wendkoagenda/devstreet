@@ -1,16 +1,15 @@
 import { profilePath } from "@/helpers/routes/profile-path";
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import {
+  ChevronDown,
   LogOut,
   Search,
   SendHorizontal,
   Sparkles,
-  Terminal,
   UserRound,
 } from "lucide-react";
 import { t } from "i18next";
-import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -44,16 +43,27 @@ export function AppTopbar() {
   const user = useAuthSlice((state) => state.user);
   const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
   const authReady = useAuthSlice((state) => state.isInitialized);
-  const { showCommunity, homePath } = useAccountType();
+  const { showCommunity } = useAccountType();
   const selina = useSelina();
   const [searchOpen, setSearchOpen] = useState(false);
-  const shortcutLabel = isMacPlatform() ? "⌘K" : "Ctrl K";
+  const [omnibar, setOmnibar] = useState("");
+  const omnibarRef = useRef<HTMLInputElement | null>(null);
+  const isMac = isMacPlatform();
+  const searchShortcut = isMac ? "⌘K" : "Ctrl K";
+  const selinaShortcut = isMac
+    ? t("selina.omnibar_shortcut")
+    : t("selina.omnibar_shortcut_win");
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setSearchOpen(true);
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "j") {
+        event.preventDefault();
+        omnibarRef.current?.focus();
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -83,88 +93,35 @@ export function AppTopbar() {
     else navigate("/profil/me");
   };
 
+  const handleOmnibarSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const message = omnibar.trim();
+    if (!message) return;
+    if (!isAuthenticated) {
+      navigate("/login", { flushSync: true });
+      return;
+    }
+    setOmnibar("");
+    await selina.send(message);
+  };
+
   return (
     <>
-      <header className="sticky top-0 z-20 bg-background/80 p-3 pb-2 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:p-4 sm:pb-3">
-        <div
+      <header className="sticky top-0 z-20 w-full bg-background/85 px-4 pb-2 pt-3 backdrop-blur-md pointer-events-auto sm:px-6 sm:pt-4 lg:px-8">
+        <nav
           className={cn(
-            "mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 rounded-2xl border border-brand-soft-border bg-card px-2.5 shadow-[0_1px_2px_hsl(var(--foreground)/0.04)] sm:gap-3 sm:px-3"
+            "flex w-full items-center justify-between gap-2 rounded-full border border-border/80 bg-card/95 px-2.5 py-1.5 shadow-floating backdrop-blur-xl transition-all duration-300 sm:gap-4",
+            "hover:border-border"
           )}
+          aria-label={t("topbar.home_aria")}
         >
-          <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
-            <SidebarTrigger className="rounded-xl text-muted-foreground hover:text-foreground md:hidden" />
-            <Link
-              to={homePath}
-              className="flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-colors hover:bg-muted/50"
-              aria-label={t("topbar.home_aria")}
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
-                <Terminal className="size-4" aria-hidden />
-              </span>
-              <span className="hidden min-w-0 items-baseline gap-1.5 sm:flex">
-                <span className="truncate text-[15px] font-bold tracking-tight text-foreground">
-                  {t("sidebar.brand")}
-                </span>
-                <span className="shrink-0 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  {t("topbar.beta")}
-                </span>
-              </span>
-            </Link>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
-            {showCommunity ? (
-              <Button
-                type="button"
-                size="sm"
-                data-tour="topbar-publish"
-                onClick={handlePublish}
-                aria-label={t("topbar.publish_aria")}
-                className="h-9 gap-1.5 rounded-xl bg-brand px-2.5 text-brand-foreground hover:bg-brand-strong sm:px-3"
-              >
-                <span className="hidden sm:inline">{t("topbar.publish")}</span>
-                <SendHorizontal className="size-3.5" aria-hidden />
-              </Button>
-            ) : null}
-
-            <button
-              type="button"
-              data-tour="topbar-search"
-              onClick={() => setSearchOpen(true)}
-              className={cn(
-                "inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-muted-foreground transition-colors",
-                "hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              )}
-              aria-label={t("topbar.search_aria")}
-              title={`${t("topbar.search_aria")} (${shortcutLabel})`}
-            >
-              <Search className="size-4" aria-hidden />
-              <kbd className="hidden rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground lg:inline-block">
-                {shortcutLabel}
-              </kbd>
-            </button>
-
-            {selina.isAuthenticated && selina.canChat ? (
-              <button
-                type="button"
-                onClick={() => selina.openWithDraft()}
-                className={cn(
-                  "inline-flex size-9 items-center justify-center rounded-xl text-brand transition-colors",
-                  "hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  selina.open && "bg-brand-soft"
-                )}
-                aria-label={t("selina.open")}
-                aria-pressed={selina.open}
-              >
-                <Sparkles className="size-4" aria-hidden />
-              </button>
-            ) : null}
-
-            <ResumeNotificationBell indicator="dot" />
+          {/* Gauche : menu + avatar profil (réf. mock) */}
+          <div className="flex shrink-0 items-center gap-1 pl-0.5 sm:gap-2 sm:pl-1">
+            <SidebarTrigger className="rounded-full text-muted-foreground hover:text-foreground md:hidden" />
 
             {!authReady ? (
               <div
-                className="ml-0.5 size-8 animate-pulse rounded-full bg-muted"
+                className="size-8 animate-pulse rounded-full bg-muted"
                 aria-hidden
               />
             ) : isAuthenticated ? (
@@ -172,25 +129,31 @@ export function AppTopbar() {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="relative ml-0.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35"
+                    className={cn(
+                      "group flex items-center gap-1.5 rounded-full p-0.5 pr-2 transition-all",
+                      "hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                    )}
                     aria-label={t("topbar.account_menu_aria", {
                       name: displayName,
                     })}
                   >
-                    <ForumAvatar
-                      name={displayName}
-                      photo={user?.photo}
-                      size="sm"
-                      tone="soft"
-                    />
-                    <span
-                      className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-card bg-success"
-                      aria-hidden
-                    />
+                    <span className="relative shrink-0">
+                      <ForumAvatar
+                        name={displayName}
+                        photo={user?.photo}
+                        size="sm"
+                        tone="soft"
+                      />
+                      <span
+                        className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-card bg-success"
+                        aria-hidden
+                      />
+                    </span>
+                    <ChevronDown className="size-3.5 text-muted-foreground transition group-hover:text-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
-                  align="end"
+                  align="start"
                   sideOffset={8}
                   className="w-52 rounded-xl"
                 >
@@ -211,14 +174,117 @@ export function AppTopbar() {
             ) : (
               <Button
                 size="sm"
-                className="rounded-xl"
+                className="rounded-full"
                 onClick={() => navigate("/login", { flushSync: true })}
               >
                 {t("login")}
               </Button>
             )}
           </div>
-        </div>
+
+          {/* Centre : omnibar Selina — tape ici ; Entrée ouvre le panneau + envoie */}
+          <form
+            className="relative mx-1 min-w-0 flex-1 max-w-xl sm:mx-2"
+            onSubmit={handleOmnibarSubmit}
+          >
+            <label
+              className={cn(
+                "group relative flex w-full items-center justify-between gap-3 rounded-full border border-border/70 bg-muted/70 px-3.5 py-1.5 transition-all duration-200",
+                "hover:border-brand/40 hover:bg-card hover:shadow-sm",
+                "has-[:focus-visible]:border-brand/40 has-[:focus-visible]:bg-card has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand/30",
+                selina.open && "border-brand/40 bg-card shadow-sm"
+              )}
+            >
+              <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                <span
+                  className={cn(
+                    "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-white shadow-sm",
+                    "bg-gradient-to-tr from-brand to-brand-strong",
+                    "animate-pulse-subtle motion-reduce:animate-none"
+                  )}
+                  aria-hidden
+                >
+                  <Sparkles className="size-3.5" />
+                </span>
+                <input
+                  ref={omnibarRef}
+                  type="text"
+                  value={omnibar}
+                  onChange={(event) => setOmnibar(event.target.value)}
+                  placeholder={t("selina.omnibar_placeholder")}
+                  aria-label={t("selina.omnibar_placeholder")}
+                  disabled={selina.isBusy}
+                  className={cn(
+                    "min-w-0 flex-1 border-0 bg-transparent p-0 text-xs text-foreground outline-none placeholder:text-muted-foreground sm:text-sm",
+                    "disabled:cursor-not-allowed disabled:opacity-60"
+                  )}
+                />
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5">
+                <span className="hidden items-center rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand md:inline-flex">
+                  {t("selina.omnibar_badge")}
+                </span>
+                <kbd className="hidden items-center rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground shadow-sm sm:inline-flex">
+                  {selinaShortcut}
+                </kbd>
+              </span>
+            </label>
+          </form>
+
+          {/* Droite : Publier, recherche, cloche */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+            {showCommunity ? (
+              <button
+                type="button"
+                data-tour="topbar-publish"
+                onClick={handlePublish}
+                aria-label={t("topbar.publish_aria")}
+                className={cn(
+                  "flex items-center gap-2 rounded-full bg-[#18181b] px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-150 sm:px-5 sm:text-sm",
+                  "hover:scale-[1.02] hover:bg-black active:scale-[0.98]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2",
+                  "dark:bg-foreground dark:text-background dark:hover:bg-foreground/90"
+                )}
+              >
+                <span className="hidden sm:inline">{t("topbar.publish")}</span>
+                <SendHorizontal className="size-3.5 -rotate-[15deg]" aria-hidden />
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              data-tour="topbar-search"
+              onClick={() => setSearchOpen(true)}
+              className={cn(
+                "hidden items-center gap-1 rounded-full p-1.5 text-muted-foreground transition lg:flex",
+                "hover:bg-muted/80 hover:text-foreground",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              )}
+              aria-label={t("topbar.search_aria")}
+              title={`${t("topbar.search_aria")} (${searchShortcut})`}
+            >
+              <Search className="size-4" aria-hidden />
+              <span className="rounded-md border border-border/80 bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground shadow-sm">
+                {searchShortcut}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className={cn(
+                "inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition lg:hidden",
+                "hover:bg-muted/80 hover:text-foreground",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              )}
+              onClick={() => setSearchOpen(true)}
+              aria-label={t("topbar.search_aria")}
+            >
+              <Search className="size-4" aria-hidden />
+            </button>
+
+            <ResumeNotificationBell indicator="dot" />
+          </div>
+        </nav>
       </header>
 
       <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />

@@ -173,7 +173,7 @@ export function SelinaPanel() {
 
         <div
           ref={scrollerRef}
-          className="flex-1 space-y-5 overflow-y-auto px-4 pb-3 pt-1 scrollbar-thin"
+          className="flex-1 space-y-5 overflow-y-auto px-4 pb-3 pt-1 scrollbar-none"
         >
           {selina.turns.length === 0 && !selina.isBusy ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
@@ -228,7 +228,7 @@ export function SelinaPanel() {
                 }
               }}
               placeholder={t("selina.ask_placeholder")}
-              className="max-h-32 min-h-[28px] w-full resize-none bg-transparent text-[15px] leading-snug text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
+              className="max-h-32 min-h-[28px] w-full resize-none bg-transparent text-[15px] leading-snug text-foreground placeholder:text-muted-foreground focus-visible:outline-none scrollbar-none"
               aria-label={t("selina.ask_placeholder")}
               disabled={selina.isBusy}
             />
