@@ -104,7 +104,7 @@ export function SelinaRecents() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-6 pt-3">
+      <div className="flex-1 overflow-y-auto px-2 pb-6 pt-3 scrollbar-none">
         {selina.recentsLoading ? (
           <p className="px-3 py-8 text-center text-sm text-muted-foreground">
             {t("selina.recents_loading")}

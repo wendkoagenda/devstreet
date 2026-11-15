@@ -266,6 +266,10 @@
   "selina": {
     "open": "Open Selina",
     "title": "Selina",
+    "omnibar_placeholder": "Ask AI or write a prompt...",
+    "omnibar_badge": "Selina",
+    "omnibar_shortcut": "⌘J",
+    "omnibar_shortcut_win": "Ctrl J",
     "placeholder": "Ask Selina…",
     "toolbar_placeholder": "Work with Selina",
     "input_placeholder": "Work with Selina",

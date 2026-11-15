@@ -300,7 +300,7 @@ export function EspaceChat({
       <div
         ref={listRef}
         className={cn(
-          "relative min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-4",
+          "relative min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4 scrollbar-none sm:px-4",
           "bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:18px_18px]",
           "bg-muted/30"
         )}

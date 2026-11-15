@@ -30,7 +30,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       variant="floating"
       collapsible="offcanvas"
       {...props}
-      className="text-sidebar-foreground"
+      className="font-sans text-sidebar-foreground antialiased"
     >
       <SidebarHeader className="p-0">
         <AppSidebarHeader />
