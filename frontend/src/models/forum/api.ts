@@ -18,6 +18,7 @@ import type {
   CreateCommentFormValues,
   CreateDiscussionInput,
   CreateEntraideInput,
+  CreateSondageInput,
   CreateEspaceBody,
   DecideChoixInput,
   Espace,
@@ -125,6 +126,7 @@ export type Conversation = {
   membre_2: ConversationMember | null;
   autre_membre: ConversationMember | null;
   dernier_message: ConversationLastMessage | null;
+  has_unread?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -845,6 +847,26 @@ export const forumApi = createApi({
       ],
     }),
 
+    createSondage: builder.mutation<Publication, CreateSondageInput>({
+      query: (body) => ({
+        url: "/publications",
+        method: "POST",
+        body: {
+          type: "SONDAGE",
+          titre: body.titre,
+          description: body.description,
+          options_data: body.options_data,
+          images_data: body.images_data ?? [],
+          tags_data: body.tags_data ?? [],
+        },
+      }),
+      invalidatesTags: [
+        { type: "Publications", id: "LIST" },
+        "ForumTags",
+        "TagsSuivis",
+      ],
+    }),
+
     getPublicationAvis: builder.query<AvisChoix[], number>({
       queryFn: (id, _api, _extra, fetchWithBQ) =>
         fetchAllPages<AvisChoix>((qs) =>
@@ -1094,6 +1116,7 @@ export const {
   useCreateApplicationMutation,
   useCreateEntraideMutation,
   useCreateChoixMutation,
+  useCreateSondageMutation,
   useGetPublicationAvisQuery,
   useUpsertPublicationAvisMutation,
   useDecideChoixMutation,

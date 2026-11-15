@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ import { EspaceDirectory } from "../components/espace-directory";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function CommunitiesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -44,7 +46,7 @@ export default function CommunitiesPage() {
   const handleCreate = async () => {
     const trimmed = nom.trim();
     if (!trimmed) {
-      toast.error("Le nom est obligatoire");
+      toast.error(t("forum.name_required"));
       return;
     }
     try {
@@ -56,28 +58,28 @@ export default function CommunitiesPage() {
         commentaires_ouverts: true,
         acces,
       }).unwrap();
-      toast.success("Communauté créée");
+      toast.success(t("forum.community_created"));
       setNom("");
       setDescription("");
       setShowForm(false);
       navigate(`/forum/communautes/${created.id}`);
     } catch {
-      toast.error("Impossible de créer la communauté");
+      toast.error(t("forum.community_create_error"));
     }
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
-      <header className="flex items-center justify-between gap-3 px-1">
+    <div className="mx-auto w-full max-w-5xl space-y-3">
+      <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            Communautés
+          <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+            {t("forum.communities_title")}
           </h1>
         </div>
         <Button
           type="button"
           size="icon"
-          aria-label="Créer une communauté"
+          aria-label={t("forum.create_community")}
           onClick={() => setShowForm((open) => !open)}
         >
           <Plus className="h-4 w-4" />
@@ -89,13 +91,13 @@ export default function CommunitiesPage() {
           <Input
             value={nom}
             onChange={(event) => setNom(event.target.value)}
-            placeholder="Nom de la communauté"
+            placeholder={t("forum.community_name_placeholder")}
             maxLength={120}
           />
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Description (facultatif)"
+            placeholder={t("forum.description_optional")}
             className="min-h-[72px]"
           />
           <div className="flex flex-wrap gap-2">
@@ -105,7 +107,7 @@ export default function CommunitiesPage() {
               variant={acces === "PUBLIC" ? "default" : "outline"}
               onClick={() => setAcces("PUBLIC")}
             >
-              Public
+              {t("forum.access_public")}
             </Button>
             <Button
               type="button"
@@ -113,7 +115,7 @@ export default function CommunitiesPage() {
               variant={acces === "LIEN" ? "default" : "outline"}
               onClick={() => setAcces("LIEN")}
             >
-              Accès par lien
+              {t("forum.access_link")}
             </Button>
           </div>
           <div className="flex justify-end gap-2">
@@ -122,11 +124,11 @@ export default function CommunitiesPage() {
               variant="ghost"
               onClick={() => setShowForm(false)}
             >
-              Annuler
+              {t("actions.cancel")}
             </Button>
             <Button type="button" disabled={creating} onClick={handleCreate}>
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Créer
+              {t("actions.create")}
             </Button>
           </div>
         </section>
@@ -141,9 +143,9 @@ export default function CommunitiesPage() {
         }
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Rechercher une communauté…"
-        mineTitle="Mes communautés"
-        otherTitle="À découvrir"
+        searchPlaceholder={t("forum.search_community")}
+        mineTitle={t("forum.my_communities")}
+        otherTitle={t("forum.discover")}
         isLoading={isLoading}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={Boolean(hasNextPage)}
@@ -152,15 +154,15 @@ export default function CommunitiesPage() {
         }}
         emptyLabel={
           isError
-            ? "Impossible de charger les communautés."
-            : "Aucune communauté pour l’instant."
+            ? t("forum.load_communities_error")
+            : t("forum.empty_communities")
         }
-        emptySearchLabel="Aucune communauté ne correspond à ta recherche."
+        emptySearchLabel={t("forum.empty_communities_search")}
       />
       {isError ? (
         <div className="flex justify-center">
           <Button type="button" variant="outline" onClick={() => refetch()}>
-            Réessayer
+            {t("forum.retry")}
           </Button>
         </div>
       ) : null}

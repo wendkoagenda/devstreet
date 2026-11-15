@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,10 @@ import { ScoreBadge } from "./score";
 
 /** Carte d'une offre dans une liste : titre, entreprise, faits clés, compétences et score. */
 export function OfferCard({ offer, to }: { offer: Offer; to: string }) {
-  const place = [offer.city, countryName(offer.country)].filter(Boolean).join(", ");
+  const { t, i18n } = useTranslation();
+  const place = [offer.city, countryName(offer.country, i18n.language)]
+    .filter(Boolean)
+    .join(", ");
   const budget = formatBudget(offer);
   const matched = new Set(offer.matched_skill_ids ?? []);
 
@@ -23,7 +27,9 @@ export function OfferCard({ offer, to }: { offer: Offer; to: string }) {
         <CardContent className="flex flex-wrap items-start gap-4 p-5">
           <div className="flex min-w-0 flex-1 basis-72 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">{offer.title}</span>
+              <span className="text-sm font-semibold text-foreground">
+                {offer.title}
+              </span>
               {offer.my_candidature ? (
                 <Badge variant="secondary">
                   {CANDIDATURE_STATUS_LABELS[offer.my_candidature.status]}
@@ -33,7 +39,10 @@ export function OfferCard({ offer, to }: { offer: Offer; to: string }) {
             <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
               {offer.company.name}
               {offer.company.is_verified ? (
-                <BadgeCheck className="size-3.5" aria-label="Entreprise vérifiée" />
+                <BadgeCheck
+                  className="size-3.5"
+                  aria-label={t("marketplace.company_verified")}
+                />
               ) : null}
               <span>· {place}</span>
               <span>· {offerFacts(offer).join(" · ")}</span>
@@ -42,7 +51,10 @@ export function OfferCard({ offer, to }: { offer: Offer; to: string }) {
             {offer.skills.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {offer.skills.map((skill) => (
-                  <Badge key={skill.id} variant={matched.has(skill.id) ? "default" : "outline"}>
+                  <Badge
+                    key={skill.id}
+                    variant={matched.has(skill.id) ? "default" : "outline"}
+                  >
                     {skill.name}
                   </Badge>
                 ))}

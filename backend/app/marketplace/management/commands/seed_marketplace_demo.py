@@ -1,16 +1,12 @@
 """Données de démonstration complètes de la marketplace : toutes les tables, avec des liens cohérents.
 
 Crée des entreprises, des recruteurs, des développeurs (compétences, expériences, prestations, calendriers, historique),
-des offres, des candidatures, des avis, des swipes et des connexions. Les comptes partagent un mot de passe généré,
-stocké dans `.local/demo.credentials.json` (hors dépôt), comme le seed du Hub.
+des offres, des candidatures, des avis, des swipes et des connexions. Les comptes partagent le mot de passe `test@123`.
 
 La commande est idempotente : relancée, elle met à jour les mêmes enregistrements (identifiés par e-mail, slug…).
 `--reset` supprime d'abord toutes les données de démonstration (comptes en @marketplace.example.test).
 """
-import json
-import secrets
 from datetime import date, timedelta
-from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -19,6 +15,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
+from app.core.account_types import TYPE_DEV, TYPE_ENTREPRISE
+from app.core.services.account_type_service import AccountTypeService
 from app.marketplace.models import (
     Availability,
     Candidature,
@@ -40,6 +38,7 @@ from . import _demo_data as demo
 
 User = get_user_model()
 SYSTEM_ID = 0  # created_by / updated_by des objets créés par le système (pas d'utilisateur auteur)
+SHOWCASE_PASSWORD = "test@123"
 
 
 def _email(key: str) -> str:
@@ -51,17 +50,26 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--reset", action="store_true", help="Supprime d'abord les données de démonstration existantes.")
+        parser.add_argument(
+            "--allow-non-debug",
+            action="store_true",
+            help="Autorise l'exécution quand DEBUG=False (prod/staging vide).",
+        )
 
     def handle(self, *args, **options):
-        if not settings.DEBUG:
-            raise CommandError("Données de démonstration réservées à DEBUG=True.")
+        if not settings.DEBUG and not options["allow_non_debug"]:
+            raise CommandError(
+                "DEBUG=False : passe --allow-non-debug pour peupler une instance vide "
+                "(prod/staging). Commande refusée par sécurité."
+            )
+        if options["reset"] and not settings.DEBUG and not options["allow_non_debug"]:
+            raise CommandError("--reset hors DEBUG nécessite aussi --allow-non-debug.")
         self.today = timezone.localdate()
         self.now = timezone.now()
         with transaction.atomic():
             if options["reset"]:
                 self._reset()
-            password = self._password()
-            self.users = self._users(password)
+            self.users = self._users()
             self.skills = self._skills()
             self.companies = self._companies()
             self.profils = self._profils()
@@ -93,27 +101,17 @@ class Command(BaseCommand):
 
     # ── Comptes ──────────────────────────────────────────────────────────────
 
-    def _password(self) -> str:
-        """Mot de passe commun des comptes de démonstration : généré une fois, conservé dans .local (hors dépôt)."""
-        directory = Path(settings.BASE_DIR) / ".local"
-        directory.mkdir(exist_ok=True)
-        self.credentials_path = directory / "demo.credentials.json"
-        data = json.loads(self.credentials_path.read_text(encoding="utf-8")) if self.credentials_path.exists() else {}
-        data.setdefault("password", secrets.token_urlsafe(24))
-        data["marketplace_accounts"] = [_email(person["key"]) for person in demo.RECRUITERS + demo.DEVS]
-        self.credentials_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        return data["password"]
-
-    def _users(self, password: str) -> dict:
+    def _users(self) -> dict:
         users = {}
         for person in demo.RECRUITERS + demo.DEVS:
-            user, created = User.objects.get_or_create(
+            user, _created = User.objects.get_or_create(
                 email=_email(person["key"]),
                 defaults={"username": f"mp-{person['key']}", "first_name": person["first"], "last_name": person["last"]},
             )
-            if created:
-                user.set_password(password)
-                user.save()
+            user.first_name = person["first"]
+            user.last_name = person["last"]
+            user.set_password(SHOWCASE_PASSWORD)
+            user.save()
             users[person["key"]] = user
         return users
 
@@ -184,6 +182,10 @@ class Command(BaseCommand):
             slug += "-demo"  # le slug est déjà pris par un vrai profil
         profil, _ = Profil.objects.update_or_create(
             user=user, type=type, defaults={"slug": slug, "created_by": user.id, "updated_by": user.id, **fields}
+        )
+        # Aligné sur MeService : sans account_type le front force /onboarding.
+        AccountTypeService.add_type(
+            user, TYPE_ENTREPRISE if type == Profil.TYPE_ENTREPRISE else TYPE_DEV
         )
         return profil
 
@@ -301,9 +303,13 @@ class Command(BaseCommand):
 
     # ── Avis, swipes, connexions ─────────────────────────────────────────────
 
+    def _dev_profil(self, key: str) -> Profil:
+        """Profil type=dev de la personne (les avis n'acceptent que des profils dev)."""
+        return Profil.objects.get(user=self.users[key], type=Profil.TYPE_DEV)
+
     def _reviews(self):
         for author_key, target_key, rating, comment, link, public in demo.REVIEWS:
-            author, target = self.profils[author_key], self.profils[target_key]
+            author, target = self._dev_profil(author_key), self._dev_profil(target_key)
             candidature = (
                 Candidature.objects.filter(offer=self.offers[link[0]], profil=self.profils[link[1]]).first() if link else None
             )
@@ -361,4 +367,4 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Données de démonstration de la marketplace prêtes :"))
         for label, count in counts.items():
             self.stdout.write(f"  {label} : {count}")
-        self.stdout.write(f"Comptes (@{demo.DOMAIN}) et mot de passe commun : {self.credentials_path}")
+        self.stdout.write(f"Comptes (@{demo.DOMAIN}) — mot de passe : {SHOWCASE_PASSWORD}")

@@ -29,8 +29,8 @@ export function ResumeQuotidienBanner({
 
   const label =
     resume.nombre_nouveautes === 1
-      ? "nouveauté de tes abonnements"
-      : "nouveautés de tes abonnements";
+      ? "nouveauté de vos abonnements"
+      : "nouveautés de vos abonnements";
 
   const handleOpen = async () => {
     try {

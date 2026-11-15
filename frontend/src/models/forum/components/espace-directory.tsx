@@ -73,7 +73,7 @@ export function EspaceDirectory({
   const hasQuery = search.trim().length > 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="relative">
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -89,13 +89,13 @@ export function EspaceDirectory({
       </div>
 
       {isLoading && !hasAny ? (
-        <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+        <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
           Chargement…
         </p>
       ) : null}
 
       {!isLoading && !hasAny ? (
-        <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+        <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
           {hasQuery ? emptySearchLabel : emptyLabel}
         </p>
       ) : null}
@@ -103,15 +103,15 @@ export function EspaceDirectory({
       {hasAny ? (
         <>
           {mine.length > 0 ? (
-            <section className="space-y-3">
-              <h2 className="px-1 text-sm font-semibold text-foreground">
+            <section className="space-y-2">
+              <h2 className="text-sm font-semibold text-foreground">
                 {mineTitle}
                 <span className="ml-1 font-normal text-muted-foreground">
                   ({mine.length}
                   {hasNextPage ? "+" : ""})
                 </span>
               </h2>
-              <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-2.5">
                 {mine.map((espace) => (
                   <EspaceListItem
                     key={espace.id}
@@ -124,15 +124,15 @@ export function EspaceDirectory({
           ) : null}
 
           {others.length > 0 ? (
-            <section className="space-y-3">
-              <h2 className="px-1 text-sm font-semibold text-foreground">
+            <section className="space-y-2">
+              <h2 className="text-sm font-semibold text-foreground">
                 {otherTitle}
                 <span className="ml-1 font-normal text-muted-foreground">
                   ({others.length}
                   {hasNextPage ? "+" : ""})
                 </span>
               </h2>
-              <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-2.5">
                 {others.map((espace) => (
                   <EspaceListItem
                     key={espace.id}

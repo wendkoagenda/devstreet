@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ import { EspaceDirectory } from "../components/espace-directory";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function ChannelsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -45,7 +47,7 @@ export default function ChannelsPage() {
   const handleCreate = async () => {
     const trimmed = nom.trim();
     if (!trimmed) {
-      toast.error("Le nom est obligatoire");
+      toast.error(t("forum.name_required"));
       return;
     }
     try {
@@ -57,7 +59,7 @@ export default function ChannelsPage() {
         membres_peuvent_publier: false,
         commentaires_ouverts: commentairesOuverts,
       }).unwrap();
-      toast.success("Chaîne créée");
+      toast.success(t("forum.channel_created"));
       setNom("");
       setDescription("");
       setAcces("PUBLIC");
@@ -65,22 +67,22 @@ export default function ChannelsPage() {
       setShowForm(false);
       navigate(`/forum/chaines/${created.id}`);
     } catch {
-      toast.error("Impossible de créer la chaîne");
+      toast.error(t("forum.channel_create_error"));
     }
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
-      <header className="flex items-center justify-between gap-3 px-1">
+    <div className="mx-auto w-full max-w-5xl space-y-3">
+      <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            Chaînes
+          <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+            {t("forum.channels_title")}
           </h1>
         </div>
         <Button
           type="button"
           size="icon"
-          aria-label="Créer une chaîne"
+          aria-label={t("forum.create_channel")}
           onClick={() => setShowForm((open) => !open)}
         >
           <Plus className="h-4 w-4" />
@@ -92,13 +94,13 @@ export default function ChannelsPage() {
           <Input
             value={nom}
             onChange={(event) => setNom(event.target.value)}
-            placeholder="Nom de la chaîne"
+            placeholder={t("forum.channel_name_placeholder")}
             maxLength={120}
           />
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Description (facultatif)"
+            placeholder={t("forum.description_optional")}
             className="min-h-[72px]"
           />
           <div className="flex flex-wrap gap-2">
@@ -108,7 +110,7 @@ export default function ChannelsPage() {
               variant={acces === "PUBLIC" ? "default" : "outline"}
               onClick={() => setAcces("PUBLIC")}
             >
-              Public
+              {t("forum.access_public")}
             </Button>
             <Button
               type="button"
@@ -116,7 +118,7 @@ export default function ChannelsPage() {
               variant={acces === "LIEN" ? "default" : "outline"}
               onClick={() => setAcces("LIEN")}
             >
-              Accès par lien
+              {t("forum.access_link")}
             </Button>
             <Button
               type="button"
@@ -124,7 +126,9 @@ export default function ChannelsPage() {
               variant={commentairesOuverts ? "default" : "outline"}
               onClick={() => setCommentairesOuverts((open) => !open)}
             >
-              Commentaires : {commentairesOuverts ? "ouverts" : "fermés"}
+              {commentairesOuverts
+                ? t("forum.comments_open")
+                : t("forum.comments_closed")}
             </Button>
           </div>
           <div className="flex justify-end gap-2">
@@ -133,11 +137,11 @@ export default function ChannelsPage() {
               variant="ghost"
               onClick={() => setShowForm(false)}
             >
-              Annuler
+              {t("actions.cancel")}
             </Button>
             <Button type="button" disabled={creating} onClick={handleCreate}>
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Créer
+              {t("actions.create")}
             </Button>
           </div>
         </section>
@@ -152,9 +156,9 @@ export default function ChannelsPage() {
         }
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Rechercher une chaîne…"
-        mineTitle="Mes chaînes"
-        otherTitle="À découvrir"
+        searchPlaceholder={t("forum.search_channel")}
+        mineTitle={t("forum.my_channels")}
+        otherTitle={t("forum.discover")}
         isLoading={isLoading}
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={Boolean(hasNextPage)}
@@ -162,16 +166,14 @@ export default function ChannelsPage() {
           void fetchNextPage();
         }}
         emptyLabel={
-          isError
-            ? "Impossible de charger les chaînes."
-            : "Aucune chaîne pour l’instant."
+          isError ? t("forum.load_channels_error") : t("forum.empty_channels")
         }
-        emptySearchLabel="Aucune chaîne ne correspond à ta recherche."
+        emptySearchLabel={t("forum.empty_channels_search")}
       />
       {isError ? (
         <div className="flex justify-center">
           <Button type="button" variant="outline" onClick={() => refetch()}>
-            Réessayer
+            {t("forum.retry")}
           </Button>
         </div>
       ) : null}

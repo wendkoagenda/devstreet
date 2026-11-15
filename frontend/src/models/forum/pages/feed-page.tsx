@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,8 @@ function typeForFilter(filter: FeedTypeFilterId): string | undefined {
   if (filter === "discussions") return "DISCUSSION";
   if (filter === "showcase") return "APPLICATION";
   if (filter === "entraide") return "ENTRAIDE";
+  if (filter === "choix") return "CHOIX";
+  if (filter === "sondage") return "SONDAGE";
   return undefined;
 }
 
@@ -46,6 +49,7 @@ function topByMembers(espaces: Espace[], limit = 3) {
 }
 
 export default function FeedPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tagFilter = searchParams.get("tag")?.trim() || null;
@@ -206,15 +210,15 @@ export default function FeedPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_17rem]">
-        <div className="min-w-0 space-y-4">
-          <header className="space-y-1">
-            <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
-              Fil d&apos;actualité
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0 space-y-6">
+          <header className="space-y-1.5">
+            <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              {t("forum.feed_title")}
             </h1>
             {tagFilter ? (
               <p className="text-xs text-muted-foreground">
-                Priorité à{" "}
+                {t("forum.feed_tag_prefix")}{" "}
                 <button
                   type="button"
                   onClick={clearTagFilter}
@@ -223,7 +227,7 @@ export default function FeedPage() {
                   #{tagFilter}
                 </button>
                 {" — "}
-                puis tes suivis, abonnements, et le reste du fil.
+                {t("forum.feed_tag_suffix")}
               </p>
             ) : null}
           </header>
@@ -237,17 +241,17 @@ export default function FeedPage() {
             onSortChange={setSort}
           />
 
-          <div className="space-y-2" aria-live="polite">
+          <div className="space-y-4 sm:space-y-5" aria-live="polite">
             {pubsLoading ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Chargement…
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                {t("forum.feed_loading")}
               </p>
             ) : null}
 
             {pubsError ? (
               <div className="space-y-2 py-8 text-center">
                 <p className="text-sm text-destructive">
-                  Impossible de charger le fil.
+                  {t("forum.feed_error")}
                 </p>
                 <Button
                   type="button"
@@ -255,14 +259,14 @@ export default function FeedPage() {
                   size="sm"
                   onClick={() => refetchPubs()}
                 >
-                  Réessayer
+                  {t("forum.feed_retry")}
                 </Button>
               </div>
             ) : null}
 
             {!pubsLoading && !pubsError && results.length === 0 ? (
               <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                Aucune publication pour le moment.
+                {t("forum.feed_empty")}
               </p>
             ) : null}
 
@@ -279,7 +283,7 @@ export default function FeedPage() {
 
             {isFetchingNextPage ? (
               <p className="pb-2 text-center text-xs text-muted-foreground">
-                Chargement…
+                {t("forum.feed_loading")}
               </p>
             ) : null}
           </div>

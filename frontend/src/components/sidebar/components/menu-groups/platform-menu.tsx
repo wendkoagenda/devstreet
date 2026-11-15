@@ -32,6 +32,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuthSlice } from "@/models/auth/slice";
@@ -195,6 +196,7 @@ function MenuSection({
 }
 
 export default function PlatformMenu() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -208,7 +210,8 @@ export default function PlatformMenu() {
   });
 
   const go = (url: string) => {
-    navigate(url);
+    // flushSync : évite le décalage URL / contenu (React Router 7 wrappe sinon en startTransition).
+    navigate(url, { flushSync: true });
     if (isMobile) setOpenMobile(false);
   };
 
@@ -219,7 +222,7 @@ export default function PlatformMenu() {
 
   const principalItems: NavItem[] = [
     {
-      title: "Forum",
+      title: t("sidebar.forum"),
       url: "/",
       icon: Home,
       tourId: "nav-forum",
@@ -231,28 +234,28 @@ export default function PlatformMenu() {
           !p.startsWith("/forum/favoris")),
     },
     {
-      title: "Communautés",
+      title: t("sidebar.communities"),
       url: "/forum/communautes",
       icon: Users,
       tourId: "nav-communities",
       badge: formatBadge(badges?.communautes),
     },
     {
-      title: "Chaînes",
+      title: t("sidebar.channels"),
       url: "/forum/chaines",
       icon: Radio,
       tourId: "nav-channels",
       badge: formatBadge(badges?.chaines),
     },
     {
-      title: "Messages",
+      title: t("sidebar.messages"),
       url: "/messages",
       icon: Mail,
       tourId: "nav-messages",
       badge: formatBadge(badges?.messages),
     },
     {
-      title: "Favoris",
+      title: t("sidebar.favorites"),
       url: "/forum/favoris",
       icon: Bookmark,
       tourId: "nav-favorites",
@@ -262,7 +265,7 @@ export default function PlatformMenu() {
   // Général : visible par tous.
   const generalItems: NavItem[] = [
     {
-      title: "Explorer les offres",
+      title: t("sidebar.explore_offers"),
       url: "/marketplace/offers",
       icon: Briefcase,
     },
@@ -274,7 +277,7 @@ export default function PlatformMenu() {
 
   if (canAdministerMarketplace) {
     generalItems.push({
-      title: "Administration",
+      title: t("sidebar.administration"),
       url: "/admin/marketplace",
       icon: Shield,
     });
@@ -283,22 +286,22 @@ export default function PlatformMenu() {
   // Espace dev : pour les membres qui ont un profil dev
   const devItems: NavItem[] = [
     {
-      title: "Réseau",
+      title: t("sidebar.network"),
       url: "/marketplace/network",
       icon: Network,
     },
     {
-      title: "Mes candidatures",
+      title: t("sidebar.my_applications"),
       url: "/marketplace/applications",
       icon: ClipboardList,
     },
     {
-      title: "Mes disponibilités",
+      title: t("sidebar.my_availability"),
       url: "/marketplace/availability",
       icon: CalendarDays,
     },
     {
-      title: "Mon CV",
+      title: t("sidebar.my_cv"),
       url: "/marketplace/cv",
       icon: FileText,
     },
@@ -307,18 +310,18 @@ export default function PlatformMenu() {
   // Entreprise : pour les membres qui ont un profil entreprise
   const entrepriseItems: NavItem[] = [
     {
-      title: "Mes offres",
+      title: t("sidebar.my_offers"),
       url: "/marketplace/my-offers",
       icon: Store,
     },
     {
-      title: "Talents",
+      title: t("sidebar.talents"),
       url: "/marketplace/talents",
       icon: UsersRound,
       exact: true,
     },
     {
-      title: "Vivier",
+      title: t("sidebar.pool"),
       url: "/marketplace/talents/pool",
       icon: Users,
     },
@@ -326,7 +329,7 @@ export default function PlatformMenu() {
 
   const hubItems: NavItem[] = [
     {
-      title: "Explorer les projets",
+      title: t("sidebar.explore_projects"),
       url: "/hub/projects",
       icon: FolderKanban,
       match: (p, s) =>
@@ -336,7 +339,7 @@ export default function PlatformMenu() {
     ...(isAuthenticated && userId != null
       ? [
           {
-            title: "Mes projets",
+            title: t("sidebar.my_projects"),
             url: myProjectsUrl,
             icon: FolderOpen,
             match: (p: string, s: string) =>
@@ -355,9 +358,17 @@ export default function PlatformMenu() {
   // Invitation à ajouter le type manquant (relance l'assistant pour ce seul type)
   const addTypeItem: NavItem | null =
     missingType === "entreprise"
-      ? { title: "Ajouter un espace entreprise", url: "/onboarding?add=entreprise&resume=1", icon: Plus }
+      ? {
+          title: t("sidebar.create_company"),
+          url: "/onboarding?add=entreprise&resume=1",
+          icon: Plus,
+        }
       : missingType === "dev"
-        ? { title: "Ajouter un espace dev", url: "/onboarding?add=dev&resume=1", icon: Plus }
+        ? {
+            title: t("sidebar.create_dev_profile"),
+            url: "/onboarding?add=dev&resume=1",
+            icon: Plus,
+          }
         : null;
 
   return (
@@ -365,7 +376,7 @@ export default function PlatformMenu() {
       {showCommunity ? (
         <SidebarGroup className="p-0 px-1">
           <SidebarGroupLabel className={sectionLabelClass}>
-            Principal
+            {t("sidebar.principal")}
           </SidebarGroupLabel>
           <NavList items={principalItems} path={path} search={search} onGo={go} />
         </SidebarGroup>
@@ -379,11 +390,11 @@ export default function PlatformMenu() {
 
       <SidebarGroup className="p-0 px-1" data-tour="nav-marketplace">
         <SidebarGroupLabel className={sectionLabelClass}>
-          Marketplace
+          {t("sidebar.marketplace")}
         </SidebarGroupLabel>
         <MenuSection
           id="general"
-          label="Général"
+          label={t("sidebar.general")}
           items={generalItems}
           path={path}
           search={search}
@@ -392,12 +403,16 @@ export default function PlatformMenu() {
         {showDevSpace ? (
           <MenuSection
             id="dev"
-            label="Mon espace dev"
+            label={t("sidebar.dev_space")}
             items={devItems}
             invite={
               hasProfil
                 ? undefined
-                : { title: "Créer mon profil dev", url: "/profil/me?section=dev", icon: Code2 }
+                : {
+                    title: t("sidebar.create_dev_profile"),
+                    url: "/profil/me?section=dev",
+                    icon: Code2,
+                  }
             }
             path={path}
             search={search}
@@ -407,12 +422,16 @@ export default function PlatformMenu() {
         {showEntrepriseSpace ? (
           <MenuSection
             id="entreprise"
-            label={company?.name ?? "Mon entreprise"}
+            label={company?.name ?? t("sidebar.my_company")}
             items={entrepriseItems}
             invite={
               isRecruiter
                 ? undefined
-                : { title: "Créer mon entreprise", url: "/profil/me?section=entreprise", icon: Building2 }
+                : {
+                    title: t("sidebar.create_company"),
+                    url: "/profil/me?section=entreprise",
+                    icon: Building2,
+                  }
             }
             path={path}
             search={search}
@@ -421,12 +440,7 @@ export default function PlatformMenu() {
         ) : null}
         {addTypeItem ? (
           <div className="mt-1.5">
-            <NavList
-              items={[addTypeItem]}
-              path={path}
-              search={search}
-              onGo={go}
-            />
+            <NavList items={[addTypeItem]} path={path} search={search} onGo={go} />
           </div>
         ) : null}
       </SidebarGroup>
@@ -437,7 +451,7 @@ export default function PlatformMenu() {
 
           <SidebarGroup className="p-0 px-1" data-tour="nav-projects">
             <SidebarGroupLabel className={sectionLabelClass}>
-              Projets
+              {t("sidebar.projects")}
             </SidebarGroupLabel>
             <NavList items={hubItems} path={path} search={search} onGo={go} />
           </SidebarGroup>
@@ -465,11 +479,12 @@ function HubMesFavoris({
   path: string;
   onGo: (url: string) => void;
 }) {
+  const { t } = useTranslation();
   const selected = path === "/" ? activeTag : null;
 
   return (
     <div className="space-y-1 px-2.5">
-      <p className={sectionLabelClass}>Tags suivis</p>
+      <p className={sectionLabelClass}>{t("sidebar.followed_tags")}</p>
       <FavorisTagQuickSelect
         variant="sidebar"
         activeSlug={selected}

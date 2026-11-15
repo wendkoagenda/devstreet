@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Search, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import { useGetTalentsQuery } from "../api";
 import type { TalentDirectoryCard } from "../schema";
 
 function TalentRow({ talent }: { talent: TalentDirectoryCard }) {
+  const { t } = useTranslation();
   const place = [talent.city, countryName(talent.country)].filter(Boolean).join(", ");
   return (
     <Link
@@ -34,13 +36,21 @@ function TalentRow({ talent }: { talent: TalentDirectoryCard }) {
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold text-foreground">{talent.name}</span>
-          {talent.remote ? <Badge variant="secondary">Remote</Badge> : null}
+          {talent.remote ? <Badge variant="secondary">{t("marketplace.remote")}</Badge> : null}
           {talent.available_from ? (
-            <Badge variant="outline">Dispo {formatDate(talent.available_from)}</Badge>
+            <Badge variant="outline">
+              {t("marketplace.available_short", { date: formatDate(talent.available_from) })}
+            </Badge>
           ) : null}
         </div>
         <span className="truncate text-xs text-muted-foreground">
-          {[talent.headline, place, `${talent.years_of_experience} an(s)`].filter(Boolean).join(" · ")}
+          {[
+            talent.headline,
+            place,
+            t("marketplace.years_short", { count: talent.years_of_experience }),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </span>
         {talent.skills.length > 0 ? (
           <div className="flex flex-wrap gap-1 pt-1">
@@ -63,6 +73,7 @@ function TalentRow({ talent }: { talent: TalentDirectoryCard }) {
 }
 
 function TalentsDirectoryContent() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [skill, setSkill] = useState("");
   const [country, setCountry] = useState("");
@@ -84,17 +95,19 @@ function TalentsDirectoryContent() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-foreground">Annuaire des talents</h1>
+          <h1 className="text-xl font-semibold text-foreground">
+            {t("marketplace.talents_directory")}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Filtrez par compétence, pays ou disponibilité — sans publier d'offre.
+            {t("marketplace.talents_directory_sub")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link to="/marketplace/talents/discover">Mode swipe</Link>
+            <Link to="/marketplace/talents/discover">{t("marketplace.swipe_mode")}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link to="/marketplace/talents/pool">Vivier</Link>
+            <Link to="/marketplace/talents/pool">{t("marketplace.pool")}</Link>
           </Button>
         </div>
       </div>
@@ -104,10 +117,10 @@ function TalentsDirectoryContent() {
         <Input
           type="search"
           className="pl-9"
-          placeholder="Nom, accroche ou techno…"
+          placeholder={t("marketplace.search_talent_placeholder")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          aria-label="Rechercher un talent"
+          aria-label={t("marketplace.search_talent")}
         />
       </div>
 
@@ -131,7 +144,7 @@ function TalentsDirectoryContent() {
           aria-pressed={remoteOnly}
           onClick={() => setRemoteOnly(!remoteOnly)}
         >
-          Remote
+          {t("marketplace.remote")}
         </Button>
         <Button
           type="button"
@@ -140,7 +153,7 @@ function TalentsDirectoryContent() {
           aria-pressed={availableOnly}
           onClick={() => setAvailableOnly(!availableOnly)}
         >
-          Disponible
+          {t("marketplace.available")}
         </Button>
       </div>
 
@@ -177,7 +190,7 @@ function TalentsDirectoryContent() {
 
       {isError ? (
         <p className="rounded-lg border border-destructive/40 bg-card p-6 text-sm text-destructive">
-          Impossible de charger l'annuaire. Réessayez dans un instant.
+          {t("marketplace.load_directory_error")}
         </p>
       ) : isFetching && !data ? (
         <div className="flex flex-col gap-3">
@@ -192,7 +205,7 @@ function TalentsDirectoryContent() {
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-          Aucun profil ne correspond à ces filtres.
+          {t("marketplace.empty_directory")}
         </div>
       )}
     </div>

@@ -94,9 +94,15 @@ export default function PublicationDetailPage() {
         publicationAuthorId={data.auteur?.id ?? null}
         acceptedReplyId={data.reponse_acceptee ?? null}
         allowAnonymousFeedback={data.type === "APPLICATION"}
-        choixOptions={data.type === "CHOIX" ? data.options ?? [] : []}
+        choixOptions={
+          data.type === "CHOIX" || data.type === "SONDAGE"
+            ? data.options ?? []
+            : []
+        }
         defaultOptionId={
-          data.type === "CHOIX" ? data.mon_avis_option_id ?? null : null
+          data.type === "CHOIX" || data.type === "SONDAGE"
+            ? data.mon_avis_option_id ?? null
+            : null
         }
         commentsClosed={
           data.espace?.type === "CHAINE" &&

@@ -66,3 +66,34 @@ class AiChatApiTests(APITestCase):
             "/api/v1/ai/conversations", {"consumer": "generic"}, format="json"
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_selina_consumer_and_list(self):
+        create = self.client.post(
+            "/api/v1/ai/conversations",
+            {"consumer": "selina", "title": "Selina test"},
+            format="json",
+        )
+        self.assertEqual(create.status_code, 201, create.data)
+        self.assertEqual(create.data["consumer"], "selina")
+
+        listed = self.client.get("/api/v1/ai/conversations?consumer=selina")
+        self.assertEqual(listed.status_code, 200, listed.data)
+        listed_rows = listed.data["results"]
+        self.assertEqual(len(listed_rows), 1)
+        self.assertEqual(listed_rows[0]["id"], create.data["id"])
+        self.assertNotIn("messages", listed_rows[0])
+
+        other = self.client.get("/api/v1/ai/conversations?consumer=hub")
+        self.assertEqual(other.status_code, 200)
+        self.assertEqual(len(other.data["results"]), 0)
+
+    def test_list_forbidden_without_permission(self):
+        User = get_user_model()
+        outsider = User.objects.create_user(
+            username="noailist",
+            email="noailist@example.test",
+            password="Strong-Password-42!",
+        )
+        self.client.force_authenticate(outsider)
+        response = self.client.get("/api/v1/ai/conversations?consumer=selina")
+        self.assertEqual(response.status_code, 403)

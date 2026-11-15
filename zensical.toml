@@ -1,0 +1,52 @@
+# Documentation utilisateur DevStreet (Zensical)
+# Prévisualisation : zensical serve
+# Build statique : zensical build
+
+[project]
+site_name = "DevStreet — Guide"
+site_description = "Documentation des menus et modules de DevStreet"
+docs_dir = "frontend/public/guide"
+
+[nav]
+"Accueil" = "index.md"
+"Démarrage" = "demarrage.md"
+
+"Forum" = [
+  { "Vue d'ensemble" = "forum/index.md" },
+  { "Fil général" = "forum/fil.md" },
+  { "Types de publication" = "forum/types-publication.md" },
+  { "Communautés" = "forum/communautes.md" },
+  { "Chaînes" = "forum/chaines.md" },
+  { "Messagerie" = "forum/messagerie.md" },
+  { "Favoris et tags" = "forum/favoris.md" },
+  { "Profil membre" = "forum/profil-membre.md" },
+]
+
+"Marketplace" = [
+  { "Vue d'ensemble" = "marketplace/index.md" },
+  { "Explorer les offres" = "marketplace/explorer-offres.md" },
+  { "Réseau" = "marketplace/reseau.md" },
+  { "Mes candidatures" = "marketplace/candidatures.md" },
+  { "Disponibilités" = "marketplace/disponibilites.md" },
+  { "Mon CV" = "marketplace/cv.md" },
+  { "Mes offres" = "marketplace/mes-offres.md" },
+  { "Talents" = "marketplace/talents.md" },
+  { "Vivier" = "marketplace/vivier.md" },
+]
+
+"Projets" = [
+  { "Vue d'ensemble" = "projets/index.md" },
+  { "Explorer et créer" = "projets/explorer.md" },
+  { "Mes projets" = "projets/mes-projets.md" },
+]
+
+"Administration" = [
+  { "Vue d'ensemble" = "administration/index.md" },
+  { "Utilisateurs et rôles" = "administration/utilisateurs-roles.md" },
+  { "Admin marketplace" = "administration/marketplace-admin.md" },
+]
+
+"Compte" = [
+  { "Onboarding" = "compte/onboarding.md" },
+  { "Mon profil" = "compte/mon-profil.md" },
+]

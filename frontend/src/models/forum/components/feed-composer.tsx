@@ -11,6 +11,7 @@ import {
   Scale,
   SendHorizontal,
   Video,
+  Vote,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ import {
   createChoixSchema,
   createDiscussionSchema,
   createEntraideSchema,
+  createSondageSchema,
   type CreateApplicationInput,
   type CreateChoixInput,
   type CreateDiscussionInput,
@@ -34,6 +36,7 @@ import {
   useCreateChoixMutation,
   useCreateDiscussionMutation,
   useCreateEntraideMutation,
+  useCreateSondageMutation,
   useLazySearchMembresQuery,
   useUploadForumImageMutation,
   useUploadForumMediaMutation,
@@ -61,7 +64,8 @@ type ComposerMode =
   | "DISCUSSION"
   | "APPLICATION"
   | "ENTRAIDE"
-  | "CHOIX";
+  | "CHOIX"
+  | "SONDAGE";
 
 type ComposerValues = CreateDiscussionInput &
   Partial<Pick<CreateApplicationInput, "lien_app" | "plateforme_app">> &
@@ -71,6 +75,7 @@ function schemaForMode(mode: ComposerMode) {
   if (mode === "APPLICATION") return createApplicationSchema;
   if (mode === "ENTRAIDE") return createEntraideSchema;
   if (mode === "CHOIX") return createChoixSchema;
+  if (mode === "SONDAGE") return createSondageSchema;
   return createDiscussionSchema;
 }
 
@@ -113,11 +118,14 @@ function ComposerForm({
   const [createEntraide, { isLoading: creatingEntraide }] =
     useCreateEntraideMutation();
   const [createChoix, { isLoading: creatingChoix }] = useCreateChoixMutation();
+  const [createSondage, { isLoading: creatingSondage }] =
+    useCreateSondageMutation();
   const isLoading =
     uploadingImage ||
     uploadingVideo ||
     creatingDiscussion ||
     creatingApplication ||
+    creatingSondage ||
     creatingEntraide ||
     creatingChoix;
 
@@ -208,7 +216,7 @@ function ComposerForm({
 
   const uploadImageFile = async (file: File): Promise<string | null> => {
     if (!file.type.startsWith("image/")) {
-      toast.error("Choisis une image (jpg, png, gif, webp)");
+      toast.error("Choisissez une image (jpg, png, gif, webp)");
       return null;
     }
     if (file.size > MAX_IMAGE_BYTES) {
@@ -267,7 +275,7 @@ function ComposerForm({
     const nextImages = [...images];
     for (const file of files.slice(0, remaining)) {
       if (!file.type.startsWith("video/")) {
-        toast.error("Choisis une vidéo (mp4, webm, mov)");
+        toast.error("Choisissez une vidéo (mp4, webm, mov)");
         continue;
       }
       if (file.size > MAX_VIDEO_BYTES) {
@@ -392,6 +400,25 @@ function ComposerForm({
         return;
       }
 
+      if (mode === "SONDAGE") {
+        const created = await createSondage({
+          titre: values.titre,
+          description: values.description,
+          options_data: (values.options_data || []).map((option, position) => ({
+            libelle: option.libelle,
+            description: option.description,
+            image_url: option.image_url || "",
+            position,
+          })),
+          images_data: values.images_data ?? [],
+          tags_data,
+        }).unwrap();
+        toast.success("Sondage publié");
+        resetForm();
+        onCreated?.(created.id);
+        return;
+      }
+
       const created = await createDiscussion({
         titre: values.titre,
         description: values.description,
@@ -410,7 +437,9 @@ function ComposerForm({
             ? "Impossible de publier l'entraide"
             : mode === "CHOIX"
               ? "Impossible de publier l'aide au choix"
-              : "Impossible de publier la discussion"
+              : mode === "SONDAGE"
+                ? "Impossible de publier le sondage"
+                : "Impossible de publier la discussion"
       );
     }
   });
@@ -463,6 +492,17 @@ function ComposerForm({
           <Scale className="h-3.5 w-3.5" />
           Choix
         </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={mode === "SONDAGE" ? "default" : "outline"}
+          className="gap-1.5"
+          aria-pressed={mode === "SONDAGE"}
+          onClick={() => onModeChange("SONDAGE")}
+        >
+          <Vote className="h-3.5 w-3.5" />
+          Sondage
+        </Button>
       </div>
       ) : null}
 
@@ -476,16 +516,21 @@ function ComposerForm({
             mode === "APPLICATION"
               ? "Nom de l'application"
               : mode === "ENTRAIDE"
-                ? "Quel est ton problème technique ?"
+                ? "Quel est votre problème technique ?"
                 : mode === "CHOIX"
-                  ? "Sur quoi hésites-tu ?"
-                  : "Titre de la discussion"
+                  ? "Sur quoi hésitez-vous ?"
+                  : mode === "SONDAGE"
+                    ? "Question du sondage"
+                    : "Titre de la discussion"
           }
           className="border-0 bg-transparent px-0 text-base font-semibold shadow-none focus-visible:ring-0"
+          aria-invalid={Boolean(errors.titre)}
           {...register("titre")}
         />
         {errors.titre ? (
-          <p className="text-xs text-destructive">{errors.titre.message}</p>
+          <p className="text-xs text-destructive" role="alert">
+            {errors.titre.message}
+          </p>
         ) : null}
       </div>
 
@@ -498,14 +543,17 @@ function ComposerForm({
           rows={4}
           placeholder={
             mode === "APPLICATION"
-              ? "Décris ton app, ce qu'elle fait, pour qui…"
+              ? "Décrivez votre app, ce qu'elle fait, pour qui…"
               : mode === "ENTRAIDE"
-                ? "Explique le bug, colle le code (```python … ```), ajoute le contexte…"
+                ? "Expliquez le bug, collez le code (```python … ```), ajoutez le contexte…"
                 : mode === "CHOIX"
                   ? "Contexte de la décision à prendre…"
-                  : "Développe ton idée, ta question ou ton retour d'expérience…"
+                  : mode === "SONDAGE"
+                    ? "Précisez le contexte du sondage…"
+                    : "Développez votre idée, votre question ou votre retour d'expérience…"
           }
           className="min-h-24 resize-none border-0 bg-transparent px-0 font-sans shadow-none focus-visible:ring-0"
+          aria-invalid={Boolean(errors.description)}
           {...descriptionRegister}
           ref={(node) => {
             descriptionRegister.ref(node);
@@ -513,7 +561,7 @@ function ComposerForm({
           }}
         />
         {errors.description ? (
-          <p className="text-xs text-destructive">
+          <p className="text-xs text-destructive" role="alert">
             {errors.description.message}
           </p>
         ) : null}
@@ -616,7 +664,7 @@ function ComposerForm({
         </div>
       ) : null}
 
-      {mode === "CHOIX" ? (
+      {mode === "CHOIX" || mode === "SONDAGE" ? (
         <div className="space-y-3">
           {optionsData.map((option, index) => (
             <div
@@ -644,8 +692,16 @@ function ComposerForm({
               </div>
               <Input
                 placeholder="Libellé"
+                aria-invalid={Boolean(
+                  errors.options_data?.[index]?.libelle
+                )}
                 {...register(`options_data.${index}.libelle` as const)}
               />
+              {errors.options_data?.[index]?.libelle?.message ? (
+                <p className="text-xs text-destructive">
+                  {errors.options_data[index]?.libelle?.message}
+                </p>
+              ) : null}
               <Textarea
                 rows={2}
                 placeholder="Précision (optionnel)"
