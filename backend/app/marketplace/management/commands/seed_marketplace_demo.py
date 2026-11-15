@@ -15,6 +15,8 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
+from app.core.account_types import TYPE_DEV, TYPE_ENTREPRISE
+from app.core.services.account_type_service import AccountTypeService
 from app.marketplace.models import (
     Availability,
     Candidature,
@@ -180,6 +182,10 @@ class Command(BaseCommand):
             slug += "-demo"  # le slug est déjà pris par un vrai profil
         profil, _ = Profil.objects.update_or_create(
             user=user, type=type, defaults={"slug": slug, "created_by": user.id, "updated_by": user.id, **fields}
+        )
+        # Aligné sur MeService : sans account_type le front force /onboarding.
+        AccountTypeService.add_type(
+            user, TYPE_ENTREPRISE if type == Profil.TYPE_ENTREPRISE else TYPE_DEV
         )
         return profil
 
