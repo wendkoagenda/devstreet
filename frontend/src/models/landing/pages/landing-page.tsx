@@ -156,9 +156,7 @@ export default function LandingPage() {
               className="flex items-center gap-2.5"
               aria-label={t("landing.home_aria")}
             >
-              <span className="flex size-8 items-center justify-center rounded-xl bg-foreground text-background">
-                <Terminal className="size-4" aria-hidden />
-              </span>
+              <BrandLogo variant="mark" className="size-8" />
               <span className="text-[1.05rem] font-bold tracking-tight">
                 {t("sidebar.brand")}
               </span>
