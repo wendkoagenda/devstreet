@@ -152,7 +152,7 @@ jobs:
             fi
           done
           # Valeurs publiques (integrees au JavaScript) : leur empreinte distingue deux configurations du meme commit.
-          config="$(printf '%s\n%s\n%s\n%s\n' "$api_url" "$api_v1_url" "$gcs_bucket" "$s3_bucket_url" | sha256sum | cut -c1-8)"
+          config="$(printf '%s\n%s\n%s\n' "$api_url" "$api_v1_url" "$use_s3" | sha256sum | cut -c1-8)"
           image="$FRONTEND_BASE:$BRANCHE-$SHA-$config"
           echo "frontend_image=$image" >> "$GITHUB_OUTPUT"
           if docker manifest inspect "$image" > /dev/null 2>&1; then
@@ -164,8 +164,7 @@ jobs:
             --sbom=false \
             --build-arg "VITE_API_URL=$api_url" \
             --build-arg "VITE_API_V1_URL=$api_v1_url" \
-            --build-arg "VITE_GCS_BUCKET_NAME=$gcs_bucket" \
-            --build-arg "VITE_S3_BUCKET_URL=$s3_bucket_url" \
+            --build-arg "VITE_USE_S3=$use_s3" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$SHA" \
             --tag "$image" frontend
