@@ -1,5 +1,6 @@
 import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/redux/store";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -53,10 +54,11 @@ import {
   parseRichMessage,
 } from "../lib/rich-message";
 import type { Espace } from "../schema";
+import i18n from "i18next";
 
 function memberLabel(member: ConversationMember | null | undefined) {
-  if (!member) return "Membre";
-  return member.full_name || member.username || "Membre";
+  if (!member) return i18n.t("forum.member");
+  return member.full_name || member.username || i18n.t("forum.member");
 }
 
 function matchesQuery(
@@ -80,7 +82,8 @@ function formatTime(value: string | null | undefined) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("fr-FR", {
+  const locale = i18n.language?.startsWith("en") ? "en-GB" : "fr-FR";
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "short",
     timeStyle: "short",
   }).format(date);
@@ -93,12 +96,13 @@ function GroupeListItem({
   espace: Espace;
   active?: boolean;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const isChaine = espace.type === "CHAINE";
   const count = espace.membres_count ?? 0;
   const subtitle = isChaine
-    ? `Chaîne · ${count} abonné${count > 1 ? "s" : ""}`
-    : `Groupe · ${count} membre${count > 1 ? "s" : ""}`;
+    ? t(count > 1 ? "forum.channel_meta_plural" : "forum.channel_meta", { count })
+    : t(count > 1 ? "forum.group_meta_plural" : "forum.group_meta", { count });
 
   return (
     <button
@@ -135,6 +139,7 @@ function GroupeListItem({
 }
 
 export default function MessagesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams] = useSearchParams();
@@ -235,7 +240,7 @@ export default function MessagesPage() {
       const conversation = await openConversation(userId).unwrap();
       navigate(`/messages/${conversation.id}`);
     } catch {
-      toast.error("Impossible d'ouvrir la conversation");
+      toast.error(t("forum.open_conversation_error"));
     } finally {
       setOpeningSuiviId(null);
     }
@@ -256,7 +261,7 @@ export default function MessagesPage() {
         }
       } catch {
         if (!cancelled) {
-          toast.error("Impossible d'ouvrir la conversation");
+          toast.error(t("forum.open_conversation_error"));
           navigate("/messages", { replace: true });
         }
       }
@@ -276,7 +281,7 @@ export default function MessagesPage() {
     <div className="mx-auto flex h-[calc(100dvh-8rem)] w-full max-w-5xl flex-col gap-3 overflow-hidden">
       <header className="shrink-0">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Messages
+          {t("forum.messages_title")}
         </h1>
       </header>
 
@@ -296,31 +301,31 @@ export default function MessagesPage() {
               <Input
                 value={sidebarQuery}
                 onChange={(event) => setSidebarQuery(event.target.value)}
-                placeholder="Rechercher un groupe ou un contact…"
+                placeholder={t("forum.search_messages")}
                 className="h-9 pl-8 text-sm"
-                aria-label="Rechercher dans Messages"
+                aria-label={t("forum.search_messages_aria")}
               />
             </label>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
             <p className="px-2 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Groupes
+              {t("forum.groups_section")}
             </p>
             {loadingGroups ? (
               <p className="px-2 py-4 text-center text-xs text-muted-foreground">
-                Chargement des groupes…
+                {t("forum.loading_groups")}
               </p>
             ) : null}
             {!loadingGroups && groupes.length === 0 ? (
               <p className="px-2 py-3 text-xs text-muted-foreground">
-                Rejoins une communauté ou une chaîne : elle apparaîtra ici.
+                {t("forum.empty_groups")}
               </p>
             ) : null}
             {!loadingGroups &&
             groupes.length > 0 &&
             filteredGroupes.length === 0 ? (
               <p className="px-2 py-3 text-xs text-muted-foreground">
-                Aucun groupe ne correspond.
+                {t("forum.empty_groups_search")}
               </p>
             ) : null}
             {filteredGroupes.map((espace) => (
@@ -332,17 +337,17 @@ export default function MessagesPage() {
             ))}
 
             <p className="px-2 pb-1.5 pt-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Privés
+              {t("forum.contacts_section")}
             </p>
             {loadingList || loadingSuivis || opening ? (
               <p className="px-2 py-6 text-center text-sm text-muted-foreground">
-                Chargement…
+                {t("forum.loading")}
               </p>
             ) : null}
             {listError ? (
               <div className="space-y-2 px-2 py-4 text-center">
                 <p className="text-sm text-destructive">
-                  Impossible de charger les conversations.
+                  {t("forum.conversations_error")}
                 </p>
                 <Button
                   type="button"
@@ -350,14 +355,14 @@ export default function MessagesPage() {
                   variant="outline"
                   onClick={() => void refetchList()}
                 >
-                  Réessayer
+                  {t("forum.retry")}
                 </Button>
               </div>
             ) : null}
             {suivisError ? (
               <div className="space-y-2 px-2 py-2 text-center">
                 <p className="text-xs text-destructive">
-                  Impossible de charger tes abonnements.
+                  {t("forum.follows_error")}
                 </p>
                 <Button
                   type="button"
@@ -365,7 +370,7 @@ export default function MessagesPage() {
                   variant="outline"
                   onClick={() => void refetchSuivis()}
                 >
-                  Réessayer
+                  {t("forum.retry")}
                 </Button>
               </div>
             ) : null}
@@ -376,8 +381,8 @@ export default function MessagesPage() {
             filteredSuivisSansConversation.length === 0 ? (
               <p className="px-2 py-4 text-center text-xs text-muted-foreground">
                 {sidebarQuery.trim()
-                  ? "Aucun contact ne correspond."
-                  : "Suis quelqu’un pour lui écrire ici, ou ouvre une conversation depuis son profil."}
+                  ? t("forum.empty_contacts_search")
+                  : t("forum.empty_contacts")}
               </p>
             ) : null}
             {filteredConversations.map((conversation) => {
@@ -388,7 +393,7 @@ export default function MessagesPage() {
                 conversation.id === conversationId;
               const preview =
                 conversation.dernier_message?.texte?.trim() ||
-                "Nouvelle conversation";
+                t("forum.new_conversation");
               return (
                 <button
                   key={conversation.id}
@@ -439,10 +444,10 @@ export default function MessagesPage() {
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {busy
-                        ? "Ouverture…"
+                        ? t("forum.opening")
                         : membre.username
-                          ? `@${membre.username} · Suivi`
-                          : "Suivi · Écrire"}
+                          ? `@${membre.username} · ${t("forum.follow_prefix")}`
+                          : t("forum.follow_write")}
                     </p>
                   </div>
                 </button>
@@ -466,7 +471,7 @@ export default function MessagesPage() {
             />
           ) : (
             <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-muted-foreground">
-              Sélectionne un groupe ou une conversation privée.
+              {t("forum.select_thread")}
             </div>
           )}
         </section>
@@ -476,6 +481,7 @@ export default function MessagesPage() {
 }
 
 function GroupeThread({ espaceId }: { espaceId: number }) {
+  const { t } = useTranslation();
   const {
     data: espace,
     isLoading,
@@ -509,7 +515,7 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        Ouverture du groupe…
+        {t("forum.opening_group")}
       </div>
     );
   }
@@ -517,9 +523,9 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
   if (isError || !espace) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-        <p className="text-sm text-destructive">Impossible d&apos;ouvrir ce groupe.</p>
+        <p className="text-sm text-destructive">{t("forum.open_group_error")}</p>
         <Button type="button" variant="outline" onClick={() => void refetch()}>
-          Réessayer
+          {t("forum.retry")}
         </Button>
       </div>
     );
@@ -529,10 +535,10 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Tu dois rejoindre « {espace.nom} » pour y accéder ici.
+          {t("forum.must_join", { name: espace.nom })}
         </p>
         <Button asChild>
-          <Link to={detailHref}>Voir l&apos;espace</Link>
+          <Link to={detailHref}>{t("forum.view_space")}</Link>
         </Button>
       </div>
     );
@@ -547,7 +553,7 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
           size="icon"
           variant="ghost"
           className="size-8 shrink-0 lg:hidden"
-          aria-label="Retour à la liste"
+          aria-label={t("forum.back_to_list")}
         >
           <Link to="/messages">
             <ArrowLeft className="size-4" />
@@ -558,7 +564,7 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
             {espace.nom}
           </p>
           <p className="truncate text-[11px] text-muted-foreground sm:text-xs">
-            {isChaine ? "Chaîne" : "Communauté"}
+            {isChaine ? t("forum.channel_label") : t("forum.community_label")}
           </p>
         </div>
         <Button
@@ -567,7 +573,7 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
           variant="outline"
           className="h-7 shrink-0 px-2 text-[11px] sm:h-8 sm:px-3 sm:text-sm"
         >
-          <Link to={`${detailHref}?manage=1`}>Infos</Link>
+          <Link to={`${detailHref}?manage=1`}>{t("forum.infos")}</Link>
         </Button>
       </div>
 
@@ -583,20 +589,20 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
             />
           ) : (
             <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-[12px] text-muted-foreground sm:text-sm">
-              Seuls les admins publient ici. Tu peux liker et commenter.
+              {t("forum.channel_admins_publish")}
             </p>
           )}
 
           {feedLoading ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Chargement…
+              {t("forum.loading")}
             </p>
           ) : null}
 
           {feedError ? (
             <div className="space-y-2 py-6 text-center">
               <p className="text-sm text-destructive">
-                Impossible de charger les annonces.
+                {t("forum.load_announcements_error")}
               </p>
               <Button
                 type="button"
@@ -604,14 +610,14 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
                 size="sm"
                 onClick={() => void refetchFeed()}
               >
-                Réessayer
+                {t("forum.retry")}
               </Button>
             </div>
           ) : null}
 
           {!feedLoading && !feedError && publications.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-              Aucune annonce pour l’instant.
+              {t("forum.empty_announcements")}
             </p>
           ) : null}
 
@@ -631,7 +637,7 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
                 disabled={isFetching}
                 onClick={() => void fetchNextPage()}
               >
-                {isFetching ? "Chargement…" : "Voir plus"}
+                {isFetching ? t("forum.loading") : t("forum.see_more")}
               </Button>
             </div>
           ) : null}
@@ -644,7 +650,7 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
             canWrite={canWrite}
             canReact={isMember}
             canModerate={isAdmin}
-            readOnlyHint="Seuls les administrateurs peuvent écrire ici."
+            readOnlyHint={t("forum.admins_only_hint")}
           />
         </div>
       )}
@@ -659,6 +665,7 @@ function ConversationThread({
   conversationId: number;
   currentUserId: number | null;
 }) {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const listRef = useRef<HTMLDivElement | null>(null);
   const [draft, setDraft] = useState("");
@@ -720,7 +727,7 @@ function ConversationThread({
       await sendMessage({ conversationId, texte }).unwrap();
       setDraft("");
     } catch {
-      toast.error("Impossible d'envoyer le message");
+      toast.error(t("forum.send_message_error"));
     }
   };
 
@@ -732,7 +739,7 @@ function ConversationThread({
     try {
       await handleSendEncoded(encodeVocalMessage(url));
     } catch {
-      toast.error("Impossible d'envoyer le vocal");
+      toast.error(t("forum.send_voice_error"));
       throw new Error("send vocal failed");
     }
   };
@@ -740,7 +747,7 @@ function ConversationThread({
   if (loadingConversation || loadingMessages) {
     return (
       <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        Chargement du fil…
+        {t("forum.load_thread")}
       </div>
     );
   }
@@ -749,14 +756,14 @@ function ConversationThread({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
         <p className="text-sm text-destructive">
-          Impossible de charger cette conversation.
+          {t("forum.load_conversation_error")}
         </p>
         <Button
           type="button"
           variant="outline"
           onClick={() => void refetchMessages()}
         >
-          Réessayer
+          {t("forum.retry")}
         </Button>
       </div>
     );
@@ -771,7 +778,7 @@ function ConversationThread({
           size="icon"
           variant="ghost"
           className="shrink-0 lg:hidden"
-          aria-label="Retour à la liste"
+          aria-label={t("forum.back_to_list")}
         >
           <Link to="/messages">
             <ArrowLeft className="size-4" />
@@ -806,7 +813,7 @@ function ConversationThread({
       >
         {messages.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            Dis bonjour — envoie le premier message.
+            {t("forum.say_hello")}
           </p>
         ) : null}
         {messages.map((message) => {
@@ -861,7 +868,7 @@ function ConversationThread({
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="Écrire un message…"
+            placeholder={t("forum.write_message")}
             rows={2}
             className="min-h-[44px] resize-none"
             onKeyDown={(event) => {
@@ -877,7 +884,7 @@ function ConversationThread({
               try {
                 await handleSendEncoded(texte);
               } catch {
-                toast.error("Impossible d'envoyer la pièce jointe");
+                toast.error(t("forum.send_attachment_error"));
                 throw new Error("send attachment failed");
               }
             }}
@@ -885,7 +892,7 @@ function ConversationThread({
           <VoiceRecorderButton
             compact
             disabled={sending}
-            confirmLabel="Envoyer"
+            confirmLabel={t("forum.send")}
             onRecorded={async ({ url }) => {
               await handleSendVocal(url);
             }}
@@ -896,7 +903,7 @@ function ConversationThread({
             ) : (
               <SendHorizontal className="h-4 w-4" />
             )}
-            <span className="sr-only">Envoyer</span>
+            <span className="sr-only">{t("forum.send")}</span>
           </Button>
         </div>
       </form>

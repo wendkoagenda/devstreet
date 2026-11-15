@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,7 @@ function topByMembers(espaces: Espace[], limit = 3) {
 }
 
 export default function FeedPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tagFilter = searchParams.get("tag")?.trim() || null;
@@ -210,11 +212,11 @@ export default function FeedPage() {
         <div className="min-w-0 space-y-4">
           <header className="space-y-1">
             <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
-              Fil d&apos;actualité
+              {t("forum.feed_title")}
             </h1>
             {tagFilter ? (
               <p className="text-xs text-muted-foreground">
-                Priorité à{" "}
+                {t("forum.feed_tag_prefix")}{" "}
                 <button
                   type="button"
                   onClick={clearTagFilter}
@@ -223,7 +225,7 @@ export default function FeedPage() {
                   #{tagFilter}
                 </button>
                 {" — "}
-                puis tes suivis, abonnements, et le reste du fil.
+                {t("forum.feed_tag_suffix")}
               </p>
             ) : null}
           </header>
@@ -240,14 +242,14 @@ export default function FeedPage() {
           <div className="space-y-2" aria-live="polite">
             {pubsLoading ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                Chargement…
+                {t("forum.feed_loading")}
               </p>
             ) : null}
 
             {pubsError ? (
               <div className="space-y-2 py-8 text-center">
                 <p className="text-sm text-destructive">
-                  Impossible de charger le fil.
+                  {t("forum.feed_error")}
                 </p>
                 <Button
                   type="button"
@@ -255,14 +257,14 @@ export default function FeedPage() {
                   size="sm"
                   onClick={() => refetchPubs()}
                 >
-                  Réessayer
+                  {t("forum.feed_retry")}
                 </Button>
               </div>
             ) : null}
 
             {!pubsLoading && !pubsError && results.length === 0 ? (
               <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                Aucune publication pour le moment.
+                {t("forum.feed_empty")}
               </p>
             ) : null}
 
@@ -279,7 +281,7 @@ export default function FeedPage() {
 
             {isFetchingNextPage ? (
               <p className="pb-2 text-center text-xs text-muted-foreground">
-                Chargement…
+                {t("forum.feed_loading")}
               </p>
             ) : null}
           </div>

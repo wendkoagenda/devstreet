@@ -49,7 +49,7 @@ export function AppTopbar() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const displayName = user?.full_name || user?.username || "Profil";
+  const displayName = user?.full_name || user?.username || t("topbar.profile_fallback");
 
   const handlePublish = () => {
     navigate("/?publish=1");
@@ -86,17 +86,17 @@ export function AppTopbar() {
             <Link
               to={homePath}
               className="flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-colors hover:bg-muted/50"
-              aria-label="Accueil DevStreet"
+              aria-label={t("topbar.home_aria")}
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
                 <Terminal className="size-4" aria-hidden />
               </span>
               <span className="hidden min-w-0 items-baseline gap-1.5 sm:flex">
                 <span className="truncate text-[15px] font-bold tracking-tight text-foreground">
-                  DevStreet
+                  {t("sidebar.brand")}
                 </span>
                 <span className="shrink-0 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  Beta
+                  {t("topbar.beta")}
                 </span>
               </span>
             </Link>
@@ -110,7 +110,7 @@ export function AppTopbar() {
               "group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-muted/60 px-2.5 py-2 text-left transition-colors sm:px-3",
               "hover:border-brand-soft-border hover:bg-muted"
             )}
-            aria-label="Rechercher"
+            aria-label={t("topbar.search_aria")}
           >
             <Search
               className="size-3.5 shrink-0 text-muted-foreground"
@@ -118,10 +118,10 @@ export function AppTopbar() {
             />
             <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
               <span className="hidden md:inline">
-                Rechercher projets, technos, développeurs…
+                {t("topbar.search_placeholder")}
               </span>
               <span className="hidden min-[380px]:inline md:hidden">
-                Rechercher…
+                {t("topbar.search_short")}
               </span>
             </span>
             <kbd className="hidden shrink-0 rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground md:inline-block">
@@ -136,10 +136,10 @@ export function AppTopbar() {
                 size="sm"
                 data-tour="topbar-publish"
                 onClick={handlePublish}
-                aria-label="Publier"
+                aria-label={t("topbar.publish_aria")}
                 className="h-9 gap-1.5 rounded-xl bg-brand px-2.5 text-brand-foreground hover:bg-brand-strong sm:px-3"
               >
-                <span className="hidden sm:inline">Publier</span>
+                <span className="hidden sm:inline">{t("topbar.publish")}</span>
                 <SendHorizontal className="size-3.5" aria-hidden />
               </Button>
             ) : null}
@@ -152,7 +152,7 @@ export function AppTopbar() {
                   <button
                     type="button"
                     className="relative ml-0.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35"
-                    aria-label={`Menu compte de ${displayName}`}
+                    aria-label={t("topbar.account_menu_aria", { name: displayName })}
                   >
                     <ForumAvatar
                       name={displayName}
@@ -176,7 +176,7 @@ export function AppTopbar() {
                     className="gap-2"
                   >
                     <UserRound className="size-4" />
-                    Mon profil
+                    {t("topbar.my_profile")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="gap-2">
