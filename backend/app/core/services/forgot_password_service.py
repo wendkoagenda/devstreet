@@ -27,6 +27,7 @@ from app.core.interfaces.password_reset_challenge_repository_interface import (
 from app.core.interfaces.user_repository_interface import UserRepositoryInterface
 from app.core.repositories.password_reset_challenge_repository import PasswordResetChallengeRepository
 from app.core.repositories.user_repository import UserRepository
+from app.core.services import email_catalog
 from app.core.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
@@ -119,16 +120,10 @@ class ForgotPasswordService:
                     code_hash=self._digest(f"code:{user.pk}", code),
                     expires_at=now + timedelta(minutes=CODE_TTL_MINUTES),
                 )
-                self.email_service.send_templated(
-                    to_email=user.email,
-                    subject="Votre code de réinitialisation de mot de passe",
-                    template_name='password_reset',
-                    context={
-                        'first_name': user.first_name or user.username,
-                        'reset_code': code,
-                        'code_ttl_minutes': CODE_TTL_MINUTES,
-                        'login_url': f"{settings.FRONTEND_URL}/login",
-                    },
+                self.email_service.send(
+                    email_catalog.password_reset_code(
+                        user.email, user.first_name or user.username, code, CODE_TTL_MINUTES
+                    )
                 )
         except Exception:
             # La transaction est annulée : le challenge n'existe pas et les précédents restent valides.
@@ -201,6 +196,9 @@ class ForgotPasswordService:
 
             self.user_repository.update_password(user, new_password)
             self.challenge_repository.mark_token_used(challenge, now)
-            self.challenge_repository.invalidate_open_for_user(user, now)
+            # Tous les codes en cours (réinitialisation et changement) deviennent inutilisables
+            self.challenge_repository.invalidate_open_for_user(user, now, purpose=None)
             self.user_repository.blacklist_refresh_tokens(user)
+            # Alerte de sécurité, envoyée après validation de la transaction
+            self.email_service.queue(email_catalog.password_changed(user.email, user.first_name or user.username, now))
         return user

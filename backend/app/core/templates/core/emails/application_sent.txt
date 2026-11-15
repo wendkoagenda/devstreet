@@ -1,0 +1,8 @@
+{% extends "core/emails/base.txt" %}{% block content %}Bonjour {{ first_name }},
+
+Votre candidature a bien été transmise. L'entreprise est prévenue et vous répondra depuis DevStreet.
+
+Offre : {{ offer_title }}
+Entreprise : {{ company_name }}
+
+Vous recevrez un e-mail dès que l'entreprise aura pris sa décision.{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "core/emails/base.html" %}
+{% block title %}Un compte {{ provider }} a été lié{% endblock %}
+{% block eyebrow %}<p class="ds-muted" style="margin:0 0 10px 0;font-size:11px;line-height:16px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#765F95;">Alerte de sécurité</p>{% endblock %}
+{% block heading %}Un compte {{ provider }} a été lié{% endblock %}
+{% block content %}<p style="margin:0 0 16px 0;">Bonjour {{ first_name }},</p><p style="margin:0 0 16px 0;">Un compte <strong>{{ provider }}</strong> a été lié à votre compte DevStreet le <strong>{{ linked_at }}</strong>. Vous pouvez désormais vous connecter avec {{ provider }}.</p><p style="margin:0 0 16px 0;">Ce n'était pas vous ? Changez votre mot de passe sans attendre avec le bouton ci-dessous.</p>{% endblock %}

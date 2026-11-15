@@ -288,6 +288,14 @@ class PasswordChangeSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True, min_length=8)
     new_password_confirm = serializers.CharField(required=True)
+    code = serializers.RegexField(
+        regex=r'^\d{6}$',
+        required=True,
+        error_messages={
+            'invalid': 'Le code doit contenir 6 chiffres.',
+            'required': 'Saisissez le code reçu par e-mail.',
+        },
+    )
 
     def validate(self, attrs):
         """Validate password confirmation."""

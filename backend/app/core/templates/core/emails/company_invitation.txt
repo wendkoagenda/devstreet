@@ -1,0 +1,5 @@
+{% extends "core/emails/base.txt" %}{% block content %}Bonjour,
+
+{{ inviter_name }} vous invite à rejoindre l'entreprise « {{ company_name }} » sur DevStreet pour publier des offres et recruter avec son équipe.
+
+Ce lien est valable {{ validity_days }} jours et ne peut être utilisé qu'une seule fois.{% endblock %}{% block footer_note %}Vous recevez cet e-mail car un membre de {{ company_name }} vous a invité sur {{ brand_name }}.{% endblock %}

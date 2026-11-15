@@ -15,6 +15,7 @@ from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from app.marketplace.models import Availability, Candidature, Connection, Offer, Profil, Review, Swipe
+from app.marketplace.services import marketplace_emails
 from app.marketplace.presenters import profil_card
 from app.marketplace.services.cv_service import can_download_cv
 from app.marketplace.services.me_service import MeService
@@ -226,12 +227,15 @@ class NetworkService:
             mutual = Swipe.objects.filter(author=target, target=me, context="network", direction="like").exists()
             if mutual:
                 low, high = sorted((me.id, target.id))
-                Connection.objects.get_or_create(
+                _, created = Connection.objects.get_or_create(
                     profil_a_id=low,
                     profil_b_id=high,
                     defaults={"status": "matched", "matched_at": timezone.now(), "created_by": user.id, "updated_by": user.id},
                 )
                 matched = True
+                if created:
+                    # Les deux membres sont prévenus (pas de doublon si la relation est refaite dans l'heure)
+                    marketplace_emails.notify_match(me, target)
         return {"matched": matched, "profil": profil_card(target)}
 
     @classmethod

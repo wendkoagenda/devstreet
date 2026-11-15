@@ -15,6 +15,7 @@ from app.core.views.auth_views import (
     profile_photo_view,
     profile_banner_view,
     change_password_view,
+    change_password_code_view,
     register_view,
     forgot_password_view,
     verify_reset_code_view,
@@ -94,6 +95,8 @@ urlpatterns = [
     
     # Changer le mot de passe
     path('auth/change-password', change_password_view, name='change_password'),
+    # Code de confirmation exigé par le changement de mot de passe
+    path('auth/change-password/code', change_password_code_view, name='change_password_code'),
     
     # === MOT DE PASSE OUBLIÉ (routes publiques) ===
     # Étape 1 : demande d'un code par e-mail

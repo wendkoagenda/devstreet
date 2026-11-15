@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.conf import settings
+from django.db import transaction
 from django.middleware.csrf import get_token
 from app.core.cookies import clear_auth_cookies, set_auth_cookies
 from app.core.services import audit_service, login_lockout
@@ -32,7 +33,14 @@ from app.core.serializers import (
     VerifyResetCodeSerializer,
     ResetPasswordSerializer,
 )
+from app.core.services import email_catalog
 from app.core.services.account_type_service import AccountTypeService
+from app.core.services.email_service import EmailService
+from app.core.services.password_change_service import (
+    CODE_SENT_MESSAGE as PASSWORD_CHANGE_CODE_SENT_MESSAGE,
+    PasswordChangeCodeService,
+    PasswordChangeError,
+)
 from app.core.services.user_service import UserService
 from app.core.services.forgot_password_service import (
     ForgotPasswordService,
@@ -51,6 +59,7 @@ from app.core.throttles import (
     PasswordResetRequestThrottle,
     PasswordResetVerifyThrottle,
     PasswordResetConfirmThrottle,
+    PasswordChangeCodeThrottle,
 )
 
 logger = logging.getLogger(__name__)
@@ -474,11 +483,35 @@ def profile_banner_view(request):
 
 @swagger_auto_schema(
     method='post',
-    operation_description="Changer le mot de passe de l'utilisateur actuel",
+    operation_description="Envoie par e-mail le code de confirmation du changement de mot de passe (membre connecté)",
+    responses={
+        200: "Code envoyé",
+        400: "Compte sans mot de passe",
+        401: "Non authentifié",
+        429: "Demande trop rapprochée",
+        503: "E-mail non envoyé",
+    },
+    tags=['Auth']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([PasswordChangeCodeThrottle])
+def change_password_code_view(request):
+    """Envoie un code à 6 chiffres à l'adresse du membre ; il est exigé pour changer le mot de passe."""
+    try:
+        PasswordChangeCodeService().request_code(request.user)
+    except PasswordChangeError as error:
+        return Response({'error': error.message}, status=error.status_code)
+    return Response({'message': PASSWORD_CHANGE_CODE_SENT_MESSAGE}, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Changer le mot de passe de l'utilisateur actuel (code reçu par e-mail obligatoire)",
     request_body=PasswordChangeSerializer,
     responses={
         200: "Mot de passe changé avec succès",
-        400: "Données invalides",
+        400: "Données invalides ou code invalide",
         401: "Non authentifié"
     },
     tags=['Auth']
@@ -487,29 +520,29 @@ def profile_banner_view(request):
 @permission_classes([IsAuthenticated])
 def change_password_view(request):
     """
-    Permet à l'utilisateur authentifié de changer son mot de passe.
-    
-    Args:
-        request: La requête HTTP contenant l'ancien et le nouveau mot de passe
-        
-    Returns:
-        Response: Confirmation du changement de mot de passe
+    Change le mot de passe du membre connecté : ancien mot de passe ET code reçu par e-mail exigés.
+
+    Le code n'est vérifié qu'une fois l'ancien mot de passe validé. Sa vérification a sa propre transaction,
+    hors de celle du changement : un code faux doit compter comme tentative (limite contre la force brute).
     """
     serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
-    
-    if serializer.is_valid():
-        # Changer le mot de passe
-        user = request.user
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    try:
+        PasswordChangeCodeService().consume_code(user, serializer.validated_data['code'])
+    except PasswordChangeError as error:
+        return Response({'code': [error.message]}, status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
         user.set_password(serializer.validated_data['new_password'])
         user.save()
-        audit_service.record(Actions.PASSWORD_CHANGED, actor=user, target=user, request=request)
+        # Alerte de sécurité, envoyée après validation de la transaction
+        EmailService().queue(email_catalog.password_changed(user.email, user.first_name or user.username))
 
-        return Response(
-            {'message': 'Mot de passe changé avec succès'},
-            status=status.HTTP_200_OK
-        )
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    audit_service.record(Actions.PASSWORD_CHANGED, actor=user, target=user, request=request)
+    return Response({'message': 'Mot de passe changé avec succès'}, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -694,6 +727,8 @@ def register_view(request):
         subject=audit_service.account_key(user.email),
         request=request,
     )
+    # E-mail de bienvenue, envoyé en arrière-plan (un échec n'empêche pas la création du compte)
+    EmailService().queue(email_catalog.welcome(user.email, user.first_name or user.username))
 
     response = Response(
         {'user': UserLoginSerializer(user).data},

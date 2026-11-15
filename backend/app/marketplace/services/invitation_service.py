@@ -4,21 +4,19 @@ Règles : une invitation est à usage unique, révocable et expire ; un membre n
 seul le propriétaire invite ou révoque. Seul le hash du jeton est conservé en base.
 """
 import hashlib
-import logging
 import secrets
 from datetime import timedelta
 from typing import List, Optional
 
 from django.conf import settings
-from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
+from app.marketplace.services import marketplace_emails
 from app.marketplace.models import InvitationEntreprise, Profil
 from app.marketplace.services.me_service import MeService
 
-logger = logging.getLogger(__name__)
 
 VALIDITY_DAYS = 7
 LIST_LIMIT = 50
@@ -122,24 +120,10 @@ class InvitationService:
 
     @staticmethod
     def _send_email(invitation: InvitationEntreprise, inviter, link: str) -> None:
-        """Un échec d'envoi ne doit pas annuler l'invitation : le propriétaire garde le lien à partager."""
-        try:
-            send_mail(
-                subject=f"Invitation à rejoindre {invitation.company.name} sur DevStreet",
-                message=(
-                    "Bonjour,\n\n"
-                    f"{inviter.full_name or inviter.email} vous invite à rejoindre l'entreprise "
-                    f"« {invitation.company.name} » sur DevStreet pour publier des offres avec son équipe.\n\n"
-                    f"Acceptez l'invitation : {link}\n\n"
-                    f"Ce lien est valable {VALIDITY_DAYS} jours et ne peut être utilisé qu'une seule fois.\n\n"
-                    "L'équipe DevStreet"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[invitation.email],
-                fail_silently=False,
-            )
-        except Exception:  # noqa: BLE001 - l'envoi d'e-mail ne doit jamais bloquer la création
-            logger.exception("Échec de l'envoi de l'invitation d'entreprise %s", invitation.id)
+        """Envoi en arrière-plan : un échec ne doit pas annuler l'invitation, le propriétaire garde le lien à partager."""
+        marketplace_emails.notify_company_invitation(
+            invitation.email, inviter, invitation.company.name, link, VALIDITY_DAYS
+        )
 
     # ── Côté personne invitée ────────────────────────────────────────────────
 

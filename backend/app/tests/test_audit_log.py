@@ -75,12 +75,24 @@ class LoginAuditTests(AuditTestCase):
         self.assertEqual(audit_service.account_key(''), '')
         self.assertEqual(audit_service.account_key(123), '')
 
+    def change_code(self):
+        """Demande le code de changement de mot de passe et le lit dans l'e-mail envoyé."""
+        import re
+        from django.core import mail
+        from app.core.services.password_change_service import PasswordChangeCodeService
+
+        mail.outbox = []
+        PasswordChangeCodeService().request_code(self.user)
+        return re.search(r'\b(\d{6})\b', mail.outbox[-1].body).group(1)
+
     def test_password_change_is_recorded(self):
         client = APIClient()
         self.attempt(client=client)
         client.credentials()  # la session est dans les cookies posés par la connexion
+        code = self.change_code()
         response = client.post(CHANGE_PASSWORD, {'old_password': PASSWORD, 'new_password': 'Nouveau-Mot-De-Passe-77',
-                                                 'new_password_confirm': 'Nouveau-Mot-De-Passe-77'}, format='json')
+                                                 'new_password_confirm': 'Nouveau-Mot-De-Passe-77', 'code': code},
+                               format='json')
         if response.status_code == status.HTTP_200_OK:
             self.assertEqual(self.entries(Actions.PASSWORD_CHANGED).get().actor, self.user)
         else:  # le client de test n'envoie pas le CSRF d'une session par cookie : on passe par l'en-tête Bearer
@@ -88,7 +100,8 @@ class LoginAuditTests(AuditTestCase):
             bearer = APIClient()
             bearer.credentials(HTTP_AUTHORIZATION=f'Bearer {RefreshToken.for_user(self.user).access_token}')
             response = bearer.post(CHANGE_PASSWORD, {'old_password': PASSWORD, 'new_password': 'Nouveau-Mot-De-Passe-77',
-                                                     'new_password_confirm': 'Nouveau-Mot-De-Passe-77'}, format='json')
+                                                     'new_password_confirm': 'Nouveau-Mot-De-Passe-77', 'code': code},
+                                   format='json')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(self.entries(Actions.PASSWORD_CHANGED).get().actor, self.user)
 
