@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand/brand-logo";
 import {
   SidebarHeader,
   SidebarMenu,
@@ -6,7 +7,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { t } from "i18next";
-import { Terminal } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function AppSidebarHeader() {
@@ -31,9 +31,7 @@ export default function AppSidebarHeader() {
               aria-label={t("sidebar.brand_home")}
               className="gap-2.5"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm ring-1 ring-black/5">
-                <Terminal aria-hidden className="h-4 w-4" />
-              </span>
+              <BrandLogo variant="mark" className="size-8 shrink-0" />
               <span className="flex min-w-0 flex-col leading-none">
                 <span className="truncate text-[15px] font-bold tracking-tight text-foreground">
                   {t("sidebar.brand")}

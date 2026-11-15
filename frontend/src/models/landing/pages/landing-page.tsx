@@ -4,6 +4,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ModeToggle } from "@/components/ui/mode-toggle";
@@ -18,10 +19,11 @@ import {
   Hash,
   MessageSquare,
   Sparkles,
-  Terminal,
   Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { GlobalCommunitySection } from "../components/global-community-section";
+import { ProfilesMarquee } from "../components/profiles-marquee";
 
 const STATS = [
   { value: "3", label: "espaces liés" },
@@ -153,15 +155,10 @@ export default function LandingPage() {
           <div className="flex items-center gap-10">
             <Link
               to="/welcome"
-              className="flex items-center gap-2.5"
+              className="flex items-center"
               aria-label="DevStreet — accueil"
             >
-              <span className="flex size-8 items-center justify-center rounded-xl bg-foreground text-background">
-                <Terminal className="size-4" aria-hidden />
-              </span>
-              <span className="text-[1.05rem] font-bold tracking-tight">
-                DevStreet
-              </span>
+              <BrandLogo className="h-8" />
             </Link>
 
             <nav
@@ -278,6 +275,8 @@ export default function LandingPage() {
           />
         </section>
 
+        <ProfilesMarquee />
+
         <section
           id="produit"
           className="scroll-mt-24 pb-6 pt-4 sm:pb-10 sm:pt-8"
@@ -300,6 +299,8 @@ export default function LandingPage() {
         </section>
 
         <FeatureStack />
+
+        <GlobalCommunitySection />
       </main>
 
       {/* CTA clair (coins bas arrondis) + footer sombre + grand mot-marque au scroll */}
@@ -344,13 +345,8 @@ export default function LandingPage() {
         <footer className="relative z-0 overflow-hidden text-[hsl(270_12%_92%)]">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-10 pt-14 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:pt-16">
             <div className="lg:col-span-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-8 items-center justify-center rounded-xl bg-[hsl(270_12%_96%)] text-[hsl(250_14%_8%)]">
-                  <Terminal className="size-4" aria-hidden />
-                </span>
-                <span className="text-base font-bold tracking-tight">
-                  DevStreet
-                </span>
+              <div className="flex items-center">
+                <BrandLogo on="dark" className="h-8" />
               </div>
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-[hsl(270_8%_62%)]">
                 La rue des builders : entraide technique, marketplace de missions
@@ -371,6 +367,7 @@ export default function LandingPage() {
                       { label: "Communauté", href: "#communauté" },
                       { label: "Marketplace", href: "#marketplace" },
                       { label: "Hub Git", href: "#hub" },
+                      { label: "Dans le monde", href: "#monde" },
                     ],
                   },
                   {

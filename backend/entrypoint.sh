@@ -41,10 +41,13 @@ python manage.py migrate --noinput
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Starting Gunicorn..."
-exec gunicorn config.wsgi:application \
+# ASGI + Socket.IO (messagerie) : un seul worker car AsyncServer est en mémoire
+# (plusieurs workers casseraient les emit cross-process sans Redis).
+echo "Starting Gunicorn (ASGI / UvicornWorker)..."
+exec gunicorn config.asgi:application \
   --bind 0.0.0.0:8000 \
-  --workers 3 \
+  -k uvicorn.workers.UvicornWorker \
+  --workers 1 \
   --timeout 120 \
   --access-logfile - \
   --error-logfile -

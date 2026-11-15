@@ -1,8 +1,9 @@
 import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, Search, SendHorizontal, Terminal, UserRound } from "lucide-react";
+import { LogOut, Search, SendHorizontal, UserRound } from "lucide-react";
 import { t } from "i18next";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -88,16 +89,10 @@ export function AppTopbar() {
               className="flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-colors hover:bg-muted/50"
               aria-label="Accueil DevStreet"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
-                <Terminal className="size-4" aria-hidden />
-              </span>
-              <span className="hidden min-w-0 items-baseline gap-1.5 sm:flex">
-                <span className="truncate text-[15px] font-bold tracking-tight text-foreground">
-                  DevStreet
-                </span>
-                <span className="shrink-0 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                  Beta
-                </span>
+              <BrandLogo variant="mark" className="size-8 shrink-0 sm:hidden" />
+              <BrandLogo className="hidden h-8 sm:block" />
+              <span className="hidden shrink-0 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground sm:inline">
+                Beta
               </span>
             </Link>
           </div>

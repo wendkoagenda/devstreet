@@ -21,13 +21,26 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 logger = logging.getLogger(__name__)
 
+
+def socketio_cors_origins() -> list[str]:
+    """
+    Origines autorisées pour Socket.IO (credentials) : CORS Django + FRONTEND_URL.
+    '*' est exclu : il refuse les cookies.
+    """
+    origins: list[str] = []
+    seen: set[str] = set()
+    for raw in [*settings.CORS_ALLOWED_ORIGINS, settings.FRONTEND_URL]:
+        origin = str(raw).strip().rstrip('/')
+        if not origin or origin == '*' or origin in seen:
+            continue
+        seen.add(origin)
+        origins.append(origin)
+    return origins
+
+
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    # Origines du front Vite (proxy same-host) ; '*' refuse les credentials
-    cors_allowed_origins=[
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-    ],
+    cors_allowed_origins=socketio_cors_origins(),
     logger=False,
     engineio_logger=False,
 )

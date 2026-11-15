@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import {
   Card,
   CardContent,
@@ -40,12 +41,7 @@ export default function AuthLayout({
 
       <div className="relative w-full max-w-md space-y-6">
         <div className="flex justify-center">
-          {/* Logo bleu : inversé en blanc en mode sombre pour rester lisible */}
-          <img
-            src="/devstreet-logo.png"
-            alt="devstreet"
-            className="h-14 w-auto dark:brightness-0 dark:invert"
-          />
+          <BrandLogo className="h-14" />
         </div>
 
         <Card className="shadow-lg">

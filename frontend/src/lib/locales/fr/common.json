@@ -1,6 +1,6 @@
 {
   "app": {
-    "logo": "/devstreet-logo.png",
+    "logo": "/devstreet-logo-clair-transparent.svg",
     "name": "devstreet",
     "version": "1.0.0"
   },
@@ -92,7 +92,7 @@
   "sidebar": {
     "title": "DevStreet",
     "version": "Hub",
-    "logo": "/devstreet-logo.png",
+    "logo": "/devstreet-logo-clair-transparent.svg",
     "users": "Utilisateurs",
     "departments": "Departements",
     "general": "Général",

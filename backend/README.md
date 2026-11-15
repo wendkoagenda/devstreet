@@ -75,10 +75,19 @@ Crée le compte admin (`ADMIN_EMAIL` / `ADMIN_PASSWORD`) et les rôles / permiss
 ### 6. Serveur de développement
 
 ```bash
-python manage.py runserver    # http://127.0.0.1:8000
+python manage.py runserver    # http://127.0.0.1:8000 — API HTTP uniquement
 ```
 
 Lance l’API en local (rechargement auto à chaque modification).
+
+**Messagerie temps réel (Socket.IO)** : `runserver` ne gère pas les WebSockets. Utiliser à la place :
+
+```powershell
+.\run_asgi.ps1
+# équivalent : uvicorn config.asgi:application --reload --host 127.0.0.1 --port 8000
+```
+
+Le front Vite (`npm run dev`) proxye déjà `/socket.io` vers ce serveur.
 
 
 ## Variables d'environnement
