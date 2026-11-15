@@ -55,6 +55,14 @@ jobs:
 
       - name: Variables de test
         run: |
+          # Secrets jetables, générés à chaque exécution et masqués dans le journal avant tout usage
+          db_password="$(python -c 'import secrets; print(secrets.token_urlsafe(24))')"
+          admin_password="$(python -c 'import secrets; print(secrets.token_urlsafe(24))')"
+          secret_key="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+          jwt_signing_key="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+          for value in "$db_password" "$admin_password" "$secret_key" "$jwt_signing_key"; do
+            echo "::add-mask::$value"
+          done
           {
             echo "DEBUG=True"
             echo "ALLOWED_HOSTS=localhost,127.0.0.1"
@@ -72,10 +80,10 @@ jobs:
             echo "DB_HOST=localhost"
             echo "DB_PORT=5432"
             echo "ADMIN_EMAIL=ci-admin@example.com"
-            echo "DB_PASSWORD=$(python -c 'import secrets; print(secrets.token_urlsafe(24))')"
-            echo "ADMIN_PASSWORD=$(python -c 'import secrets; print(secrets.token_urlsafe(24))')"
-            echo "SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
-            echo "JWT_SIGNING_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+            echo "DB_PASSWORD=$db_password"
+            echo "ADMIN_PASSWORD=$admin_password"
+            echo "SECRET_KEY=$secret_key"
+            echo "JWT_SIGNING_KEY=$jwt_signing_key"
           } >> "$GITHUB_ENV"
 
       - name: Conflits de migrations

@@ -1,5 +1,7 @@
 """Client chat.completions compatible OpenAI / xAI Grok."""
 
+import re
+
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -12,6 +14,16 @@ from openai import (
 from app.ai.conf import config
 from app.ai.errors import ExternalUnavailable
 from app.ai.providers.base import CompletionResult, LlmProvider
+
+
+# Les modèles « à raisonnement » (Qwen, DeepSeek…) peuvent renvoyer leur réflexion dans un bloc <think>…</think>
+# avant la réponse : elle ne doit jamais atteindre l'utilisateur ni gêner la lecture d'un JSON.
+_THINK_BLOCK = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+
+
+def strip_reasoning(content: str) -> str:
+    """Retire les blocs de raisonnement <think>…</think> d'une réponse."""
+    return _THINK_BLOCK.sub("", content or "").strip()
 
 
 class OpenAICompatibleProvider(LlmProvider):
@@ -71,7 +83,7 @@ class OpenAICompatibleProvider(LlmProvider):
             ) from error
 
         choice = response.choices[0] if response.choices else None
-        content = (choice.message.content or "").strip() if choice else ""
+        content = strip_reasoning(choice.message.content or "") if choice else ""
         if not content:
             raise ExternalUnavailable(f"Réponse vide de {self.name}.")
         usage = response.usage

@@ -1,26 +1,29 @@
 # Intégration continue (GitHub Actions)
 
-La CI est découpée en workflows par sujet, que l'on peut lancer seuls (Actions > le workflow > Run workflow). Le workflow `ci-orchestrateur` les appelle sur chaque pull request et chaque push vers `develop`, `main` et `prod`.
+Vue d'ensemble de toute la chaîne (poste, CI, CD, VM) : [`README_PIPELINE_CI_CD.md`](./README_PIPELINE_CI_CD.md). Ce document détaille la partie CI.
+
+La CI est découpée en workflows par sujet, que l'on peut lancer seuls (Actions > le workflow > Run workflow). Le workflow `ci-orchestrateur` les appelle sur chaque pull request et chaque push vers `sandbox`, `main` et `prod` (les trois branches déployées ; `develop` n'est jamais déployée et un push dessus ne lance pas la CI, déjà passée sur la PR).
 
 | Workflow | Rôle | Déclenché par |
 |---|---|---|
-| `ci-orchestrateur` | Appelle `ci-backend`, `ci-frontend`, `ci-securite` et `ci-non-regression` ; sur un push vers `develop`/`main`/`prod`, appelle ensuite `cd-orchestrateur` si tout est vert | pull request, revue de pull request, push `develop`/`main`/`prod`, manuel (sans la non-régression) |
-| `ci-backend` | Conflits de migrations, migrations manquantes, tests Django | orchestrateur, manuel |
+| `ci-orchestrateur` | Appelle `ci-backend`, `ci-frontend`, `ci-securite` et `ci-non-regression` ; sur un push vers `sandbox`/`main`/`prod`, appelle ensuite `cd-orchestrateur` si tout est vert | pull request, revue de pull request, push `sandbox`/`main`/`prod`, manuel (sans la non-régression) |
+| `ci-backend` | Conflits de migrations, migrations manquantes (les tests Django n'y tournent plus : voir « Backend ») | orchestrateur, manuel |
 | `ci-frontend` | Lint, tests vitest, build de production | orchestrateur, manuel |
 | `ci-securite` | Scanner de sécurité | orchestrateur, manuel |
 | `ci-non-regression` | Signale les zones protégées touchées et bloque jusqu'à la validation d'un responsable | orchestrateur, manuel (comparaison de deux références) |
 | `cd-verifier-environnement` | Contrôle en lecture seule d'un environnement de déploiement (variables, secrets, DNS, SSH, ports). Voir [`README_CD.md`](./README_CD.md) | manuel (depuis la branche à vérifier) |
 | `cd-build-images` | Construit et publie les images backend et frontend d'un commit sur `ghcr.io`. Voir [`README_CD.md`](./README_CD.md) | manuel (masters, depuis la branche à construire), `cd-orchestrateur` |
-| `cd-orchestrateur` | Déploie une branche après une CI verte sur un push (images puis déploiement), avec l'environnement GitHub de la branche. Voir [`README_CD.md`](./README_CD.md) | job `deploiement` de `ci-orchestrateur` sur un push `develop`/`main`/`prod`, manuel (masters, depuis la branche à déployer) |
+| `cd-orchestrateur` | Déploie une branche après une CI verte sur un push (images puis déploiement), avec l'environnement GitHub de la branche. Voir [`README_CD.md`](./README_CD.md) | job `deploiement` de `ci-orchestrateur` sur un push `sandbox`/`main`/`prod`, manuel (masters, depuis la branche à déployer) |
 | `cd-deploiement-ssh` | Envoie la configuration et exécute le déploiement sur la VM par SSH | `cd-orchestrateur` |
 | `cd-deploiement-gcp` | Même déploiement par le tunnel IAP de GCP, sans IP publique ni clé (Workload Identity Federation) | `cd-orchestrateur` |
+| `cd-observabilite-ssh`, `cd-minio-ssh`, `cd-gitea-ssh`, `cd-maintenance-*` | Stacks annexes de la VM et maintenance (reset-db, db-forward, disk-set, docker-cleanup, logs-urgence). Voir [`README_PIPELINE_CI_CD.md`](./README_PIPELINE_CI_CD.md) §9 | manuel (masters) ; observabilité et MinIO aussi appelés par `cd-orchestrateur` |
 | `git-cli-enforce-*` | Règles `git-cli` (flux de branches, trailer des commits, chemins protégés) | existants, inchangés |
 
 Les actions GitHub sont épinglées par empreinte de commit (SHA), pas par étiquette de version. Les secrets de test (base, clés Django, mot de passe admin) sont générés à chaque exécution : aucun secret réel n'est utilisé.
 
 ## Contrôles à rendre obligatoires
 
-À régler une fois dans GitHub : Settings > Branches (ou Rulesets) > règle pour `develop`, `main` et `prod` > « Require status checks to pass before merging ». Après la **première** exécution sur une PR, les contrôles apparaissent dans la liste de recherche ; choisir ceux-ci (le nom exact s'affiche dans la PR) :
+À régler une fois dans GitHub : Settings > Branches (ou Rulesets) > règle pour `develop`, `sandbox`, `main` et `prod` > « Require status checks to pass before merging ». Après la **première** exécution sur une PR, les contrôles apparaissent dans la liste de recherche ; choisir ceux-ci (le nom exact s'affiche dans la PR) :
 
 - `backend` (appelé depuis `ci-orchestrateur`)
 - `frontend`
@@ -33,7 +36,7 @@ Un contrôle ne peut être choisi qu'après s'être exécuté au moins une fois 
 
 - **Conflit de migrations** : `makemigrations --merge --dry-run` doit répondre « No conflicts detected to merge. » Sinon, deux migrations partent de la même base : lancer `python manage.py makemigrations --merge` en local et commiter la migration de fusion.
 - **Migration manquante** : `makemigrations --check --dry-run` échoue si un modèle a changé sans migration.
-- **Tests** : toute la suite `manage.py test`, sur PostgreSQL 16 jetable. Pas de mesure de couverture côté backend pour l'instant (jugée peu fiable).
+- **Tests** : **retirés de la CI** depuis le 2026-11-13 (la suite n'est pas encore fiable) ; `python manage.py test` reste à lancer en local avant de pousser. À remettre quand la suite sera fiable. Le job garde son PostgreSQL 16 jetable, nécessaire aux commandes `makemigrations`. Pas de mesure de couverture côté backend pour l'instant (jugée peu fiable).
 
 ## Frontend
 
@@ -48,10 +51,8 @@ En local, depuis `backend/` :
 
 ```powershell
 pip-audit -r requirements.txt --format json -o pip-audit.json
-cd ..rontend; npm audit --omit=dev --json > ..
-pm-audit.json; cd ..ackend
-python -m scripts.dependency_audit --pip pip-audit.json --npm ..
-pm-audit.json
+cd ..\frontend; npm audit --omit=dev --json > ..\npm-audit.json; cd ..\backend
+python -m scripts.dependency_audit --pip pip-audit.json --npm ..\npm-audit.json
 ```
 
 ## Non-régression
@@ -77,7 +78,7 @@ Les responsables par défaut viennent de `ZONE_PROTEGEE_USERS` dans `git-cli/acc
 
 Les règles et l'outil sont lus sur la **branche cible** : une PR ne peut pas réécrire `regression-guard.json` pour se rendre invisible (sauf à la toute première introduction de l'outil). Les PR venant d'un fork n'ont pas de commentaire ni de label (droits en lecture seule), mais le contrôle échoue de la même façon.
 
-**Sur un push** vers `develop`, `main` ou `prod`, et en lancement manuel (comparer par exemple `main` et `prod` avant une mise en production), le résultat va dans le résumé du job sans bloquer : le changement est déjà intégré.
+**Sur un push** vers `sandbox`, `main` ou `prod`, et en lancement manuel (comparer par exemple `main` et `prod` avant une mise en production), le résultat va dans le résumé du job sans bloquer : le changement est déjà intégré.
 
 En local, avant de pousser :
 
@@ -95,6 +96,6 @@ Code de sortie : `0` aucune zone touchée, `1` au moins une, `2` configuration i
 
 ## Ce que la CI ne fait pas encore
 
-- Aucune mesure de couverture des tests (backend et frontend), jugée peu fiable pour l'instant.
+- Aucun test Django (retirés de la CI, suite pas encore fiable) et aucune mesure de couverture des tests (backend et frontend), jugée peu fiable pour l'instant.
 - Aucun audit des dépendances (pip-audit, npm audit) : prévu plus tard, hors des pull requests.
 - Aucune construction d'image Docker pendant les pull requests : les images sont construites au déploiement (`cd-build-images`).
