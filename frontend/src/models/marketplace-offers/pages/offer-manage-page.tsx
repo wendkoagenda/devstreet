@@ -1,5 +1,6 @@
 import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
 import { Link, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,7 @@ import {
 import type { CandidatureStatus, OfferStatus } from "../schema";
 
 function CandidaturesTable({ offerId }: { offerId: number }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useGetOfferCandidaturesQuery(offerId);
   const [decide, { isLoading: isDeciding }] = useDecideCandidatureMutation();
 
@@ -39,11 +41,11 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
       await decide({ id, status }).unwrap();
       CreationSuccessSonner(
         status === "accepted"
-          ? "Candidature acceptée : le candidat est prévenu par e-mail"
-          : "Candidature mise à jour"
+          ? t("marketplace.offer_manage.accepted_email")
+          : t("marketplace.offer_manage.updated")
       );
     } catch {
-      CreationErrorSonner("Impossible de mettre à jour la candidature");
+      CreationErrorSonner(t("marketplace.offer_manage.update_error"));
     }
   };
 
@@ -51,7 +53,7 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
   if (!data || data.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Aucune candidature pour le moment.
+        {t("marketplace.offer_manage.empty_candidatures")}
       </p>
     );
   }
@@ -61,10 +63,12 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Candidat</TableHead>
-            <TableHead>Score</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead className="text-right">Décision</TableHead>
+            <TableHead>{t("marketplace.offer_manage.col_candidate")}</TableHead>
+            <TableHead>{t("marketplace.offer_manage.col_score")}</TableHead>
+            <TableHead>{t("marketplace.offer_manage.col_status")}</TableHead>
+            <TableHead className="whitespace-nowrap text-right">
+              {t("marketplace.offer_manage.col_decision")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -101,14 +105,16 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
                 <TableCell className="font-semibold">{candidature.score}</TableCell>
                 <TableCell>
                   <Badge variant={candidature.status === "accepted" ? "default" : "secondary"}>
-                    {CANDIDATURE_STATUS_LABELS[candidature.status]}
+                    {t(`marketplace.labels.candidature_status.${candidature.status}`, {
+                      defaultValue: CANDIDATURE_STATUS_LABELS[candidature.status],
+                    })}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap justify-end gap-1.5">
                     {profil?.email ? (
                       <Button asChild size="sm" variant="ghost">
-                        <a href={`mailto:${profil.email}`}>Contacter</a>
+                        <a href={`mailto:${profil.email}`}>{t("marketplace.contact")}</a>
                       </Button>
                     ) : null}
                     {!locked ? (
@@ -120,7 +126,7 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
                             disabled={isDeciding}
                             onClick={() => change(candidature.id, "shortlisted")}
                           >
-                            Retenir
+                            {t("marketplace.offer_manage.shortlist")}
                           </Button>
                         ) : null}
                         {candidature.status !== "rejected" ? (
@@ -130,7 +136,7 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
                             disabled={isDeciding}
                             onClick={() => change(candidature.id, "rejected")}
                           >
-                            Refuser
+                            {t("marketplace.offer_manage.reject")}
                           </Button>
                         ) : null}
                         <Button
@@ -138,7 +144,7 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
                           disabled={isDeciding}
                           onClick={() => change(candidature.id, "accepted")}
                         >
-                          Accepter
+                          {t("marketplace.offer_manage.accept")}
                         </Button>
                       </>
                     ) : null}
@@ -154,13 +160,14 @@ function CandidaturesTable({ offerId }: { offerId: number }) {
 }
 
 function RecommendedProfils({ offerId }: { offerId: number }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useGetRecommendedProfilsQuery(offerId);
 
   if (isLoading) return <Skeleton className="h-32 w-full" />;
   if (!data || data.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Aucun profil recommandé pour le moment.
+        {t("marketplace.offer_manage.empty_recommended")}
       </p>
     );
   }
@@ -184,9 +191,18 @@ function RecommendedProfils({ offerId }: { offerId: number }) {
                     </Badge>
                   ))}
                 </div>
-                {talent.applied ? <Badge variant="secondary">A déjà postulé</Badge> : null}
+                {talent.applied ? (
+                  <Badge variant="secondary">
+                    {t("marketplace.offer_manage.already_applied")}
+                  </Badge>
+                ) : null}
               </div>
-              {talent.score !== undefined ? <ScoreBadge score={talent.score} caption="score" /> : null}
+              {talent.score !== undefined ? (
+                <ScoreBadge
+                  score={talent.score}
+                  caption={t("marketplace.offer_manage.score_caption")}
+                />
+              ) : null}
             </CardContent>
           </Card>
         </Link>
@@ -196,6 +212,7 @@ function RecommendedProfils({ offerId }: { offerId: number }) {
 }
 
 function OfferManageContent() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const offerId = Number(id);
   const { data: offer, isLoading, isError } = useGetMyOfferQuery(offerId, { skip: !id });
@@ -204,9 +221,13 @@ function OfferManageContent() {
   const setStatus = async (status: OfferStatus) => {
     try {
       await updateOffer({ id: offerId, status }).unwrap();
-      CreationSuccessSonner(status === "open" ? "Offre publiée" : "Offre clôturée");
+      CreationSuccessSonner(
+        status === "open"
+          ? t("marketplace.offer_manage.published")
+          : t("marketplace.offer_manage.closed")
+      );
     } catch {
-      CreationErrorSonner("Impossible de changer le statut de l'offre");
+      CreationErrorSonner(t("marketplace.offer_manage.status_error"));
     }
   };
 
@@ -214,9 +235,9 @@ function OfferManageContent() {
   if (isError || !offer) {
     return (
       <div className="mx-auto w-full max-w-4xl rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-        Cette offre n'existe pas.{" "}
+        {t("marketplace.offer_manage.missing")}{" "}
         <Link to="/marketplace/my-offers" className="underline">
-          Retour à mes offres
+          {t("marketplace.offer_manage.back_to_my_offers")}
         </Link>
       </div>
     );
@@ -229,24 +250,29 @@ function OfferManageContent() {
           <h1 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-foreground">
             {offer.title}
             <Badge variant={offer.status === "open" ? "default" : "secondary"}>
-              {OFFER_STATUS_LABELS[offer.status]}
+              {t(`marketplace.labels.offer_status.${offer.status}`, {
+                defaultValue: OFFER_STATUS_LABELS[offer.status],
+              })}
             </Badge>
           </h1>
           <span className="text-xs text-muted-foreground">
-            {offerFacts(offer).join(" · ")} · {offer.views_count ?? 0} vue(s)
+            {offerFacts(offer).join(" · ")} ·{" "}
+            {t("marketplace.offer_manage.views", { count: offer.views_count ?? 0 })}
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link to={`/marketplace/my-offers/${offer.id}/edit`}>Modifier</Link>
+            <Link to={`/marketplace/my-offers/${offer.id}/edit`}>
+              {t("marketplace.offer_manage.edit")}
+            </Link>
           </Button>
           {offer.status === "open" ? (
             <Button variant="outline" disabled={isUpdating} onClick={() => setStatus("closed")}>
-              Clôturer
+              {t("marketplace.offer_manage.close")}
             </Button>
           ) : (
             <Button disabled={isUpdating} onClick={() => setStatus("open")}>
-              Publier
+              {t("marketplace.offer_manage.publish")}
             </Button>
           )}
         </div>
@@ -254,7 +280,9 @@ function OfferManageContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Candidatures reçues</CardTitle>
+          <CardTitle className="text-base">
+            {t("marketplace.offer_manage.received_applications")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <CandidaturesTable offerId={offer.id} />
@@ -264,9 +292,11 @@ function OfferManageContent() {
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-foreground">
-            Profils recommandés pour votre offre
+            {t("marketplace.offer_manage.recommended_title")}
           </h2>
-          <span className="text-xs text-muted-foreground">Score calculé sur 100 par règles</span>
+          <span className="text-xs text-muted-foreground">
+            {t("marketplace.offer_manage.recommended_sub")}
+          </span>
         </div>
         <RecommendedProfils offerId={offer.id} />
       </section>

@@ -1,6 +1,6 @@
 # Plan : module Communauté DevStreet
 
-> Sources : « DevStreet — PRD du module Communauté » fourni le 12 novembre 2026 ; [étude préalable](communaute/ETUDE.md), [espaces et abonnements](communaute/ESPACES_ET_ABONNEMENTS.md), [modèle de classes proposé](communaute/MODELE_PROPOSE.md). Statut : roadmap de travail validée dans son découpage ; les décisions ouvertes ci-dessous restent à trancher avant les phases concernées. Aucun code n'est engagé par ce plan.
+> Sources : [PRD Communauté](communaute/PRD.md) (consolidé 15 novembre 2026) ; brief du 12 novembre 2026 ; [étude préalable](communaute/ETUDE.md), [espaces et abonnements](communaute/ESPACES_ET_ABONNEMENTS.md), [modèle de classes proposé](communaute/MODELE_PROPOSE.md). Statut : roadmap de travail ; les décisions ouvertes du PRD restent à trancher avant les phases concernées.
 
 ## Décisions architecturales
 
@@ -16,7 +16,7 @@
 
 ## User stories de référence
 
-Le PRD fourni n'attribue pas d'identifiants à ses stories. Les codes suivants sont **provisoires** pour suivre leur couverture ; ils seront alignés sur le PRD consolidé.
+Les codes `US-01…US-17` ci-dessous correspondent aux `UC-01…UC-17` du [PRD Communauté](communaute/PRD.md).
 
 | ID | Besoin utilisateur |
 | --- | --- |

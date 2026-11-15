@@ -1,4 +1,5 @@
 /** Listes de choix des formulaires du profil et de l'entreprise. */
+import i18n from "i18next";
 
 export const COUNTRIES = [
   { code: "BJ", name: "Bénin", timezone: "Africa/Porto-Novo" },
@@ -37,9 +38,24 @@ export const CURRENCIES = [
 ];
 
 export const CV_VISIBILITIES = [
-  { value: "companies", label: "Les entreprises" },
-  { value: "public", label: "Tout le monde" },
-  { value: "private", label: "Moi uniquement" },
+  {
+    value: "companies",
+    get label() {
+      return i18n.t("marketplace.labels.cv_visibility.companies");
+    },
+  },
+  {
+    value: "public",
+    get label() {
+      return i18n.t("marketplace.labels.cv_visibility.public");
+    },
+  },
+  {
+    value: "private",
+    get label() {
+      return i18n.t("marketplace.labels.cv_visibility.private");
+    },
+  },
 ];
 
 export const SECTORS = [
@@ -60,9 +76,21 @@ export const COMPANY_SIZES = [
   { value: "200+", label: "Plus de 200 personnes" },
 ];
 
-export function countryName(code: string): string {
-  return (
-    COUNTRIES.find((country) => country.code === code.toUpperCase())?.name ??
-    code
-  );
+/** Nom du pays selon la langue (Intl), avec repli sur la liste locale. */
+export function countryName(code: string, language?: string): string {
+  const normalized = code.toUpperCase();
+  let localized: string | undefined;
+  try {
+    const locale = language?.startsWith("en") ? "en" : language || "fr";
+    localized = new Intl.DisplayNames([locale], { type: "region" }).of(
+      normalized
+    );
+  } catch (error) {
+    // Navigateur sans Intl.DisplayNames : repli sur COUNTRIES.
+    if (import.meta.env.DEV) {
+      console.debug("[countryName] Intl.DisplayNames indisponible", error);
+    }
+  }
+  if (localized) return localized;
+  return COUNTRIES.find((country) => country.code === normalized)?.name ?? code;
 }

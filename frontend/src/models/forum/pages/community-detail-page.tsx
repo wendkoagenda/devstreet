@@ -6,6 +6,7 @@ import {
   Copy,
   Loader2,
   Link2,
+  Mail,
   Settings,
   UserMinus,
   Users,
@@ -22,6 +23,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { PAGE_SIZE } from "@/helpers/api/pagination";
+import { useAuthSlice } from "@/models/auth/slice";
 import {
   useCreateEspaceLienMutation,
   useExclureEspaceMembreMutation,
@@ -29,6 +31,7 @@ import {
   useGetEspaceMembresQuery,
   useGetEspaceQuery,
   useGetPublicationsInfiniteQuery,
+  useOpenConversationMutation,
   useQuitterEspaceMutation,
   useRejoindreEspaceMutation,
   useRejoindreViaInvitationMutation,
@@ -44,12 +47,14 @@ import { PublicationCard } from "../components/publication-card";
 
 export default function CommunityDetailPage() {
   const navigate = useNavigate();
+  const currentUserId = useAuthSlice((state) => state.user?.id);
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get("invite") || undefined;
   const espaceId = Number(id);
   const skip = !Number.isFinite(espaceId) || espaceId <= 0;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [messagingUserId, setMessagingUserId] = useState<number | null>(null);
 
   const {
     data: espace,
@@ -86,13 +91,17 @@ export default function CommunityDetailPage() {
   const isAdmin =
     espace?.mon_role === "SUPER_ADMIN" || espace?.mon_role === "ADMIN";
   const isSuperAdmin = espace?.mon_role === "SUPER_ADMIN";
+  const isMember = Boolean(espace?.mon_role);
+  const isChannel = espace?.type === "CHAINE";
+  // Communauté : tous les membres voient la liste. Chaîne : admins seulement.
+  const canViewMembers = isMember && (isAdmin || !isChannel);
 
   const { data: liens } = useGetEspaceLiensQuery(espaceId, {
     skip: skip || !isAdmin || !settingsOpen || espace?.acces !== "LIEN",
   });
   const { data: membresData, refetch: refetchMembres } =
     useGetEspaceMembresQuery(espaceId, {
-      skip: skip || !settingsOpen || !isAdmin,
+      skip: skip || !settingsOpen || !canViewMembers,
     });
 
   const [rejoindre, { isLoading: joining }] = useRejoindreEspaceMutation();
@@ -105,6 +114,7 @@ export default function CommunityDetailPage() {
   const [revoquerLien] = useRevoquerEspaceLienMutation();
   const [setRole] = useSetEspaceMembreRoleMutation();
   const [exclureMembre] = useExclureEspaceMembreMutation();
+  const [openConversation] = useOpenConversationMutation();
   const [uploadForumImage, { isLoading: uploadingPhoto }] =
     useUploadForumImageMutation();
   const photoInputRef = useRef<HTMLInputElement | null>(null);
@@ -115,10 +125,22 @@ export default function CommunityDetailPage() {
 
   const publications =
     feed?.pages.flatMap((page) => page.results ?? []) ?? [];
-  const isChannel = espace?.type === "CHAINE";
   const listPath = isChannel ? "/forum/chaines" : "/forum/communautes";
+
+  const handleMessageMember = async (membreId: number, name: string) => {
+    if (currentUserId != null && membreId === currentUserId) return;
+    setMessagingUserId(membreId);
+    try {
+      const conversation = await openConversation(membreId).unwrap();
+      setSettingsOpen(false);
+      navigate(`/messages/${conversation.id}`);
+    } catch {
+      toast.error(`Impossible d'écrire à ${name}`);
+    } finally {
+      setMessagingUserId(null);
+    }
+  };
   const spaceLabel = isChannel ? "chaîne" : "communauté";
-  const isMember = Boolean(espace?.mon_role);
   const canPublish = Boolean(espace?.can_publish);
   const canRead = espace?.can_read !== false || isMember;
   const canLeave = isMember && !isSuperAdmin;
@@ -148,7 +170,7 @@ export default function CommunityDetailPage() {
         await rejoindre(espaceId).unwrap();
       }
       toast.success(
-        isChannel ? "Tu es abonné à la chaîne" : "Tu as rejoint la communauté"
+        isChannel ? "Vous êtes abonné à la chaîne" : "Vous avez rejoint la communauté"
       );
       navigate(`/messages?groupe=${espaceId}`, { replace: true });
     } catch {
@@ -164,7 +186,7 @@ export default function CommunityDetailPage() {
     try {
       await quitter(espaceId).unwrap();
       toast.success(
-        isChannel ? "Tu t'es désabonné" : "Tu as quitté la communauté"
+        isChannel ? "Vous vous êtes désabonné" : "Vous avez quitté la communauté"
       );
       void refetch();
     } catch {
@@ -274,7 +296,7 @@ export default function CommunityDetailPage() {
     event.target.value = "";
     if (!file || !espace) return;
     if (!file.type.startsWith("image/")) {
-      toast.error("Choisis une image");
+      toast.error("Choisissez une image");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -438,7 +460,7 @@ export default function CommunityDetailPage() {
           />
         ) : (
           <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-            Rejoins la communauté pour discuter avec les membres.
+            Rejoignez la communauté pour discuter avec les membres.
           </p>
         )
       ) : (
@@ -457,7 +479,7 @@ export default function CommunityDetailPage() {
             </p>
           ) : (
             <p className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-              Abonne-toi pour voir les nouveautés de la chaîne.
+              Abonnez-vous pour voir les nouveautés de la chaîne.
             </p>
           )}
 
@@ -526,8 +548,8 @@ export default function CommunityDetailPage() {
               {isAdmin
                 ? `Photo, détails, droits et ${isChannel ? "abonnés" : "membres"}.`
                 : isChannel
-                  ? "Les annonces s’affichent dans Messages."
-                  : "La discussion s’affiche dans Messages."}
+                  ? "Les annonces s’affichent dans Messages. La liste des abonnés est réservée aux admins."
+                  : "Membres du groupe et discussion dans Messages."}
             </SheetDescription>
           </SheetHeader>
 
@@ -737,7 +759,7 @@ export default function CommunityDetailPage() {
               </section>
             ) : null}
 
-            {isAdmin ? (
+            {canViewMembers ? (
               <section className="space-y-3">
                 <h3 className="text-sm font-semibold text-foreground">
                   {isChannel ? "Abonnés" : "Membres"} (
@@ -749,9 +771,13 @@ export default function CommunityDetailPage() {
                       m.membre_detail?.full_name ||
                       m.membre_detail?.username ||
                       `Membre #${m.membre}`;
+                    const isSelf =
+                      currentUserId != null && m.membre === currentUserId;
                     const canExclude =
+                      isAdmin &&
                       m.role !== "SUPER_ADMIN" &&
                       (isSuperAdmin || m.role === "MEMBRE");
+                    const messaging = messagingUserId === m.membre;
                     return (
                       <li
                         key={m.id}
@@ -778,6 +804,25 @@ export default function CommunityDetailPage() {
                           </p>
                         </div>
                         <div className="flex shrink-0 gap-1">
+                          {!isSelf ? (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              aria-label={`Écrire à ${name}`}
+                              title="Message privé"
+                              disabled={messaging}
+                              onClick={() =>
+                                void handleMessageMember(m.membre, name)
+                              }
+                            >
+                              {messaging ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Mail className="h-4 w-4" />
+                              )}
+                            </Button>
+                          ) : null}
                           {isSuperAdmin && m.role !== "SUPER_ADMIN" ? (
                             <Button
                               type="button"

@@ -574,9 +574,15 @@ class EspaceService:
         return espace
 
     def list_membres(self, *, espace: Espace, acteur: User) -> QuerySet:
+        """
+        Communauté : tout membre peut voir la liste.
+        Chaîne : réservé aux admins (les abonnés ne voient pas les autres).
+        """
         access = self.resolve_access(espace=espace, acteur=acteur)
         if not access.can_interact:
             raise ValidationError('Réservé aux membres de la communauté.')
+        if espace.type == self.TYPE_CHAINE:
+            self._assert_admin(espace=espace, acteur=acteur)
         return (
             ParticipationEspace.objects.filter(espace=espace)
             .select_related('membre')

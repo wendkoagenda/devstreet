@@ -26,6 +26,7 @@ export const ENTREPRISE_ALLOWED_PREFIXES = [
   "/forum/profil",
   "/forum/u",
   "/hub/profiles",
+  "/aide",
   ONBOARDING_PATH,
   "/welcome",
   "/login",

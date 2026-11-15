@@ -83,20 +83,22 @@ export function ChoixOptionsButtons({
               option_id: pendingOptionId,
             },
           }).unwrap();
-          toast.success("Choix et commentaire enregistrés");
+          toast.success("Vote et commentaire enregistrés");
         } else {
-          toast.success("Choix enregistré");
+          toast.success("Vote enregistré");
         }
       } else {
-        toast.success("Choix enregistré");
+        toast.success("Vote enregistré");
       }
 
       setPendingOptionId(null);
       setComment("");
     } catch {
-      toast.error("Impossible d'enregistrer ton choix");
+      toast.error("Impossible d'enregistrer votre vote");
     }
   };
+
+  const isPoll = publication.type === "SONDAGE";
 
   return (
     <div className="space-y-2" role="group" aria-label="Options de vote">
@@ -105,10 +107,10 @@ export function ChoixOptionsButtons({
           {locked ? (
             <span className="inline-flex items-center gap-1">
               <Lock className="h-3 w-3" />
-              Ton vote est enregistré — plus de changement possible
+              Votre vote est enregistré — plus de changement possible
             </span>
           ) : (
-            "Choisis une option, puis valide (commentaire optionnel)"
+            "Choisissez une option, puis validez (commentaire optionnel)"
           )}
         </p>
       ) : null}
@@ -172,7 +174,7 @@ export function ChoixOptionsButtons({
                   {option.libelle}
                   {confirmed && !retained ? (
                     <span className="text-[11px] font-medium text-brand-strong">
-                      Ton choix
+                      Votre vote
                     </span>
                   ) : null}
                   {showForm ? (
@@ -207,7 +209,7 @@ export function ChoixOptionsButtons({
                   htmlFor={`${commentFieldId}-${option.id}`}
                   className="text-xs font-medium text-muted-foreground"
                 >
-                  Commentaire sur ce choix{" "}
+                  Commentaire{" "}
                   <span className="font-normal">(optionnel)</span>
                 </label>
                 <Textarea
@@ -215,7 +217,11 @@ export function ChoixOptionsButtons({
                   rows={2}
                   value={comment}
                   onChange={(event) => setComment(event.target.value)}
-                  placeholder="Pourquoi tu votes ça…"
+                  placeholder={
+                    isPoll
+                      ? "Précisez votre vote si besoin…"
+                      : "Pourquoi ce choix…"
+                  }
                   disabled={isLoading}
                   className="resize-none bg-background"
                 />
@@ -225,7 +231,7 @@ export function ChoixOptionsButtons({
                   disabled={isLoading}
                   onClick={handleConfirm}
                 >
-                  {isLoading ? "Envoi…" : "Valider mon choix"}
+                  {isLoading ? "Envoi…" : "Valider mon vote"}
                 </Button>
               </div>
             ) : null}

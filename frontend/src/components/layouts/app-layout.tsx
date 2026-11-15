@@ -17,7 +17,7 @@ export default function AppLayout() {
       <div className="min-w-0 flex-1 overflow-auto">
         <SidebarInset className="bg-background">
           <AppTopbar />
-          <div className="flex flex-col gap-4 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+          <div className="flex flex-col gap-6 px-4 pb-6 pt-1 sm:px-6 sm:pb-8 lg:px-8 lg:pb-10">
             <OnboardingReminder />
             <Outlet />
           </div>

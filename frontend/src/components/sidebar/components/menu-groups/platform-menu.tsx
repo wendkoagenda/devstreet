@@ -210,7 +210,8 @@ export default function PlatformMenu() {
   });
 
   const go = (url: string) => {
-    navigate(url);
+    // flushSync : évite le décalage URL / contenu (React Router 7 wrappe sinon en startTransition).
+    navigate(url, { flushSync: true });
     if (isMobile) setOpenMobile(false);
   };
 

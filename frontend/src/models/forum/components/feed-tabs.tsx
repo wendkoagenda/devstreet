@@ -3,7 +3,13 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export type FeedScopeId = "pour-vous" | "abonnements";
-export type FeedTypeFilterId = "tout" | "discussions" | "showcase" | "entraide";
+export type FeedTypeFilterId =
+  | "tout"
+  | "discussions"
+  | "showcase"
+  | "entraide"
+  | "choix"
+  | "sondage";
 export type FeedSortId = "recents" | "populaires";
 
 /** @deprecated — préférer FeedScopeId + FeedTypeFilterId */
@@ -43,6 +49,8 @@ export function FeedTabs({
     { id: "discussions", label: t("forum.tab_discussions") },
     { id: "showcase", label: t("forum.tab_showcase") },
     { id: "entraide", label: t("forum.tab_help") },
+    { id: "choix", label: t("forum.tab_choice") },
+    { id: "sondage", label: t("forum.tab_poll") },
   ];
 
   return (

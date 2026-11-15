@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useGetTagsSuivisQuery } from "../api";
 
@@ -21,10 +22,12 @@ export function FavorisTagQuickSelect({
   activeSlug = null,
   onSelect,
   variant = "bar",
-  emptyHint = "Suis un thème depuis une publication pour le retrouver ici.",
+  emptyHint,
   className,
 }: FavorisTagQuickSelectProps) {
+  const { t } = useTranslation();
   const { data: tags = [], isLoading } = useGetTagsSuivisQuery();
+  const resolvedEmptyHint = emptyHint ?? t("forum.favorites_tags_empty");
 
   if (isLoading) {
     return (
@@ -48,7 +51,7 @@ export function FavorisTagQuickSelect({
             className
           )}
         >
-          {emptyHint}
+          {resolvedEmptyHint}
         </p>
       );
     }
@@ -60,7 +63,7 @@ export function FavorisTagQuickSelect({
       <ul
         className={cn("space-y-0.5", className)}
         role="listbox"
-        aria-label="Mes favoris"
+        aria-label={t("forum.favorites_quick_select")}
       >
         {tags.map((tag) => {
           const active = activeSlug === tag.slug;
@@ -95,7 +98,7 @@ export function FavorisTagQuickSelect({
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between gap-2">
         <p className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          Mes favoris
+          {t("forum.favorites_quick_select")}
         </p>
         {activeSlug ? (
           <button
@@ -103,14 +106,14 @@ export function FavorisTagQuickSelect({
             onClick={() => onSelect(null)}
             className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
           >
-            Tout voir
+            {t("forum.favorites_see_all")}
           </button>
         ) : null}
       </div>
       <div
         className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="listbox"
-        aria-label="Sélection rapide Mes favoris"
+        aria-label={t("forum.favorites_quick_select_aria")}
       >
         {tags.map((tag) => {
           const active = activeSlug === tag.slug;

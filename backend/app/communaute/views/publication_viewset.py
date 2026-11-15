@@ -33,6 +33,7 @@ from app.core.pagination import (
     FeedCursorPagination,
     PopulairesCursorPagination,
     PourVousCursorPagination,
+    StandardPagination,
 )
 
 
@@ -333,12 +334,22 @@ class PublicationViewSet(viewsets.ModelViewSet):
                     created_by=request.user.id,
                     updated_by=request.user.id,
                 )
+            elif publication_type == PublicationService.SONDAGE_TYPE:
+                publication = self.publication_service.create_sondage(
+                    auteur=request.user,
+                    titre=validated.get('titre', ''),
+                    description=validated.get('description', ''),
+                    options=validated.get('options_data') or [],
+                    images=validated.get('images_data') or [],
+                    created_by=request.user.id,
+                    updated_by=request.user.id,
+                )
             else:
                 return Response(
                     {
                         'error': (
-                            'Types acceptés pour le moment : '
-                            'DISCUSSION, APPLICATION, ENTRAIDE, CHOIX.'
+                            'Types acceptés : '
+                            'DISCUSSION, APPLICATION, ENTRAIDE, CHOIX, SONDAGE.'
                         )
                     },
                     status=status.HTTP_400_BAD_REQUEST,
@@ -748,13 +759,15 @@ class PublicationViewSet(viewsets.ModelViewSet):
     def commentaires(self, request, pk=None):
         """Liste ou crée les commentaires d'une publication."""
         if request.method == 'GET':
+            # Le front pagine en page/page_size : pas le curseur du fil.
             commentaires = self.commentaire_service.list_for_publication(
                 publication_id=int(pk),
                 membre=request.user,
             )
-            page = self.paginate_queryset(commentaires)
+            paginator = StandardPagination()
+            page = paginator.paginate_queryset(commentaires, request, view=self)
             serializer = CommentaireSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
         try:
             payload = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)

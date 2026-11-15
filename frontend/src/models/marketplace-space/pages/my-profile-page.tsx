@@ -1,5 +1,6 @@
 import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import {
   Briefcase,
@@ -178,6 +179,7 @@ function FriendsPanel() {
  * ses éléments liés (compétences, expériences, entreprise…) en orbite autour.
  */
 export function MyProfilePro({ photo }: { photo?: string | null }) {
+  const { t } = useTranslation();
   const user = useAuthSlice((state) => state.user);
   const { profil, company, isRecruiter, isLoading, isError } = useMySpace();
   const stats = useStats("profile", { skip: !profil });
@@ -316,7 +318,12 @@ export function MyProfilePro({ photo }: { photo?: string | null }) {
     {
       key: "infos",
       title: "Informations",
-      summary: [place, `${profil.years_of_experience} an(s) d'expérience`].filter(Boolean).join(" · "),
+      summary: [
+        place,
+        t("marketplace.years_exp", { count: profil.years_of_experience }),
+      ]
+        .filter(Boolean)
+        .join(" · "),
       icon: <UserRound className="size-4" />,
       todo: !profil.headline || !profil.bio,
       onSelect: () => setPanel("infos"),

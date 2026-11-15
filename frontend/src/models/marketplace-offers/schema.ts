@@ -15,6 +15,9 @@ export type ScoreItem = {
   score: number;
   max: number;
   detail: string;
+  /** Clé i18n pour le détail (prioritaire sur `detail` si présente). */
+  detail_key?: string;
+  detail_params?: Record<string, string | number>;
 };
 
 export type OfferCompany = {

@@ -629,7 +629,7 @@ export function EspaceChat({
       ) : (
         <p className="shrink-0 border-t border-border px-4 py-3 text-sm text-muted-foreground">
           {readOnlyHint ??
-            "Rejoins la communauté pour participer à la discussion."}
+            "Rejoignez la communauté pour participer à la discussion."}
         </p>
       )}
     </section>

@@ -1,5 +1,6 @@
 import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Bookmark,
@@ -51,33 +52,20 @@ type PublicationCardProps = {
   disableCardNav?: boolean;
 };
 
-const TYPE_META: Record<
-  Publication["type"],
-  {
-    label: string;
-    Icon: typeof MessagesSquare;
-  }
-> = {
-  DISCUSSION: {
-    label: "Discussion",
-    Icon: MessagesSquare,
-  },
-  APPLICATION: {
-    label: "Showcase",
-    Icon: Sparkles,
-  },
-  ENTRAIDE: {
-    label: "Code Review",
-    Icon: Code2,
-  },
-  CHOIX: {
-    label: "Débat",
-    Icon: HelpCircle,
-  },
-  SONDAGE: {
-    label: "Sondage",
-    Icon: Vote,
-  },
+const TYPE_ICONS: Record<Publication["type"], typeof MessagesSquare> = {
+  DISCUSSION: MessagesSquare,
+  APPLICATION: Sparkles,
+  ENTRAIDE: Code2,
+  CHOIX: HelpCircle,
+  SONDAGE: Vote,
+};
+
+const TYPE_LABEL_KEYS: Record<Publication["type"], string> = {
+  DISCUSSION: "forum.type_discussion",
+  APPLICATION: "forum.type_showcase",
+  ENTRAIDE: "forum.type_help",
+  CHOIX: "forum.type_choice",
+  SONDAGE: "forum.type_poll",
 };
 
 const PLATEFORME_LABELS: Record<"WEB" | "MOBILE" | "LES_DEUX", string> = {
@@ -91,18 +79,24 @@ function safeHttpUrl(value: string | undefined | null): string | null {
   return /^https?:\/\//i.test(url) ? url : null;
 }
 
-function formatRelativeDate(value: string) {
+function formatRelativeDate(
+  value: string,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  locale: string
+) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   const diffMs = Date.now() - date.getTime();
   const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "à l'instant";
-  if (minutes < 60) return `il y a ${minutes} min`;
+  if (minutes < 1) return t("forum.time_just_now");
+  if (minutes < 60) return t("forum.time_minutes", { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `il y a ${hours} h`;
+  if (hours < 24) return t("forum.time_hours", { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `il y a ${days} j`;
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(date);
+  if (days < 7) return t("forum.time_days", { count: days });
+  return new Intl.DateTimeFormat(locale.startsWith("en") ? "en-GB" : "fr-FR", {
+    dateStyle: "medium",
+  }).format(date);
 }
 
 function MediaTile({
@@ -418,6 +412,7 @@ function FollowPublicationTarget({
 }: {
   publication: Publication;
 }) {
+  const { t } = useTranslation();
   const currentUserId = useAuthSlice((state) => state.user?.id ?? null);
   const [toggleSuivre, { isLoading: followBusy }] =
     useToggleSuivreMembreMutation();
@@ -458,7 +453,7 @@ function FollowPublicationTarget({
           variant="outline"
           className="h-7 shrink-0 gap-1 px-2 text-[11px] sm:h-8 sm:gap-1.5 sm:px-3 sm:text-sm"
           disabled
-          title="Tu es le créateur de cette chaîne"
+          title="Vous êtes le créateur de cette chaîne"
         >
           <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden />
           Créateur
@@ -473,10 +468,10 @@ function FollowPublicationTarget({
       try {
         if (prev) {
           await quitter(espaceId).unwrap();
-          toast.success("Tu t'es désabonné de la chaîne");
+          toast.success("Vous vous êtes désabonné de la chaîne");
         } else {
           await rejoindre(espaceId).unwrap();
-          toast.success("Tu suis cette chaîne");
+          toast.success("Vous suivez cette chaîne");
         }
       } catch (error) {
         setJoined(prev);
@@ -508,7 +503,7 @@ function FollowPublicationTarget({
         onClick={() => void handleToggleChannel()}
       >
         <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden />
-        {joined ? "Abonné" : "Suivre"}
+        {joined ? t("forum.action_joined_subscriber") : t("forum.action_follow")}
       </Button>
     );
   }
@@ -522,8 +517,8 @@ function FollowPublicationTarget({
         setFollowing(result.following);
         toast.success(
           result.following
-            ? "Tu suis ce membre"
-            : "Tu ne suis plus ce membre"
+            ? "Vous suivez ce membre"
+            : "Vous ne suivez plus ce membre"
         );
       } catch {
         setFollowing(prev);
@@ -541,7 +536,7 @@ function FollowPublicationTarget({
         onClick={() => void handleToggleAuthor()}
       >
         <UserPlus className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden />
-        {following ? "Suivi" : "Suivre"}
+        {following ? t("forum.action_following") : t("forum.action_follow")}
       </Button>
     );
   }
@@ -550,6 +545,7 @@ function FollowPublicationTarget({
 }
 
 function PublicationTagChip({ tag }: { tag: ForumTag }) {
+  const { t } = useTranslation();
   const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
   const [toggleSuivreTag, { isLoading }] = useToggleSuivreTagMutation();
   const [followed, setFollowed] = useState(Boolean(tag.followed_by_me));
@@ -567,12 +563,12 @@ function PublicationTagChip({ tag }: { tag: ForumTag }) {
       setFollowed(result.following);
       toast.success(
         result.following
-          ? `#${tag.slug} ajouté à Mes favoris`
-          : `#${tag.slug} retiré de Mes favoris`
+          ? t("forum.tag_added_favorites", { slug: tag.slug })
+          : t("forum.tag_removed_favorites", { slug: tag.slug })
       );
     } catch {
       setFollowed(prev);
-      toast.error("Impossible de mettre à jour le thème");
+      toast.error(t("forum.tag_update_error"));
     }
   };
 
@@ -588,10 +584,16 @@ function PublicationTagChip({ tag }: { tag: ForumTag }) {
           : "border-border bg-muted/40 text-muted-foreground hover:border-brand-soft-border hover:bg-brand-soft hover:text-brand"
       )}
       aria-label={
-        followed ? `Ne plus suivre #${tag.slug}` : `Suivre #${tag.slug}`
+        followed
+          ? t("forum.tag_unfollow_aria", { slug: tag.slug })
+          : t("forum.tag_follow_aria", { slug: tag.slug })
       }
       aria-pressed={followed}
-      title={followed ? "Dans Tags suivis" : "Ajouter aux tags suivis"}
+      title={
+        followed
+          ? t("forum.tag_followed_title")
+          : t("forum.tag_follow_title")
+      }
     >
       #{tag.slug}
     </button>
@@ -612,6 +614,7 @@ export function PublicationCard({
   showFullBody = false,
   disableCardNav = false,
 }: PublicationCardProps) {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [toggleLike] = useTogglePublicationLikeMutation();
   const [toggleFavori] = useTogglePublicationFavoriMutation();
@@ -636,12 +639,12 @@ export function PublicationCard({
   const authorName =
     publication.auteur?.full_name ||
     publication.auteur?.username ||
-    "Membre";
+    t("forum.member_fallback");
   const handle = publication.auteur?.username
     ? `@${publication.auteur.username}`
     : "@membre";
-  const typeMeta = TYPE_META[publication.type];
-  const TypeIcon = typeMeta.Icon;
+  const TypeIcon = TYPE_ICONS[publication.type];
+  const typeLabel = t(TYPE_LABEL_KEYS[publication.type]);
   const body =
     !showFullBody && publication.description.length > 280
       ? `${publication.description.slice(0, 280).trim()}…`
@@ -732,7 +735,7 @@ export function PublicationCard({
       .unwrap()
       .catch(() => {
         setSaved(prevSaved);
-        toast.error("Impossible de mettre à jour le favori");
+        toast.error(t("forum.favorites_update_error"));
       })
       .finally(() => setSaveBusy(false));
   };
@@ -757,12 +760,12 @@ export function PublicationCard({
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       className={cn(
-        "overflow-hidden rounded-lg border border-border bg-card",
+        "overflow-hidden rounded-xl border border-border bg-card",
         !disableCardNav &&
           "cursor-pointer transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
       )}
     >
-      <div className="flex items-start gap-2.5 px-3 pt-3 sm:gap-3 sm:px-5 sm:pt-5">
+      <div className="flex items-start gap-3 px-4 pt-4 sm:gap-3.5 sm:px-6 sm:pt-6">
         {publication.auteur?.username ? (
           <Link
             to={profilePath(publication.auteur.username)}
@@ -806,7 +809,7 @@ export function PublicationCard({
                 <span className="text-muted-foreground">·</span>
                 <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground sm:text-xs">
                   <TypeIcon className="size-3" aria-hidden />
-                  {typeMeta.label}
+                  {typeLabel}
                 </span>
               </div>
               <p className="mt-0.5 truncate text-[11px] text-muted-foreground sm:text-xs">
@@ -839,7 +842,11 @@ export function PublicationCard({
                 ) : null}
                 <span aria-hidden> · </span>
                 <time dateTime={publication.created_at}>
-                  {formatRelativeDate(publication.created_at)}
+                  {formatRelativeDate(
+                    publication.created_at,
+                    t,
+                    i18n.language
+                  )}
                 </time>
               </p>
             </div>
@@ -850,8 +857,8 @@ export function PublicationCard({
         </div>
       </div>
 
-      <div className="space-y-2 px-3 pt-2.5 sm:space-y-3 sm:px-5 sm:pt-3">
-        <div className="space-y-1 sm:space-y-1.5">
+      <div className="space-y-3 px-4 pt-3 sm:space-y-3.5 sm:px-6 sm:pt-4">
+        <div className="space-y-1.5 sm:space-y-2">
           <h2 className="text-[14px] font-semibold leading-snug text-foreground sm:text-[15px] md:text-base">
             <Link to={detailHref} className="hover:text-brand hover:underline">
               {publication.titre}
@@ -900,7 +907,7 @@ export function PublicationCard({
           </div>
         ) : null}
 
-        {publication.type === "CHOIX" ? (
+        {publication.type === "CHOIX" || publication.type === "SONDAGE" ? (
           <div data-no-card-nav>
             <ChoixOptionsButtons
               publication={publication}
@@ -926,15 +933,25 @@ export function PublicationCard({
       ) : null}
 
       {(likesCount > 0 || commentsCount > 0) ? (
-        <div className="mt-2 flex items-center justify-between gap-2 px-3 text-[11px] text-muted-foreground sm:px-5 sm:text-xs">
+        <div className="mt-3 flex items-center justify-between gap-2 px-4 text-[11px] text-muted-foreground sm:px-6 sm:text-xs">
           <span className="tabular-nums">
             {likesCount > 0
-              ? `${likesCount} j'aime${likesCount > 1 ? "s" : ""}`
+              ? t(
+                  likesCount > 1
+                    ? "forum.likes_count_other"
+                    : "forum.likes_count_one",
+                  { count: likesCount }
+                )
               : ""}
           </span>
           {commentsCount > 0 ? (
             <Link to={detailHref} className="hover:text-brand hover:underline">
-              {commentsCount} commentaire{commentsCount > 1 ? "s" : ""}
+              {t(
+                commentsCount > 1
+                  ? "forum.comments_count_other"
+                  : "forum.comments_count_one",
+                { count: commentsCount }
+              )}
             </Link>
           ) : (
             <span />
@@ -943,7 +960,7 @@ export function PublicationCard({
       ) : null}
 
       <div
-        className="mt-1 grid grid-cols-4 border-t border-border/80"
+        className="mt-2 grid grid-cols-4 border-t border-border/80"
         data-no-card-nav
       >
         <button
@@ -951,10 +968,10 @@ export function PublicationCard({
           disabled={likeBusy}
           onClick={handleToggleLike}
           className={cn(
-            "inline-flex items-center justify-center gap-1 py-2 text-xs font-medium transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm",
+            "inline-flex items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors hover:bg-muted sm:gap-1.5 sm:py-3 sm:text-sm",
             liked ? "text-destructive" : "text-muted-foreground"
           )}
-          aria-label={liked ? "Retirer le like" : "J'aime"}
+          aria-label={liked ? t("forum.action_unlike") : t("forum.action_like")}
           aria-pressed={liked}
         >
           <Heart
@@ -964,37 +981,37 @@ export function PublicationCard({
               likePulse && "scale-110"
             )}
           />
-          <span className="hidden sm:inline">J&apos;aime</span>
+          <span className="hidden sm:inline">{t("forum.action_like")}</span>
         </button>
         <Link
           to={detailHref}
-          className="inline-flex items-center justify-center gap-1 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm"
+          className="inline-flex items-center justify-center gap-1 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:gap-1.5 sm:py-3 sm:text-sm"
         >
           <MessageCircle className="size-3.5 sm:size-4" />
-          <span className="hidden sm:inline">Commenter</span>
+          <span className="hidden sm:inline">{t("forum.action_comment")}</span>
         </Link>
         <button
           type="button"
           onClick={() => void handleShare()}
-          className="inline-flex items-center justify-center gap-1 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm"
-          aria-label="Partager"
+          className="inline-flex items-center justify-center gap-1 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted sm:gap-1.5 sm:py-3 sm:text-sm"
+          aria-label={t("forum.action_share")}
         >
           <Share2 className="size-3.5 sm:size-4" />
-          <span className="hidden sm:inline">Partager</span>
+          <span className="hidden sm:inline">{t("forum.action_share")}</span>
         </button>
         <button
           type="button"
           disabled={saveBusy}
           onClick={handleToggleFavori}
           className={cn(
-            "inline-flex items-center justify-center gap-1 py-2 text-xs font-medium transition-colors hover:bg-muted sm:gap-1.5 sm:py-2.5 sm:text-sm",
+            "inline-flex items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors hover:bg-muted sm:gap-1.5 sm:py-3 sm:text-sm",
             saved ? "text-brand" : "text-muted-foreground"
           )}
-          aria-label={saved ? "Retirer des favoris" : "Enregistrer"}
+          aria-label={saved ? t("forum.action_unsave") : t("forum.action_save")}
           aria-pressed={saved}
         >
           <Bookmark className={cn("size-3.5 sm:size-4", saved && "fill-current")} />
-          <span className="hidden sm:inline">Enregistrer</span>
+          <span className="hidden sm:inline">{t("forum.action_save")}</span>
         </button>
       </div>
     </article>

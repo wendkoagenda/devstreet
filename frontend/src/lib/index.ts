@@ -28,4 +28,12 @@ i18n
     },
   });
 
+function syncDocumentLang(lng: string) {
+  if (typeof document === "undefined") return;
+  document.documentElement.lang = lng.startsWith("en") ? "en" : "fr";
+}
+
+syncDocumentLang(i18n.language || "fr");
+i18n.on("languageChanged", syncDocumentLang);
+
 export default i18n;

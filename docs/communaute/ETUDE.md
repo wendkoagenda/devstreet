@@ -1,6 +1,6 @@
 # Communauté — étude préalable
 
-Statut : document de travail, à valider avant toute implémentation. Source : « DevStreet — PRD du module Communauté », version du 12 novembre 2026, fourni par l'équipe.
+Statut : document de travail historique. Le PRD consolidé est désormais [PRD.md](PRD.md). Source initiale : brief « DevStreet — PRD du module Communauté », 12 novembre 2026.
 
 ## Intention produit
 
@@ -68,4 +68,4 @@ Ces trois étapes donnent la vue d'ensemble. La [roadmap détaillée](../PLAN.md
 
 ## Prochaine étape de cadrage
 
-Résoudre les décisions du tableau, puis rédiger et valider `docs/PRD.md` selon le cadrage produit du dépôt. La [roadmap détaillée](../PLAN.md) servira de base d'exécution après alignement sur ce PRD. Le diagramme dans `MODELE_PROPOSE.md` sert à discuter les regroupements ; il ne représente pas un schéma déjà validé.
+Les décisions encore ouvertes sont listées dans [PRD.md](PRD.md). La [roadmap détaillée](../PLAN.md) reste la base d'exécution. Le diagramme dans `MODELE_PROPOSE.md` détaille le schéma de travail.

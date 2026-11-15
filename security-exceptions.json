@@ -104,13 +104,6 @@
       "reason": "Audit des dependances retire de la CI pour le moment (decision du projet) : il sera traite plus tard, hors des pull requests. A retirer quand l'audit reviendra.",
       "author": "wendkoagenda",
       "expires": "2027-04-01"
-    },
-    {
-      "rule": "FB-004",
-      "path": "frontend/src/components/onboarding/app-tour.tsx",
-      "reason": "localStorage peut lever en navigation privee : on considere le tour deja vu (read) ou on accepte un reaffichage (write) plutot que de faire echouer le rendu de l'app.",
-      "author": "wendkoagenda",
-      "expires": "2027-04-01"
     }
   ]
 }

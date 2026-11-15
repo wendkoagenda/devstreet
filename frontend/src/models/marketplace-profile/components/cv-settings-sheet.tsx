@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,8 +26,6 @@ import {
   DENSITY_OPTIONS,
   FONT_OPTIONS,
   PHOTO_OPTIONS,
-  PRESET_LABELS,
-  SECTION_LABELS,
   SIDEBAR_OPTIONS,
   SIDEBAR_STYLE_OPTIONS,
   SKILL_OPTIONS,
@@ -69,32 +68,45 @@ export function CvSettingsSheet({
   onVisibilityChange,
   visibilitySaving,
 }: CvSettingsSheetProps) {
+  const { t } = useTranslation();
   const current = colorHex(settings, presets);
   const isCustom = !presets[settings.color];
+  const presetName = (key: string) => t(`marketplace.cv.preset.${key}`, { defaultValue: key });
   const toggleSection = (section: CvSection, visible: boolean) => {
     const hidden = settings.hidden_sections.filter((item) => item !== section);
     onChange({ hidden_sections: visible ? hidden : [...hidden, section] });
   };
 
+  const photoOptions = PHOTO_OPTIONS.map((option) => ({
+    ...option,
+    label: t(`marketplace.cv.photo_opt.${option.value}`),
+  }));
+  const skillOptions = SKILL_OPTIONS.map((option) => ({
+    ...option,
+    label: t(`marketplace.cv.skill_opt.${option.value}`),
+  }));
+  const densityOptions = DENSITY_OPTIONS.map((option) => ({
+    ...option,
+    label: t(`marketplace.cv.density_opt.${option.value}`),
+  }));
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
         <SheetHeader className="border-b border-border px-6 py-5 text-left">
-          <SheetTitle>Personnaliser mon CV</SheetTitle>
-          <SheetDescription>
-            L'aperçu change en direct. Enregistrez pour appliquer ce style au PDF que voient les recruteurs.
-          </SheetDescription>
+          <SheetTitle>{t("marketplace.cv.customize_title")}</SheetTitle>
+          <SheetDescription>{t("marketplace.cv.customize_desc")}</SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
-          <Group title="Couleur principale">
+          <Group title={t("marketplace.cv.color")}>
             <div className="flex flex-wrap items-center gap-2.5">
               {Object.entries(presets).map(([key, hex]) => (
                 <button
                   key={key}
                   type="button"
-                  title={PRESET_LABELS[key] ?? key}
-                  aria-label={`Couleur ${PRESET_LABELS[key] ?? key}`}
+                  title={presetName(key)}
+                  aria-label={t("marketplace.cv.color_aria", { name: presetName(key) })}
                   aria-pressed={settings.color === key}
                   onClick={() => onChange({ color: key })}
                   className={cn(
@@ -111,13 +123,13 @@ export function CvSettingsSheet({
                   "relative flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border ring-offset-2 ring-offset-background transition focus-within:ring-2 focus-within:ring-ring",
                   isCustom && "border-solid ring-2 ring-foreground",
                 )}
-                title="Couleur personnalisée"
+                title={t("marketplace.cv.color_custom")}
                 style={isCustom ? { background: current } : undefined}
               >
                 {isCustom ? null : <span className="text-xs font-semibold text-muted-foreground">+</span>}
                 <input
                   type="color"
-                  aria-label="Couleur personnalisée"
+                  aria-label={t("marketplace.cv.color_custom")}
                   value={current.toLowerCase()}
                   onChange={(event) => onChange({ color: event.target.value.toUpperCase() })}
                   className="absolute inset-0 size-full cursor-pointer opacity-0"
@@ -125,11 +137,13 @@ export function CvSettingsSheet({
               </label>
             </div>
             <p className="text-xs text-muted-foreground">
-              {isCustom ? `Personnalisée · ${current}` : `${PRESET_LABELS[settings.color] ?? settings.color} · ${current}`}
+              {isCustom
+                ? t("marketplace.cv.color_custom_label", { hex: current })
+                : `${presetName(settings.color)} · ${current}`}
             </p>
           </Group>
 
-          <Group title="Police">
+          <Group title={t("marketplace.cv.font")}>
             <div className="grid grid-cols-3 gap-2">
               {FONT_OPTIONS.map((option) => (
                 <OptionCard
@@ -138,26 +152,38 @@ export function CvSettingsSheet({
                   onClick={() => onChange({ font: option.value })}
                 >
                   <span className={cn("text-2xl leading-none text-foreground", option.className)}>Aa</span>
-                  <span className="text-xs text-muted-foreground">{option.label}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t(`marketplace.cv.font_opt.${option.value}`)}
+                  </span>
                 </OptionCard>
               ))}
             </div>
           </Group>
 
-          <Group title="Mise en page">
+          <Group title={t("marketplace.cv.layout")}>
             <div className="grid grid-cols-2 gap-2">
               {SIDEBAR_OPTIONS.flatMap((position) =>
                 SIDEBAR_STYLE_OPTIONS.map((style) => {
-                  const selected = settings.sidebar === position.value && settings.sidebar_style === style.value;
+                  const selected =
+                    settings.sidebar === position.value && settings.sidebar_style === style.value;
                   return (
                     <OptionCard
                       key={`${position.value}-${style.value}`}
                       selected={selected}
-                      onClick={() => onChange({ sidebar: position.value, sidebar_style: style.value })}
+                      onClick={() =>
+                        onChange({ sidebar: position.value, sidebar_style: style.value })
+                      }
                     >
-                      <LayoutThumbnail color={current} side={position.value} filled={style.value === "filled"} />
+                      <LayoutThumbnail
+                        color={current}
+                        side={position.value}
+                        filled={style.value === "filled"}
+                      />
                       <span className="text-xs text-muted-foreground">
-                        Bande {style.label.toLowerCase()} · {position.label.toLowerCase()}
+                        {t("marketplace.cv.band_layout", {
+                          style: t(`marketplace.cv.sidebar_style.${style.value}`).toLowerCase(),
+                          side: t(`marketplace.cv.sidebar.${position.value}`).toLowerCase(),
+                        })}
                       </span>
                     </OptionCard>
                   );
@@ -166,23 +192,31 @@ export function CvSettingsSheet({
             </div>
           </Group>
 
-          <Group title="Photo">
-            <Segmented options={PHOTO_OPTIONS} value={settings.photo} onChange={(photo) => onChange({ photo })} />
-          </Group>
-
-          <Group title="Compétences">
-            <Segmented options={SKILL_OPTIONS} value={settings.skills} onChange={(skills) => onChange({ skills })} />
-          </Group>
-
-          <Group title="Densité">
+          <Group title={t("marketplace.cv.photo")}>
             <Segmented
-              options={DENSITY_OPTIONS}
+              options={photoOptions}
+              value={settings.photo}
+              onChange={(photo) => onChange({ photo })}
+            />
+          </Group>
+
+          <Group title={t("marketplace.cv.skills")}>
+            <Segmented
+              options={skillOptions}
+              value={settings.skills}
+              onChange={(skills) => onChange({ skills })}
+            />
+          </Group>
+
+          <Group title={t("marketplace.cv.density")}>
+            <Segmented
+              options={densityOptions}
               value={settings.density}
               onChange={(density) => onChange({ density })}
             />
           </Group>
 
-          <Group title="Sections affichées">
+          <Group title={t("marketplace.cv.sections")}>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
               {sections.map((section) => {
                 const id = `cv-section-${section}`;
@@ -194,20 +228,20 @@ export function CvSettingsSheet({
                       onCheckedChange={(checked) => toggleSection(section, checked === true)}
                     />
                     <Label htmlFor={id} className="text-sm font-normal">
-                      {SECTION_LABELS[section] ?? section}
+                      {t(`marketplace.cv.section.${section}`)}
                     </Label>
                   </div>
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground">Les prestations n'apparaissent que dans le PDF.</p>
+            <p className="text-xs text-muted-foreground">{t("marketplace.cv.sections_hint")}</p>
           </Group>
 
           <Separator />
 
-          <Group title="Qui peut télécharger mon CV">
+          <Group title={t("marketplace.cv.who_can_download")}>
             <Select value={visibility} onValueChange={onVisibilityChange} disabled={visibilitySaving}>
-              <SelectTrigger aria-label="Visibilité du CV">
+              <SelectTrigger aria-label={t("marketplace.cv.visibility_aria")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -218,21 +252,21 @@ export function CvSettingsSheet({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">Enregistré immédiatement.</p>
+            <p className="text-xs text-muted-foreground">{t("marketplace.cv.saved_immediately")}</p>
           </Group>
         </div>
 
         <SheetFooter className="flex-row items-center justify-between gap-2 border-t border-border px-6 py-4 sm:justify-between">
           <Button type="button" variant="ghost" size="sm" onClick={onReset} disabled={saving}>
             <RotateCcw className="size-4" />
-            Style d'origine
+            {t("marketplace.cv.original_style")}
           </Button>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={onDiscard} disabled={!dirty || saving}>
-              Annuler
+              {t("actions.cancel")}
             </Button>
             <Button type="button" size="sm" onClick={onSave} disabled={!dirty || saving}>
-              Enregistrer
+              {t("actions.save")}
             </Button>
           </div>
         </SheetFooter>

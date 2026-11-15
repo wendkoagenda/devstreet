@@ -46,6 +46,51 @@ class ActivityService:
             espace_id=espace_id, membre_id=acteur.id
         ).update(lu_at=timezone.now())
 
+    def conversation_has_unread(
+        self, *, conversation: Conversation, acteur: User
+    ) -> bool:
+        """True s'il reste au moins un message reçu non lu dans la conversation."""
+        lu_at = (
+            conversation.membre_1_lu_at
+            if conversation.membre_1_id == acteur.id
+            else conversation.membre_2_lu_at
+        )
+        qs = Message.objects.filter(conversation_id=conversation.id).exclude(
+            auteur_id=acteur.id
+        )
+        if lu_at is not None:
+            qs = qs.filter(sent_at__gt=lu_at)
+        return qs.exists()
+
+    def espace_has_unread(
+        self, *, espace_id: int, espace_type: str, acteur: User
+    ) -> bool:
+        """True s'il reste de l'activité non lue sur cet espace pour le membre."""
+        part = (
+            ParticipationEspace.objects.filter(
+                espace_id=espace_id, membre_id=acteur.id
+            )
+            .only('lu_at')
+            .first()
+        )
+        if part is None:
+            return False
+        if espace_type == 'COMMUNAUTE':
+            qs = MessageGroupe.objects.filter(espace_id=espace_id).exclude(
+                auteur_id=acteur.id
+            ).filter(supprime_at__isnull=True)
+            if part.lu_at is not None:
+                qs = qs.filter(sent_at__gt=part.lu_at)
+            return qs.exists()
+        if espace_type == 'CHAINE':
+            qs = Publication.objects.filter(espace_id=espace_id).exclude(
+                auteur_id=acteur.id
+            )
+            if part.lu_at is not None:
+                qs = qs.filter(created_at__gt=part.lu_at)
+            return qs.exists()
+        return False
+
     def _unread_dm_conversations(self, acteur: User) -> int:
         """Nombre de conversations avec au moins 1 message non lu."""
         total = 0
