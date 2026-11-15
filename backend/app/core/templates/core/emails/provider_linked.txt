@@ -1,5 +1,0 @@
-{% extends "core/emails/base.txt" %}{% block content %}Bonjour {{ first_name }},
-
-Un compte {{ provider }} a été lié à votre compte DevStreet le {{ linked_at }}. Vous pouvez désormais vous connecter avec {{ provider }}.
-
-Ce n'était pas vous ? Changez votre mot de passe sans attendre.{% endblock %}

@@ -391,7 +391,7 @@ Phases 1 et 2. Le sondage du fil général est démontrable sans espace ; son pl
 | US-MAIL-2 | Recevoir le code « mot de passe oublié » dans un e-mail moderne. |
 | US-MAIL-3 | Confirmer un changement de mot de passe, une fois connecté, avec un code reçu par e-mail. |
 | US-MAIL-4 | Être alerté par e-mail quand son mot de passe a été modifié. |
-| US-MAIL-5 | Être alerté par e-mail quand un compte Google ou GitHub est lié à son compte. |
+| US-MAIL-5 | ~~Être alerté quand un compte Google ou GitHub est lié à son compte.~~ Abandonné le 15 novembre 2026 : seul l'e-mail de bienvenue est envoyé à la création d'un compte Google/GitHub. |
 | US-MAIL-6 | Recevoir un accusé de réception après avoir postulé à une offre. |
 | US-MAIL-7 | Être prévenu, côté entreprise, d'une nouvelle candidature à une de ses offres. |
 | US-MAIL-8 | Être prévenu que sa candidature est acceptée. |
@@ -429,18 +429,18 @@ Aucune — démarrable immédiatement.
 
 ## Phase M2 : sécurité du compte
 
-**User stories** : US-MAIL-2, US-MAIL-4, US-MAIL-5.
+**User stories** : US-MAIL-2, US-MAIL-4 (US-MAIL-5 abandonnée).
 
 ### Ce qu'on livre
 
-L'e-mail de code « mot de passe oublié » passe sur le gabarit commun. Une alerte est envoyée quand le mot de passe est modifié (réinitialisation ou changement) et quand un compte Google/GitHub est lié à un compte existant.
+L'e-mail de code « mot de passe oublié » passe sur le gabarit commun. Une alerte est envoyée quand le mot de passe est modifié (réinitialisation ou changement). Lier un compte Google/GitHub à un compte existant n'envoie aucun e-mail.
 
 ### Critères d'acceptation
 
 - [ ] Le code de réinitialisation est lisible d'un coup d'œil (gros caractères), avec sa durée de validité, et n'apparaît jamais dans les journaux.
 - [ ] Le parcours « mot de passe oublié » fonctionne comme avant (demande, vérification, nouveau mot de passe).
 - [ ] Après une réinitialisation ou un changement de mot de passe, le membre reçoit une alerte datée qui explique quoi faire s'il n'est pas à l'origine du changement.
-- [ ] Lier un fournisseur Google ou GitHub à un compte existant envoie une alerte nommant le fournisseur ; une simple reconnexion avec un fournisseur déjà lié n'en envoie pas.
+- [ ] Lier un fournisseur Google ou GitHub à un compte existant n'envoie aucun e-mail.
 - [ ] Les alertes n'annulent jamais l'action en cas d'échec d'envoi.
 
 ## Bloquée par
@@ -532,3 +532,129 @@ Une mise en relation réciproque dans le Réseau prévient les deux membres. L'i
 ## Bloquée par
 
 - Phase M1.
+
+---
+
+# Plan : correctifs de sécurité issus du rapport Herald
+
+> Source : `herald-devstreet-2026-11-15.md` (Async Herald 0.1.4, analyse statique sur disque du 15 novembre 2026), chaque point vérifié dans le dépôt le même jour. Le rapport analyse aussi `backend/venv/` et `node_modules`, qui ne sont pas du code du projet : la plupart de ses 9934 problèmes en viennent.
+
+## Tri des signalements de sécurité
+
+| Signalement Herald | Verdict | Raison |
+| --- | --- | --- |
+| Dépendances Python vulnérables (DRF, python-socketio, black) | **Retenu** — phase S1 | Versions confirmées dans `backend/requirements.txt`. DRF : déni de service par l'en-tête Accept, décodage imposé par l'attaquant dans JSONParser. python-socketio : déni de service par accumulation de pièces jointes (la faille RCE par pickle ne s'applique pas : aucun gestionnaire multi-serveur configuré). |
+| Dépendance frontend embarquée vulnérable (zod) | **Retenu** — phase S2 | `npm audit --omit=dev` : 1 vulnérabilité haute, zod 4.0.10 (épuisement mémoire), corrigée en 4.6.x, même version majeure. |
+| Outillage frontend vulnérable (vite, vitest, shadcn et dépendances transitives) | **Retenu** — phase S3 | `npm audit` : 5 critiques, 16 hautes, uniquement en outils de développement. Le serveur Vite écoute sur le réseau local (`server.host: true`) : ses failles de lecture de fichiers sont exploitables depuis le Wi-Fi d'un développeur. `shadcn` (CLI d'ajout de composants) tire un SDK MCP et une pile Express vulnérables. |
+| Secret affiché dans les journaux du pipeline (`ci-backend.yml` l. 75-78) | **Retenu, priorité basse** — phase S4 | Faux positif sur le fond : les valeurs sont générées aléatoirement à chaque exécution et écrites dans `$GITHUB_ENV`, pas dans le journal. Mais elles ne sont pas masquées : un `set -x` ou une erreur futurs les afficheraient. |
+| Pas de contrôle de santé du conteneur backend | **Retenu, optionnel** — phase S5 | `backend/Dockerfile` n'a pas de `HEALTHCHECK` alors que la route `/api/health` existe. |
+| Fichier `.env` versionné | Écarté | `backend/.env` est dans `.gitignore` et absent de l'index : Herald a lu le disque, pas le dépôt. |
+| Jeton / clé privée en clair (`secret_rules.py`) | Écarté | Ce sont les expressions régulières du scanner de sécurité du projet, pas des secrets. Les autres occurrences sont dans `venv`. |
+| Cookie sans protections (`core/cookies.py`) | Écarté | Les cookies d'authentification sont HttpOnly, Secure hors développement et SameSite=Lax. |
+| Action GitHub non épinglée (×39) | Écarté | Toutes les actions externes sont épinglées par SHA ; seules les références aux workflows locaux (`./.github/workflows/...`) ne le sont pas, ce qui est normal. |
+| Requête SQL construite par formatage | Écarté | Occurrences dans les générateurs de code (texte produit, pas de requête exécutée) et dans `venv`. |
+| Adresse HTTP non chiffrée, fichiers `.pem`, chemin temporaire | Écarté | Exemple de format dans `deploy_env/spec.py` (URL interne MinIO) ; le reste est dans `venv`. |
+| Affichage de débogage dans `settings.py` | Écarté | Messages de démarrage sur la sortie d'erreur (adresses LAN ignorées), sans donnée sensible. |
+
+Les catégories Qualité, Pattern et Versioning (complexité, imports inutilisés, longueur de lignes…) sont hors périmètre de ce plan.
+
+## Décisions architecturales
+
+- **Pas de changement de version majeure** sans phase dédiée : DRF 3.17 → 3.18, python-socketio 5.13 → 5.16, zod 4.0 → 4.6, vite 7.1 → 7.3, vitest 3.2.4 → 3.2.x. Seul `shadcn` (outil, pas de code embarqué) peut changer de majeure ou être retiré.
+- **Versions exactes** : les dépendances restent épinglées (`==` côté Python, `--save-exact` côté npm), fichiers de verrouillage mis à jour avec elles.
+- **Contrôles de référence** : `python -m scripts.dependency_audit`, `npm audit`, `python -m scripts.security_scan --fail-on warning`, suites de tests backend et frontend, `npm run lint`, `npm run build` (le build sur demande explicite, conformément à CLAUDE.md).
+- **Herald** : pour les prochains rapports, exclure `backend/venv/` et `node_modules/` de l'analyse, sinon le bruit masque les vrais problèmes.
+
+---
+
+## Phase S1 : dépendances Python vulnérables
+
+### Ce qu'on livre
+
+`djangorestframework` passe en 3.18.2, `python-socketio` en 5.16.2 et `black` en 26.10.1. L'API, l'authentification, la messagerie temps réel et la CI de formatage fonctionnent comme avant.
+
+### Critères d'acceptation
+
+- [x] `backend/requirements.txt` épingle les trois nouvelles versions (DRF 3.18.2, python-socketio 5.16.2, black 26.10.1) ; `pip check` sans conflit.
+- [x] La suite de tests backend ne présente aucun nouvel échec : 1280 tests, les mêmes 243 échecs avant et après (comparaison nominative, avec les anciennes puis les nouvelles versions). Ces échecs préexistants (rôles en double, fabriques de tests communauté incomplètes) sont à traiter à part.
+- [ ] La messagerie temps réel (connexion, envoi et réception d'un message) fonctionne en local. *L'application ASGI et socketio se chargent ; parcours dans le navigateur non fait.*
+- [x] La documentation d'API se génère toujours (240 routes, mêmes avertissements qu'avec DRF 3.17.2).
+
+## Bloquée par
+
+Aucune — démarrable immédiatement.
+
+---
+
+## Phase S2 : dépendance frontend embarquée (zod)
+
+### Ce qu'on livre
+
+`zod` passe de 4.0.10 à la dernière 4.6.x corrigée. Tous les formulaires valident comme avant.
+
+### Critères d'acceptation
+
+- [x] `npm audit --omit=dev` ne signale plus aucune vulnérabilité (zod 4.6.7).
+- [ ] Lint, type-check et tests Vitest sans nouvelle erreur ; build réussi. *Lint, type-check et 119 tests Vitest OK ; build non lancé (demande explicite requise).*
+- [ ] Les formulaires d'inscription, de profil, d'entreprise, d'offre et de changement de mot de passe affichent les mêmes messages d'erreur qu'avant. *Non vérifié dans le navigateur.*
+
+## Bloquée par
+
+Aucune — démarrable immédiatement.
+
+---
+
+## Phase S3 : outillage frontend
+
+### Ce qu'on livre
+
+`vite` passe en 7.3.8, `vitest` et `@vitest/coverage-v8` en 3.2.7, et les dépendances transitives vulnérables (tar, rollup, lodash, minimatch, brace-expansion…) sont corrigées sans changement majeur. `shadcn` est retiré des dépendances du projet et utilisé à la demande avec `npx shadcn@<version>` (ou mis à jour en 4.x si l'équipe préfère le garder installé).
+
+### Critères d'acceptation
+
+- [x] `npm audit` : 31 → 14 vulnérabilités, plus aucune haute. Restent 2 critiques (`tinypool`, embarqué par vitest 3 : exécution des tests en local uniquement) et 12 modérées (chaîne `typescript-eslint`/`glob`, vitest) : toutes demandent une version majeure (vitest 5), hors de ce plan.
+- [ ] Le serveur de développement démarre, le rechargement à chaud fonctionne et l'accès depuis le réseau local aussi. *Non vérifié.*
+- [ ] Tests Vitest (avec couverture), lint et build sans nouvelle erreur. *Tests avec couverture et lint OK ; build non lancé.*
+- [x] `frontend/README.md` indique `npx shadcn@2.10.0 add …` (version compatible Tailwind 3).
+
+## Bloquée par
+
+- Phase S2 (même fichier de verrouillage : une mise à jour à la fois).
+
+---
+
+## Phase S4 : secrets générés en CI
+
+### Ce qu'on livre
+
+Dans `ci-backend.yml`, les mots de passe et clés générés pour la CI sont masqués (`::add-mask::`) avant d'être écrits dans l'environnement du job. On vérifie aussi pourquoi l'audit des dépendances déjà présent en CI n'a pas bloqué les versions corrigées en S1 à S3, et on corrige le seuil ou l'exception en cause.
+
+### Critères d'acceptation
+
+- [ ] Un affichage volontaire d'une de ces valeurs dans un job de test apparaît masqué (`***`) dans le journal. *`::add-mask::` ajouté ; à constater sur la prochaine exécution de la CI.*
+- [ ] La CI backend passe comme avant. *YAML validé localement ; à constater en CI.*
+- [ ] La cause de l'absence d'alerte de l'audit des dépendances est documentée, et l'audit échoue désormais sur une vulnérabilité critique non couverte par une exception datée. *Cause : l'audit a été retiré volontairement de la CI (`00readme/README_CI.md`), absence couverte par deux exceptions datées. Son retour en CI est une décision d'équipe, en attente.*
+
+## Bloquée par
+
+Aucune — démarrable immédiatement (la vérification de l'audit est plus parlante après S1 à S3).
+
+---
+
+## Phase S5 : contrôle de santé du conteneur backend (optionnel) — abandonnée
+
+> Vérifié le 15 novembre 2026 : `deploy/compose/compose.yml` déclare déjà un contrôle de santé du backend sur `/api/health`, avec l'en-tête `Host` exigé par `ALLOWED_HOSTS`. Un `HEALTHCHECK` dans le Dockerfile ferait doublon (le compose le remplace) et passerait « unhealthy » hors de ce compose. Signalement Herald écarté.
+
+### Ce qu'on livre
+
+Le conteneur backend déclare un `HEALTHCHECK` qui interroge `/api/health`, pour que l'orchestrateur redémarre un conteneur bloqué.
+
+### Critères d'acceptation
+
+- [ ] `docker inspect` affiche l'état de santé du conteneur (`healthy` une fois démarré).
+- [ ] Un backend arrêté dans le conteneur passe à `unhealthy`.
+- [ ] Le déploiement existant (fichiers compose et workflows CD) n'est pas modifié dans son comportement.
+
+## Bloquée par
+
+Aucune — démarrable immédiatement.

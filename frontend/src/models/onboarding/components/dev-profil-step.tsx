@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { CityField, CountryField } from "@/components/geo/geo-form-fields";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -6,16 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { CreationSuccessSonner } from "@/helpers/api/feed-backs";
 import { useCreateMyProfilMutation } from "@/models/marketplace-space/api";
-import { SelectField, TextField } from "@/models/marketplace-space/components/form-fields";
+import { TextField } from "@/models/marketplace-space/components/form-fields";
 import { applySubmitError } from "@/models/marketplace-space/components/submit-error";
 import { COUNTRIES } from "@/models/marketplace-space/options";
 import { devProfilStepSchema, type DevProfilStepValues } from "../schema";
 import { OnboardingShell } from "./onboarding-shell";
 
-const countryOptions = COUNTRIES.map((country) => ({
-  value: country.code,
-  label: country.name,
-}));
 
 /** Étape dev 1/2 : l'essentiel du profil (titre, pays, ville). */
 export function DevProfilStep({
@@ -72,8 +69,8 @@ export function DevProfilStep({
             label="Titre"
             placeholder="Ex. Développeur full-stack React / Django"
           />
-          <SelectField control={form.control} name="country" label="Pays" options={countryOptions} />
-          <TextField control={form.control} name="city" label="Ville" />
+          <CountryField control={form.control} name="country" label="Pays" resetOnChange={["city"]} />
+          <CityField control={form.control} name="city" label="Ville" countryName="country" />
 
           {globalError ? (
             <div role="alert" className="text-sm text-destructive">

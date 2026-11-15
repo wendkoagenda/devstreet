@@ -25,7 +25,6 @@ def sample_specs():
         catalog.password_reset_code(SAMPLE_TO, 'Ada', '482913', 15),
         catalog.password_change_code(SAMPLE_TO, 'Ada', '730264', 15),
         catalog.password_changed(SAMPLE_TO, 'Ada'),
-        catalog.provider_linked(SAMPLE_TO, 'Ada', 'github'),
         catalog.application_sent(SAMPLE_TO, 'Ada', 'Développeur·se React / Django', 'Kora Fintech'),
         catalog.application_received(
             SAMPLE_TO,

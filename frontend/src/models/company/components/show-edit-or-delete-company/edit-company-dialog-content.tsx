@@ -1,3 +1,6 @@
+import { CountrySelect } from "@/components/geo/country-select";
+import { CitySelect } from "@/components/geo/city-select";
+import { PhoneInput } from "@/components/geo/phone-input";
 import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -284,7 +287,7 @@ export default function EditCompanyDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Phone                  </FormLabel>
                   <FormControl>
-                    <Input {...formField} className="h-10" />
+                    <PhoneInput value={formField.value ?? ""} onChange={formField.onChange} defaultCountry={form.watch("country")} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -298,7 +301,7 @@ export default function EditCompanyDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Country *                  </FormLabel>
                   <FormControl>
-                    <Input {...formField} className="h-10" />
+                    <CountrySelect value={formField.value ?? ""} onChange={(code) => { if (code !== formField.value) form.setValue("city", ""); formField.onChange(code); }} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -312,7 +315,7 @@ export default function EditCompanyDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     City                  </FormLabel>
                   <FormControl>
-                    <Input {...formField} className="h-10" />
+                    <CitySelect country={form.watch("country")} value={formField.value ?? ""} onChange={formField.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
