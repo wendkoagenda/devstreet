@@ -254,7 +254,8 @@ CHANNELS = [
         "description": "Changelog DevStreet : forum, marketplace et Hub — ce qui change vraiment pour vous.",
         "creator": "kossi",
         "members": [u["key"] for u in USERS],
-        "commentaires_ouverts": False,
+        # Ouverts : les membres peuvent laisser des retours sur les notes de version.
+        "commentaires_ouverts": True,
     },
 ]
 

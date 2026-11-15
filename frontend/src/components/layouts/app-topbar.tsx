@@ -34,6 +34,7 @@ export function AppTopbar() {
   const { logout } = useAuth();
   const user = useAuthSlice((state) => state.user);
   const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
+  const authReady = useAuthSlice((state) => state.isInitialized);
   const { showCommunity, homePath } = useAccountType();
   const [searchOpen, setSearchOpen] = useState(false);
   const shortcutLabel = isMacPlatform() ? "⌘K" : "Ctrl K";
@@ -52,7 +53,7 @@ export function AppTopbar() {
   const displayName = user?.full_name || user?.username || t("topbar.profile_fallback");
 
   const handlePublish = () => {
-    navigate("/?publish=1");
+    navigate("/?publish=1", { flushSync: true });
   };
 
   const handleLogout = async () => {
@@ -146,7 +147,12 @@ export function AppTopbar() {
 
             <ResumeNotificationBell indicator="dot" />
 
-            {isAuthenticated ? (
+            {!authReady ? (
+              <div
+                className="ml-0.5 size-8 animate-pulse rounded-full bg-muted"
+                aria-hidden
+              />
+            ) : isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -189,7 +195,7 @@ export function AppTopbar() {
               <Button
                 size="sm"
                 className="rounded-xl"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/login", { flushSync: true })}
               >
                 {t("login")}
               </Button>

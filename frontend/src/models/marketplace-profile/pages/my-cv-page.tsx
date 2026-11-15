@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Download, Settings2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import { cvPalette, sameSettings, type CvSettings } from "../cv-settings";
 import { downloadCv } from "../download-cv";
 
 function MyCvContent() {
+  const { t } = useTranslation();
   const { profil } = useMySpace();
   const user = useAuthSlice((state) => state.user);
   const { data: profile, isLoading } = useGetPublicProfileQuery(profil?.id ?? 0, { skip: !profil });
@@ -43,7 +45,9 @@ function MyCvContent() {
     () => (settings && cvSettings ? cvPalette(settings, cvSettings.presets) : null),
     [settings, cvSettings],
   );
-  const visibilityLabel = CV_VISIBILITIES.find((option) => option.value === profil?.cv_visibility)?.label;
+  const visibilityLabel = CV_VISIBILITIES.find(
+    (option) => option.value === profil?.cv_visibility
+  )?.label;
 
   const change = (changes: Partial<CvSettings>) => {
     if (settings) setDraft({ ...settings, ...changes });
@@ -54,9 +58,9 @@ function MyCvContent() {
     try {
       await updateSettings(draft).unwrap();
       setDraft(null);
-      CreationSuccessSonner("Style du CV enregistré");
+      CreationSuccessSonner(t("marketplace.cv.style_saved"));
     } catch {
-      CreationErrorSonner("Impossible d'enregistrer le style du CV");
+      CreationErrorSonner(t("marketplace.cv.style_save_error"));
     }
   };
 
@@ -64,18 +68,18 @@ function MyCvContent() {
     try {
       await resetSettings().unwrap();
       setDraft(null);
-      CreationSuccessSonner("Style d'origine rétabli");
+      CreationSuccessSonner(t("marketplace.cv.style_reset"));
     } catch {
-      CreationErrorSonner("Impossible de rétablir le style d'origine");
+      CreationErrorSonner(t("marketplace.cv.style_reset_error"));
     }
   };
 
   const changeVisibility = async (value: string) => {
     try {
       await updateProfil({ cv_visibility: value }).unwrap();
-      CreationSuccessSonner("Visibilité du CV mise à jour");
+      CreationSuccessSonner(t("marketplace.cv.visibility_updated"));
     } catch {
-      CreationErrorSonner("Impossible de modifier la visibilité");
+      CreationErrorSonner(t("marketplace.cv.visibility_error"));
     }
   };
 
@@ -85,7 +89,7 @@ function MyCvContent() {
       // Le PDF suit ce que montre l'aperçu, même si le style n'est pas encore enregistré
       await downloadCv(undefined, dirty && draft ? draft : undefined);
     } catch {
-      CreationErrorSonner("Impossible de télécharger le CV");
+      CreationErrorSonner(t("marketplace.cv_download_error"));
     } finally {
       setDownloading(false);
     }
@@ -100,14 +104,16 @@ function MyCvContent() {
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <h1 className="text-lg font-semibold text-foreground">Mon CV automatique</h1>
+            <h1 className="text-lg font-semibold text-foreground">
+              {t("marketplace.cv.title")}
+            </h1>
             <Button
               type="button"
               variant="ghost"
               size="icon"
               className="size-8"
-              aria-label="Paramètres du CV automatique"
-              title="Paramètres du CV"
+              aria-label={t("marketplace.cv.settings_aria")}
+              title={t("marketplace.cv.settings_title")}
               onClick={() => setSettingsOpen(true)}
               disabled={!cvSettings}
             >
@@ -116,29 +122,33 @@ function MyCvContent() {
             {dirty ? (
               <Badge variant="outline" className="ml-1 gap-1 font-normal">
                 <Sparkles className="size-3" />
-                Aperçu non enregistré
+                {t("marketplace.cv.unsaved_preview")}
               </Badge>
             ) : null}
           </div>
           <p className="text-sm text-muted-foreground">
-            Construit depuis votre profil, vos compétences et vos expériences, toujours à jour.
-            {visibilityLabel ? ` Visible par : ${visibilityLabel.toLowerCase()}.` : ""}
+            {t("marketplace.cv.sub")}
+            {visibilityLabel
+              ? ` ${t("marketplace.cv.visible_by", {
+                  who: visibilityLabel.toLowerCase(),
+                })}`
+              : ""}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           {dirty ? (
             <>
               <Button type="button" variant="ghost" onClick={() => setDraft(null)}>
-                Annuler
+                {t("actions.cancel")}
               </Button>
               <Button type="button" variant="outline" onClick={save} disabled={saving}>
-                Enregistrer le style
+                {t("marketplace.cv.save_style")}
               </Button>
             </>
           ) : null}
           <Button type="button" disabled={downloading} onClick={download}>
             <Download className="size-4" />
-            Télécharger (PDF)
+            {t("marketplace.cv.download_pdf")}
           </Button>
         </div>
       </div>
@@ -155,9 +165,9 @@ function MyCvContent() {
             />
             {profile.experiences.length === 0 ? (
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                Aucune expérience pour le moment :{" "}
+                {t("marketplace.cv.no_experience")}{" "}
                 <Link to="/profil/me?section=dev" className="underline">
-                  ajoutez-en depuis votre profil
+                  {t("marketplace.cv.add_experience")}
                 </Link>
                 .
               </p>

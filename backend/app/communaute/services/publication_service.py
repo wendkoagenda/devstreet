@@ -47,6 +47,7 @@ class PublicationService:
     APPLICATION_TYPE = 'APPLICATION'
     ENTRAIDE_TYPE = 'ENTRAIDE'
     CHOIX_TYPE = 'CHOIX'
+    SONDAGE_TYPE = 'SONDAGE'
     PLATEFORMES_APP = ('WEB', 'MOBILE', 'LES_DEUX')
     MEDIA_KINDS = (ImagePublication.KIND_IMAGE, ImagePublication.KIND_VIDEO)
 
@@ -716,6 +717,71 @@ class PublicationService:
 
         return self.get_by_id(publication.id, membre=auteur)
 
+    def create_sondage(
+        self,
+        *,
+        auteur: User,
+        titre: str,
+        description: str,
+        options: List[Dict[str, Any]],
+        images: Optional[List[Dict[str, Any]]] = None,
+        created_by: int,
+        updated_by: int,
+    ) -> Publication:
+        """Créer un sondage avec au moins deux options de vote."""
+        titre = (titre or '').strip()
+        description = (description or '').strip()
+        if not titre:
+            raise ValidationError('Le titre est obligatoire.')
+        if not description:
+            raise ValidationError('La description est obligatoire.')
+
+        cleaned_options: List[Dict[str, Any]] = []
+        for index, raw in enumerate(options or []):
+            libelle = (raw.get('libelle') or '').strip()
+            if not libelle:
+                raise ValidationError('Chaque option doit avoir un libellé.')
+            cleaned_options.append(
+                {
+                    'libelle': libelle,
+                    'description': (raw.get('description') or '').strip(),
+                    'image_url': (raw.get('image_url') or '').strip(),
+                    'position': raw.get('position', index),
+                }
+            )
+        if len(cleaned_options) < 2:
+            raise ValidationError('Un sondage exige au moins deux options.')
+
+        images = images or []
+
+        with transaction.atomic():
+            publication = self.publication_repository.create(
+                auteur=auteur,
+                type=self.SONDAGE_TYPE,
+                titre=titre,
+                description=description,
+                created_by=created_by,
+                updated_by=updated_by,
+            )
+            self._attach_medias(
+                publication=publication,
+                images=images,
+                created_by=created_by,
+                updated_by=updated_by,
+            )
+            for option in cleaned_options:
+                OptionPublication.objects.create(
+                    publication=publication,
+                    libelle=option['libelle'],
+                    description=option['description'],
+                    image_url=option['image_url'],
+                    position=option['position'],
+                    created_by=created_by,
+                    updated_by=updated_by,
+                )
+
+        return self.get_by_id(publication.id, membre=auteur)
+
     def upsert_avis_choix(
         self,
         *,
@@ -724,12 +790,14 @@ class PublicationService:
         membre: User,
         explication: str,
     ) -> AvisChoix:
-        """Créer ou modifier l'avis du membre avant la décision finale."""
+        """Créer ou modifier l'avis / le vote du membre (aide au choix ou sondage)."""
         publication = Publication.objects.filter(id=publication_id).first()
         if publication is None:
             raise Http404('Publication introuvable.')
-        if publication.type != self.CHOIX_TYPE:
-            raise ValidationError('Les avis ne concernent que les aides au choix.')
+        if publication.type not in (self.CHOIX_TYPE, self.SONDAGE_TYPE):
+            raise ValidationError(
+                'Les votes ne concernent que les aides au choix et les sondages.'
+            )
         if publication.decided_at is not None:
             raise ValidationError('La décision est déjà publiée : les avis sont fermés.')
 
@@ -749,7 +817,7 @@ class PublicationService:
         )
         # Un seul vote définitif par membre : pas de changement après validation
         if existing:
-            raise ValidationError('Tu as déjà validé ton choix sur ce débat.')
+            raise ValidationError('Vous avez déjà validé votre choix sur cette publication.')
 
         return AvisChoix.objects.create(
             membre=membre,

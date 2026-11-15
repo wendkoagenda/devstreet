@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Check, Info, Undo2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ export function SwipeDeck({
   onSwipe,
   onUndo,
 }: SwipeDeckProps) {
+  const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [kept, setKept] = useState(0);
   const [history, setHistory] = useState<number[]>([]);
@@ -154,12 +156,18 @@ export function SwipeDeck({
               {/* Mode d'emploi dans une bulle : s'ouvre au clic sur le « i » */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon" className="size-7 rounded-full text-muted-foreground" aria-label="Comment ça marche ?">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 rounded-full text-muted-foreground"
+                    aria-label={t("marketplace.network.how_it_works")}
+                  >
                     <Info className="size-4" aria-hidden />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-72 text-xs leading-relaxed">
-                  Glissez la carte vers la droite pour {likeVerb}, vers la gauche pour passer, ou utilisez les boutons.
+                  {t("marketplace.network.how_it_works_body", { verb: likeVerb })}
                 </PopoverContent>
               </Popover>
             </div>
@@ -202,7 +210,7 @@ export function SwipeDeck({
             ) : null}
             {dx < -50 ? (
               <span className="absolute right-4 top-4 rotate-[10deg] rounded-md border-2 border-muted-foreground px-2.5 py-1 text-sm font-bold text-muted-foreground">
-                Passer
+                {t("marketplace.network.pass")}
               </span>
             ) : null}
 
@@ -223,7 +231,9 @@ export function SwipeDeck({
                         : "border-border text-muted-foreground"
                     }`}
                   >
-                    {card.type === "entreprise" ? "Entreprise" : "Dev"}
+                    {card.type === "entreprise"
+                      ? t("marketplace.network.type_company")
+                      : t("marketplace.network.type_dev")}
                   </Badge>
                 ) : null}
                 <span className="truncate text-lg font-semibold text-foreground">{card.name}</span>
@@ -262,7 +272,7 @@ export function SwipeDeck({
                     // Ne pas démarrer un glissement de la carte quand on clique sur le lien
                     onPointerDown={(event) => event.stopPropagation()}
                   >
-                    Voir le profil
+                    {t("marketplace.network.view_profile")}
                     <ArrowUpRight className="ml-1 size-3.5" aria-hidden />
                   </Link>
                 </Button>
@@ -274,10 +284,10 @@ export function SwipeDeck({
         {!card && !matched ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card p-6 text-center">
             <span className="text-sm font-semibold text-foreground">
-              Plus de profils pour le moment
+              {t("marketplace.network.no_more_profiles")}
             </span>
             <span className="text-xs text-muted-foreground">
-              Revenez plus tard pour de nouvelles recommandations.
+              {t("marketplace.network.no_more_profiles_sub")}
             </span>
             {emptyAction}
           </div>
@@ -288,11 +298,13 @@ export function SwipeDeck({
             role="status"
             className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-xl bg-primary p-6 text-center text-primary-foreground"
           >
-            <span className="text-2xl font-semibold">Vous êtes connectés !</span>
+            <span className="text-2xl font-semibold">
+              {t("marketplace.network.you_matched")}
+            </span>
             <span className="text-sm opacity-90">{matchedText(matched)}</span>
             <div className="flex flex-wrap justify-center gap-2">
               <Button variant="secondary" onClick={() => setMatched("")}>
-                Continuer à découvrir
+                {t("marketplace.network.keep_discovering")}
               </Button>
               {matchedAction}
             </div>
@@ -306,7 +318,7 @@ export function SwipeDeck({
           variant="outline"
           size="icon"
           className="size-12 rounded-full"
-          aria-label="Annuler le dernier choix"
+          aria-label={t("marketplace.network.undo_aria")}
           disabled={history.length === 0}
           onClick={undo}
         >
@@ -317,7 +329,7 @@ export function SwipeDeck({
           variant="outline"
           size="icon"
           className="size-14 rounded-full"
-          aria-label="Passer"
+          aria-label={t("marketplace.network.pass")}
           disabled={!card || Boolean(matched)}
           onClick={() => decide(-1)}
         >

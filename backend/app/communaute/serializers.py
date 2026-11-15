@@ -307,6 +307,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     destinataire_id = serializers.IntegerField(write_only=True, required=True)
     autre_membre = serializers.SerializerMethodField()
     dernier_message = serializers.SerializerMethodField()
+    has_unread = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
@@ -317,6 +318,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             'destinataire_id',
             'autre_membre',
             'dernier_message',
+            'has_unread',
             'created_by',
             'updated_by',
             'created_at',
@@ -362,6 +364,17 @@ class ConversationSerializer(serializers.ModelSerializer):
             'auteur_id': message.auteur_id,
         }
 
+    def get_has_unread(self, instance):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request else None
+        if not user or not getattr(user, 'is_authenticated', False) or not user.id:
+            return False
+        from app.communaute.services.activity_service import ActivityService
+
+        return ActivityService().conversation_has_unread(
+            conversation=instance, acteur=user
+        )
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['created_at'] = instance.created_at.isoformat() if instance.created_at else None
@@ -381,6 +394,7 @@ class EspaceSerializer(serializers.ModelSerializer):
 
     mon_role = serializers.SerializerMethodField()
     membres_count = serializers.SerializerMethodField()
+    has_unread = serializers.SerializerMethodField()
 
     class Meta:
         model = Espace
@@ -396,6 +410,7 @@ class EspaceSerializer(serializers.ModelSerializer):
             'commentaires_ouverts',
             'mon_role',
             'membres_count',
+            'has_unread',
             'created_by',
             'updated_by',
             'created_at',
@@ -413,6 +428,7 @@ class EspaceSerializer(serializers.ModelSerializer):
             'acces',
             'mon_role',
             'membres_count',
+            'has_unread',
             'created_by',
             'updated_by',
             'created_at',
@@ -445,6 +461,22 @@ class EspaceSerializer(serializers.ModelSerializer):
         if annotated is not None:
             return int(annotated)
         return instance.participations.count()
+
+    def get_has_unread(self, instance):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request else None
+        if not user or not getattr(user, 'is_authenticated', False) or not user.id:
+            return False
+        # Pas membre : pas de badge non lu
+        if self.get_mon_role(instance) is None:
+            return False
+        from app.communaute.services.activity_service import ActivityService
+
+        return ActivityService().espace_has_unread(
+            espace_id=instance.id,
+            espace_type=instance.type,
+            acteur=user,
+        )
 
     def to_representation(self, instance):
         """

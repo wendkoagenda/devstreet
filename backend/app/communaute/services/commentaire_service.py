@@ -56,10 +56,10 @@ class CommentaireService:
             .first()
         )
 
-    def list_for_publication(self, publication_id: int, membre: Optional[User] = None) -> List[Commentaire]:
-        """Retourne les commentaires racines d'une publication avec leurs réponses."""
+    def list_for_publication(self, publication_id: int, membre: Optional[User] = None):
+        """Retourne les commentaires racines d'une publication avec leurs réponses (QuerySet)."""
         if not Publication.objects.filter(id=publication_id).exists():
-            return []
+            return Commentaire.objects.none()
 
         annotations = self._engagement_annotations(membre)
         medias_qs = MediaCommentaire.objects.order_by('position', 'id')
@@ -71,7 +71,7 @@ class CommentaireService:
             .annotate(**annotations)
             .order_by('created_at', 'id')
         )
-        racines = (
+        return (
             Commentaire.objects.filter(publication_id=publication_id, parent__isnull=True)
             .select_related('auteur', 'option')
             .annotate(**annotations)
@@ -81,7 +81,6 @@ class CommentaireService:
             )
             .order_by('created_at', 'id')
         )
-        return list(racines)
 
     NATURE_RETOUR_APP = 'RETOUR_APP'
 

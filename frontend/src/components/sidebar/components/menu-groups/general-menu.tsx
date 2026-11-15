@@ -70,7 +70,7 @@ export default function GeneralMenu() {
                       <SidebarMenuButton asChild isActive={item.isActive}>
                         <button
                           onClick={() => {
-                            navigate(item.url);
+                            navigate(item.url, { flushSync: true });
                             if (isMobile) setOpenMobile(false);
                           }}
                           className="flex items-center gap-2"

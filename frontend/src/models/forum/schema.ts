@@ -154,6 +154,7 @@ export const espaceSchema = z.object({
     .optional()
     .default(null),
   membres_count: z.number().optional().default(0),
+  has_unread: z.boolean().optional().default(false),
   can_read: z.boolean().optional().default(true),
   can_interact: z.boolean().optional().default(false),
   can_publish: z.boolean().optional().default(false),
@@ -228,7 +229,7 @@ export const createEntraideSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(1, "Décris le problème (texte et/ou code)"),
+    .min(1, "Décrivez le problème (texte et/ou code)"),
   images_data: imagesDataSchema,
   tags_data: tagsDataSchema,
 });
@@ -237,6 +238,24 @@ export const createChoixSchema = z.object({
   titre: z.string().trim().min(1, "Le titre est obligatoire").max(200),
   description: z.string().trim().min(1, "Le contexte est obligatoire"),
   contraintes: z.string().optional().default(""),
+  options_data: z
+    .array(
+      z.object({
+        libelle: z.string().trim().min(1, "Libellé obligatoire").max(200),
+        description: z.string().trim().optional().default(""),
+        image_url: z.string().url().optional().or(z.literal("")),
+        position: z.number().int().min(0).optional().default(0),
+      })
+    )
+    .min(2, "Au moins deux options sont requises"),
+  images_data: imagesDataSchema,
+  tags_data: tagsDataSchema,
+});
+
+/** Même forme que l'aide au choix : titre, description, ≥ 2 options. */
+export const createSondageSchema = z.object({
+  titre: z.string().trim().min(1, "Le titre est obligatoire").max(200),
+  description: z.string().trim().min(1, "La question du sondage est obligatoire"),
   options_data: z
     .array(
       z.object({
@@ -285,7 +304,7 @@ export const createCommentSchema = z
     if (!hasText && !hasMedia) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Ajoute un texte ou un média",
+        message: "Ajoutez un texte ou un média",
         path: ["texte"],
       });
     }
@@ -307,6 +326,7 @@ export type CreateDiscussionInput = z.infer<typeof createDiscussionSchema>;
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 export type CreateEntraideInput = z.infer<typeof createEntraideSchema>;
 export type CreateChoixInput = z.infer<typeof createChoixSchema>;
+export type CreateSondageInput = z.infer<typeof createSondageSchema>;
 export type UpsertAvisInput = z.infer<typeof upsertAvisSchema>;
 export type DecideChoixInput = z.infer<typeof decideChoixSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;

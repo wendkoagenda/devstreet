@@ -5,7 +5,11 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { CreationSuccessSonner } from "@/helpers/api/feed-backs";
-import { SelectField, TextField } from "@/models/marketplace-space/components/form-fields";
+import {
+  DateField,
+  SelectField,
+  TextField,
+} from "@/models/marketplace-space/components/form-fields";
 import { applySubmitError } from "@/models/marketplace-space/components/submit-error";
 import { useCreateAvailabilityMutation, useUpdateAvailabilityMutation } from "../api";
 import {
@@ -54,7 +58,7 @@ export function AvailabilityForm({ period, onDone }: AvailabilityFormProps) {
       } else {
         await create(payload).unwrap();
       }
-      CreationSuccessSonner("Période enregistrée");
+      CreationSuccessSonner(t("marketplace.availability.saved"));
       onDone();
     } catch (err) {
       setGlobalError(applySubmitError(err, form, t));
@@ -66,27 +70,37 @@ export function AvailabilityForm({ period, onDone }: AvailabilityFormProps) {
       <form className="flex flex-col gap-4" noValidate onSubmit={form.handleSubmit(onSubmit)}>
         {globalError}
         <div className="grid gap-3 sm:grid-cols-2">
-          <TextField control={form.control} name="start_date" label="Du" type="date" />
-          <TextField control={form.control} name="end_date" label="Au" type="date" />
+          <DateField
+            control={form.control}
+            name="start_date"
+            label={t("marketplace.availability.from")}
+            placeholder={t("marketplace.availability.pick_date")}
+          />
+          <DateField
+            control={form.control}
+            name="end_date"
+            label={t("marketplace.availability.to")}
+            placeholder={t("marketplace.availability.pick_date")}
+          />
           <SelectField
             control={form.control}
             name="status"
-            label="Statut"
+            label={t("marketplace.availability.status")}
             options={statusOptionsFor(period)}
           />
           <TextField
             control={form.control}
             name="hours_per_week"
-            label="Heures par semaine"
+            label={t("marketplace.availability.hours_per_week")}
             type="number"
           />
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onDone}>
-            Annuler
+            {t("actions.cancel")}
           </Button>
           <Button type="submit" disabled={isCreating || isUpdating}>
-            Enregistrer
+            {t("actions.save")}
           </Button>
         </div>
       </form>

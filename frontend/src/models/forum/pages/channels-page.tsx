@@ -72,10 +72,10 @@ export default function ChannelsPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4">
-      <header className="flex items-center justify-between gap-3 px-1">
+    <div className="mx-auto w-full max-w-5xl space-y-3">
+      <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
             {t("forum.channels_title")}
           </h1>
         </div>

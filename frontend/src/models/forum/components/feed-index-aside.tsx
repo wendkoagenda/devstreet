@@ -1,5 +1,6 @@
 import { profilePath } from "@/helpers/routes/profile-path";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuthSlice } from "@/models/auth/slice";
@@ -30,16 +31,17 @@ export function FeedIndexAside({
   topCommunautes,
   topChaines,
 }: FeedIndexAsideProps) {
+  const { t } = useTranslation();
   const currentUserId = useAuthSlice((state) => state.user?.id ?? null);
 
   return (
-    <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
+    <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
       {peers.length > 0 ? (
-        <section className="rounded-xl border border-border bg-card p-3.5">
-          <h2 className="mb-3 text-xs font-semibold text-foreground">
-            Actifs sur le fil
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+          <h2 className="mb-3.5 text-xs font-semibold tracking-wide text-foreground">
+            {t("forum.aside_active")}
           </h2>
-          <ul className="space-y-2.5">
+          <ul className="space-y-3">
             {peers.map((peer) => (
               <li key={peer.id} className="flex items-center gap-2">
                 <ForumAvatar
@@ -66,21 +68,21 @@ export function FeedIndexAside({
       ) : null}
 
       <EspaceAsideList
-        title="Top communautés"
+        title={t("forum.aside_top_communities")}
         hrefAll="/forum/communautes"
         items={topCommunautes}
         detailBase="/forum/communautes"
-        actionLabel="Rejoindre"
-        joinedLabel="Membre"
+        actionLabel={t("forum.action_join")}
+        joinedLabel={t("forum.action_joined_member")}
       />
 
       <EspaceAsideList
-        title="Top chaînes"
+        title={t("forum.aside_top_channels")}
         hrefAll="/forum/chaines"
         items={topChaines}
         detailBase="/forum/chaines"
-        actionLabel="Suivre"
-        joinedLabel="Abonné"
+        actionLabel={t("forum.action_follow")}
+        joinedLabel={t("forum.action_joined_subscriber")}
       />
     </aside>
   );
@@ -97,10 +99,12 @@ function PeerAction({
 }) {
   const [toggleSuivre, { isLoading }] = useToggleSuivreMembreMutation();
 
+  const { t } = useTranslation();
+
   if (currentUserId != null && peerId === currentUserId) {
     return (
       <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-        Vous
+        {t("forum.you")}
       </span>
     );
   }
@@ -108,7 +112,7 @@ function PeerAction({
   if (following) {
     return (
       <span className="rounded-md bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand">
-        Suivi
+        {t("forum.action_following")}
       </span>
     );
   }
@@ -125,13 +129,15 @@ function PeerAction({
           .unwrap()
           .then((result) => {
             toast.success(
-              result.following ? "Tu suis ce membre" : "Tu ne suis plus ce membre"
+              result.following
+                ? "Vous suivez ce membre"
+                : "Vous ne suivez plus ce membre"
             );
           })
           .catch(() => toast.error("Impossible de mettre à jour le suivi"));
       }}
     >
-      Suivre
+      {t("forum.action_follow")}
     </Button>
   );
 }
@@ -154,9 +160,9 @@ function EspaceAsideList({
   if (items.length === 0) return null;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-3.5">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-xs font-semibold text-foreground">{title}</h2>
+    <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+      <div className="mb-3.5 flex items-center justify-between gap-2">
+        <h2 className="text-xs font-semibold tracking-wide text-foreground">{title}</h2>
         <Link
           to={hrefAll}
           className="text-[11px] font-medium text-brand hover:underline"
@@ -223,7 +229,7 @@ function EspaceJoinButton({
         onClick={() => {
           void quitter(espace.id)
             .unwrap()
-            .then(() => toast.success("Tu as quitté cet espace"))
+            .then(() => toast.success("Vous avez quitté cet espace"))
             .catch(() => toast.error("Impossible de quitter"));
         }}
       >

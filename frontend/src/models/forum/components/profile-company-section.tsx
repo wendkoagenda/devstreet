@@ -28,7 +28,7 @@ export function ProfileCompanySection({
       <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-10 text-center">
         <p className="mb-3 text-sm text-muted-foreground">
           {isOwnProfile
-            ? "Tu n'es rattaché à aucune entreprise. Crée la tienne, ou rejoins-en une sur invitation de son propriétaire."
+            ? "Vous n'êtes rattaché à aucune entreprise. Créez la vôtre, ou rejoignez-en une sur invitation de son propriétaire."
             : "Ce membre n'a pas de profil entreprise."}
         </p>
         {isOwnProfile ? <CreateCompanyDialog onCreated={onCreated} /> : null}

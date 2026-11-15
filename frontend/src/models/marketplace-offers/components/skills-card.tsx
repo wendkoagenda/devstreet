@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ const LEVELS = [
 type Row = { skill_id: number; name: string; level: number; years: number };
 
 function SkillsEditor({ initial }: { initial: MySkill[] }) {
+  const { t } = useTranslation();
   const { data: options } = useGetSkillOptionsQuery();
   const [save, { isLoading }] = useSetMySkillsMutation();
   const [rows, setRows] = useState<Row[]>(initial);
@@ -106,7 +108,9 @@ function SkillsEditor({ initial }: { initial: MySkill[] }) {
                   })
                 }
               />
-              <span className="text-xs text-muted-foreground">an(s)</span>
+              <span className="text-xs text-muted-foreground">
+                {t("marketplace.years_unit_short")}
+              </span>
               <Button
                 type="button"
                 size="icon"
