@@ -6,6 +6,8 @@ from django.db import models
 from django.db.models.functions import Lower
 from typing import List
 
+from app.core.account_types import ACCOUNT_TYPE_CHOICES, ADMIN_ROLE_NAMES, TYPE_NONE
+
 
 
 class Permission(models.Model):
@@ -83,6 +85,13 @@ class User(AbstractUser):
         help_text="Roles assigned to this user"
     )
     is_active = models.BooleanField(default=True, help_text="Designates whether this user should be treated as active")
+    account_type = models.CharField(
+        max_length=12,
+        choices=ACCOUNT_TYPE_CHOICES,
+        blank=True,
+        default=TYPE_NONE,
+        help_text="Type de compte choisi à l'onboarding (vide tant que le membre n'a pas choisi)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -129,6 +138,12 @@ class User(AbstractUser):
         for role in self.roles.all():
             permissions.update(role.get_permissions())
         return list(permissions)
+
+    def is_platform_admin(self) -> bool:
+        """Vrai pour un superutilisateur ou un porteur d'un rôle IAM de base (administration de la plateforme)."""
+        if self.is_superuser:
+            return True
+        return self.roles.filter(name__in=ADMIN_ROLE_NAMES).exists()
 
     def get_roles(self) -> List[str]:
         """

@@ -27,6 +27,7 @@ export default function EntrepriseInvitationPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isInitialized } = useAuth();
   const username = useAuthSlice((state) => state.user?.username);
+  const loadSession = useAuthSlice((state) => state.loadSession);
   const { data, isLoading, isError } = useGetInvitationQuery(token, {
     skip: !isAuthenticated || !token,
   });
@@ -64,6 +65,8 @@ export default function EntrepriseInvitationPage() {
     try {
       const result = await acceptInvitation(token).unwrap();
       CreationSuccessSonner(`Vous avez rejoint ${result.company.name}`);
+      // Accepter l'invitation donne le type entreprise : on relit la session (menu, droits, type de compte)
+      await loadSession();
       navigate(username ? profilePath(username, "entreprise") : "/", { replace: true });
     } catch (error) {
       const message = (error as { data?: { error?: string } })?.data?.error;

@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/models/auth/hooks/useAuth";
 import { useAuthSlice } from "@/models/auth/slice";
+import { useAccountType } from "@/models/auth/account-type/use-account-type";
 import { ForumAvatar } from "@/models/forum/components/forum-avatar";
 import { ResumeNotificationBell } from "@/models/forum/components/resume-notification-bell";
 import { GlobalSearchDialog } from "./global-search-dialog";
@@ -33,6 +34,7 @@ export function AppTopbar() {
   const { logout } = useAuth();
   const user = useAuthSlice((state) => state.user);
   const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
+  const { showCommunity, homePath } = useAccountType();
   const [searchOpen, setSearchOpen] = useState(false);
   const shortcutLabel = isMacPlatform() ? "⌘K" : "Ctrl K";
 
@@ -82,7 +84,7 @@ export function AppTopbar() {
           <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-2">
             <SidebarTrigger className="rounded-xl text-muted-foreground hover:text-foreground md:hidden" />
             <Link
-              to="/"
+              to={homePath}
               className="flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-colors hover:bg-muted/50"
               aria-label="Accueil DevStreet"
             >
@@ -128,17 +130,19 @@ export function AppTopbar() {
           </button>
 
           <div className="flex shrink-0 items-center gap-0.5 sm:gap-1.5">
-            <Button
-              type="button"
-              size="sm"
-              data-tour="topbar-publish"
-              onClick={handlePublish}
-              aria-label="Publier"
-              className="h-9 gap-1.5 rounded-xl bg-brand px-2.5 text-brand-foreground hover:bg-brand-strong sm:px-3"
-            >
-              <span className="hidden sm:inline">Publier</span>
-              <SendHorizontal className="size-3.5" aria-hidden />
-            </Button>
+            {showCommunity ? (
+              <Button
+                type="button"
+                size="sm"
+                data-tour="topbar-publish"
+                onClick={handlePublish}
+                aria-label="Publier"
+                className="h-9 gap-1.5 rounded-xl bg-brand px-2.5 text-brand-foreground hover:bg-brand-strong sm:px-3"
+              >
+                <span className="hidden sm:inline">Publier</span>
+                <SendHorizontal className="size-3.5" aria-hidden />
+              </Button>
+            ) : null}
 
             <ResumeNotificationBell indicator="dot" />
 
