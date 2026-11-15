@@ -263,6 +263,45 @@
       }
     }
   },
+  "selina": {
+    "open": "Open Selina",
+    "title": "Selina",
+    "placeholder": "Ask Selina…",
+    "toolbar_placeholder": "Work with Selina",
+    "input_placeholder": "Work with Selina",
+    "ask_placeholder": "Ask a question",
+    "empty_title": "Where would you like to start?",
+    "empty": "Ask about the forum, a project, or a technical idea.",
+    "recents": "Recents",
+    "history": "History",
+    "history_chats": "Chats",
+    "today": "Today",
+    "recents_loading": "Loading…",
+    "recents_empty": "No conversations yet.",
+    "back": "Back",
+    "new": "New conversation",
+    "close": "Close Selina",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "thinking_status": "Thinking about your request…",
+    "analyzing": "Analyzing…",
+    "writing": "Selina is writing…",
+    "thinking_aria": "Selina is thinking",
+    "you": "You",
+    "assistant": "Selina",
+    "failover": "fallback",
+    "untitled": "Conversation",
+    "disclaimer": "Selina can be wrong. Review suggestions before acting.",
+    "mention_badge": "AI",
+    "mention_hint": "Mention @selina for an automatic reply",
+    "mention_suggest": "@selina",
+    "errors": {
+      "forbidden": "You do not have permission to use Selina.",
+      "unavailable": "Selina is unavailable. Try again later.",
+      "quota": "Daily AI quota reached.",
+      "generic": "Unable to get a response from Selina."
+    }
+  },
   "hub": {
     "common": {
       "login": "Sign in",

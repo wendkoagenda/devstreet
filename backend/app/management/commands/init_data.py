@@ -101,6 +101,8 @@ class Command(BaseCommand):
                         options['admin_email'] or settings.ADMIN_EMAIL,
                         options['admin_password'] or settings.ADMIN_PASSWORD
                     )
+                    # Compte Selina après schéma User complet (évite core.0006 précoce)
+                    self._ensure_selina_user()
 
                 # Exécuter les seeds pour les autres modèles
                 self._run_model_seeds()
@@ -331,6 +333,24 @@ class Command(BaseCommand):
             role.permissions.add(permission)
         status = 'créée' if was_created else 'existante'
         self.stdout.write(f'  ✓ Permission ai.chat ({status}) attribuée à DevStreet Hub Developer / Admin / Super Admin')
+
+    def _ensure_selina_user(self):
+        """Assure le compte système Selina pour les réponses forum @selina."""
+        from django.db.utils import ProgrammingError
+
+        self.stdout.write('🤖 Compte système Selina...')
+        try:
+            from app.ai.selina_user import ensure_selina_user
+
+            user = ensure_selina_user()
+            self.stdout.write(f'  ✓ Compte Selina prêt: {user.username} ({user.email})')
+        except ProgrammingError as error:
+            # Pendant les migrations précoces (ex. core.0006), le schéma User peut être incomplet.
+            self.stdout.write(
+                self.style.WARNING(
+                    f'  ⚠ Compte Selina reporté (schéma incomplet): {error}'
+                )
+            )
 
     def _create_admin_user(self, admin_email, admin_password):
         """

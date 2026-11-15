@@ -63,6 +63,19 @@ class PublicationViewSet(viewsets.ModelViewSet):
     def paginator(self):
         return self.get_paginator()
 
+    def _paginated_list_response(self, request, items, serializer_class):
+        """
+        Paginer une list Python au format StandardPagination (count/next/previous/results).
+        Évite FeedCursorPagination, incompatible avec les listes.
+        """
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(list(items), request, view=None)
+        if page is None:
+            return Response(serializer_class(items, many=True).data)
+        return paginator.get_paginated_response(
+            serializer_class(page, many=True).data
+        )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.publication_service = PublicationService()
@@ -566,9 +579,9 @@ class PublicationViewSet(viewsets.ModelViewSet):
                 publication_id=int(pk),
                 membre=request.user,
             )
-            page = self.paginate_queryset(avis_list)
-            serializer = AvisChoixSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return self._paginated_list_response(
+                request, avis_list, AvisChoixSerializer
+            )
 
         try:
             serializer = AvisChoixSerializer(data=request.data)
@@ -759,15 +772,14 @@ class PublicationViewSet(viewsets.ModelViewSet):
     def commentaires(self, request, pk=None):
         """Liste ou crée les commentaires d'une publication."""
         if request.method == 'GET':
-            # Le front pagine en page/page_size : pas le curseur du fil.
+            # list_for_publication renvoie une list : pagination page (pas curseur fil).
             commentaires = self.commentaire_service.list_for_publication(
                 publication_id=int(pk),
                 membre=request.user,
             )
-            paginator = StandardPagination()
-            page = paginator.paginate_queryset(commentaires, request, view=self)
-            serializer = CommentaireSerializer(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            return self._paginated_list_response(
+                request, commentaires, CommentaireSerializer
+            )
 
         try:
             payload = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)

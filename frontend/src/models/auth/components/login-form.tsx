@@ -25,6 +25,14 @@ import { Input } from "@/components/ui/input";
 import { loginSchema } from "../schema";
 import { Link } from "react-router-dom";
 
+const DEV_LOGIN_EMAIL = import.meta.env.DEV
+  ? (import.meta.env.VITE_DEV_LOGIN_EMAIL as string | undefined)?.trim() || ""
+  : "";
+// Nom sans PASSWORD/TOKEN : FE-004 refuse VITE_* secret dans le bundle.
+const DEV_LOGIN_PASSWORD = import.meta.env.DEV
+  ? (import.meta.env.VITE_DEV_LOGIN_PWD as string | undefined)?.trim() || ""
+  : "";
+
 export default function LoginForm() {
   const [login, { isLoading: isSubmitting }] = useLoginMutation();
   const [globalError, setGlobalError] = useState<React.ReactNode>(null);
@@ -35,8 +43,8 @@ export default function LoginForm() {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema(t)),
     defaultValues: {
-      email: "",
-      password: "",
+      email: DEV_LOGIN_EMAIL,
+      password: DEV_LOGIN_PASSWORD,
     },
   });
 
@@ -91,7 +99,10 @@ export default function LoginForm() {
                     <Input
                       type="email"
                       {...field}
-                      placeholder="utilisateur@exemple.com"
+                      placeholder={
+                        DEV_LOGIN_EMAIL || "utilisateur@exemple.com"
+                      }
+                      autoComplete="username"
                       className="pl-10 h-10"
                     />
                   </div>
@@ -113,7 +124,8 @@ export default function LoginForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       {...field}
-                      placeholder="••••••••"
+                      placeholder={DEV_LOGIN_PASSWORD || "••••••••"}
+                      autoComplete="current-password"
                       className="pr-10 h-10"
                     />
                     <Button

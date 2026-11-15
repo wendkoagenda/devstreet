@@ -10,6 +10,7 @@ import {
   useToggleSuivreMembreMutation,
 } from "../api";
 import type { Espace } from "../schema";
+import { FeedSearchRail } from "./feed-search-rail";
 import { ForumAvatar } from "./forum-avatar";
 
 type Peer = {
@@ -36,6 +37,8 @@ export function FeedIndexAside({
 
   return (
     <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+      <FeedSearchRail />
+
       {peers.length > 0 ? (
         <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
           <h2 className="mb-3.5 text-xs font-semibold tracking-wide text-foreground">

@@ -14,6 +14,12 @@ class ChatRepository:
     def get_conversation_for_user(self, user, pk: int) -> AiConversation:
         return get_object_or_404(AiConversation.objects.filter(user=user), pk=pk)
 
+    def list_conversations_for_user(self, user, *, consumer: str | None = None):
+        qs = AiConversation.objects.filter(user=user)
+        if consumer:
+            qs = qs.filter(consumer=consumer)
+        return qs.order_by("-updated_at", "-id")
+
     def list_messages(self, conversation: AiConversation):
         return conversation.messages.all()
 

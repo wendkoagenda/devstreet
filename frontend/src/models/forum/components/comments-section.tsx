@@ -7,6 +7,7 @@ import {
   ImageIcon,
   Loader2,
   MessageCircle,
+  Sparkles,
   ThumbsUp,
   Video,
   X,
@@ -17,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
 import { cn } from "@/lib/utils";
+import { AI_CHAT } from "@/models/auth/permissions/constants";
+import { usePermissions } from "@/hooks/use-permissions";
 import { useAuthSlice } from "@/models/auth/slice";
 import {
   useAcceptTechnicalReplyMutation,
@@ -103,6 +106,11 @@ type CommentsSectionProps = {
   commentsClosed?: boolean;
 };
 
+function isSelinaAuthor(comment: Commentaire): boolean {
+  const username = comment.auteur?.username?.trim().toLowerCase();
+  return username === "selina";
+}
+
 function CommentComposer({
   publicationId,
   parentId = null,
@@ -130,11 +138,14 @@ function CommentComposer({
   onSuccess?: () => void;
 }) {
   const { t } = useTranslation();
+  const { hasPermission, isSuperAdmin } = usePermissions();
+  const canMentionSelina = isSuperAdmin || hasPermission(AI_CHAT);
   const [createComment, { isLoading: posting }] =
     useCreatePublicationCommentMutation();
   const [uploadMedia, { isLoading: uploading }] =
     useUploadForumMediaMutation();
   const [pendingMedias, setPendingMedias] = useState<PendingMedia[]>([]);
+  const [showSelinaSuggest, setShowSelinaSuggest] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -161,6 +172,7 @@ function CommentComposer({
 
   const { ref: texteRef, ...texteRegister } = register("texte");
   const estAnonyme = watch("est_anonyme");
+  const texteValue = watch("texte") || "";
 
   useEffect(() => {
     setValue("medias_data", pendingMedias, { shouldValidate: true });
@@ -168,6 +180,25 @@ function CommentComposer({
       clearErrors("texte");
     }
   }, [pendingMedias, setValue, clearErrors]);
+
+  useEffect(() => {
+    if (!canMentionSelina) {
+      setShowSelinaSuggest(false);
+      return;
+    }
+    const typingMention = /(^|\s)@s(e(l(i(n(a)?)?)?)?)?$/i.test(texteValue);
+    const alreadyComplete = /(^|\s)@selina\b/i.test(texteValue);
+    setShowSelinaSuggest(typingMention && !alreadyComplete);
+  }, [canMentionSelina, texteValue]);
+
+  const insertSelinaMention = () => {
+    const next = /(^|\s)@s(e(l(i(n(a)?)?)?)?)?$/i.test(texteValue)
+      ? texteValue.replace(/(^|\s)@s(e(l(i(n(a)?)?)?)?)?$/i, "$1@selina ")
+      : `${texteValue.trimEnd()} @selina `;
+    setValue("texte", next, { shouldValidate: true });
+    setShowSelinaSuggest(false);
+    textareaRef.current?.focus();
+  };
 
   useEffect(() => {
     if (autoFocus) {
@@ -306,25 +337,50 @@ function CommentComposer({
           </select>
         </div>
       ) : null}
-      <Textarea
-        rows={technicalReply ? 4 : discussionOnly ? 2 : 2}
-        placeholder={
-          pendingMedias.some((media) => media.kind === "AUDIO")
-            ? t("forum.comments_placeholder_voice")
-            : placeholder
-        }
-        className={cn(
-          "resize-none",
-          technicalReply
-            ? "min-h-[96px] border-brand-soft-border bg-background font-mono text-sm"
-            : "min-h-[72px]"
-        )}
-        {...texteRegister}
-        ref={(element) => {
-          texteRef(element);
-          textareaRef.current = element;
-        }}
-      />
+      <div className="relative">
+        <Textarea
+          rows={technicalReply ? 4 : discussionOnly ? 2 : 2}
+          placeholder={
+            pendingMedias.some((media) => media.kind === "AUDIO")
+              ? t("forum.comments_placeholder_voice")
+              : placeholder
+          }
+          className={cn(
+            "resize-none",
+            technicalReply
+              ? "min-h-[96px] border-brand-soft-border bg-background font-mono text-sm"
+              : "min-h-[72px]"
+          )}
+          {...texteRegister}
+          onKeyDown={(event) => {
+            // Entrée publie ; Maj+Entrée = nouvelle ligne.
+            if (event.key !== "Enter" || event.shiftKey) return;
+            if (event.nativeEvent.isComposing) return;
+            event.preventDefault();
+            if (posting || uploading) return;
+            void onSubmit();
+          }}
+          ref={(element) => {
+            texteRef(element);
+            textareaRef.current = element;
+          }}
+        />
+        {showSelinaSuggest ? (
+          <button
+            type="button"
+            onClick={insertSelinaMention}
+            className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-md border border-brand-soft-border bg-brand-soft px-2 py-1 text-[11px] font-medium text-brand shadow-sm"
+          >
+            <Sparkles className="size-3" aria-hidden />
+            {t("selina.mention_suggest")}
+          </button>
+        ) : null}
+      </div>
+      {canMentionSelina && !technicalReply ? (
+        <p className="text-[11px] text-muted-foreground">
+          {t("selina.mention_hint")}
+        </p>
+      ) : null}
       {errors.texte ? (
         <p className="text-xs text-destructive">{errors.texte.message}</p>
       ) : null}
@@ -522,11 +578,14 @@ function CommentItem({
   const [acceptReply, { isLoading: accepting }] =
     useAcceptTechnicalReplyMutation();
 
+  const isSelina = isSelinaAuthor(comment);
   const author = comment.est_anonyme
     ? t("forum.comments_anonymous")
-    : comment.auteur?.full_name ||
-      comment.auteur?.username ||
-      t("forum.member_fallback");
+    : isSelina
+      ? "Selina"
+      : comment.auteur?.full_name ||
+        comment.auteur?.username ||
+        t("forum.member_fallback");
   const isReplying = replyTo === comment.id;
   const isTechnical = comment.nature === "REPONSE_TECHNIQUE";
   const isAccepted = acceptedReplyId === comment.id;
@@ -583,14 +642,22 @@ function CommentItem({
           <div
             className={cn(
               "rounded-xl px-3 py-2",
-              isTechnical
-                ? "border border-brand-soft-border bg-background"
-                : "bg-muted/50",
+              isSelina
+                ? "border border-brand-soft-border bg-brand-soft/60"
+                : isTechnical
+                  ? "border border-brand-soft-border bg-background"
+                  : "bg-muted/50",
               isAccepted && "border-brand bg-brand-soft/50 ring-1 ring-brand/20"
             )}
           >
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-semibold text-foreground">{author}</p>
+              {isSelina ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-brand-soft-border bg-card px-2 py-0.5 text-[10px] font-semibold text-brand">
+                  <Sparkles className="h-3 w-3" aria-hidden />
+                  {t("selina.mention_badge")}
+                </span>
+              ) : null}
               {isTechnical ? (
                 <span className="rounded-full border border-brand-soft-border bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand">
                   {t("forum.comments_technical_badge")}
@@ -630,30 +697,32 @@ function CommentItem({
             <CommentMedias medias={comment.medias} />
           </div>
           <div className="flex flex-wrap items-center gap-3 pl-1 text-xs text-muted-foreground">
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={handleLike}
-              aria-label={
-                comment.liked_by_me
-                  ? t("forum.comments_unlike")
-                  : t("forum.comments_like")
-              }
-              aria-pressed={comment.liked_by_me}
-              className={cn(
-                "inline-flex items-center gap-1 hover:text-foreground",
-                comment.liked_by_me && "text-destructive"
-              )}
-            >
-              <Heart
+            {!isSelina ? (
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={handleLike}
+                aria-label={
+                  comment.liked_by_me
+                    ? t("forum.comments_unlike")
+                    : t("forum.comments_like")
+                }
+                aria-pressed={comment.liked_by_me}
                 className={cn(
-                  "h-3.5 w-3.5",
-                  comment.liked_by_me && "fill-current"
+                  "inline-flex items-center gap-1 hover:text-foreground",
+                  comment.liked_by_me && "text-destructive"
                 )}
-              />
-              {comment.likes_count}
-            </button>
-            {!commentsClosed ? (
+              >
+                <Heart
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    comment.liked_by_me && "fill-current"
+                  )}
+                />
+                {comment.likes_count}
+              </button>
+            ) : null}
+            {!commentsClosed && !isSelina ? (
               <button
                 type="button"
                 onClick={() => onReply(comment.id)}
