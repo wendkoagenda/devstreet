@@ -30,6 +30,7 @@ from app.core.views.oauth_views import (
     oauth_providers_view,
     oauth_start_view,
 )
+from app.core.views.geo_views import country_cities_view
 from app.core.views.health_views import health_view
 from app.core.views.user_viewset import UserViewSet
 from app.core.views.role_viewset import RoleViewSet
@@ -71,6 +72,9 @@ urlpatterns = [
 
     # Utilisateur connecté + permissions (lus en base)
     path('auth/me', me_view, name='me'),
+
+    # Villes d'un pays (formulaires pays / ville / téléphone)
+    path('v1/geo/countries/<str:country_code>/cities', country_cities_view, name='geo_country_cities'),
 
     # Choix du type de compte (onboarding) ou ajout d'un type
     path('auth/account-type', account_type_view, name='account_type'),

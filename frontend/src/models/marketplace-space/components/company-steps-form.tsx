@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { CityField, CountryField, PhoneField } from "@/components/geo/geo-form-fields";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -8,7 +9,7 @@ import { Form } from "@/components/ui/form";
 import { CreationSuccessSonner } from "@/helpers/api/feed-backs";
 import { cn } from "@/lib/utils";
 import { useCreateMyCompanyMutation } from "../api";
-import { COMPANY_SIZES, COUNTRIES, SECTORS } from "../options";
+import { COMPANY_SIZES, SECTORS } from "../options";
 import {
   companyFormSchema,
   companyToForm,
@@ -18,10 +19,6 @@ import {
 import { SelectField, TextareaField, TextField } from "./form-fields";
 import { applySubmitError } from "./submit-error";
 
-const countryOptions = COUNTRIES.map((country) => ({
-  value: country.code,
-  label: country.name,
-}));
 
 type Step = {
   title: string;
@@ -165,13 +162,13 @@ export function CompanyStepsForm({ onCreated }: { onCreated?: () => void }) {
         </div>
 
         <div className={cn("grid gap-4 sm:grid-cols-2", stepIndex !== 1 && "hidden")}>
-          <SelectField
+          <CountryField
             control={form.control}
             name="country"
             label="Pays"
-            options={countryOptions}
+            resetOnChange={["city"]}
           />
-          <TextField control={form.control} name="city" label="Ville" />
+          <CityField control={form.control} name="city" label="Ville" countryName="country" />
           <TextField
             control={form.control}
             name="address"
@@ -187,7 +184,7 @@ export function CompanyStepsForm({ onCreated }: { onCreated?: () => void }) {
             label="E-mail de contact"
             type="email"
           />
-          <TextField control={form.control} name="phone" label="Téléphone" />
+          <PhoneField control={form.control} name="phone" label="Téléphone" countryName="country" />
           <TextField
             control={form.control}
             name="website"

@@ -391,7 +391,7 @@ Phases 1 et 2. Le sondage du fil général est démontrable sans espace ; son pl
 | US-MAIL-2 | Recevoir le code « mot de passe oublié » dans un e-mail moderne. |
 | US-MAIL-3 | Confirmer un changement de mot de passe, une fois connecté, avec un code reçu par e-mail. |
 | US-MAIL-4 | Être alerté par e-mail quand son mot de passe a été modifié. |
-| US-MAIL-5 | Être alerté par e-mail quand un compte Google ou GitHub est lié à son compte. |
+| US-MAIL-5 | ~~Être alerté quand un compte Google ou GitHub est lié à son compte.~~ Abandonné le 15 novembre 2026 : seul l'e-mail de bienvenue est envoyé à la création d'un compte Google/GitHub. |
 | US-MAIL-6 | Recevoir un accusé de réception après avoir postulé à une offre. |
 | US-MAIL-7 | Être prévenu, côté entreprise, d'une nouvelle candidature à une de ses offres. |
 | US-MAIL-8 | Être prévenu que sa candidature est acceptée. |
@@ -429,18 +429,18 @@ Aucune — démarrable immédiatement.
 
 ## Phase M2 : sécurité du compte
 
-**User stories** : US-MAIL-2, US-MAIL-4, US-MAIL-5.
+**User stories** : US-MAIL-2, US-MAIL-4 (US-MAIL-5 abandonnée).
 
 ### Ce qu'on livre
 
-L'e-mail de code « mot de passe oublié » passe sur le gabarit commun. Une alerte est envoyée quand le mot de passe est modifié (réinitialisation ou changement) et quand un compte Google/GitHub est lié à un compte existant.
+L'e-mail de code « mot de passe oublié » passe sur le gabarit commun. Une alerte est envoyée quand le mot de passe est modifié (réinitialisation ou changement). Lier un compte Google/GitHub à un compte existant n'envoie aucun e-mail.
 
 ### Critères d'acceptation
 
 - [ ] Le code de réinitialisation est lisible d'un coup d'œil (gros caractères), avec sa durée de validité, et n'apparaît jamais dans les journaux.
 - [ ] Le parcours « mot de passe oublié » fonctionne comme avant (demande, vérification, nouveau mot de passe).
 - [ ] Après une réinitialisation ou un changement de mot de passe, le membre reçoit une alerte datée qui explique quoi faire s'il n'est pas à l'origine du changement.
-- [ ] Lier un fournisseur Google ou GitHub à un compte existant envoie une alerte nommant le fournisseur ; une simple reconnexion avec un fournisseur déjà lié n'en envoie pas.
+- [ ] Lier un fournisseur Google ou GitHub à un compte existant n'envoie aucun e-mail.
 - [ ] Les alertes n'annulent jamais l'action en cas d'échec d'envoi.
 
 ## Bloquée par

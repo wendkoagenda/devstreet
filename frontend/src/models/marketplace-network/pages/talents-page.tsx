@@ -10,6 +10,11 @@ import { formatDate, initialsOf } from "@/models/marketplace-offers/labels";
 import { useGetSkillOptionsQuery } from "@/models/marketplace-offers/api";
 import { RequireRecruiter } from "@/models/marketplace-space/components/guards";
 import { COUNTRIES, countryName } from "@/models/marketplace-space/options";
+import { CountryFlag } from "@/components/geo/country-flag";
+import { CountrySelect } from "@/components/geo/country-select";
+
+/** Pays proposés en accès direct dans le filtre (les autres via le sélecteur). */
+const QUICK_COUNTRIES = COUNTRIES.slice(0, 10);
 import { useGetTalentsQuery } from "../api";
 import type { TalentDirectoryCard } from "../schema";
 
@@ -139,8 +144,8 @@ function TalentsDirectoryContent() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {COUNTRIES.slice(0, 10).map((item) => (
+      <div className="flex flex-wrap items-center gap-2">
+        {QUICK_COUNTRIES.map((item) => (
           <Button
             key={item.code}
             type="button"
@@ -148,10 +153,26 @@ function TalentsDirectoryContent() {
             variant={country === item.code ? "default" : "outline"}
             aria-pressed={country === item.code}
             onClick={() => setCountry(country === item.code ? "" : item.code)}
+            className="gap-1.5"
           >
+            <CountryFlag code={item.code} />
             {item.name}
           </Button>
         ))}
+        {/* Tous les autres pays, avec recherche */}
+        <div className="w-56">
+          <CountrySelect
+            value={QUICK_COUNTRIES.some((item) => item.code === country) ? "" : country}
+            onChange={setCountry}
+            placeholder="Autre pays…"
+            className="h-9"
+          />
+        </div>
+        {country ? (
+          <Button type="button" size="sm" variant="ghost" onClick={() => setCountry("")}>
+            Tous les pays
+          </Button>
+        ) : null}
       </div>
 
       {isError ? (

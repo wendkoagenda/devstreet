@@ -45,7 +45,7 @@ class EmailFoundationTests(TestCase):
     def test_chaque_email_du_catalogue_se_rend_en_html_et_en_texte(self):
         out = StringIO()
         call_command('preview_emails', '--out', self._tmp(), stdout=out)
-        self.assertIn('11 aperçu(s)', out.getvalue())
+        self.assertIn('10 aperçu(s)', out.getvalue())
 
     def _tmp(self):
         import tempfile
@@ -155,16 +155,12 @@ class AccountSecurityEmailTests(TestCase):
         self.assertEqual(mail.outbox[-1].subject, 'Votre mot de passe a été modifié')
         self.assertIn('http://app.devstreet.test/forgot-password', html_of(mail.outbox[-1]))
 
-    def test_lier_un_fournisseur_a_un_compte_existant_envoie_une_alerte(self):
+    def test_lier_un_fournisseur_a_un_compte_existant_n_envoie_rien(self):
         profile = OAuthProfile(provider='github', provider_user_id='gh-7', email='secu@example.com',
                                first_name='Sam', last_name='U')
         with self.captureOnCommitCallbacks(execute=True):
             resolve_user(profile)
-        self.assertEqual(mail.outbox[-1].subject, 'Un compte GitHub a été lié à votre compte DevStreet')
-        count = len(mail.outbox)
-        with self.captureOnCommitCallbacks(execute=True):
-            resolve_user(profile)  # simple reconnexion
-        self.assertEqual(len(mail.outbox), count)
+        self.assertEqual(mail.outbox, [])
 
 
 # ── M3 : changement de mot de passe par code ────────────────────────────────
