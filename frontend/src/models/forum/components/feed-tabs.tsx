@@ -1,4 +1,5 @@
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export type FeedScopeId = "pour-vous" | "abonnements";
@@ -12,18 +13,6 @@ export type FeedTabId =
   | "discussions"
   | "showcase"
   | "derniers";
-
-const SCOPES: Array<{ id: FeedScopeId; label: string }> = [
-  { id: "pour-vous", label: "Pour vous" },
-  { id: "abonnements", label: "Abonnements" },
-];
-
-const TYPE_CHIPS: Array<{ id: FeedTypeFilterId; label: string }> = [
-  { id: "tout", label: "Tout" },
-  { id: "discussions", label: "Discussions" },
-  { id: "showcase", label: "Showcase" },
-  { id: "entraide", label: "Code Review" },
-];
 
 type FeedTabsProps = {
   scope: FeedScopeId;
@@ -42,14 +31,28 @@ export function FeedTabs({
   sort,
   onSortChange,
 }: FeedTabsProps) {
+  const { t } = useTranslation();
+
+  const scopes: Array<{ id: FeedScopeId; label: string }> = [
+    { id: "pour-vous", label: t("forum.tab_for_you") },
+    { id: "abonnements", label: t("forum.tab_following") },
+  ];
+
+  const typeChips: Array<{ id: FeedTypeFilterId; label: string }> = [
+    { id: "tout", label: t("forum.tab_all") },
+    { id: "discussions", label: t("forum.tab_discussions") },
+    { id: "showcase", label: t("forum.tab_showcase") },
+    { id: "entraide", label: t("forum.tab_help") },
+  ];
+
   return (
     <div className="space-y-3">
       <div
         role="tablist"
-        aria-label="Portée du fil"
+        aria-label={t("forum.feed_scope_aria")}
         className="flex gap-5 border-b border-border"
       >
-        {SCOPES.map((item) => {
+        {scopes.map((item) => {
           const active = scope === item.id;
           return (
             <button
@@ -74,10 +77,10 @@ export function FeedTabs({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div
           role="group"
-          aria-label="Type de publication"
+          aria-label={t("forum.feed_type_aria")}
           className="flex flex-wrap gap-1.5"
         >
-          {TYPE_CHIPS.map((chip) => {
+          {typeChips.map((chip) => {
             const active = typeFilter === chip.id;
             return (
               <button
@@ -99,7 +102,7 @@ export function FeedTabs({
         </div>
 
         <label className="relative inline-flex items-center">
-          <span className="sr-only">Trier le fil</span>
+          <span className="sr-only">{t("forum.feed_sort_aria")}</span>
           <select
             value={sort}
             onChange={(event) =>
@@ -107,8 +110,8 @@ export function FeedTabs({
             }
             className="h-8 appearance-none rounded-lg border border-border bg-card py-1 pl-2.5 pr-7 text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-brand/30"
           >
-            <option value="recents">Trier : Récents</option>
-            <option value="populaires">Trier : Populaires</option>
+            <option value="recents">{t("forum.sort_recent")}</option>
+            <option value="populaires">{t("forum.sort_popular")}</option>
           </select>
           <ChevronDown
             className="pointer-events-none absolute right-2 size-3.5 text-muted-foreground"

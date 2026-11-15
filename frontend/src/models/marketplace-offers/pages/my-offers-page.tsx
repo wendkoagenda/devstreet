@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +10,7 @@ import { useGetMyOffersQuery } from "../api";
 import { OFFER_STATUS_LABELS, formatDate, offerFacts } from "../labels";
 
 function MyOffersContent() {
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useGetMyOffersQuery();
 
   return (
@@ -16,19 +18,19 @@ function MyOffersContent() {
       <OffersStatsStrip />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-foreground">Mes offres</h1>
+          <h1 className="text-xl font-semibold text-foreground">{t("marketplace.my_offers")}</h1>
           <p className="text-sm text-muted-foreground">
-            Les offres de votre entreprise et les candidatures reçues.
+            {t("marketplace.my_offers_sub")}
           </p>
         </div>
-        <CreateOfferDialog label="Publier une offre" size="default" />
+        <CreateOfferDialog label={t("marketplace.publish_offer")} size="default" />
       </div>
 
       {isLoading ? (
         <Skeleton className="h-32 w-full" />
       ) : isError ? (
         <p className="rounded-lg border border-destructive/40 bg-card p-6 text-sm text-destructive">
-          Impossible de charger vos offres.
+          {t("marketplace.load_my_offers_error")}
         </p>
       ) : data && data.length > 0 ? (
         data.map((offer) => (
@@ -44,16 +46,20 @@ function MyOffersContent() {
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {offerFacts(offer).join(" · ")}
-                    {offer.published_at ? ` · publiée le ${formatDate(offer.published_at)}` : ""}
+                    {offer.published_at
+                      ? ` · ${t("marketplace.published_on", { date: formatDate(offer.published_at) })}`
+                      : ""}
                   </span>
                 </div>
                 <div className="flex flex-col items-end text-xs text-muted-foreground">
                   <span className="text-lg font-semibold text-foreground">
                     {offer.candidatures_count ?? 0}
                   </span>
-                  candidature(s)
+                  {t("marketplace.candidatures_count")}
                   {offer.candidatures_new ? (
-                    <span className="text-foreground">{offer.candidatures_new} nouvelle(s)</span>
+                    <span className="text-foreground">
+                      {t("marketplace.candidatures_new", { count: offer.candidatures_new })}
+                    </span>
                   ) : null}
                 </div>
               </CardContent>
@@ -62,8 +68,8 @@ function MyOffersContent() {
         ))
       ) : (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-          Vous n'avez pas encore d'offre.
-          <CreateOfferDialog label="Publier ma première offre" size="default" />
+          {t("marketplace.no_offers_yet")}
+          <CreateOfferDialog label={t("marketplace.publish_first_offer")} size="default" />
         </div>
       )}
     </div>

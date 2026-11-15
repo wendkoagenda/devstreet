@@ -1,14 +1,13 @@
 """Comptes et projets de démonstration locaux, via les modèles/IAM existants."""
 
-import json
-import secrets
-from pathlib import Path
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from app.core.models import Permission, Role
 from app.devstreet_hub.models import Project, Repository, Star, Technology
+
+SHOWCASE_PASSWORD = "test@123"
 
 DEMO_TECHNOLOGIES = (
     ("Python", "python"),
@@ -67,18 +66,19 @@ class Command(BaseCommand):
         "de démonstration ; secrets dans .local uniquement."
     )
 
-    def handle(self, *args, **options):
-        if not settings.DEBUG:
-            raise CommandError("Données de démonstration réservées à DEBUG=True.")
-        call_command("init_devstreet_hub")
-        directory = Path(settings.BASE_DIR) / ".local"
-        directory.mkdir(exist_ok=True)
-        path = directory / "demo.credentials.json"
-        data = (
-            json.loads(path.read_text(encoding="utf-8"))
-            if path.exists()
-            else {"password": secrets.token_urlsafe(24)}
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--allow-non-debug",
+            action="store_true",
+            help="Autorise l'exécution quand DEBUG=False (prod/staging vide).",
         )
+
+    def handle(self, *args, **options):
+        if not settings.DEBUG and not options.get("allow_non_debug"):
+            raise CommandError(
+                "DEBUG=False : passe --allow-non-debug pour peupler une instance vide."
+            )
+        call_command("init_devstreet_hub")
         developer = Role.objects.get(name="DevStreet Hub Developer")
         catalog, _ = Role.objects.get_or_create(name="DevStreet Hub Catalog Maintainer")
         catalog.permissions.add(
@@ -90,7 +90,7 @@ class Command(BaseCommand):
             ("aicha-chantier", "Aïcha"),
             ("moussa-chantier", "Moussa"),
         ):
-            user, created = User.objects.get_or_create(
+            user, _created = User.objects.get_or_create(
                 email=username + "@example.test",
                 defaults={
                     "username": username,
@@ -98,14 +98,12 @@ class Command(BaseCommand):
                     "last_name": "Démo",
                 },
             )
-            if created:
-                user.set_password(data["password"])
-                user.save()
+            user.set_password(SHOWCASE_PASSWORD)
+            user.save()
             user.roles.add(developer)
             if username == "aicha-chantier":
                 user.roles.add(catalog)
             users[username] = user
-            data[username] = {"id": user.pk, "email": user.email}
 
         tech_by_slug = {}
         for label, slug in DEMO_TECHNOLOGIES:
@@ -170,10 +168,8 @@ class Command(BaseCommand):
                 f"{project.title} ({project.status})"
             )
 
-        path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         self.stdout.write(
             self.style.SUCCESS(
-                "Comptes et projets prêts ; identifiants dans "
-                "backend/.local/demo.credentials.json (ignoré par Git)."
+                f"Comptes et projets prêts — mot de passe : {SHOWCASE_PASSWORD}"
             )
         )
