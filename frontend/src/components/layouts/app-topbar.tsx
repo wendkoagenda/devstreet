@@ -10,6 +10,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { t } from "i18next";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

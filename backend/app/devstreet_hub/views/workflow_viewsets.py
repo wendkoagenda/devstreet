@@ -137,7 +137,7 @@ class ProjectViewSet(
         image = WorkflowService().repo.project_image(self.get_object(), image_id)
         try:
             response = FileResponse(image.file.open('rb'), content_type='image/jpeg')
-        except FileNotFoundError:
+        except (FileNotFoundError, OSError, ValueError):
             raise Http404('Image indisponible.')
         response['Cache-Control'] = 'private, no-store'
         response['X-Content-Type-Options'] = 'nosniff'

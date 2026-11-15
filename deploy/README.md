@@ -65,7 +65,7 @@ Variables de déploiement uniquement (`DEPLOY_*`). Exemple déjà dans le fichie
 Noms = ceux de `backend/.env.example` et `frontend/.env.example` (pas de `DEPLOY_*`).
 
 - Si `DEPLOY_DB_MODE=interne` (dans `.env.deploy.sandbox`) : dans `backend.env.sandbox`, mettre `DB_HOST=db` et inclure le domaine (`DEPLOY_DOMAIN`) dans `ALLOWED_HOSTS`.
-- `frontend.env.sandbox` : au minimum `VITE_API_URL` et `VITE_API_V1_URL` (ex. `https://sandbox.monapp.com/api`).
+- `frontend.env.sandbox` : au minimum `VITE_API_URL` et `VITE_API_V1_URL` (ex. `https://sandbox.monapp.com/api`). Si `USE_S3=True` dans `backend.env`, mettre aussi `VITE_USE_S3=true` (sinon le JS figé pointe vers `/media/` alors que les fichiers sont dans MinIO → 404).
 - Connexion sociale (facultative) : `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `OAUTH_GITHUB_CLIENT_ID`, `OAUTH_GITHUB_CLIENT_SECRET` dans `backend.env.sandbox`. Les deux `*_CLIENT_ID` sont des variables GitHub, les deux `*_CLIENT_SECRET` des secrets. Le nom GitHub est écrit `OAUTH_GITHUB_*` et non `GITHUB_OAUTH_*` : GitHub refuse tout nom de secret ou de variable commençant par `GITHUB_` (erreur HTTP 422). Un fournisseur n'est actif que si son identifiant **et** son secret sont renseignés ; sans eux, ses boutons restent masqués. L'URL de rappel à déclarer chez le fournisseur est `https://<DEPLOY_DOMAIN>/api/auth/oauth/google/callback` (ou `.../github/callback`) : elle est construite depuis `FRONTEND_URL`, qui doit donc être l'URL publique exacte (`https://...`).
 
 ### Renseigner `observabilite.env.sandbox`

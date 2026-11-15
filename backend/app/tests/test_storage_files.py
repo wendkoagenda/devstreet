@@ -204,6 +204,17 @@ class StoredFileApiTests(APITestCase):
         self.assertTrue(response['Content-Disposition'].startswith('attachment'))
         self.body(response)
 
+    def test_hub_project_images_prefix_is_not_readable_via_files_endpoint(self):
+        """Les images Hub ont une ACL projet : /api/v1/files/ ne doit pas les servir."""
+        hub_dir = self.media_root / 'hub_project_images'
+        hub_dir.mkdir(parents=True)
+        (hub_dir / 'secret.jpg').write_bytes(self.CONTENT)
+        self.login()
+        self.assertEqual(
+            self.client.get('/api/v1/files/hub_project_images/secret.jpg').status_code,
+            status.HTTP_404_NOT_FOUND,
+        )
+
 
 class StorageCommandsTests(SimpleTestCase):
     def setUp(self):

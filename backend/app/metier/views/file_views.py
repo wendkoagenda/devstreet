@@ -26,6 +26,9 @@ _RANGE_RE = re.compile(r'^bytes=(\d*)-(\d*)$')
 _INLINE_PREFIXES = ('image/', 'video/', 'audio/')
 _INLINE_TYPES = ('application/pdf',)
 _CACHE_CONTROL = 'private, max-age=86400'  # jamais de cache partagé : le fichier est réservé aux utilisateurs connectés
+# Doit rester aligné avec HUB_PROJECT_IMAGES_PREFIX (app.devstreet_hub.image_storage).
+_HUB_PRIVATE_PREFIX = 'hub_project_images/'
+_HUB_PRIVATE_ROOT = 'hub_project_images'
 
 
 class FileReadThrottle(UserRateThrottle):
@@ -104,6 +107,8 @@ class StoredFileView(APIView):
     def get(self, request, file_path: str):
         name = normalize_file_path(file_path)
         if name is None:
+            raise Http404
+        if name == _HUB_PRIVATE_ROOT or name.startswith(_HUB_PRIVATE_PREFIX):
             raise Http404
 
         storage = get_storage_service()

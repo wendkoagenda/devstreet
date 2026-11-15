@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,7 @@ function PanelCopy({ mode }: { mode: AuthMode }) {
   return (
     <div className="flex h-full flex-col justify-between gap-8 p-8 text-primary-foreground md:p-10">
       <div>
-        <img
-          src="/devstreet-logo.png"
-          alt="DevStreet"
-          className="h-10 w-auto brightness-0 invert dark:invert-0"
-        />
+        <BrandLogo on="dark" className="h-10" />
       </div>
       <div className="space-y-4">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">

@@ -20,6 +20,15 @@ module.exports = {
           "0 10px 25px -5px hsl(220 12% 12% / 0.08), 0 8px 10px -6px hsl(220 12% 12% / 0.04)",
         subtle: "0 1px 2px 0 hsl(220 12% 12% / 0.04)",
       },
+      keyframes: {
+        "marquee-right": {
+          from: { transform: "translateX(-50%)" },
+          to: { transform: "translateX(0)" },
+        },
+      },
+      animation: {
+        "marquee-right": "marquee-right var(--marquee-duration, 60s) linear infinite",
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",

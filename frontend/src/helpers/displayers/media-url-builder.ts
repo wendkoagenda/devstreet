@@ -22,14 +22,44 @@ const encodePath = (filePath: string): string =>
   filePath.split("/").map(encodeURIComponent).join("/");
 
 /**
+ * Si S3 est actif et que l'URL pointe vers /media/ sur l'origine backend,
+ * renvoie l'équivalent /api/v1/files/… (forum/messagerie stockent souvent une URL absolue).
+ */
+const rewriteMediaPathForS3 = (pathname: string): string | null => {
+  if (!config.storage.use_s3 || !pathname.startsWith(MEDIA_PREFIX)) {
+    return null;
+  }
+  return buildFilesUrl(pathname.slice(MEDIA_PREFIX.length));
+};
+
+/**
  * Construit une URL complète pour un fichier média
  * @param filePath - Le chemin du fichier (ex: "store_logos/fichier.jpg" ou URL complète)
  * @returns L'URL complète du fichier
  */
 export function buildMediaUrl(filePath: string): string {
-  // Si c'est déjà une URL complète, la retourner telle quelle
+  // URL absolue : réécrire https://…/media/… vers /api/v1/files/… si S3 (historique forum/chat)
   if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+    try {
+      const absolute = new URL(filePath);
+      if (absolute.origin === backendOrigin()) {
+        const rewritten = rewriteMediaPathForS3(absolute.pathname);
+        if (rewritten) {
+          return rewritten;
+        }
+      }
+    } catch (error) {
+      console.warn(`URL de média illisible, laissée telle quelle : ${filePath}`, error);
+    }
     return filePath;
+  }
+
+  // Chemin /media/… avec S3 actif : le fichier est dans MinIO, pas sur le disque nginx.
+  if (filePath.startsWith(MEDIA_PREFIX)) {
+    const rewrittenRelative = rewriteMediaPathForS3(filePath);
+    if (rewrittenRelative) {
+      return rewrittenRelative;
+    }
   }
 
   // Chemin absolu /media/… ou /api/v1/files/… : le convertir vers le backend
@@ -109,15 +139,5 @@ export function extractFilePathFromUrl(url: string): string | null {
  * @returns L'URL appropriée selon l'environnement
  */
 export function getAppropriateUrl(filePath: string): string {
-  // Si c'est déjà une URL complète, la retourner telle quelle
-  if (
-    filePath.startsWith("http://") ||
-    filePath.startsWith("https://") ||
-    filePath.startsWith("/")
-  ) {
-    return filePath;
-  }
-
-  // Construire l'URL selon l'environnement
   return buildMediaUrl(filePath);
 }
