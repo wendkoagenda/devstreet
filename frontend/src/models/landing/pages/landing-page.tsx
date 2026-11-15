@@ -153,13 +153,10 @@ export default function LandingPage() {
           <div className="flex items-center gap-10">
             <Link
               to="/welcome"
-              className="flex items-center gap-2.5"
+              className="flex items-center"
               aria-label={t("landing.home_aria")}
             >
-              <BrandLogo variant="mark" className="size-8" />
-              <span className="text-[1.05rem] font-bold tracking-tight">
-                {t("sidebar.brand")}
-              </span>
+              <BrandLogo className="h-8" />
             </Link>
 
             <nav

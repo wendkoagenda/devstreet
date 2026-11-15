@@ -325,6 +325,17 @@
   .animate-assistant-spark-3 {
     animation: assistant-spark 1.2s ease-in-out 0.4s infinite;
   }
+
+  /* Scroll possible, barre invisible (chat, commentaires, listes). */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 @layer base {

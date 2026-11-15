@@ -59,10 +59,10 @@ type NavItem = {
 };
 
 const itemClass =
-  "h-8 gap-2.5 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/80 transition-colors duration-150 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-border))]";
+  "h-8 gap-2.5 rounded-lg px-2.5 font-sans text-sm font-medium leading-5 text-sidebar-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_0_0_0_1px_hsl(var(--sidebar-border))]";
 
 const sectionLabelClass =
-  "mb-0.5 h-auto px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80";
+  "mb-0.5 h-auto px-2.5 py-0.5 font-sans text-[10px] font-medium uppercase leading-4 tracking-[0.14em] text-muted-foreground";
 
 function isItemActive(path: string, search: string, item: NavItem) {
   if (item.match) return item.match(path, search);
@@ -100,10 +100,10 @@ function NavList({
             >
               <Icon
                 className={cn(
-                  "size-4 stroke-[1.75]",
+                  "size-4 stroke-2",
                   active
                     ? "text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/55"
+                    : "text-muted-foreground"
                 )}
                 aria-hidden
               />
@@ -175,7 +175,7 @@ function MenuSection({
         type="button"
         onClick={toggle}
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-md px-2.5 py-1 text-[11px] font-semibold text-sidebar-foreground/70 transition-colors hover:text-sidebar-foreground"
+        className="flex w-full items-center justify-between rounded-md px-2.5 py-1 font-sans text-[11px] font-medium leading-4 text-muted-foreground transition-colors hover:text-sidebar-foreground"
       >
         <span className="truncate">{label}</span>
         <ChevronDown

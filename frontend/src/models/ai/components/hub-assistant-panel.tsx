@@ -312,7 +312,7 @@ export function HubAssistantPanel({
 
           <div
             ref={scrollerRef}
-            className="flex-1 space-y-3.5 overflow-y-auto bg-gradient-to-b from-secondary/20 to-card px-3 py-3"
+            className="flex-1 space-y-3.5 overflow-y-auto bg-gradient-to-b from-secondary/20 to-card px-3 py-3 scrollbar-none"
           >
             {assistant.turns.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-4 text-center">

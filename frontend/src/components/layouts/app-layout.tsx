@@ -1,7 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import React from "react";
-import { SelinaBottomToolbar } from "@/models/ai/components/selina-bottom-toolbar";
 import { SelinaPanel } from "@/models/ai/components/selina-panel";
 import { SelinaProvider } from "@/models/ai/components/selina-provider";
 import { useSelina } from "@/models/ai/components/use-selina";
@@ -30,14 +29,13 @@ function AppShell() {
       >
         <SidebarInset className="bg-background">
           <AppTopbar />
-          <div className="flex flex-col gap-6 px-4 pb-28 pt-1 sm:px-6 sm:pb-28 lg:px-8 lg:pb-28">
+          <div className="flex flex-col gap-6 px-4 pb-6 pt-1 sm:px-6 sm:pb-8 lg:px-8 lg:pb-10">
             <OnboardingReminder />
             <Outlet />
           </div>
         </SidebarInset>
       </div>
       <AppTour />
-      <SelinaBottomToolbar />
       <SelinaPanel />
     </SidebarProvider>
   );

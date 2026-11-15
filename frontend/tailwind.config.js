@@ -19,15 +19,22 @@ module.exports = {
         "card-hover":
           "0 10px 25px -5px hsl(220 12% 12% / 0.08), 0 8px 10px -6px hsl(220 12% 12% / 0.04)",
         subtle: "0 1px 2px 0 hsl(220 12% 12% / 0.04)",
+        floating:
+          "0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.03), 0 1px 3px 0 rgba(0, 0, 0, 0.05)",
       },
       keyframes: {
         "marquee-right": {
           from: { transform: "translateX(-50%)" },
           to: { transform: "translateX(0)" },
         },
+        "pulse-subtle": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(0.96)" },
+        },
       },
       animation: {
         "marquee-right": "marquee-right var(--marquee-duration, 60s) linear infinite",
+        "pulse-subtle": "pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       colors: {
         background: "hsl(var(--background))",

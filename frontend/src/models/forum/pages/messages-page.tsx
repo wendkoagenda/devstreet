@@ -331,7 +331,7 @@ export default function MessagesPage() {
               />
             </label>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 scrollbar-none">
             <p className="px-2 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {t("forum.groups_section")}
             </p>
@@ -635,7 +635,7 @@ function GroupeThread({ espaceId }: { espaceId: number }) {
       </div>
 
       {isChaine ? (
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3 scrollbar-none sm:px-4">
           {canWrite ? (
             <FeedComposer
               espaceId={espaceId}
@@ -866,7 +866,7 @@ function ConversationThread({
 
       <div
         ref={listRef}
-        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 scrollbar-none"
       >
         {messages.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
