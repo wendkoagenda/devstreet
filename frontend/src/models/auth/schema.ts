@@ -118,12 +118,18 @@ export const changePasswordSchema = (t: TFunction) =>
     new_password_confirm: z
       .string()
       .min(1, t("validation.password_confirm.required")),
+    code: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, "Saisissez le code à 6 chiffres reçu par e-mail"),
   });
 
 export type ChangePasswordSchema = {
   old_password: string;
   new_password: string;
   new_password_confirm: string;
+  /** Code de confirmation reçu par e-mail (obligatoire). */
+  code: string;
 };
 
 export type ChangePasswordResponse = {

@@ -364,3 +364,171 @@ Un membre autorisé publie un sondage dans le fil général, une communauté ou 
 ## Bloquée par
 
 Phases 1 et 2. Le sondage du fil général est démontrable sans espace ; son placement dans les communautés et chaînes réutilise les phases 8 et 11. Les limites de longueur et de nombre d'options restent à préciser avant cette phase.
+
+---
+
+# Plan : e-mails transactionnels par SMTP
+
+> Source : cadrage du 15 novembre 2026 en conversation (pas de PRD dédié). Les identifiants `US-MAIL-*` sont propres à ce plan et distincts des `US-01…US-17` du plan Communauté et des `US-ONB-*` du PRD d'onboarding.
+
+## Décisions architecturales
+
+- **Point d'envoi unique** : tous les e-mails passent par le service d'e-mails existant du module `core` (gabarit texte + HTML). Les envois en texte brut de la marketplace (acceptation de candidature, invitation d'entreprise) y sont migrés.
+- **Moment et mode d'envoi** : l'envoi est déclenché après l'enregistrement de l'action (fin de transaction), dans un fil d'exécution séparé : la réponse à l'utilisateur n'attend pas le serveur SMTP. Pas de file de tâches ni de nouvelle infrastructure, pas de nouvelle tentative automatique.
+- **Échecs** : un échec d'envoi est journalisé (destinataire masqué, jamais le contenu ni un code) et n'annule jamais l'action. Seul l'envoi d'un code de confirmation signale l'échec à l'utilisateur, puisqu'il ne peut pas continuer sans.
+- **Configuration** : variables existantes `EMAIL_BACKEND`, `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` (port 587, STARTTLS). En développement, le moteur console affiche les e-mails. Les liens des e-mails sont absolus et construits à partir de `FRONTEND_URL`.
+- **Gabarits** : un gabarit de base commun (en-tête DevStreet, carte de contenu, bouton d'action, pied de page) et un gabarit par e-mail, chacun en version HTML et texte, dans le dossier des gabarits d'e-mail du module `core`. HTML compatible avec les clients de messagerie : mise en page en tableaux, styles en ligne, largeur maximale 600 px, lisible sans images et en mode sombre. Textes en français.
+- **Codes de confirmation** : le mécanisme de défi du « mot de passe oublié » (code à 6 chiffres haché, durée de vie, tentatives limitées) est réutilisé pour le changement de mot de passe connecté, distingué par un motif (réinitialisation / changement).
+- **Destinataires entreprise** : « tous les membres de l'entreprise » désigne le propriétaire et les membres invités, c'est-à-dire tous les profils entreprise rattachés à la société. Chaque destinataire reçoit un e-mail séparé.
+- **Aperçu** : une commande de gestion produit chaque e-mail avec des données d'exemple (fichiers HTML locaux ou envoi de test à une adresse), pour vérifier le rendu sans déclencher l'action réelle.
+- **Hors périmètre** : préférences et désabonnement, e-mails marketing, résumé quotidien par e-mail, e-mail à chaque message privé, vérification d'adresse à l'inscription, suivi d'ouverture.
+
+## User stories de référence
+
+| ID | Besoin utilisateur |
+| --- | --- |
+| US-MAIL-1 | Recevoir un e-mail de bienvenue après l'inscription (email, Google ou GitHub), avec un lien vers l'assistant d'onboarding. |
+| US-MAIL-2 | Recevoir le code « mot de passe oublié » dans un e-mail moderne. |
+| US-MAIL-3 | Confirmer un changement de mot de passe, une fois connecté, avec un code reçu par e-mail. |
+| US-MAIL-4 | Être alerté par e-mail quand son mot de passe a été modifié. |
+| US-MAIL-5 | Être alerté par e-mail quand un compte Google ou GitHub est lié à son compte. |
+| US-MAIL-6 | Recevoir un accusé de réception après avoir postulé à une offre. |
+| US-MAIL-7 | Être prévenu, côté entreprise, d'une nouvelle candidature à une de ses offres. |
+| US-MAIL-8 | Être prévenu que sa candidature est acceptée. |
+| US-MAIL-9 | Être prévenu que sa candidature est refusée. |
+| US-MAIL-10 | Être prévenu d'une mise en relation réciproque dans le Réseau. |
+| US-MAIL-11 | Recevoir une invitation à rejoindre une entreprise dans un e-mail moderne. |
+| US-MAIL-12 | Recevoir des e-mails cohérents, propres et lisibles partout (gabarit commun, version texte, aperçu). |
+| US-MAIL-13 | Ne jamais voir une action échouer ou ralentir à cause de l'envoi d'un e-mail. |
+
+---
+
+## Phase M1 : socle e-mail et bienvenue
+
+**User stories** : US-MAIL-1, US-MAIL-12, US-MAIL-13.
+
+### Ce qu'on livre
+
+Le gabarit de base moderne, l'envoi après enregistrement en arrière-plan et la commande d'aperçu. Premier e-mail réel : la bienvenue, envoyée à la création d'un compte par inscription ou par Google/GitHub, avec un bouton vers l'assistant d'onboarding.
+
+### Critères d'acceptation
+
+- [ ] Une inscription par email et une première connexion Google/GitHub envoient chacune un seul e-mail de bienvenue ; une reconnexion n'en envoie pas.
+- [ ] L'e-mail contient une version HTML et une version texte, le prénom du membre et un lien absolu vers l'assistant d'onboarding.
+- [ ] La réponse d'inscription n'attend pas le serveur SMTP ; un serveur SMTP injoignable n'empêche pas la création du compte et laisse une trace dans les journaux sans le contenu de l'e-mail.
+- [ ] Aucun e-mail n'est envoyé si la création du compte est annulée (transaction annulée).
+- [ ] La commande d'aperçu produit l'e-mail de bienvenue avec des données d'exemple.
+- [ ] Le rendu HTML reste lisible sans images, en largeur mobile et en mode sombre (vérifié sur l'aperçu).
+- [ ] Le nom d'expéditeur d'exemple de la configuration est DevStreet.
+
+## Bloquée par
+
+Aucune — démarrable immédiatement.
+
+---
+
+## Phase M2 : sécurité du compte
+
+**User stories** : US-MAIL-2, US-MAIL-4, US-MAIL-5.
+
+### Ce qu'on livre
+
+L'e-mail de code « mot de passe oublié » passe sur le gabarit commun. Une alerte est envoyée quand le mot de passe est modifié (réinitialisation ou changement) et quand un compte Google/GitHub est lié à un compte existant.
+
+### Critères d'acceptation
+
+- [ ] Le code de réinitialisation est lisible d'un coup d'œil (gros caractères), avec sa durée de validité, et n'apparaît jamais dans les journaux.
+- [ ] Le parcours « mot de passe oublié » fonctionne comme avant (demande, vérification, nouveau mot de passe).
+- [ ] Après une réinitialisation ou un changement de mot de passe, le membre reçoit une alerte datée qui explique quoi faire s'il n'est pas à l'origine du changement.
+- [ ] Lier un fournisseur Google ou GitHub à un compte existant envoie une alerte nommant le fournisseur ; une simple reconnexion avec un fournisseur déjà lié n'en envoie pas.
+- [ ] Les alertes n'annulent jamais l'action en cas d'échec d'envoi.
+
+## Bloquée par
+
+- Phase M1.
+
+---
+
+## Phase M3 : changement de mot de passe par code
+
+**User stories** : US-MAIL-3.
+
+### Ce qu'on livre
+
+Un membre connecté qui change son mot de passe demande d'abord un code, le reçoit par e-mail, puis le saisit avec son mot de passe actuel et le nouveau. Le changement n'est accepté qu'avec un code valide.
+
+### Critères d'acceptation
+
+- [ ] Sans code valide, le changement de mot de passe est refusé, même avec le bon mot de passe actuel.
+- [ ] Un code expiré, déjà utilisé ou issu d'une demande de réinitialisation est refusé ; les tentatives sont limitées.
+- [ ] Une nouvelle demande de code invalide la précédente ; les demandes sont limitées dans le temps.
+- [ ] La boîte de dialogue de changement de mot de passe guide le membre (envoi du code, saisie, renvoi possible) et affiche une erreur claire si l'e-mail n'a pas pu partir.
+- [ ] Un compte créé par Google/GitHub sans mot de passe garde le comportement actuel (pas de changement possible sans mot de passe défini).
+- [ ] Un changement réussi déclenche l'alerte « mot de passe modifié » de la phase M2.
+
+## Bloquée par
+
+- Phase M2.
+
+---
+
+## Phase M4 : candidature déposée
+
+**User stories** : US-MAIL-6, US-MAIL-7.
+
+### Ce qu'on livre
+
+Quand un membre postule à une offre, il reçoit un accusé de réception, et tous les membres de l'entreprise qui publie l'offre reçoivent un e-mail « nouvelle candidature » avec un lien vers la gestion de l'offre.
+
+### Critères d'acceptation
+
+- [ ] Une candidature réussie envoie un accusé au candidat (titre de l'offre, entreprise, lien vers « Mes candidatures »).
+- [ ] Chaque membre de l'entreprise (propriétaire et membres invités) reçoit un e-mail séparé (nom du candidat, titre de l'offre, lien vers la gestion de l'offre) ; aucune adresse d'un destinataire n'est visible des autres.
+- [ ] Une candidature refusée par le serveur (doublon, offre fermée) n'envoie aucun e-mail.
+- [ ] Le dépôt de la candidature n'attend pas l'envoi et ne peut pas échouer à cause de lui.
+
+## Bloquée par
+
+- Phase M1.
+
+---
+
+## Phase M5 : décision sur une candidature
+
+**User stories** : US-MAIL-8, US-MAIL-9.
+
+### Ce qu'on livre
+
+L'e-mail d'acceptation existant passe sur le gabarit commun, et un e-mail de refus, sobre et respectueux, est ajouté quand l'entreprise refuse une candidature.
+
+### Critères d'acceptation
+
+- [ ] Une acceptation envoie un e-mail au candidat (offre, entreprise, mention de l'ajout de la mission à son calendrier, lien vers la candidature).
+- [ ] Un refus envoie un e-mail au candidat, sans motif imposé, avec un lien vers les autres offres.
+- [ ] Revenir sur une décision déjà prise ou renvoyer la même décision n'envoie pas de second e-mail.
+- [ ] Un échec d'envoi n'annule pas la décision ni l'ajout au calendrier.
+
+## Bloquée par
+
+- Phase M1.
+
+---
+
+## Phase M6 : réseau et équipe
+
+**User stories** : US-MAIL-10, US-MAIL-11.
+
+### Ce qu'on livre
+
+Une mise en relation réciproque dans le Réseau prévient les deux membres. L'invitation à rejoindre une entreprise passe sur le gabarit commun.
+
+### Critères d'acceptation
+
+- [ ] Le like qui crée une mise en relation envoie un e-mail à chacun des deux membres (nom de l'autre, lien vers son profil ou la conversation) ; un like sans réciprocité n'envoie rien.
+- [ ] Annuler puis refaire une mise en relation n'envoie pas d'e-mail en double dans un court intervalle.
+- [ ] L'e-mail d'invitation contient le nom de l'entreprise, celui de la personne qui invite, un bouton vers le lien d'invitation et sa durée de validité.
+- [ ] Un échec d'envoi de l'invitation laisse le lien disponible au propriétaire, comme aujourd'hui.
+
+## Bloquée par
+
+- Phase M1.

@@ -3,6 +3,7 @@ Django settings for the devstreet project.
 """
 
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -192,6 +193,8 @@ REST_FRAMEWORK = {
         'password_reset_request': '5/hour',
         'password_reset_verify': '20/hour',
         'password_reset_confirm': '10/hour',
+        # Code de changement de mot de passe (par utilisateur connecté)
+        'password_change_code': '5/hour',
         # Limitation de débit de la connexion et du rafraîchissement (par IP)
         'login': '10/minute',
         'register': '5/minute',
@@ -390,6 +393,8 @@ else:
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = required('DEFAULT_FROM_EMAIL')
+# Les e-mails différés (après une action) partent dans un fil séparé, sauf pendant les tests (résultats déterministes)
+EMAIL_SEND_IN_THREAD = not (len(sys.argv) > 1 and sys.argv[1] == 'test')
 
 # URL publique du frontend (liens présents dans les e-mails)
 FRONTEND_URL = required('FRONTEND_URL').rstrip('/')

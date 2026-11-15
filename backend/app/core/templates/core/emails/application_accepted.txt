@@ -1,0 +1,8 @@
+{% extends "core/emails/base.txt" %}{% block content %}Bonjour {{ first_name }},
+
+{{ company_name }} a accepté votre candidature. Félicitations !
+
+Offre : {{ offer_title }}
+Entreprise : {{ company_name }}
+
+La période de mission a été ajoutée à votre calendrier de disponibilité. L'entreprise va revenir vers vous pour la suite : gardez un œil sur votre messagerie DevStreet.{% endblock %}

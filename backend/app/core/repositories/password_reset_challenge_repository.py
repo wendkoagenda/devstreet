@@ -18,7 +18,9 @@ class PasswordResetChallengeRepository(PasswordResetChallengeRepositoryInterface
     Concrete implementation of password reset challenge repository operations.
     """
 
-    def create(self, user: User, code_hash: str, expires_at: datetime) -> PasswordResetChallenge:
+    def create(
+        self, user: User, code_hash: str, expires_at: datetime, purpose: str = 'reset'
+    ) -> PasswordResetChallenge:
         """
         Create a new challenge.
         """
@@ -26,6 +28,7 @@ class PasswordResetChallengeRepository(PasswordResetChallengeRepositoryInterface
             user=user,
             code_hash=code_hash,
             expires_at=expires_at,
+            purpose=purpose,
         )
 
     def delete(self, challenge: PasswordResetChallenge) -> None:
@@ -34,24 +37,27 @@ class PasswordResetChallengeRepository(PasswordResetChallengeRepositoryInterface
         """
         challenge.delete()
 
-    def get_latest_created_at(self, user: User) -> Optional[datetime]:
+    def get_latest_created_at(self, user: User, purpose: str = 'reset') -> Optional[datetime]:
         """
         Get the creation date of the most recent challenge of a user.
         """
         return (
             PasswordResetChallenge.objects
-            .filter(user=user)
+            .filter(user=user, purpose=purpose)
             .order_by('-created_at')
             .values_list('created_at', flat=True)
             .first()
         )
 
-    def get_latest_open_for_user(self, user: User, lock: bool = False) -> Optional[PasswordResetChallenge]:
+    def get_latest_open_for_user(
+        self, user: User, lock: bool = False, purpose: str = 'reset'
+    ) -> Optional[PasswordResetChallenge]:
         """
         Get the most recent challenge whose code and token have not been consumed yet.
         """
         queryset = PasswordResetChallenge.objects.filter(
             user=user,
+            purpose=purpose,
             code_used_at__isnull=True,
             token_used_at__isnull=True,
         ).order_by('-created_at')
@@ -67,6 +73,13 @@ class PasswordResetChallengeRepository(PasswordResetChallengeRepositoryInterface
         if lock:
             queryset = queryset.select_for_update(of=('self',))
         return queryset.first()
+
+    def mark_code_used(self, challenge: PasswordResetChallenge, now: datetime) -> None:
+        """
+        Consume the code of a challenge that has no token step (password change).
+        """
+        challenge.code_used_at = now
+        challenge.save(update_fields=['code_used_at'])
 
     def increment_attempts(self, challenge: PasswordResetChallenge) -> int:
         """
@@ -98,11 +111,13 @@ class PasswordResetChallengeRepository(PasswordResetChallengeRepositoryInterface
         challenge.token_used_at = now
         challenge.save(update_fields=['token_used_at'])
 
-    def invalidate_open_for_user(self, user: User, now: datetime) -> int:
+    def invalidate_open_for_user(self, user: User, now: datetime, purpose: Optional[str] = 'reset') -> int:
         """
         Invalidate every challenge of the user whose token has not been consumed.
         """
         open_challenges = PasswordResetChallenge.objects.filter(user=user, token_used_at__isnull=True)
+        if purpose is not None:
+            open_challenges = open_challenges.filter(purpose=purpose)
         open_challenges.filter(reset_token_hash__isnull=False).update(token_expires_at=now)
         return open_challenges.update(expires_at=now)
 

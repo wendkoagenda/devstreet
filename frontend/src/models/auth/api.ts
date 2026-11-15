@@ -58,6 +58,14 @@ export const authApi = createApi({
         body: passwordData,
       }),
     }),
+    /** Envoie par e-mail le code exigé pour changer le mot de passe. */
+    requestChangePasswordCode: builder.mutation<{ message: string }, void>({
+      query: () => ({
+        url: "/auth/change-password/code",
+        method: "POST",
+        body: {},
+      }),
+    }),
     uploadProfilePhoto: builder.mutation<User, File>({
       query: (file) => {
         const formData = new FormData();
@@ -146,6 +154,7 @@ export const {
   useRegisterMutation,
   useGetPublicProfileQuery,
   useChangePasswordMutation,
+  useRequestChangePasswordCodeMutation,
   useUploadProfilePhotoMutation,
   useDeleteProfilePhotoMutation,
   useUploadProfileBannerMutation,

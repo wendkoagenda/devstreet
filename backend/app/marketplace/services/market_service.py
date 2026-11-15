@@ -3,22 +3,19 @@
 Comme `MeService`, il ne passe pas par les permissions RBAC d'administration : chaque règle d'accès est portée
 ici (un candidat voit les offres ouvertes ; un recruteur ne gère que les offres de son entreprise).
 """
-import logging
 from typing import Any, Dict, List, Optional
 
-from django.conf import settings
-from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Count, F, Q
 from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from app.marketplace.models import Availability, Candidature, Offer, Profil, ProfilSkill, Skill
+from app.marketplace.services import marketplace_emails
 from app.marketplace.presenters import candidature_dict, offer_dict, profil_card
 from app.marketplace.services.me_service import MeService
 from app.marketplace.services.scoring import build_contexts, compute_score, mission_period, offer_period
 
-logger = logging.getLogger(__name__)
 
 LIST_LIMIT = 50
 DECISIONS = ("shortlisted", "rejected", "accepted")
@@ -170,6 +167,8 @@ class MarketService:
         candidature = Candidature.objects.create(
             offer=offer, profil=profil, message=message, status="sent", created_by=user.id, updated_by=user.id
         )
+        # Accusé au candidat et alerte aux membres de l'entreprise, après validation de la transaction
+        marketplace_emails.notify_application(candidature)
         return candidature_dict(candidature)
 
     @classmethod
@@ -309,13 +308,15 @@ class MarketService:
             raise NotFound("Candidature introuvable.")
         if candidature.status == "accepted":
             raise ValidationError({"error": "Cette candidature est déjà acceptée."})
+        previous_status = candidature.status
         candidature.status = status
         candidature.decided_at = timezone.now()
         candidature.updated_by = user.id
         candidature.save()
         if status == "accepted":
             cls._book_mission(candidature, user)
-            cls._notify_accepted(candidature)
+        # Acceptée ou refusée : e-mail au candidat, une seule fois par décision
+        marketplace_emails.notify_decision(candidature, previous_status)
         return candidature_dict(candidature)
 
     @staticmethod
@@ -336,22 +337,3 @@ class MarketService:
             updated_by=user.id,
         )
 
-    @staticmethod
-    def _notify_accepted(candidature: Candidature) -> None:
-        """E-mail d'acceptation ; un échec d'envoi ne doit pas annuler la décision."""
-        offer = candidature.offer
-        try:
-            send_mail(
-                subject=f"Votre candidature a été acceptée : {offer.title}",
-                message=(
-                    f"Bonjour {candidature.profil.user.first_name},\n\n"
-                    f"{offer.company.name} a accepté votre candidature pour « {offer.title} ». "
-                    "La période de mission a été ajoutée à votre calendrier de disponibilité.\n\n"
-                    "L'équipe DevStreet"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[candidature.profil.user.email],
-                fail_silently=False,
-            )
-        except Exception:  # noqa: BLE001 - l'envoi d'e-mail ne doit jamais bloquer la décision
-            logger.exception("Échec de l'envoi de l'e-mail d'acceptation (candidature %s)", candidature.id)
