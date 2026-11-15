@@ -6,7 +6,6 @@ import {
   Search,
   SendHorizontal,
   Sparkles,
-  Terminal,
   UserRound,
 } from "lucide-react";
 import { t } from "i18next";
@@ -98,9 +97,7 @@ export function AppTopbar() {
               className="flex min-w-0 items-center gap-2 rounded-xl px-1 py-1 transition-colors hover:bg-muted/50"
               aria-label={t("topbar.home_aria")}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
-                <Terminal className="size-4" aria-hidden />
-              </span>
+              <BrandLogo variant="mark" className="size-8 shrink-0" />
               <span className="hidden min-w-0 items-baseline gap-1.5 sm:flex">
                 <span className="truncate text-[15px] font-bold tracking-tight text-foreground">
                   {t("sidebar.brand")}
