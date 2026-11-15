@@ -6,16 +6,26 @@ import os
 import sys
 from pathlib import Path
 from datetime import timedelta
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-from config.env import optional, required, required_bool, required_list  # noqa: E402 (après load_dotenv)
-from config.env_secrets import read_admin_credentials, read_signing_secrets  # noqa: E402
+from dotenv import dotenv_values
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Charge backend/.env de façon fiable (indépendant du cwd).
+# - Fichier absent (prod Docker typique) → no-op ; les vars viennent de Compose.
+# - On n'écrit que les clés absentes ou vides : une vraie valeur Docker/CI n'est
+#   jamais écrasée (contrairement à override=True), tout en corrigeant un USE_S3="" local.
+_env_path = BASE_DIR / ".env"
+if _env_path.is_file():
+    for _key, _value in dotenv_values(_env_path).items():
+        if _value is None:
+            continue
+        _current = os.environ.get(_key)
+        if _current is None or not str(_current).strip():
+            os.environ[_key] = _value
+
+from config.env import optional, required, required_bool, required_list  # noqa: E402 (après chargement .env)
+from config.env_secrets import read_admin_credentials, read_signing_secrets  # noqa: E402
 
 # Secrets obligatoires, sans valeur par défaut : SECRET_KEY (Django) et JWT_SIGNING_KEY (jetons JWT),
 # distinctes l'une de l'autre. Voir config/env_secrets.py.

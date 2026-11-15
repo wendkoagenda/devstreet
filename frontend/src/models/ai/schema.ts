@@ -19,9 +19,19 @@ export const aiMessageSchema = z.object({
   created_at: z.string(),
 });
 
+export const aiConsumerSchema = z.enum(["hub", "generic", "selina"]);
+
+export const aiConversationListItemSchema = z.object({
+  id: z.number(),
+  consumer: aiConsumerSchema,
+  title: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
 export const aiConversationSchema = z.object({
   id: z.number(),
-  consumer: z.enum(["hub", "generic"]),
+  consumer: aiConsumerSchema,
   title: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -31,6 +41,8 @@ export const aiConversationSchema = z.object({
 export type AiChatResponse = z.infer<typeof aiChatResponseSchema>;
 export type AiMessage = z.infer<typeof aiMessageSchema>;
 export type AiConversation = z.infer<typeof aiConversationSchema>;
+export type AiConversationListItem = z.infer<typeof aiConversationListItemSchema>;
+export type AiConsumer = z.infer<typeof aiConsumerSchema>;
 
 export type HubAssistantChatBody = {
   message: string;

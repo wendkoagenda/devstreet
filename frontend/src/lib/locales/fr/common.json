@@ -316,6 +316,45 @@
       }
     }
   },
+  "selina": {
+    "open": "Ouvrir Selina",
+    "title": "Selina",
+    "placeholder": "Demander à Selina…",
+    "toolbar_placeholder": "Travailler avec Selina",
+    "input_placeholder": "Travailler avec Selina",
+    "ask_placeholder": "Posez une question",
+    "empty_title": "Par où voulez-vous commencer ?",
+    "empty": "Pose une question sur le forum, un projet ou une idée technique.",
+    "recents": "Récents",
+    "history": "Historique",
+    "history_chats": "Chats",
+    "today": "Aujourd'hui",
+    "recents_loading": "Chargement…",
+    "recents_empty": "Aucune conversation pour le moment.",
+    "back": "Retour",
+    "new": "Nouvelle conversation",
+    "close": "Fermer Selina",
+    "send": "Envoyer",
+    "thinking": "Réflexion…",
+    "thinking_status": "Réflexion sur ta demande…",
+    "analyzing": "Analyse…",
+    "writing": "Selina écrit…",
+    "thinking_aria": "Selina réfléchit",
+    "you": "Toi",
+    "assistant": "Selina",
+    "failover": "secours",
+    "untitled": "Conversation",
+    "disclaimer": "Selina peut se tromper. Vérifie les suggestions avant d'agir.",
+    "mention_badge": "IA",
+    "mention_hint": "Mentionne @selina pour une réponse automatique",
+    "mention_suggest": "@selina",
+    "errors": {
+      "forbidden": "Tu n'as pas la permission d'utiliser Selina.",
+      "unavailable": "Selina est indisponible. Réessaie plus tard.",
+      "quota": "Quota quotidien IA atteint.",
+      "generic": "Impossible d'obtenir une réponse de Selina."
+    }
+  },
   "hub": {
     "common": {
       "rate_limited": "Trop de requêtes. Attendez un instant avant de réessayer.",

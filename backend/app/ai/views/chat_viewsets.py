@@ -7,6 +7,7 @@ from drf_yasg.utils import swagger_auto_schema
 from app.ai.serializers import (
     AiChatResponseSerializer,
     AiConversationCreateSerializer,
+    AiConversationListSerializer,
     AiConversationSerializer,
     AiMessageCreateSerializer,
 )
@@ -20,6 +21,7 @@ def validated(serializer_class, data):
 
 
 class AiConversationViewSet(
+    mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
@@ -31,6 +33,24 @@ class AiConversationViewSet(
 
     def get_queryset(self):
         return []
+
+    @swagger_auto_schema(
+        responses={200: AiConversationListSerializer(many=True)},
+        tags=["V1 - AiConversation"],
+        manual_parameters=[],
+    )
+    def list(self, request, *args, **kwargs):
+        consumer = (request.query_params.get("consumer") or "").strip() or None
+        conversations = ChatService().list_conversations(
+            request.user, consumer=consumer
+        )
+        page = self.paginate_queryset(conversations)
+        serializer = AiConversationListSerializer(
+            page if page is not None else conversations, many=True
+        )
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
     @swagger_auto_schema(
         request_body=AiConversationCreateSerializer,
