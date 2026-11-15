@@ -65,6 +65,8 @@ class Command(BaseCommand):
         forum_opts = dict(flag)
         if options["force_forum"]:
             forum_opts["force"] = True
+        # Forum d'abord : sans lui la prod reste vide. Ne pas laisser Hub/marketplace
+        # faire échouer toute la migration (transaction annulée → 0 compte).
         call_command("seed_forum_showcase", **forum_opts)
 
         if options["skip_marketplace"]:
@@ -74,13 +76,23 @@ class Command(BaseCommand):
             market_opts = dict(flag)
             if options["reset_marketplace"]:
                 market_opts["reset"] = True
-            call_command("seed_marketplace_demo", **market_opts)
+            try:
+                call_command("seed_marketplace_demo", **market_opts)
+            except Exception as exc:
+                self.stderr.write(
+                    self.style.ERROR(f"Marketplace seed échoué (forum conservé) : {exc}")
+                )
 
         if options["skip_hub"]:
             self.stdout.write(self.style.WARNING("3/3 — Hub ignoré (--skip-hub)"))
         else:
             self.stdout.write(self.style.MIGRATE_HEADING("3/3 — Hub showcase"))
-            call_command("seed_hub_showcase", **flag)
+            try:
+                call_command("seed_hub_showcase", **flag)
+            except Exception as exc:
+                self.stderr.write(
+                    self.style.ERROR(f"Hub seed échoué (forum conservé) : {exc}")
+                )
 
         self.stdout.write(
             self.style.SUCCESS("Showcase prêt. Mot de passe de tous les comptes : test@123")
