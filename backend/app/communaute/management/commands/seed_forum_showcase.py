@@ -27,6 +27,8 @@ from app.communaute.models import (
     Publication,
     SuiviUtilisateur,
 )
+from app.core.account_types import TYPE_BOTH
+from app.core.services.account_type_service import AccountTypeService
 
 from . import _forum_showcase_data as data
 
@@ -108,6 +110,9 @@ class Command(BaseCommand):
             user.username = person["username"][:30]
             user.set_password(SHOWCASE_PASSWORD)
             user.save()
+            # Sans type de compte, le front redirige vers /onboarding (fil invisible).
+            # both = accès communauté + marketplace pour la démo showcase.
+            AccountTypeService.add_type(user, person.get("account_type", TYPE_BOTH))
             users[person["key"]] = user
         return users
 
