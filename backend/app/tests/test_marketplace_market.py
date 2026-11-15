@@ -301,7 +301,9 @@ class DecisionTests(MarketBase):
         )
 
     def test_accept_books_mission_and_sends_email(self):
-        response = self.decide(self.recruiter_user, "accepted")
+        # L'e-mail part après la validation de la transaction
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.decide(self.recruiter_user, "accepted")
         self.assertEqual(response.status_code, 200, response.data)
         self.candidature.refresh_from_db()
         self.assertEqual(self.candidature.status, "accepted")

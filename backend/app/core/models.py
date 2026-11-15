@@ -172,11 +172,24 @@ class PasswordResetChallenge(models.Model):
     Le code e-mail et le reset_token ne sont jamais stockés en clair :
     seules leurs empreintes HMAC-SHA256 le sont (voir forgot_password_service).
     """
+    PURPOSE_RESET = 'reset'
+    PURPOSE_CHANGE = 'change'
+    PURPOSE_CHOICES = (
+        (PURPOSE_RESET, 'Mot de passe oublié'),
+        (PURPOSE_CHANGE, 'Changement de mot de passe (membre connecté)'),
+    )
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='password_reset_challenges',
         help_text="Utilisateur qui a demandé la réinitialisation"
+    )
+    purpose = models.CharField(
+        max_length=10,
+        choices=PURPOSE_CHOICES,
+        default=PURPOSE_RESET,
+        help_text="Motif du code : un code de réinitialisation ne sert pas à un changement, et inversement",
     )
     code_hash = models.CharField(max_length=64, help_text="Empreinte HMAC du code envoyé par e-mail")
     expires_at = models.DateTimeField(help_text="Expiration du code")

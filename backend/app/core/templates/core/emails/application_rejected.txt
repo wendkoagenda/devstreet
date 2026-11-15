@@ -1,0 +1,5 @@
+{% extends "core/emails/base.txt" %}{% block content %}Bonjour {{ first_name }},
+
+{{ company_name }} a étudié votre candidature à l'offre « {{ offer_title }} » et a décidé de ne pas y donner suite.
+
+Ce n'est pas un jugement sur votre talent : les entreprises reçoivent souvent plusieurs profils pour un même poste. D'autres offres vous attendent.{% endblock %}

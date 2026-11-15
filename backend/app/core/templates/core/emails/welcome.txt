@@ -1,0 +1,5 @@
+{% extends "core/emails/base.txt" %}{% block content %}Bienvenue sur DevStreet, {{ first_name }} !
+
+Votre compte est prêt. DevStreet réunit les développeurs et les entreprises : montrez vos compétences, trouvez des missions, recrutez des talents et construisez des projets ensemble.
+
+Pour commencer, dites-nous ce que vous venez faire : développeur, entreprise ou les deux. Nous vous guiderons pour créer l'essentiel en deux minutes.{% endblock %}

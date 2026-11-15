@@ -5,7 +5,7 @@ Les autres routes sont couvertes par la limite par défaut (DEFAULT_THROTTLE_CLA
 
 Les taux sont des constantes de settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] (config/settings.py).
 """
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 
 class PasswordResetRequestThrottle(AnonRateThrottle):
@@ -71,3 +71,8 @@ class OAuthStartThrottle(AnonRateThrottle):
 class OAuthCallbackThrottle(AnonRateThrottle):
     """Callback OAuth (échange de code)."""
     scope = 'oauth_callback'
+
+
+class PasswordChangeCodeThrottle(UserRateThrottle):
+    """Envoi du code de changement de mot de passe (membre connecté), limité par utilisateur."""
+    scope = 'password_change_code'

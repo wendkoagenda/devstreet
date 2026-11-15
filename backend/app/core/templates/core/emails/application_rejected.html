@@ -1,0 +1,5 @@
+{% extends "core/emails/base.html" %}
+{% block title %}Merci pour votre candidature{% endblock %}
+{% block eyebrow %}<p class="ds-muted" style="margin:0 0 10px 0;font-size:11px;line-height:16px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#765F95;">Réponse à votre candidature</p>{% endblock %}
+{% block heading %}Merci pour votre candidature{% endblock %}
+{% block content %}<p style="margin:0 0 16px 0;">Bonjour {{ first_name }},</p><p style="margin:0 0 16px 0;"><strong>{{ company_name }}</strong> a étudié votre candidature à l'offre « {{ offer_title }} » et a décidé de ne pas y donner suite.</p><p style="margin:0 0 16px 0;">Ce n'est pas un jugement sur votre talent : les entreprises reçoivent souvent plusieurs profils pour un même poste. D'autres offres vous attendent, et un profil à jour vous rend plus visible des recruteurs.</p>{% endblock %}

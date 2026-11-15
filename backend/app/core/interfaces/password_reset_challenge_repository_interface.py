@@ -16,7 +16,9 @@ class PasswordResetChallengeRepositoryInterface(ABC):
     """
 
     @abstractmethod
-    def create(self, user: User, code_hash: str, expires_at: datetime) -> PasswordResetChallenge:
+    def create(
+        self, user: User, code_hash: str, expires_at: datetime, purpose: str = 'reset'
+    ) -> PasswordResetChallenge:
         """
         Create a new challenge.
 
@@ -41,7 +43,7 @@ class PasswordResetChallengeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def get_latest_created_at(self, user: User) -> Optional[datetime]:
+    def get_latest_created_at(self, user: User, purpose: str = 'reset') -> Optional[datetime]:
         """
         Get the creation date of the most recent challenge of a user.
 
@@ -54,7 +56,9 @@ class PasswordResetChallengeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def get_latest_open_for_user(self, user: User, lock: bool = False) -> Optional[PasswordResetChallenge]:
+    def get_latest_open_for_user(
+        self, user: User, lock: bool = False, purpose: str = 'reset'
+    ) -> Optional[PasswordResetChallenge]:
         """
         Get the most recent challenge whose code has not been consumed yet.
 
@@ -78,6 +82,13 @@ class PasswordResetChallengeRepositoryInterface(ABC):
 
         Returns:
             Optional[PasswordResetChallenge]: The challenge if any
+        """
+        pass
+
+    @abstractmethod
+    def mark_code_used(self, challenge: PasswordResetChallenge, now: datetime) -> None:
+        """
+        Consume the code of a challenge that has no token step (password change).
         """
         pass
 
@@ -125,7 +136,7 @@ class PasswordResetChallengeRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    def invalidate_open_for_user(self, user: User, now: datetime) -> int:
+    def invalidate_open_for_user(self, user: User, now: datetime, purpose: Optional[str] = 'reset') -> int:
         """
         Invalidate every challenge of the user whose token has not been consumed
         (code and token expire immediately).

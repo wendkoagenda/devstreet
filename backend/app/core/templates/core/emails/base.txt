@@ -1,0 +1,11 @@
+{% autoescape off %}{% block content %}{% endblock %}{% if cta_url %}
+
+{{ cta_label }} : {{ cta_url }}{% endif %}
+
+À bientôt,
+L'équipe {{ brand_name }}
+
+--
+{% block footer_note %}Vous recevez cet e-mail car vous avez un compte sur {{ brand_name }}.{% endblock %}
+{{ frontend_url }}
+{% endautoescape %}

@@ -1,0 +1,3 @@
+{% extends "core/emails/base.txt" %}{% block content %}Bonjour {{ first_name }},
+
+{{ other_name }}{% if other_headline %} ({{ other_headline }}){% endif %} et vous vous êtes choisis mutuellement dans le Réseau. C'est le bon moment pour faire connaissance.{% endblock %}

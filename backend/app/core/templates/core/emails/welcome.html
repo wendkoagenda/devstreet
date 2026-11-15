@@ -1,0 +1,5 @@
+{% extends "core/emails/base.html" %}
+{% block title %}Bienvenue sur DevStreet, {{ first_name }} !{% endblock %}
+{% block eyebrow %}<p class="ds-muted" style="margin:0 0 10px 0;font-size:11px;line-height:16px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#765F95;">Bienvenue</p>{% endblock %}
+{% block heading %}Bienvenue sur DevStreet, {{ first_name }} !{% endblock %}
+{% block content %}<p style="margin:0 0 16px 0;">Votre compte est prêt. DevStreet réunit les développeurs et les entreprises : montrez vos compétences, trouvez des missions, recrutez des talents et construisez des projets ensemble.</p><p style="margin:0 0 16px 0;">Pour commencer, dites-nous ce que vous venez faire : <strong>développeur</strong>, <strong>entreprise</strong> ou <strong>les deux</strong>. Nous vous guiderons pour créer l'essentiel en deux minutes.</p>{% endblock %}

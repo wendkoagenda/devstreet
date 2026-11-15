@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>{% block title %}{{ brand_name }}{% endblock %}</title>
+  <style>
+    body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; }
+    a { color: #5D487A; }
+    @media (max-width: 620px) {
+      .ds-container { width: 100% !important; }
+      .ds-pad { padding-left: 24px !important; padding-right: 24px !important; }
+      .ds-title { font-size: 22px !important; line-height: 30px !important; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .ds-bg { background-color: #141318 !important; }
+      .ds-card { background-color: #1F1D25 !important; border-color: #34313D !important; }
+      .ds-text { color: #EFEDF3 !important; }
+      .ds-muted { color: #A9A5B5 !important; }
+      .ds-soft { background-color: #2A2533 !important; border-color: #3D3549 !important; }
+      .ds-divider { border-color: #34313D !important; }
+    }
+  </style>
+</head>
+<body class="ds-bg" style="margin:0;padding:0;background-color:#F3F3F1;">
+  <!-- Aperçu affiché par la messagerie à côté de l'objet -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">
+    {% block preheader %}{{ preheader }}{% endblock %}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;
+  </div>
+
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="ds-bg" style="background-color:#F3F3F1;">
+    <tr>
+      <td align="center" style="padding:32px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" class="ds-container" style="width:600px;max-width:600px;">
+
+          <!-- En-tête : logo texte (lisible sans images) -->
+          <tr>
+            <td style="padding:0 8px 20px 8px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="background-color:#26252D;border-radius:10px;width:36px;height:36px;text-align:center;vertical-align:middle;font-family:'Courier New',Courier,monospace;font-size:15px;font-weight:bold;color:#FFFFFF;">&gt;_</td>
+                  <td class="ds-text" style="padding-left:10px;font-family:Poppins,'Segoe UI',Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;letter-spacing:-0.2px;color:#26252D;">{{ brand_name }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Carte de contenu -->
+          <tr>
+            <td class="ds-card" style="background-color:#FFFFFF;border:1px solid #E5E3EA;border-radius:16px;overflow:hidden;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td class="ds-pad" style="padding:36px 40px 12px 40px;font-family:Poppins,'Segoe UI',Helvetica,Arial,sans-serif;">
+                    {% block eyebrow %}{% if eyebrow %}<p class="ds-muted" style="margin:0 0 10px 0;font-size:11px;line-height:16px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#765F95;">{{ eyebrow }}</p>{% endif %}{% endblock %}
+                    <h1 class="ds-text ds-title" style="margin:0 0 20px 0;font-size:24px;line-height:32px;font-weight:700;letter-spacing:-0.3px;color:#26252D;">{% block heading %}{% endblock %}</h1>
+                    <div class="ds-text" style="font-size:15px;line-height:24px;color:#3A3843;">
+                      {% block content %}{% endblock %}
+                    </div>
+                  </td>
+                </tr>
+
+                {% if cta_url %}
+                <!-- Bouton d'action (compatible Outlook) -->
+                <tr>
+                  <td class="ds-pad" style="padding:12px 40px 8px 40px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td align="center" bgcolor="#765F95" style="border-radius:10px;background-color:#765F95;">
+                          <a href="{{ cta_url }}" target="_blank" style="display:inline-block;padding:13px 26px;font-family:Poppins,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;line-height:20px;color:#FFFFFF;text-decoration:none;border-radius:10px;">{{ cta_label }}&nbsp;&rarr;</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="ds-pad" style="padding:8px 40px 0 40px;font-family:Poppins,'Segoe UI',Helvetica,Arial,sans-serif;">
+                    <p class="ds-muted" style="margin:0;font-size:12px;line-height:18px;color:#656374;">Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :<br><a href="{{ cta_url }}" style="color:#5D487A;word-break:break-all;">{{ cta_url }}</a></p>
+                  </td>
+                </tr>
+                {% endif %}
+
+                {% block after_cta %}{% endblock %}
+
+                <tr>
+                  <td class="ds-pad" style="padding:28px 40px 36px 40px;font-family:Poppins,'Segoe UI',Helvetica,Arial,sans-serif;">
+                    <p class="ds-text" style="margin:0;font-size:15px;line-height:24px;color:#3A3843;">À bientôt,<br><strong>L'équipe {{ brand_name }}</strong></p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Pied de page -->
+          <tr>
+            <td class="ds-pad" style="padding:24px 40px 0 40px;font-family:Poppins,'Segoe UI',Helvetica,Arial,sans-serif;text-align:center;">
+              <p class="ds-muted" style="margin:0 0 6px 0;font-size:12px;line-height:18px;color:#656374;">{% block footer_note %}Vous recevez cet e-mail car vous avez un compte sur {{ brand_name }}.{% endblock %}</p>
+              <p class="ds-muted" style="margin:0;font-size:12px;line-height:18px;color:#656374;">&copy; {{ year }} {{ brand_name }} &middot; <a href="{{ frontend_url }}" style="color:#656374;text-decoration:underline;">{{ frontend_url }}</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

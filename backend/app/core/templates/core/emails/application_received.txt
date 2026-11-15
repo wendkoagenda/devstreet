@@ -1,0 +1,9 @@
+{% extends "core/emails/base.txt" %}{% block content %}Bonjour {{ first_name }},
+
+Une nouvelle candidature vient d'arriver pour une offre de votre entreprise.
+
+Candidat : {{ candidate_name }}{% if candidate_headline %} ({{ candidate_headline }}){% endif %}
+Offre : {{ offer_title }}{% if message_excerpt %}
+
+Son message :
+« {{ message_excerpt }} »{% endif %}{% endblock %}{% block footer_note %}Vous recevez cet e-mail car vous êtes membre de l'entreprise qui publie cette offre sur {{ brand_name }}.{% endblock %}

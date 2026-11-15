@@ -1,0 +1,6 @@
+{% extends "core/emails/base.html" %}
+{% block title %}Rejoignez {{ company_name }} sur DevStreet{% endblock %}
+{% block eyebrow %}<p class="ds-muted" style="margin:0 0 10px 0;font-size:11px;line-height:16px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#765F95;">Invitation</p>{% endblock %}
+{% block heading %}Rejoignez {{ company_name }} sur DevStreet{% endblock %}
+{% block content %}<p style="margin:0 0 16px 0;">Bonjour,</p><p style="margin:0 0 16px 0;"><strong>{{ inviter_name }}</strong> vous invite à rejoindre l'entreprise <strong>{{ company_name }}</strong> sur DevStreet pour publier des offres et recruter avec son équipe.</p><p class="ds-muted" style="margin:0 0 16px 0;font-size:13px;line-height:20px;color:#656374;">Ce lien est valable {{ validity_days }} jours et ne peut être utilisé qu'une seule fois. Vous n'attendiez pas cette invitation ? Ignorez simplement ce message.</p>{% endblock %}
+{% block footer_note %}Vous recevez cet e-mail car un membre de {{ company_name }} vous a invité sur {{ brand_name }}.{% endblock %}
