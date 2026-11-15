@@ -5,9 +5,11 @@ from django.db import models
 class AiConversation(models.Model):
     CONSUMER_HUB = "hub"
     CONSUMER_GENERIC = "generic"
+    CONSUMER_SELINA = "selina"
     CONSUMER_CHOICES = (
         (CONSUMER_HUB, "DevStreet Hub"),
         (CONSUMER_GENERIC, "Générique"),
+        (CONSUMER_SELINA, "Selina"),
     )
 
     user = models.ForeignKey(

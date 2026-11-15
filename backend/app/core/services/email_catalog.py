@@ -18,8 +18,6 @@ LOGIN_PATH = '/login'
 MY_APPLICATIONS_PATH = '/marketplace/applications'
 OFFERS_PATH = '/marketplace/offers'
 
-PROVIDER_LABELS = {'google': 'Google', 'github': 'GitHub'}
-
 
 def _when(moment: Optional[datetime]) -> str:
     """Date et heure lisibles en français avec le fuseau, ex. « 15 novembre 2026 à 10:42 (UTC) »."""
@@ -89,24 +87,6 @@ def password_changed(to_email: str, first_name: str, changed_at: Optional[dateti
             'preheader': "Si vous n'êtes pas à l'origine de ce changement, réagissez maintenant.",
             'cta_url': frontend_link(ACCOUNT_RECOVERY_PATH),
             'cta_label': "Ce n'était pas moi",
-        },
-    )
-
-
-def provider_linked(to_email: str, first_name: str, provider: str, linked_at: Optional[datetime] = None) -> EmailSpec:
-    """Alerte de sécurité : un compte Google ou GitHub a été lié au compte."""
-    label = PROVIDER_LABELS.get(provider, provider.capitalize())
-    return EmailSpec(
-        to_email=to_email,
-        subject=f"Un compte {label} a été lié à votre compte DevStreet",
-        template_name='provider_linked',
-        context={
-            'first_name': first_name,
-            'provider': label,
-            'linked_at': _when(linked_at),
-            'preheader': f"Vous pouvez désormais vous connecter avec {label}.",
-            'cta_url': frontend_link(ACCOUNT_RECOVERY_PATH),
-            'cta_label': "Sécuriser mon compte",
         },
     )
 

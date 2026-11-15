@@ -1,6 +1,7 @@
 import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Download, ExternalLink, Pencil, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export function DevProfileView({
   /** Sur mon propre profil : action du bouton « Mettre à jour » (par défaut, ouvre mon profil dev). */
   onEdit?: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   const { data: profil, isLoading, isError } = useGetPublicProfileQuery(profilId, {
     skip: !profilId,
   });
@@ -33,7 +35,7 @@ export function DevProfileView({
     try {
       await downloadCv(profil.id);
     } catch {
-      CreationErrorSonner("Impossible de télécharger le CV");
+      CreationErrorSonner(t("marketplace.network.download_cv_error"));
     } finally {
       setDownloading(false);
     }
@@ -43,9 +45,9 @@ export function DevProfileView({
   if (isError || !profil) {
     return (
       <div className="mx-auto w-full max-w-4xl rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-        Ce profil dev n'est pas visible : il n'est pas ouvert aux opportunités, ou vous n'avez pas encore de profil.{" "}
+        {t("marketplace.network.profile_hidden")}{" "}
         <Link to={MY_DEV_PROFILE_PATH} className="underline">
-          Mon profil dev
+          {t("marketplace.network.my_dev_profile")}
         </Link>
       </div>
     );
@@ -65,12 +67,17 @@ export function DevProfileView({
           <div className="flex min-w-0 flex-col gap-1">
             <CardTitle className="text-xl">{profil.name}</CardTitle>
             <span className="text-xs text-muted-foreground">
-              {[profil.headline, profil.city, countryName(profil.country)].filter(Boolean).join(" · ")}
+              {[profil.headline, profil.city, countryName(profil.country, i18n.language)]
+                .filter(Boolean)
+                .join(" · ")}
             </span>
             {profil.rating_avg !== null ? (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Star className="size-3.5" aria-hidden />
-                {profil.rating_avg} / 5 · {profil.reviews_count} avis
+                {t("marketplace.network.reviews_summary", {
+                  avg: profil.rating_avg,
+                  count: profil.reviews_count,
+                })}
               </span>
             ) : null}
           </div>
@@ -82,7 +89,9 @@ export function DevProfileView({
 
           {profil.experiences.length > 0 ? (
             <section id="dev-experiences" className="flex scroll-mt-4 flex-col gap-3">
-              <h2 className="text-sm font-semibold text-foreground">Expériences</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("marketplace.network.experiences")}
+              </h2>
               {profil.experiences.map((experience) => (
                 <div key={experience.id} className="flex flex-col gap-0.5 border-l-2 border-border pl-3">
                   <span className="text-sm font-medium text-foreground">
@@ -90,7 +99,9 @@ export function DevProfileView({
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {formatDate(experience.start_date)} –{" "}
-                    {experience.is_current || !experience.end_date ? "aujourd'hui" : formatDate(experience.end_date)}
+                    {experience.is_current || !experience.end_date
+                      ? t("marketplace.network.today")
+                      : formatDate(experience.end_date)}
                     {experience.location ? ` · ${experience.location}` : ""}
                   </span>
                   {experience.description ? (
@@ -105,13 +116,21 @@ export function DevProfileView({
 
           {(profil.prestations?.length ?? 0) > 0 ? (
             <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-foreground">Prestations</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("marketplace.network.services")}
+              </h2>
               {profil.prestations.map((prestation) => (
                 <div key={prestation.id} className="flex flex-col gap-0.5 border-l-2 border-border pl-3">
                   <span className="text-sm font-medium text-foreground">{prestation.title}</span>
                   <span className="text-xs text-muted-foreground">
-                    {Number(prestation.price).toLocaleString("fr-FR")} {prestation.currency} ·{" "}
-                    {prestation.delivery_days} jour(s) · {prestation.revisions} retouche(s)
+                    {t("marketplace.network.delivery_meta", {
+                      price: Number(prestation.price).toLocaleString(
+                        i18n.language.startsWith("fr") ? "fr-FR" : "en-US"
+                      ),
+                      currency: prestation.currency,
+                      days: prestation.delivery_days,
+                      revisions: prestation.revisions,
+                    })}
                   </span>
                   {prestation.description ? (
                     <span className="text-xs leading-relaxed text-muted-foreground">
@@ -125,7 +144,9 @@ export function DevProfileView({
 
           {profil.skills_detail.length > 0 ? (
             <section id="dev-skills" className="flex scroll-mt-4 flex-col gap-2">
-              <h2 className="text-sm font-semibold text-foreground">Compétences</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("marketplace.network.skills")}
+              </h2>
               {profil.skills_detail.map((skill) => (
                 <div key={skill.name} className="flex items-center gap-3 text-xs">
                   <span className="w-32 shrink-0 text-foreground">{skill.name}</span>
@@ -146,14 +167,18 @@ export function DevProfileView({
 
           {profil.languages.length > 0 ? (
             <section id="dev-languages" className="flex scroll-mt-4 flex-col gap-1">
-              <h2 className="text-sm font-semibold text-foreground">Langues</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("marketplace.network.languages")}
+              </h2>
               <p className="text-sm text-muted-foreground">{profil.languages.join(", ")}</p>
             </section>
           ) : null}
 
           {profil.reviews.length > 0 ? (
             <section id="dev-reviews" className="flex scroll-mt-4 flex-col gap-3">
-              <h2 className="text-sm font-semibold text-foreground">Avis</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                {t("marketplace.network.reviews")}
+              </h2>
               {profil.reviews.map((review) => (
                 <div key={`${review.author}-${review.created_at}`} className="flex flex-col gap-0.5">
                   <span className="text-xs font-medium text-foreground">
@@ -171,11 +196,15 @@ export function DevProfileView({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Contact et liens</CardTitle>
+          <CardTitle className="text-sm">{t("marketplace.network.contact_links")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline">{profil.years_of_experience} an(s) d'expérience</Badge>
+            <Badge variant="outline">
+              {t("marketplace.network.years_badge", {
+                count: profil.years_of_experience,
+              })}
+            </Badge>
           </div>
           {profil.is_self ? (
             // Mon propre profil : pas de « Contacter », mais un accès direct pour mettre à jour mes informations
@@ -183,30 +212,30 @@ export function DevProfileView({
               {onEdit ? (
                 <Button type="button" onClick={onEdit}>
                   <Pencil className="size-4" aria-hidden />
-                  Mettre à jour mon profil
+                  {t("marketplace.network.update_my_profile")}
                 </Button>
               ) : (
                 <Button asChild>
                   <Link to={MY_DEV_PROFILE_PATH}>
                     <Pencil className="size-4" aria-hidden />
-                    Mettre à jour mon profil
+                    {t("marketplace.network.update_my_profile")}
                   </Link>
                 </Button>
               )}
             </>
           ) : profil.email ? (
             <Button asChild>
-              <a href={`mailto:${profil.email}`}>Contacter</a>
+              <a href={`mailto:${profil.email}`}>{t("marketplace.network.contact")}</a>
             </Button>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Les coordonnées sont visibles après une candidature, une connexion ou l'ajout au vivier.
+              {t("marketplace.network.contact_locked")}
             </p>
           )}
           {profil.can_download_cv ? (
             <Button type="button" variant="outline" disabled={downloading} onClick={download}>
               <Download className="size-4" />
-              Télécharger le CV (PDF)
+              {t("marketplace.network.download_cv")}
             </Button>
           ) : null}
           {links.map((link) => (
@@ -222,7 +251,9 @@ export function DevProfileView({
             </a>
           ))}
           <span className="text-xs text-muted-foreground">
-            Membre depuis le {formatDate(profil.member_since)}
+            {t("marketplace.network.member_since", {
+              date: formatDate(profil.member_since),
+            })}
           </span>
         </CardContent>
       </Card>
@@ -232,6 +263,7 @@ export function DevProfileView({
 
 /** Ancienne fiche /marketplace/profiles/:id → onglet « Profil dev » de la page /profil/<nom>. */
 export default function ProfileViewPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { data: profil, isLoading, isError } = useGetPublicProfileQuery(Number(id), {
     skip: !id,
@@ -241,9 +273,9 @@ export default function ProfileViewPage() {
   if (isError || !profil?.username) {
     return (
       <div className="mx-auto w-full max-w-4xl rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-        Ce profil n'existe pas ou n'est pas visible.{" "}
+        {t("marketplace.network.profile_missing")}{" "}
         <Link to="/marketplace/offers" className="underline">
-          Retour
+          {t("marketplace.network.back")}
         </Link>
       </div>
     );

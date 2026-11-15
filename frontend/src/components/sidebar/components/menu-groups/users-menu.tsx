@@ -10,7 +10,7 @@ import {
 import { usePermissions } from "@/hooks/use-permissions";
 import { Icons } from "@/lib/constants/icons";
 import { cn } from "@/lib/utils";
-import { t } from "i18next";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const itemClass =
@@ -20,6 +20,7 @@ const sectionLabelClass =
   "mb-0.5 h-auto px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/80";
 
 export default function UsersMenu() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -49,7 +50,7 @@ export default function UsersMenu() {
       <Separator className="mx-3 bg-sidebar-border/70" />
       <SidebarGroup className="p-0 px-1">
         <SidebarGroupLabel className={sectionLabelClass}>
-          Administration
+          {t("sidebar.administration")}
         </SidebarGroupLabel>
         <SidebarMenu className="gap-0.5">
           {menuItems.map((item) => {
@@ -61,7 +62,7 @@ export default function UsersMenu() {
                 <SidebarMenuButton
                   isActive={isActive}
                   onClick={() => {
-                    navigate(item.url);
+                    navigate(item.url, { flushSync: true });
                     if (isMobile) setOpenMobile(false);
                   }}
                   tooltip={item.title}

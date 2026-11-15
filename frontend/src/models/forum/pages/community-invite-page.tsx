@@ -18,7 +18,7 @@ export default function CommunityInvitePage() {
   const handleJoin = async () => {
     try {
       await rejoindre(code).unwrap();
-      toast.success("Tu as rejoint la communauté");
+      toast.success("Vous avez rejoint la communauté");
       navigate(`/forum/communautes/${data?.espace_id}`);
     } catch {
       toast.error("Impossible de rejoindre via ce lien");

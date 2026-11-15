@@ -21,7 +21,7 @@ export function OnboardingReminder() {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-soft-border bg-brand-soft px-4 py-3 text-sm"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-soft-border bg-brand-soft px-4 py-2.5 text-sm"
     >
       <p className="text-foreground">
         Terminez la création de {missing.join(" et ")} pour profiter pleinement de DevStreet.

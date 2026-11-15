@@ -7,15 +7,19 @@ import {
   ImageIcon,
   Loader2,
   MessageCircle,
+  Sparkles,
   ThumbsUp,
   Video,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { buildMediaUrl } from "@/helpers/displayers/media-url-builder";
 import { cn } from "@/lib/utils";
+import { AI_CHAT } from "@/models/auth/permissions/constants";
+import { usePermissions } from "@/hooks/use-permissions";
 import { useAuthSlice } from "@/models/auth/slice";
 import {
   useAcceptTechnicalReplyMutation,
@@ -46,6 +50,7 @@ type PendingMedia = {
 };
 
 function CommentMedias({ medias }: { medias?: MediaCommentaire[] }) {
+  const { t } = useTranslation();
   if (!medias?.length) return null;
   return (
     <div className="mt-2 space-y-2">
@@ -72,11 +77,11 @@ function CommentMedias({ medias }: { medias?: MediaCommentaire[] }) {
             target="_blank"
             rel="noreferrer"
             className="block overflow-hidden rounded-xl bg-muted"
-            title="Ouvrir l'image"
+            title={t("forum.comments_open_image")}
           >
             <img
               src={src}
-              alt={media.texte_alternatif || "Image"}
+              alt={media.texte_alternatif || t("forum.comments_image")}
               className="max-h-72 w-full object-contain"
               loading="lazy"
             />
@@ -100,6 +105,11 @@ type CommentsSectionProps = {
   /** Chaîne avec commentaires fermés : lecture seule */
   commentsClosed?: boolean;
 };
+
+function isSelinaAuthor(comment: Commentaire): boolean {
+  const username = comment.auteur?.username?.trim().toLowerCase();
+  return username === "selina";
+}
 
 function CommentComposer({
   publicationId,
@@ -127,11 +137,15 @@ function CommentComposer({
   onCancel?: () => void;
   onSuccess?: () => void;
 }) {
+  const { t } = useTranslation();
+  const { hasPermission, isSuperAdmin } = usePermissions();
+  const canMentionSelina = isSuperAdmin || hasPermission(AI_CHAT);
   const [createComment, { isLoading: posting }] =
     useCreatePublicationCommentMutation();
   const [uploadMedia, { isLoading: uploading }] =
     useUploadForumMediaMutation();
   const [pendingMedias, setPendingMedias] = useState<PendingMedia[]>([]);
+  const [showSelinaSuggest, setShowSelinaSuggest] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -158,6 +172,7 @@ function CommentComposer({
 
   const { ref: texteRef, ...texteRegister } = register("texte");
   const estAnonyme = watch("est_anonyme");
+  const texteValue = watch("texte") || "";
 
   useEffect(() => {
     setValue("medias_data", pendingMedias, { shouldValidate: true });
@@ -165,6 +180,25 @@ function CommentComposer({
       clearErrors("texte");
     }
   }, [pendingMedias, setValue, clearErrors]);
+
+  useEffect(() => {
+    if (!canMentionSelina) {
+      setShowSelinaSuggest(false);
+      return;
+    }
+    const typingMention = /(^|\s)@s(e(l(i(n(a)?)?)?)?)?$/i.test(texteValue);
+    const alreadyComplete = /(^|\s)@selina\b/i.test(texteValue);
+    setShowSelinaSuggest(typingMention && !alreadyComplete);
+  }, [canMentionSelina, texteValue]);
+
+  const insertSelinaMention = () => {
+    const next = /(^|\s)@s(e(l(i(n(a)?)?)?)?)?$/i.test(texteValue)
+      ? texteValue.replace(/(^|\s)@s(e(l(i(n(a)?)?)?)?)?$/i, "$1@selina ")
+      : `${texteValue.trimEnd()} @selina `;
+    setValue("texte", next, { shouldValidate: true });
+    setShowSelinaSuggest(false);
+    textareaRef.current?.focus();
+  };
 
   useEffect(() => {
     if (autoFocus) {
@@ -177,7 +211,7 @@ function CommentComposer({
     kind: "IMAGE" | "VIDEO" | "AUDIO"
   ) => {
     if (pendingMedias.length >= 4) {
-      toast.error("Maximum 4 médias par commentaire");
+      toast.error(t("forum.comments_media_max"));
       return;
     }
     const maxBytes =
@@ -189,10 +223,10 @@ function CommentComposer({
     if (file.size > maxBytes) {
       toast.error(
         kind === "IMAGE"
-          ? "Image trop lourde (max 5 Mo)"
+          ? t("forum.comments_image_too_heavy")
           : kind === "VIDEO"
-            ? "Vidéo trop lourde (max 50 Mo)"
-            : "Audio trop lourd (max 15 Mo)"
+            ? t("forum.comments_video_too_heavy")
+            : t("forum.comments_audio_too_heavy")
       );
       return;
     }
@@ -208,7 +242,7 @@ function CommentComposer({
         },
       ]);
     } catch {
-      toast.error("Impossible de téléverser le média");
+      toast.error(t("forum.comments_upload_error"));
     }
   };
 
@@ -220,11 +254,11 @@ function CommentComposer({
       const optionId =
         showChoixSelect && values.option_id ? Number(values.option_id) : null;
       if (showChoixSelect && !optionId) {
-        toast.error("Indique sur quel choix porte ton commentaire");
+        toast.error(t("forum.comments_choice_required"));
         return;
       }
       if (!values.texte?.trim() && pendingMedias.length === 0) {
-        toast.error("Ajoute un texte ou un média");
+        toast.error(t("forum.comments_text_or_media"));
         return;
       }
       await createComment({
@@ -252,18 +286,27 @@ function CommentComposer({
       setPendingMedias([]);
       toast.success(
         parentId
-          ? "Réponse publiée"
+          ? t("forum.comments_reply_published")
           : anonymous
-            ? "Retour anonyme publié"
+            ? t("forum.comments_anon_feedback_published")
             : isTechnical
-              ? "Réponse technique publiée"
+              ? t("forum.comments_technical_published")
               : isAppFeedback
-                ? "Retour publié"
-                : "Commentaire publié"
+                ? t("forum.comments_feedback_published")
+                : t("forum.comments_published")
       );
       onSuccess?.();
-    } catch {
-      toast.error("Impossible de publier le commentaire");
+    } catch (error: unknown) {
+      const apiError =
+        error &&
+        typeof error === "object" &&
+        "data" in error &&
+        error.data &&
+        typeof error.data === "object" &&
+        "error" in error.data
+          ? String((error.data as { error: unknown }).error)
+          : null;
+      toast.error(apiError || t("forum.comments_publish_error"));
     }
   });
 
@@ -275,7 +318,7 @@ function CommentComposer({
             htmlFor={`comment-option-${publicationId}-${parentId ?? "root"}`}
             className="text-xs font-medium text-muted-foreground"
           >
-            Ce commentaire porte sur
+            {t("forum.comments_choice_label")}
           </label>
           <select
             id={`comment-option-${publicationId}-${parentId ?? "root"}`}
@@ -285,7 +328,7 @@ function CommentComposer({
                 value === "" || value == null ? null : Number(value),
             })}
           >
-            <option value="">Choisir une option…</option>
+            <option value="">{t("forum.comments_choice_placeholder")}</option>
             {choixOptions.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.libelle}
@@ -294,25 +337,50 @@ function CommentComposer({
           </select>
         </div>
       ) : null}
-      <Textarea
-        rows={technicalReply ? 4 : discussionOnly ? 2 : 2}
-        placeholder={
-          pendingMedias.some((media) => media.kind === "AUDIO")
-            ? "Texte optionnel avec le vocal…"
-            : placeholder
-        }
-        className={cn(
-          "resize-none",
-          technicalReply
-            ? "min-h-[96px] border-brand-soft-border bg-background font-mono text-sm"
-            : "min-h-[72px]"
-        )}
-        {...texteRegister}
-        ref={(element) => {
-          texteRef(element);
-          textareaRef.current = element;
-        }}
-      />
+      <div className="relative">
+        <Textarea
+          rows={technicalReply ? 4 : discussionOnly ? 2 : 2}
+          placeholder={
+            pendingMedias.some((media) => media.kind === "AUDIO")
+              ? t("forum.comments_placeholder_voice")
+              : placeholder
+          }
+          className={cn(
+            "resize-none",
+            technicalReply
+              ? "min-h-[96px] border-brand-soft-border bg-background font-mono text-sm"
+              : "min-h-[72px]"
+          )}
+          {...texteRegister}
+          onKeyDown={(event) => {
+            // Entrée publie ; Maj+Entrée = nouvelle ligne.
+            if (event.key !== "Enter" || event.shiftKey) return;
+            if (event.nativeEvent.isComposing) return;
+            event.preventDefault();
+            if (posting || uploading) return;
+            void onSubmit();
+          }}
+          ref={(element) => {
+            texteRef(element);
+            textareaRef.current = element;
+          }}
+        />
+        {showSelinaSuggest ? (
+          <button
+            type="button"
+            onClick={insertSelinaMention}
+            className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-md border border-brand-soft-border bg-brand-soft px-2 py-1 text-[11px] font-medium text-brand shadow-sm"
+          >
+            <Sparkles className="size-3" aria-hidden />
+            {t("selina.mention_suggest")}
+          </button>
+        ) : null}
+      </div>
+      {canMentionSelina && !technicalReply ? (
+        <p className="text-[11px] text-muted-foreground">
+          {t("selina.mention_hint")}
+        </p>
+      ) : null}
       {errors.texte ? (
         <p className="text-xs text-destructive">{errors.texte.message}</p>
       ) : null}
@@ -332,16 +400,16 @@ function CommentComposer({
                 />
               ) : media.kind === "VIDEO" ? (
                 <span className="text-xs font-medium text-muted-foreground">
-                  Vidéo
+                  {t("forum.comments_video")}
                 </span>
               ) : (
                 <span className="text-xs font-medium text-muted-foreground">
-                  Audio
+                  {t("forum.comments_audio")}
                 </span>
               )}
               <button
                 type="button"
-                aria-label="Retirer le média"
+                aria-label={t("forum.comments_remove_media")}
                 className="absolute right-1 top-1 rounded bg-background/90 p-0.5"
                 onClick={() =>
                   setPendingMedias((prev) =>
@@ -399,7 +467,7 @@ function CommentComposer({
                 ) : (
                   <ImageIcon className="h-3.5 w-3.5" />
                 )}
-                Image
+                {t("forum.comments_image")}
               </Button>
               <Button
                 type="button"
@@ -410,11 +478,11 @@ function CommentComposer({
                 onClick={() => videoInputRef.current?.click()}
               >
                 <Video className="h-3.5 w-3.5" />
-                Vidéo
+                {t("forum.comments_video")}
               </Button>
               <VoiceRecorderButton
                 disabled={uploading || pendingMedias.length >= 4}
-                confirmLabel="Joindre"
+                confirmLabel={t("forum.comments_attach")}
                 onRecorded={(payload) => {
                   setPendingMedias((prev) => [
                     ...prev,
@@ -425,13 +493,13 @@ function CommentComposer({
                       position: prev.length,
                     },
                   ]);
-                  toast.success("Vocal joint — tu peux publier sans texte");
+                  toast.success(t("forum.comments_voice_attached"));
                 }}
               />
             </>
           ) : (
             <span className="text-xs text-muted-foreground">
-              Discussion uniquement
+              {t("forum.comments_discussion_only")}
             </span>
           )}
           {allowAnonymous && !parentId ? (
@@ -441,9 +509,11 @@ function CommentComposer({
                 className="h-3.5 w-3.5 rounded border-input"
                 {...register("est_anonyme")}
               />
-              Anonyme
+              {t("forum.comments_anonymous")}
               {estAnonyme ? (
-                <span className="text-muted-foreground/80">(sans nom)</span>
+                <span className="text-muted-foreground/80">
+                  {t("forum.comments_anonymous_hint")}
+                </span>
               ) : null}
             </label>
           ) : null}
@@ -451,7 +521,7 @@ function CommentComposer({
         <div className="flex items-center gap-2">
           {onCancel ? (
             <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              Annuler
+              {t("forum.comments_cancel")}
             </Button>
           ) : null}
           <Button
@@ -465,12 +535,12 @@ function CommentComposer({
             }
           >
             {posting
-              ? "Envoi…"
+              ? t("forum.comments_sending")
               : technicalReply
-                ? "Proposer une solution"
+                ? t("forum.comments_propose")
                 : discussionOnly
-                  ? "Commenter"
-                  : "Publier"}
+                  ? t("forum.comments_comment")
+                  : t("forum.comments_publish")}
           </Button>
         </div>
       </div>
@@ -501,15 +571,21 @@ function CommentItem({
   acceptedReplyId?: number | null;
   commentsClosed?: boolean;
 }) {
+  const { t } = useTranslation();
   const [toggleLike, { isLoading }] = useToggleCommentLikeMutation();
   const [toggleAide, { isLoading: confirming }] =
     useToggleConfirmationAideMutation();
   const [acceptReply, { isLoading: accepting }] =
     useAcceptTechnicalReplyMutation();
 
+  const isSelina = isSelinaAuthor(comment);
   const author = comment.est_anonyme
-    ? "Anonyme"
-    : comment.auteur?.full_name || comment.auteur?.username || "Membre";
+    ? t("forum.comments_anonymous")
+    : isSelina
+      ? "Selina"
+      : comment.auteur?.full_name ||
+        comment.auteur?.username ||
+        t("forum.member_fallback");
   const isReplying = replyTo === comment.id;
   const isTechnical = comment.nature === "REPONSE_TECHNIQUE";
   const isAccepted = acceptedReplyId === comment.id;
@@ -521,7 +597,7 @@ function CommentItem({
         publicationId,
       }).unwrap();
     } catch {
-      toast.error("Impossible de liker ce commentaire");
+      toast.error(t("forum.comments_like_error"));
     }
   };
 
@@ -532,7 +608,7 @@ function CommentItem({
         publicationId,
       }).unwrap();
     } catch {
-      toast.error("Impossible de confirmer l'aide");
+      toast.error(t("forum.comments_help_error"));
     }
   };
 
@@ -543,10 +619,12 @@ function CommentItem({
         commentaireId: isAccepted ? null : comment.id,
       }).unwrap();
       toast.success(
-        isAccepted ? "Réponse acceptée retirée" : "Réponse acceptée"
+        isAccepted
+          ? t("forum.comments_accepted_removed")
+          : t("forum.comments_accepted")
       );
     } catch {
-      toast.error("Impossible de mettre à jour la réponse acceptée");
+      toast.error(t("forum.comments_accept_error"));
     }
   };
 
@@ -564,33 +642,45 @@ function CommentItem({
           <div
             className={cn(
               "rounded-xl px-3 py-2",
-              isTechnical
-                ? "border border-brand-soft-border bg-background"
-                : "bg-muted/50",
+              isSelina
+                ? "border border-brand-soft-border bg-brand-soft/60"
+                : isTechnical
+                  ? "border border-brand-soft-border bg-background"
+                  : "bg-muted/50",
               isAccepted && "border-brand bg-brand-soft/50 ring-1 ring-brand/20"
             )}
           >
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-semibold text-foreground">{author}</p>
+              {isSelina ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-brand-soft-border bg-card px-2 py-0.5 text-[10px] font-semibold text-brand">
+                  <Sparkles className="h-3 w-3" aria-hidden />
+                  {t("selina.mention_badge")}
+                </span>
+              ) : null}
               {isTechnical ? (
                 <span className="rounded-full border border-brand-soft-border bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-brand">
-                  Réponse technique
+                  {t("forum.comments_technical_badge")}
                 </span>
               ) : null}
               {comment.est_anonyme || comment.nature === "RETOUR_APP" ? (
                 <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  {comment.est_anonyme ? "Retour anonyme" : "Retour app"}
+                  {comment.est_anonyme
+                    ? t("forum.comments_anon_feedback_badge")
+                    : t("forum.comments_app_feedback_badge")}
                 </span>
               ) : null}
               {isAccepted ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-brand-soft-border bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand-strong">
                   <BadgeCheck className="h-3 w-3" />
-                  Acceptée
+                  {t("forum.comments_accepted_badge")}
                 </span>
               ) : null}
               {comment.option_libelle ? (
                 <span className="rounded-full border border-brand-soft-border bg-brand-soft/50 px-2 py-0.5 text-[10px] font-medium text-brand-strong">
-                  Sur : {comment.option_libelle}
+                  {t("forum.comments_on_option", {
+                    label: comment.option_libelle,
+                  })}
                 </span>
               ) : null}
             </div>
@@ -607,37 +697,43 @@ function CommentItem({
             <CommentMedias medias={comment.medias} />
           </div>
           <div className="flex flex-wrap items-center gap-3 pl-1 text-xs text-muted-foreground">
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={handleLike}
-              aria-label={comment.liked_by_me ? "Retirer le like" : "Liker"}
-              aria-pressed={comment.liked_by_me}
-              className={cn(
-                "inline-flex items-center gap-1 hover:text-foreground",
-                comment.liked_by_me && "text-destructive"
-              )}
-            >
-              <Heart
+            {!isSelina ? (
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={handleLike}
+                aria-label={
+                  comment.liked_by_me
+                    ? t("forum.comments_unlike")
+                    : t("forum.comments_like")
+                }
+                aria-pressed={comment.liked_by_me}
                 className={cn(
-                  "h-3.5 w-3.5",
-                  comment.liked_by_me && "fill-current"
+                  "inline-flex items-center gap-1 hover:text-foreground",
+                  comment.liked_by_me && "text-destructive"
                 )}
-              />
-              {comment.likes_count}
-            </button>
-            {!commentsClosed ? (
+              >
+                <Heart
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    comment.liked_by_me && "fill-current"
+                  )}
+                />
+                {comment.likes_count}
+              </button>
+            ) : null}
+            {!commentsClosed && !isSelina ? (
               <button
                 type="button"
                 onClick={() => onReply(comment.id)}
-                aria-label={`Répondre à ${author}`}
+                aria-label={t("forum.comments_reply_to", { name: author })}
                 aria-expanded={isReplying}
                 className={cn(
                   "hover:text-foreground",
                   isReplying && "font-medium text-foreground"
                 )}
               >
-                Répondre
+                {t("forum.comments_reply")}
               </button>
             ) : null}
             {isEntraide && isTechnical ? (
@@ -647,8 +743,8 @@ function CommentItem({
                 onClick={handleToggleAide}
                 aria-label={
                   comment.confirmed_by_me
-                    ? "Retirer « Ça m'a aidé aussi »"
-                    : "Ça m'a aidé aussi"
+                    ? t("forum.comments_helped_undo")
+                    : t("forum.comments_helped")
                 }
                 aria-pressed={comment.confirmed_by_me}
                 className={cn(
@@ -662,7 +758,7 @@ function CommentItem({
                     comment.confirmed_by_me && "fill-current"
                   )}
                 />
-                Ça m&apos;a aidé aussi
+                {t("forum.comments_helped")}
                 {(comment.confirmations_count ?? 0) > 0
                   ? ` · ${comment.confirmations_count}`
                   : ""}
@@ -675,7 +771,9 @@ function CommentItem({
                 onClick={handleAccept}
                 className="hover:text-foreground"
               >
-                {isAccepted ? "Retirer l'acceptation" : "Accepter"}
+                {isAccepted
+                  ? t("forum.comments_unaccept")
+                  : t("forum.comments_accept")}
               </button>
             ) : null}
           </div>
@@ -685,7 +783,9 @@ function CommentItem({
               <CommentComposer
                 publicationId={publicationId}
                 parentId={threadRootId}
-                placeholder={`Répondre à ${author}…`}
+                placeholder={t("forum.comments_reply_placeholder", {
+                  name: author,
+                })}
                 autoFocus
                 onCancel={onCancelReply}
                 onSuccess={onCancelReply}
@@ -728,6 +828,7 @@ export function CommentsSection({
   defaultOptionId = null,
   commentsClosed = false,
 }: CommentsSectionProps) {
+  const { t } = useTranslation();
   const currentUserId = useAuthSlice((state) => state.user?.id);
   const { data, isLoading, isError, refetch } =
     useGetPublicationCommentsQuery(publicationId);
@@ -752,38 +853,36 @@ export function CommentsSection({
           <div className="flex items-center gap-2">
             <BadgeCheck className="h-4 w-4 text-brand" />
             <h2 className="text-base font-semibold text-foreground">
-              Réponses techniques
+              {t("forum.comments_technical_title")}
             </h2>
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Une seule zone : propose une solution. Pour discuter d&apos;une
-            proposition, utilise « Répondre » sous celle-ci. L&apos;auteur peut
-            retenir une réponse officielle.
+            {t("forum.comments_technical_hint")}
           </p>
         </div>
 
         {commentsClosed ? (
           <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-            Les réponses sont fermées sur cette chaîne.
+            {t("forum.comments_replies_closed")}
           </p>
         ) : (
           <CommentComposer
             publicationId={publicationId}
-            placeholder="Propose une solution (texte ou code)…"
+            placeholder={t("forum.comments_placeholder_technical")}
             technicalReply
           />
         )}
 
         {isLoading ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            Chargement…
+            {t("forum.loading")}
           </p>
         ) : null}
 
         {isError ? (
           <div className="space-y-2 py-4 text-center">
             <p className="text-sm text-destructive">
-              Impossible de charger les réponses.
+              {t("forum.comments_replies_load_error")}
             </p>
             <Button
               type="button"
@@ -791,14 +890,14 @@ export function CommentsSection({
               size="sm"
               onClick={() => refetch()}
             >
-              Réessayer
+              {t("forum.comments_retry")}
             </Button>
           </div>
         ) : null}
 
         {!isLoading && !isError && technicalReplies.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            Aucune réponse technique pour le moment.
+            {t("forum.comments_technical_empty")}
           </p>
         ) : null}
 
@@ -828,23 +927,25 @@ export function CommentsSection({
       <div className="flex items-center gap-2">
         <MessageCircle className="h-4 w-4 text-muted-foreground" />
         <h2 className="text-base font-semibold text-foreground">
-          {allowAnonymousFeedback ? "Retours" : "Commentaires"}
+          {allowAnonymousFeedback
+            ? t("forum.comments_feedback_title")
+            : t("forum.comments_title")}
         </h2>
       </div>
 
       {commentsClosed ? (
         <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          Les commentaires sont fermés sur cette chaîne. Tu peux toujours liker.
+          {t("forum.comments_closed_channel")}
         </p>
       ) : (
         <CommentComposer
           publicationId={publicationId}
           placeholder={
             allowAnonymousFeedback
-              ? "Laisser un retour sur l'application…"
+              ? t("forum.comments_placeholder_feedback")
               : isChoix
-                ? "Commenter un choix…"
-                : "Ajouter un commentaire…"
+                ? t("forum.comments_placeholder_choice")
+                : t("forum.comments_placeholder")
           }
           allowAnonymous={allowAnonymousFeedback}
           choixOptions={isChoix ? choixOptions : []}
@@ -854,14 +955,14 @@ export function CommentsSection({
 
       {isLoading ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
-          Chargement des commentaires…
+          {t("forum.comments_loading")}
         </p>
       ) : null}
 
       {isError ? (
         <div className="space-y-2 py-6 text-center">
           <p className="text-sm text-destructive">
-            Impossible de charger les commentaires.
+            {t("forum.comments_load_error")}
           </p>
           <Button
             type="button"
@@ -869,7 +970,7 @@ export function CommentsSection({
             size="sm"
             onClick={() => refetch()}
           >
-            Réessayer
+            {t("forum.comments_retry")}
           </Button>
         </div>
       ) : null}
@@ -877,8 +978,8 @@ export function CommentsSection({
       {!isLoading && !isError && rootComments.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
           {allowAnonymousFeedback
-            ? "Aucun retour pour le moment."
-            : "Aucun commentaire pour le moment."}
+            ? t("forum.comments_feedback_empty")
+            : t("forum.comments_empty")}
         </p>
       ) : null}
 

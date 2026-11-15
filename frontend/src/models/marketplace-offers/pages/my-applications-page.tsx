@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,19 +7,33 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicationsStatsStrip } from "@/models/marketplace-stats/components/page-stats";
 import { RequireProfil } from "@/models/marketplace-space/components/guards";
 import { useGetMyCandidaturesQuery } from "../api";
-import { CANDIDATURE_STATUS_LABELS, formatDate } from "../labels";
-import type { Candidature } from "../schema";
+import { formatDate } from "../labels";
+import type { Candidature, CandidatureStatus } from "../schema";
 
 type Step = { label: string; date: string; state: "done" | "final" | "refused" };
 
+function statusLabel(
+  t: (key: string) => string,
+  status: CandidatureStatus
+): string {
+  return t(`marketplace.labels.candidature_status.${status}`);
+}
+
 /** Étapes connues d'une candidature : envoi, puis la dernière décision de l'entreprise. */
-function stepsOf(candidature: Candidature): Step[] {
+function stepsOf(
+  candidature: Candidature,
+  t: (key: string) => string
+): Step[] {
   const steps: Step[] = [
-    { label: CANDIDATURE_STATUS_LABELS.sent, date: formatDate(candidature.created_at), state: "done" },
+    {
+      label: statusLabel(t, "sent"),
+      date: formatDate(candidature.created_at),
+      state: "done",
+    },
   ];
   if (candidature.status !== "sent") {
     steps.push({
-      label: CANDIDATURE_STATUS_LABELS[candidature.status],
+      label: statusLabel(t, candidature.status),
       date: formatDate(candidature.decided_at),
       state:
         candidature.status === "accepted"
@@ -32,6 +47,7 @@ function stepsOf(candidature: Candidature): Step[] {
 }
 
 function ApplicationCard({ candidature }: { candidature: Candidature }) {
+  const { t } = useTranslation();
   const offer = candidature.offer;
   return (
     <Card>
@@ -42,14 +58,14 @@ function ApplicationCard({ candidature }: { candidature: Candidature }) {
               {offer.title}
             </Link>
           ) : (
-            "Offre"
+            t("marketplace.offer_fallback")
           )}
         </CardTitle>
         <span className="text-xs text-muted-foreground">{offer?.company.name}</span>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <ol className="flex flex-col gap-3">
-          {stepsOf(candidature).map((step) => (
+          {stepsOf(candidature, t).map((step) => (
             <li key={step.label} className="flex items-start gap-3">
               <span
                 className={`flex size-6 shrink-0 items-center justify-center rounded-full ${
@@ -72,9 +88,11 @@ function ApplicationCard({ candidature }: { candidature: Candidature }) {
         </ol>
         {candidature.status === "accepted" ? (
           <p className="rounded-lg border border-border bg-muted/40 p-3 text-xs leading-relaxed text-foreground">
-            {offer?.company.name} vous a choisi. La mission est ajoutée à votre{" "}
+            {t("marketplace.accepted_notice", {
+              company: offer?.company.name ?? "",
+            })}{" "}
             <Link to="/marketplace/availability" className="underline">
-              calendrier de disponibilité
+              {t("marketplace.availability_calendar")}
             </Link>
             .
           </p>
@@ -85,30 +103,35 @@ function ApplicationCard({ candidature }: { candidature: Candidature }) {
 }
 
 function MyApplicationsContent() {
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useGetMyCandidaturesQuery();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <ApplicationsStatsStrip />
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-foreground">Suivi de mes candidatures</h1>
+        <h1 className="text-xl font-semibold text-foreground">
+          {t("marketplace.my_applications")}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          L'état de chaque candidature envoyée, mis à jour par les entreprises.
+          {t("marketplace.my_applications_sub")}
         </p>
       </div>
       {isLoading ? (
         <Skeleton className="h-40 w-full" />
       ) : isError ? (
         <p className="rounded-lg border border-destructive/40 bg-card p-6 text-sm text-destructive">
-          Impossible de charger vos candidatures.
+          {t("marketplace.load_applications_error")}
         </p>
       ) : data && data.length > 0 ? (
-        data.map((candidature) => <ApplicationCard key={candidature.id} candidature={candidature} />)
+        data.map((candidature) => (
+          <ApplicationCard key={candidature.id} candidature={candidature} />
+        ))
       ) : (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-input bg-card p-8 text-center text-sm text-muted-foreground">
-          Vous n'avez encore postulé à aucune offre.
+          {t("marketplace.empty_applications")}
           <Button asChild>
-            <Link to="/marketplace/offers">Voir les offres pour moi</Link>
+            <Link to="/marketplace/offers">{t("marketplace.see_offers_for_me")}</Link>
           </Button>
         </div>
       )}

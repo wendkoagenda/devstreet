@@ -57,6 +57,18 @@ server {
         add_header Content-Security-Policy "default-src 'none'; sandbox" always;
     }
 
+    # Socket.IO (messagerie temps réel) — WebSocket + polling vers le backend ASGI
+    location /socket.io/ {
+        proxy_pass $backend_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 86400s;
+    }
+
     location / {
         proxy_pass $frontend_upstream;
     }

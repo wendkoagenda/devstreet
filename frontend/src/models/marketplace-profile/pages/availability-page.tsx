@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ function firstOfMonth(date: Date) {
 }
 
 function AvailabilityContent() {
+  const { t } = useTranslation();
   const { data, isLoading } = useGetMyAvailabilitiesQuery();
   const [remove] = useDeleteAvailabilityMutation();
   const [month, setMonth] = useState(() => firstOfMonth(new Date()));
@@ -29,9 +31,9 @@ function AvailabilityContent() {
   const onDelete = async (period: Availability) => {
     try {
       await remove(period.id).unwrap();
-      CreationSuccessSonner("Période supprimée");
+      CreationSuccessSonner(t("marketplace.availability.deleted"));
     } catch {
-      CreationErrorSonner("Impossible de supprimer cette période");
+      CreationErrorSonner(t("marketplace.availability.delete_error"));
     }
   };
 
@@ -39,11 +41,11 @@ function AvailabilityContent() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       <AvailabilityStatsStrip />
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-foreground">Mes disponibilités</h1>
+        <h1 className="text-xl font-semibold text-foreground">
+          {t("marketplace.availability.title")}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Sans période, vous êtes disponible : ajoutez seulement vos plages occupées (mission, congé, charge
-          partielle). Votre calendrier alimente le score des offres, et une candidature acceptée ajoute
-          automatiquement la mission en « occupé ».
+          {t("marketplace.availability.sub")}
         </p>
       </div>
 
@@ -62,10 +64,10 @@ function AvailabilityContent() {
           <CardHeader>
             <CardTitle className="text-sm">
               {editing === "new"
-                ? "Ajouter une période"
+                ? t("marketplace.availability.add_period")
                 : editing
-                  ? "Modifier la période"
-                  : "Mes périodes"}
+                  ? t("marketplace.availability.edit_period")
+                  : t("marketplace.availability.my_periods")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
@@ -78,7 +80,9 @@ function AvailabilityContent() {
             ) : (
               <>
                 {periods.length === 0 && !isLoading ? (
-                  <p className="text-sm text-muted-foreground">Aucune période renseignée.</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("marketplace.availability.empty_periods")}
+                  </p>
                 ) : null}
                 {periods.map((period) => (
                   <div
@@ -91,12 +95,16 @@ function AvailabilityContent() {
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {AVAILABILITY_LABELS[period.status]}
-                        {period.hours_per_week ? ` · ${period.hours_per_week} h / semaine` : ""}
+                        {period.hours_per_week
+                          ? ` · ${t("marketplace.availability.hours_week", {
+                              count: period.hours_per_week,
+                            })}`
+                          : ""}
                         {period.note ? ` · ${period.note}` : ""}
                       </span>
                       {period.source === "mission" ? (
                         <Badge variant="secondary" className="mt-1 w-fit">
-                          Ajoutée par une mission
+                          {t("marketplace.availability.from_mission")}
                         </Badge>
                       ) : null}
                     </div>
@@ -106,7 +114,7 @@ function AvailabilityContent() {
                           type="button"
                           size="icon"
                           variant="ghost"
-                          aria-label="Modifier la période"
+                          aria-label={t("marketplace.availability.edit_aria")}
                           onClick={() => setEditing(period)}
                         >
                           <Pencil className="size-4" />
@@ -115,7 +123,7 @@ function AvailabilityContent() {
                           type="button"
                           size="icon"
                           variant="ghost"
-                          aria-label="Supprimer la période"
+                          aria-label={t("marketplace.availability.delete_aria")}
                           onClick={() => onDelete(period)}
                         >
                           <Trash2 className="size-4" />
@@ -125,7 +133,7 @@ function AvailabilityContent() {
                   </div>
                 ))}
                 <Button type="button" variant="outline" onClick={() => setEditing("new")}>
-                  Ajouter une période
+                  {t("marketplace.availability.add_period")}
                 </Button>
               </>
             )}

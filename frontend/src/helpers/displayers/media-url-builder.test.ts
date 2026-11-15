@@ -43,6 +43,27 @@ describe("media-url-builder : plus de serveur codé en dur", () => {
     expect(buildMediaUrl("https://autre.exemple.fr/x.png")).toBe("https://autre.exemple.fr/x.png");
   });
 
+  it("réécrit /media/… en /api/v1/files/… quand S3 est actif (fichiers absents du disque nginx)", () => {
+    mockConfig.storage.use_s3 = true;
+    expect(buildMediaUrl("/media/profile_photos/a.png")).toBe(
+      "https://api.exemple.fr/api/v1/files/profile_photos/a.png",
+    );
+  });
+
+  it("réécrit une URL absolue historique https://…/media/… quand S3 est actif (forum/messagerie)", () => {
+    mockConfig.storage.use_s3 = true;
+    expect(
+      buildMediaUrl("https://api.exemple.fr/media/forum_images/photo.png"),
+    ).toBe("https://api.exemple.fr/api/v1/files/forum_images/photo.png");
+  });
+
+  it("laisse une URL absolue d'un autre domaine inchangée même si S3 est actif", () => {
+    mockConfig.storage.use_s3 = true;
+    expect(buildMediaUrl("https://cdn.autre.fr/media/x.png")).toBe(
+      "https://cdn.autre.fr/media/x.png",
+    );
+  });
+
   it("extrait le chemin (encodé) d'une URL /api/v1/files/ ou /media/", () => {
     expect(extractFilePathFromUrl("https://api.exemple.fr/api/v1/files/a/ma%20photo.png")).toBe("a/ma%20photo.png");
     expect(extractFilePathFromUrl("/media/a/b.png")).toBe("a/b.png");

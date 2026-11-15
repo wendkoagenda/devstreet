@@ -35,9 +35,18 @@ class AiConversationSerializer(serializers.ModelSerializer):
 
 class AiConversationCreateSerializer(serializers.Serializer):
     consumer = serializers.ChoiceField(
-        choices=("hub", "generic"), default="generic", required=False
+        choices=("hub", "generic", "selina"), default="generic", required=False
     )
     title = serializers.CharField(max_length=180, required=False, allow_blank=True)
+
+
+class AiConversationListSerializer(serializers.ModelSerializer):
+    """Liste légère sans messages (historique Selina / Récents)."""
+
+    class Meta:
+        model = AiConversation
+        fields = ("id", "consumer", "title", "created_at", "updated_at")
+        read_only_fields = fields
 
 
 class AiMessageCreateSerializer(serializers.Serializer):

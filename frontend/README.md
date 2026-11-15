@@ -20,6 +20,16 @@ npm run dev    # :5173
 
 Sans fichier `.env`, l'application refuse de démarrer (variables Vite obligatoires).
 
+## Ajouter un composant UI (shadcn/ui)
+
+L'outil `shadcn` n'est plus une dépendance du projet (il installait des paquets vulnérables). On l'appelle à la demande, dans la version compatible avec Tailwind 3 et `components.json` :
+
+```bash
+npx shadcn@2.10.0 add <composant>   # ex. npx shadcn@2.10.0 add tabs
+```
+
+Les fichiers générés arrivent dans `src/components/ui/`.
+
 ## Variables d'environnement
 
 Modèle : [`frontend/.env.example`](.env.example).

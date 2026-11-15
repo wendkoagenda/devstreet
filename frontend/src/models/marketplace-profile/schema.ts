@@ -1,6 +1,14 @@
+import i18n from "i18next";
 import { z } from "zod";
 
 export type AvailabilityStatus = "available" | "partial" | "busy" | "leave";
+
+const AVAILABILITY_STATUSES = [
+  "available",
+  "partial",
+  "busy",
+  "leave",
+] as const satisfies readonly AvailabilityStatus[];
 
 export type Availability = {
   id: number;
@@ -46,12 +54,16 @@ export const availabilityFormSchema = z
 
 export type AvailabilityFormValues = z.infer<typeof availabilityFormSchema>;
 
-export const AVAILABILITY_LABELS: Record<AvailabilityStatus, string> = {
-  available: "Disponible",
-  partial: "Partiellement occupé",
-  busy: "Occupé",
-  leave: "Congé",
-};
+/** Libellés résolus à la lecture (suivent la langue i18n courante). */
+export const AVAILABILITY_LABELS: Record<AvailabilityStatus, string> = new Proxy(
+  {} as Record<AvailabilityStatus, string>,
+  {
+    get: (_target, prop: string) =>
+      i18n.t(`marketplace.labels.availability_status.${prop}`),
+    ownKeys: () => [...AVAILABILITY_STATUSES],
+    getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }),
+  }
+);
 
 export function availabilityToForm(row: Availability | null): AvailabilityFormValues {
   return {

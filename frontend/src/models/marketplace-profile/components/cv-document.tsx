@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { PublicProfile } from "@/models/marketplace-network/schema";
 import { FONT_OPTIONS, type CvPalette, type CvSection, type CvSettings } from "../cv-settings";
@@ -21,17 +22,8 @@ const MAX_SKILLS = 14;
 
 const FONT_SCALE: Record<CvSettings["font"], number> = { sans: 1, serif: 1.06, mono: 0.92 };
 const DENSITY_SCALE: Record<CvSettings["density"], number> = { compact: 0.9, standard: 1, airy: 1.14 };
-const LEVEL_LABELS: Record<number, string> = {
-  1: "Notions",
-  2: "Débutant",
-  3: "Intermédiaire",
-  4: "Avancé",
-  5: "Expert",
-};
 
 const shortLink = (url: string) => url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-const month = (value: string) =>
-  new Date(value).toLocaleDateString("fr-FR", { month: "short", year: "numeric" });
 const initialsOf = (name: string) =>
   name
     .split(/\s+/)
@@ -49,6 +41,10 @@ type CvDocumentProps = {
 };
 
 export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDocumentProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language?.startsWith("en") ? "en-GB" : "fr-FR";
+  const month = (value: string) =>
+    new Date(value).toLocaleDateString(locale, { month: "short", year: "numeric" });
   const fontScale = FONT_SCALE[settings.font];
   const density = DENSITY_SCALE[settings.density];
   const fontClass = FONT_OPTIONS.find((option) => option.value === settings.font)?.className;
@@ -138,7 +134,7 @@ export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDo
 
       {show("contact") && (contactLines.length > 0 || links.length > 0) ? (
         <>
-          {sideHeading("CONTACT")}
+          {sideHeading(t("marketplace.cv.doc_contact"))}
           {[...contactLines, ...links.map(shortLink)].map((line) => (
             <p key={line} className="break-words" style={text(8.8, 12.5, { color: side.text, marginBottom: 2 })}>
               {line}
@@ -149,16 +145,23 @@ export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDo
 
       {show("skills") && skills.length > 0 ? (
         <>
-          {sideHeading("COMPÉTENCES")}
+          {sideHeading(t("marketplace.cv.doc_skills"))}
           {skills.map((skill) => (
-            <SkillLine key={skill.name} style={settings.skills} name={skill.name} level={skill.level} palette={palette} text={text} />
+            <SkillLine
+              key={skill.name}
+              style={settings.skills}
+              name={skill.name}
+              level={skill.level}
+              palette={palette}
+              text={text}
+            />
           ))}
         </>
       ) : null}
 
       {show("languages") && profile.languages.length > 0 ? (
         <>
-          {sideHeading("LANGUES")}
+          {sideHeading(t("marketplace.cv.doc_languages"))}
           {profile.languages.map((language) => (
             <p key={language} style={text(8.8, 12.5, { color: side.text })}>
               {language}
@@ -169,16 +172,20 @@ export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDo
 
       {profile.years_of_experience ? (
         <>
-          {sideHeading("EXPÉRIENCE")}
-          <p style={text(8.8, 12.5, { color: side.text })}>{profile.years_of_experience} an(s)</p>
+          {sideHeading(t("marketplace.cv.doc_experience"))}
+          <p style={text(8.8, 12.5, { color: side.text })}>
+            {t("marketplace.cv.doc_years", { count: profile.years_of_experience })}
+          </p>
         </>
       ) : null}
 
       {show("reputation") && profile.rating_avg !== null ? (
         <>
-          {sideHeading("RÉPUTATION")}
+          {sideHeading(t("marketplace.cv.doc_reputation"))}
           <p style={text(8.8, 12.5, { color: side.text })}>{profile.rating_avg} / 5</p>
-          <p style={text(8.2, 11.5, { color: side.muted })}>{profile.reviews_count} avis publics</p>
+          <p style={text(8.2, 11.5, { color: side.muted })}>
+            {t("marketplace.cv.doc_public_reviews", { count: profile.reviews_count })}
+          </p>
         </>
       ) : null}
     </div>
@@ -196,7 +203,7 @@ export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDo
 
       {show("bio") && profile.bio ? (
         <>
-          {mainHeading("Profil")}
+          {mainHeading(t("marketplace.cv.doc_profile"))}
           <p className="whitespace-pre-line" style={text(9.8, 14, { color: palette.ink })}>
             {profile.bio}
           </p>
@@ -205,7 +212,7 @@ export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDo
 
       {show("experiences") && profile.experiences.length > 0 ? (
         <>
-          {mainHeading("Expériences")}
+          {mainHeading(t("marketplace.cv.doc_experiences"))}
           {profile.experiences.map((experience) => (
             <div key={experience.id} style={{ marginTop: 7 }}>
               <div className="flex items-start justify-between gap-3">
@@ -215,7 +222,9 @@ export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDo
                 </div>
                 <p className="shrink-0 text-right" style={text(8.8, 12, { color: palette.muted, width: 3.3 * CM })}>
                   {month(experience.start_date)} –{" "}
-                  {experience.is_current || !experience.end_date ? "aujourd'hui" : month(experience.end_date)}
+                  {experience.is_current || !experience.end_date
+                    ? t("marketplace.cv.doc_today")
+                    : month(experience.end_date)}
                 </p>
               </div>
               {experience.location ? (
@@ -227,7 +236,9 @@ export function CvDocument({ profile, phone, photoUrl, settings, palette }: CvDo
                 </p>
               ) : null}
               {experience.technologies ? (
-                <p style={text(8.8, 12, { color: palette.muted })}>Technologies : {experience.technologies}</p>
+                <p style={text(8.8, 12, { color: palette.muted })}>
+                  {t("marketplace.cv.doc_technologies", { list: experience.technologies })}
+                </p>
               ) : null}
             </div>
           ))}
@@ -298,12 +309,17 @@ function SkillLine({
   palette: CvPalette;
   text: TextStyle;
 }) {
+  const { t } = useTranslation();
   const side = palette.side;
   const value = Math.max(0, Math.min(5, level));
+  const levelLabel =
+    value >= 1 && value <= 5
+      ? t(`marketplace.cv.level.${value}`)
+      : String(value);
   if (style === "text") {
     return (
       <p style={text(8.8, 12.5, { color: side.text })}>
-        {name} <span style={{ color: side.muted }}>· {LEVEL_LABELS[value] ?? value}</span>
+        {name} <span style={{ color: side.muted }}>· {levelLabel}</span>
       </p>
     );
   }
@@ -313,7 +329,11 @@ function SkillLine({
         <span className="truncate" style={text(8.6, 11, { color: side.text })}>
           {name}
         </span>
-        <span className="flex shrink-0" style={{ gap: 4.5 }} aria-label={`Niveau ${value} sur 5`}>
+        <span
+          className="flex shrink-0"
+          style={{ gap: 4.5 }}
+          aria-label={t("marketplace.cv.doc_level_aria", { value })}
+        >
           {[0, 1, 2, 3, 4].map((index) => (
             <span
               key={index}
@@ -326,7 +346,10 @@ function SkillLine({
     );
   }
   return (
-    <div style={{ height: 0.78 * CM }} aria-label={`${name} : niveau ${value} sur 5`}>
+    <div
+      style={{ height: 0.78 * CM }}
+      aria-label={t("marketplace.cv.doc_skill_level_aria", { name, value })}
+    >
       <p className="truncate" style={text(8.6, 11, { color: side.text })}>
         {name}
       </p>

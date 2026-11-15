@@ -1,10 +1,10 @@
 # Déploiement (CD) : guide opérateur
 
-Décisions et phases : [`PLAN_CD.md`](./PLAN_CD.md). Ce guide couvre : définir les variables et secrets d'une branche, préparer une VM, vérifier l'environnement, construire les images et déployer (SSH ou GCP).
+Vue d'ensemble de toute la chaîne (poste, CI, CD, VM, maintenance) : [`README_PIPELINE_CI_CD.md`](./README_PIPELINE_CI_CD.md). Pas à pas opérateur plus récent (fil `sandbox`, observabilité, MinIO, maintenance, tunnel) : [`deploy/README.md`](../deploy/README.md). Décisions et phases : [`PLAN_CD.md`](./PLAN_CD.md). Ce guide couvre : définir les variables et secrets d'une branche, préparer une VM, vérifier l'environnement, construire les images et déployer (SSH ou GCP).
 
 ## Principe
 
-Chaque branche déployée (`develop`, `main`, `prod`) a son **environnement GitHub** du même nom, avec ses propres variables et secrets sous leur nom simple (`SECRET_KEY`, `VM_SSH_HOST`…). Une branche peut donc viser sa propre VM. GitHub fait foi : on peut modifier une valeur avec `deploy_env.py` ou dans l'interface (Settings > Environments > `<branche>`), à condition de garder le bon type (secret ou variable).
+Chaque branche déployée (`sandbox`, `main`, `prod` ; `develop` n'est jamais déployée) a son **environnement GitHub** du même nom, avec ses propres variables et secrets sous leur nom simple (`SECRET_KEY`, `VM_SSH_HOST`…). Une branche peut donc viser sa propre VM. GitHub fait foi : on peut modifier une valeur avec `deploy_env.py` ou dans l'interface (Settings > Environments > `<branche>`), à condition de garder le bon type (secret ou variable).
 
 Chaque environnement est **réservé à sa branche** (Settings > Environments > `<branche>` > Deployment branches and tags : la seule branche `<branche>`). `deploy_env.py` pose cette règle en créant l'environnement et `etat` la contrôle. Sans elle, un workflow de n'importe quelle branche pourrait déclarer `environment: prod` et lire les secrets de `prod`. Conséquence : un workflow qui utilise l'environnement `prod` doit s'exécuter sur la branche `prod` (voir §4 à §6).
 
@@ -20,11 +20,11 @@ La liste des noms attendus est lue dans `backend/.env.example` et `frontend/.env
 | `frontend.env.<branche>` | Les noms de `frontend/.env.example` (`VITE_API_URL`…) |
 | `.env.deploy.<branche>` | `DEPLOY_NAMESPACE`, `DEPLOY_DOMAIN`, `DEPLOY_LETSENCRYPT_EMAIL`, `DEPLOY_ACCES` (`ssh` ou `gcp`), `DEPLOY_DB_MODE` (`interne` ou `externe`) ; en mode `gcp` aussi `GCP_PROJECT_ID`, `GCP_ZONE`, `GCP_INSTANCE`, `GCP_WIF_PROVIDER`, `GCP_SERVICE_ACCOUNT` (§7) |
 
-Exemple de `.env.deploy.develop` :
+Exemple de `.env.deploy.sandbox` :
 
 ```env
-DEPLOY_NAMESPACE=devstreet-develop
-DEPLOY_DOMAIN=develop.monapp.com
+DEPLOY_NAMESPACE=devstreet-sandbox
+DEPLOY_DOMAIN=sandbox.monapp.com
 DEPLOY_LETSENCRYPT_EMAIL=ops@monapp.com
 DEPLOY_ACCES=ssh
 DEPLOY_DB_MODE=interne
@@ -38,7 +38,7 @@ L'environnement GitHub de la branche est créé (ou mis à jour) et réservé à
 
 Prérequis : une VM **Ubuntu LTS**, un utilisateur d'administration avec `sudo` sans mot de passe (ex. `ubuntu`, pas `root`) et une connexion SSH par clé (agent SSH ou `--cle-admin`).
 
-Les infos de connexion à la VM vont dans `.env.vm.<branche>`, à la racine du dépôt (`cp .env.vm.example .env.vm.develop`). Ce fichier est ignoré par Git et n'est jamais envoyé à GitHub :
+Les infos de connexion à la VM vont dans `.env.vm.<branche>`, à la racine du dépôt (`cp .env.vm.example .env.vm.sandbox`). Ce fichier est ignoré par Git et n'est jamais envoyé à GitHub :
 
 ```env
 VM_HOTE=203.0.113.10
@@ -49,8 +49,10 @@ VM_CLE_ADMIN=~/.ssh/ma_cle_admin
 `VM_CLE_ADMIN` est le **chemin** de la clé, pas son contenu. Il est facultatif : sans lui, l'agent SSH est utilisé.
 
 ```powershell
-python git-cli/deploy_env.py preparer-vm --branche develop
+python git-cli/deploy_env.py preparer-vm --branche sandbox
 ```
+
+Ces commandes (`preparer-vm`, `definir`, `etat`) exigent d'être **sur la branche Git locale correspondante** (`git checkout sandbox` avant `--branche sandbox`).
 
 Les options `--hote`, `--admin-user` et `--cle-admin` restent possibles et priment sur le fichier, qui est alors facultatif.
 
@@ -71,9 +73,9 @@ La clé privée de déploiement n'est écrite nulle part ailleurs que dans GitHu
 ## 3. Définir et contrôler les valeurs
 
 ```powershell
-python git-cli/deploy_env.py definir --branche develop --dry-run   # liste les noms, n'écrit rien
-python git-cli/deploy_env.py definir --branche develop             # crée l'environnement develop, y écrit après confirmation
-python git-cli/deploy_env.py etat --branche develop                # règle de branche et valeurs comparées à la liste de référence
+python git-cli/deploy_env.py definir --branche sandbox --dry-run   # liste les noms, n'écrit rien
+python git-cli/deploy_env.py definir --branche sandbox             # crée l'environnement sandbox, y écrit après confirmation
+python git-cli/deploy_env.py etat --branche sandbox                # règle de branche et valeurs comparées à la liste de référence
 ```
 
 `definir` refuse les noms inconnus, les valeurs obligatoires vides ou invalides, et les `VM_SSH_*` (écrits par `preparer-vm`). Les valeurs ne sont jamais affichées.
@@ -86,7 +88,7 @@ python git-cli/deploy_env.py etat --branche develop                # règle de b
 
 ## 4. Vérifier depuis GitHub
 
-Actions > **CD - VERIFIER ENVIRONNEMENT** > Run workflow > « Use workflow from » : la branche à vérifier (`develop`, `main` ou `prod` ; une autre branche est refusée). Le workflow ne reçoit aucune valeur et ne modifie rien : il contrôle la présence et le classement des variables et secrets, le DNS du domaine (il doit pointer vers la VM avant le premier déploiement, pour certbot), la connexion SSH avec l'empreinte épinglée, Docker, et que seuls les ports 22, 80 et 443 écoutent.
+Actions > **CD - VERIFIER ENVIRONNEMENT** > Run workflow > « Use workflow from » : la branche à vérifier (`sandbox`, `main` ou `prod` ; une autre branche est refusée). Le workflow ne reçoit aucune valeur et ne modifie rien : il contrôle la présence et le classement des variables et secrets, le DNS du domaine (il doit pointer vers la VM avant le premier déploiement, pour certbot), la connexion SSH avec l'empreinte épinglée, Docker, et que seuls les ports 22, 80 et 443 écoutent.
 
 ## 5. Construire les images
 
@@ -95,7 +97,7 @@ Actions > **CD - BUILD IMAGES** > Run workflow > « Use workflow from » : la br
 | Image | Tag |
 |---|---|
 | backend | `<sha>` (identique pour tous les environnements) |
-| frontend | `<branche>-<sha>-<empreinte>` : l'empreinte couvre `VITE_API_URL`, `VITE_API_V1_URL` et `VITE_GCS_BUCKET_NAME`, figées dans le JavaScript à la construction |
+| frontend | `<branche>-<sha>-<empreinte>` : l'empreinte couvre `VITE_API_URL`, `VITE_API_V1_URL` et `VITE_USE_S3`, figées dans le JavaScript à la construction |
 
 - Une image déjà publiée n'est **pas** reconstruite : redéployer un ancien commit (retour arrière) ne coûte aucune construction. Changer un `VITE_*` produit un nouveau tag frontend pour le même commit.
 - Le commit doit appartenir à l'historique de la branche choisie : impossible de publier pour `prod` un commit absent de `prod`.
@@ -104,9 +106,9 @@ Actions > **CD - BUILD IMAGES** > Run workflow > « Use workflow from » : la br
 
 ## 6. Déployer
 
-**Automatique** : un push ou un merge vers `develop`, `main` ou `prod` lance `CI - ORCHESTRATEUR`. Quand backend, frontend, sécurité et non-régression sont verts, son job `deploiement` appelle `CD - ORCHESTRATEUR`, qui construit les images puis déploie la branche selon `DEPLOY_ACCES` (`ssh` ou `gcp`). Le tout s'exécute sur la branche poussée, avec ses propres fichiers de workflow : c'est ce qui lui donne accès à son environnement. Un échec de la CI n'entraîne aucun déploiement ; une pull request non plus. Deux déploiements d'une même branche s'enchaînent, sans jamais s'interrompre ; deux déploiements de branches différentes sur la même VM s'attendent (verrou `/opt/apps/.deployer.lock`, 20 minutes d'attente au plus). Si, une fois la CI verte, le commit n'est plus la pointe de la branche (un push plus récent est arrivé), il n'est pas déployé : le plus récent le remplace, et un retour en arrière silencieux est évité.
+**Automatique** : un push ou un merge vers `sandbox`, `main` ou `prod` lance `CI - ORCHESTRATEUR`. Quand backend, frontend, sécurité et non-régression sont verts, son job `deploiement` appelle `CD - ORCHESTRATEUR`, qui construit les images puis déploie la branche selon `DEPLOY_ACCES` (`ssh` ou `gcp`). Le tout s'exécute sur la branche poussée, avec ses propres fichiers de workflow : c'est ce qui lui donne accès à son environnement. Un échec de la CI n'entraîne aucun déploiement ; une pull request non plus. Deux déploiements d'une même branche s'enchaînent, sans jamais s'interrompre ; deux déploiements de branches différentes sur la même VM s'attendent (verrou `/opt/apps/.deployer.lock`, 20 minutes d'attente au plus). Si, une fois la CI verte, le commit n'est plus la pointe de la branche (un push plus récent est arrivé), il n'est pas déployé : le plus récent le remplace, et un retour en arrière silencieux est évité.
 
-**Manuel** (relance ou retour arrière) : Actions > **CD - ORCHESTRATEUR** > Run workflow > « Use workflow from » : la branche à déployer, et un commit complet (40 caractères) pour revenir à une version précédente. Réservé aux `GIT_MASTER_USERS`, lus dans `origin/develop` ; une autre branche que `develop`, `main` ou `prod` est refusée. Si les images de ce commit existent, rien n'est reconstruit. **Les migrations déjà appliquées ne sont pas annulées** : avant un retour arrière, vérifiez que l'ancienne image reste compatible avec le schéma de la base.
+**Manuel** (relance ou retour arrière) : Actions > **CD - ORCHESTRATEUR** > Run workflow > « Use workflow from » : la branche à déployer, et un commit complet (40 caractères) pour revenir à une version précédente. Réservé aux `GIT_MASTER_USERS`, lus dans `origin/develop` ; une autre branche que `sandbox`, `main` ou `prod` est refusée. Si les images de ce commit existent, rien n'est reconstruit. **Les migrations déjà appliquées ne sont pas annulées** : avant un retour arrière, vérifiez que l'ancienne image reste compatible avec le schéma de la base.
 
 Prérequis avant le premier déploiement d'une branche : environnement complet (`etat` et **CD - VERIFIER ENVIRONNEMENT** verts), le DNS de `DEPLOY_DOMAIN` pointe vers la VM, et les ports 80 et 443 sont joignables (certbot valide le domaine en HTTP).
 
@@ -145,11 +147,11 @@ Prérequis côté GCP (à faire une fois ; **non vérifié depuis ce dépôt**) 
 
 ## Limites à connaître
 
-- **L'isolation tient à la règle de branche de chaque environnement** : si elle est retirée dans l'interface, les secrets redeviennent lisibles depuis toute branche. `etat` la contrôle. Elle repose aussi sur la protection des branches `develop`, `main` et `prod` : quiconque peut y pousser sans revue peut y modifier un workflow.
+- **L'isolation tient à la règle de branche de chaque environnement** : si elle est retirée dans l'interface, les secrets redeviennent lisibles depuis toute branche. `etat` la contrôle. Elle repose aussi sur la protection des branches `sandbox`, `main` et `prod` : quiconque peut y pousser sans revue peut y modifier un workflow.
 - **SSH ouvert à tous** sur la VM (les adresses des runners changent) : protégé par la clé seule et `fail2ban`. Le mode `gcp` (§7) supprime ce port public.
 - **Un port publié par un conteneur contourne `ufw`** : seul le proxy partagé en publiera (phase 4). Le workflow de vérification le contrôle.
 - **`deploy` vaut presque `root`** (groupe `docker`).
-- **Rien de ceci n'a été exécuté de bout en bout** au moment de l'écriture : `preparer-vm`, `preparer-vm-gcp`, les workflows (dont le mode GCP, qui suppose une configuration IAM complète), `deployer.sh` et la configuration nginx sont à valider sur une VM de test (branche `develop`) avant `prod`. Seuls ont été contrôlés la syntaxe des scripts et des YAML, `docker compose config` sur les deux fichiers Compose et les tests du rendu.
+- **Rien de ceci n'a été exécuté de bout en bout** au moment de l'écriture : `preparer-vm`, `preparer-vm-gcp`, les workflows (dont le mode GCP, qui suppose une configuration IAM complète), `deployer.sh` et la configuration nginx sont à valider sur une VM de test (branche `sandbox`) avant `prod`. Seuls ont été contrôlés la syntaxe des scripts et des YAML, `docker compose config` sur les deux fichiers Compose et les tests du rendu.
 - **Coupure brève** à chaque déploiement (remplacement des conteneurs, migrations au démarrage). Pas de déploiement sans interruption.
 - **Pas de sauvegarde** de la base `interne` : le volume survit aux redéploiements, pas à la perte de la VM. Changer `DB_PASSWORD` après la première initialisation ne change pas le mot de passe déjà enregistré dans le volume.
 - Les anciennes images s'accumulent sur la VM (seules les images sans nom sont nettoyées) : `docker image prune -a` à la main de temps en temps.

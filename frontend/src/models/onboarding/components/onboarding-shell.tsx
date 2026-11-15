@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Terminal } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { cn } from "@/lib/utils";
 
 /** Cadre plein écran de l'assistant : logo, progression, titre et contenu de l'étape. */
@@ -19,11 +19,8 @@ export function OnboardingShell({
 }) {
   return (
     <div className="flex min-h-svh flex-col items-center bg-background px-4 py-8 sm:py-12">
-      <div className="mb-8 flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-xl bg-foreground text-background">
-          <Terminal className="size-4" aria-hidden />
-        </span>
-        <span className="text-[15px] font-bold tracking-tight text-foreground">DevStreet</span>
+      <div className="mb-8">
+        <BrandLogo className="h-9" />
       </div>
 
       <main className="w-full max-w-xl rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">

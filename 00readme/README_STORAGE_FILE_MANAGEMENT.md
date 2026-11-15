@@ -55,7 +55,7 @@ Google Cloud Storage n'est plus pris en charge : `USE_GCS`, `GS_*` et `GCS_UPLOA
 
 | Variable | Description |
 |----------|-------------|
-| `VITE_USE_S3` | Facultative. `true` quand le backend a `USE_S3=True` : un chemin relatif devient `/api/v1/files/<chemin>` au lieu de `/media/<chemin>` |
+| `VITE_USE_S3` | Facultative en local. **Obligatoire à true** quand le backend a `USE_S3=True` (sinon le JS figé sert `/media/` → 404 nginx). Accepte `true`/`True`/`1`/`yes` ; la CI normalise et refuse le décalage avec `USE_S3` |
 
 ## Backend — `StorageService`
 
@@ -111,7 +111,7 @@ La commande affiche le backend actif, écrit un fichier de test, vérifie sa pr�
 
 1. **Pas de repli GCS/disque** : avec `USE_S3=True`, corriger la configuration plutôt que d'attendre un repli.
 2. **Bucket existant public** : le provisionnement exécute `mc anonymous set none`, ce qui retire un ancien accès public.
-3. **Images privées du DevStreet Hub** : `ProjectImageStorage` (`app/devstreet_hub/image_storage.py`) reste un stockage local dédié, hors de `StorageService` ; il n'est pas concerné par `USE_S3`.
+3. **Images privées du DevStreet Hub** : `ProjectImageStorage` utilise MinIO (préfixe `hub_project_images/`) si `USE_S3=True`, sinon le disque `DEVSTREET_HUB_PRIVATE_IMAGE_ROOT`. La lecture reste uniquement via `GET /api/v1/projects/{id}/presentation/images/{id}` (ACL projet) : le préfixe est refusé par `/api/v1/files/`.
 4. **Contenu déjà publié** : une URL absolue enregistrée dans le contenu d'une publication (`/media/…` ou `/api/v1/files/…`) est servie telle quelle ; après une bascule vers S3, les anciennes URLs `/media/…` ne sont plus servies que si le volume local existe encore.
 5. **Tests** : `app/tests/test_storage_files.py` (choix du backend, URL, accès authentifié, `Range`, chemins interdits).
 

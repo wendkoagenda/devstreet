@@ -75,3 +75,19 @@ class LlmRouterTests(SimpleTestCase):
             LlmRouter(primary=grok, fallback=openai).complete(
                 [{"role": "user", "content": "hi"}]
             )
+
+
+class StripReasoningTests(SimpleTestCase):
+    """Le raisonnement d'un modèle (<think>…</think>) ne doit pas polluer la réponse."""
+
+    def test_retire_le_bloc_de_raisonnement(self):
+        from app.ai.providers.openai_compatible import strip_reasoning
+
+        raw = '<think>Je dois produire {"title": 1} puis...</think>\n{"title": "Dev"}'
+        self.assertEqual(strip_reasoning(raw), '{"title": "Dev"}')
+
+    def test_reponse_sans_raisonnement_inchangee(self):
+        from app.ai.providers.openai_compatible import strip_reasoning
+
+        self.assertEqual(strip_reasoning('  {"a": 1}  '), '{"a": 1}')
+        self.assertEqual(strip_reasoning(""), "")

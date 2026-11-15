@@ -104,6 +104,8 @@ function GroupeListItem({
     ? t(count > 1 ? "forum.channel_meta_plural" : "forum.channel_meta", { count })
     : t(count > 1 ? "forum.group_meta_plural" : "forum.group_meta", { count });
 
+  const unread = Boolean(espace.has_unread);
+
   return (
     <button
       type="button"
@@ -112,6 +114,11 @@ function GroupeListItem({
         "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
         active ? "bg-brand-soft" : "hover:bg-muted"
       )}
+      aria-label={
+        unread
+          ? t("forum.unread_aria", { name: espace.nom })
+          : undefined
+      }
     >
       <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-brand">
         {espace.photo ? (
@@ -126,14 +133,31 @@ function GroupeListItem({
         ) : (
           <Users className="size-3.5" aria-hidden />
         )}
+        {unread ? (
+          <span
+            className="absolute right-0 top-0 size-2 rounded-full bg-brand ring-2 ring-card"
+            aria-hidden
+          />
+        ) : null}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground">
+        <p
+          className={cn(
+            "flex items-center gap-1.5 truncate text-sm text-foreground",
+            unread ? "font-bold" : "font-semibold"
+          )}
+        >
           <Hash className="size-3 shrink-0 text-muted-foreground" aria-hidden />
           <span className="truncate">{espace.nom}</span>
         </p>
         <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
       </div>
+      {unread ? (
+        <span
+          className="mt-1.5 size-2 shrink-0 rounded-full bg-brand"
+          aria-hidden
+        />
+      ) : null}
     </button>
   );
 }
@@ -394,6 +418,8 @@ export default function MessagesPage() {
               const preview =
                 conversation.dernier_message?.texte?.trim() ||
                 t("forum.new_conversation");
+              const unread = Boolean(conversation.has_unread);
+              const peerName = memberLabel(peer);
               return (
                 <button
                   key={conversation.id}
@@ -403,21 +429,52 @@ export default function MessagesPage() {
                     "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
                     active ? "bg-brand-soft" : "hover:bg-muted"
                   )}
+                  aria-label={
+                    unread
+                      ? t("forum.unread_aria", { name: peerName })
+                      : undefined
+                  }
                 >
-                  <ForumAvatar
-                    name={memberLabel(peer)}
-                    photo={peer?.photo}
-                    size="sm"
-                    tone="soft"
-                  />
+                  <span className="relative shrink-0">
+                    <ForumAvatar
+                      name={peerName}
+                      photo={peer?.photo}
+                      size="sm"
+                      tone="soft"
+                    />
+                    {unread ? (
+                      <span
+                        className="absolute right-0 top-0 size-2 rounded-full bg-brand ring-2 ring-card"
+                        aria-hidden
+                      />
+                    ) : null}
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {memberLabel(peer)}
+                    <p
+                      className={cn(
+                        "truncate text-sm text-foreground",
+                        unread ? "font-bold" : "font-semibold"
+                      )}
+                    >
+                      {peerName}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p
+                      className={cn(
+                        "truncate text-xs",
+                        unread
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground"
+                      )}
+                    >
                       {preview}
                     </p>
                   </div>
+                  {unread ? (
+                    <span
+                      className="mt-1.5 size-2 shrink-0 rounded-full bg-brand"
+                      aria-hidden
+                    />
+                  ) : null}
                 </button>
               );
             })}

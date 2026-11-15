@@ -28,6 +28,8 @@ function typeForFilter(filter: FeedTypeFilterId): string | undefined {
   if (filter === "discussions") return "DISCUSSION";
   if (filter === "showcase") return "APPLICATION";
   if (filter === "entraide") return "ENTRAIDE";
+  if (filter === "choix") return "CHOIX";
+  if (filter === "sondage") return "SONDAGE";
   return undefined;
 }
 
@@ -208,10 +210,10 @@ export default function FeedPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_17rem]">
-        <div className="min-w-0 space-y-4">
-          <header className="space-y-1">
-            <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0 space-y-6">
+          <header className="space-y-1.5">
+            <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               {t("forum.feed_title")}
             </h1>
             {tagFilter ? (
@@ -239,9 +241,9 @@ export default function FeedPage() {
             onSortChange={setSort}
           />
 
-          <div className="space-y-2" aria-live="polite">
+          <div className="space-y-4 sm:space-y-5" aria-live="polite">
             {pubsLoading ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
+              <p className="py-10 text-center text-sm text-muted-foreground">
                 {t("forum.feed_loading")}
               </p>
             ) : null}

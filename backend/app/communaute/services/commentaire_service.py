@@ -1,6 +1,8 @@
 """
 Commentaire service layer pour les opérations de logique métier.
 """
+import logging
+import re
 from typing import Optional, Dict, Any, List
 from django.db.models import QuerySet, Prefetch, Count, Q
 from django.core.exceptions import ValidationError
@@ -10,6 +12,7 @@ from app.communaute.models import Commentaire, MediaCommentaire, Publication
 from app.communaute.repositories.commentaire_repository import CommentaireRepository
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class CommentaireService:
@@ -56,10 +59,10 @@ class CommentaireService:
             .first()
         )
 
-    def list_for_publication(self, publication_id: int, membre: Optional[User] = None) -> List[Commentaire]:
-        """Retourne les commentaires racines d'une publication avec leurs réponses."""
+    def list_for_publication(self, publication_id: int, membre: Optional[User] = None):
+        """Retourne les commentaires racines d'une publication avec leurs réponses (QuerySet)."""
         if not Publication.objects.filter(id=publication_id).exists():
-            return []
+            return Commentaire.objects.none()
 
         annotations = self._engagement_annotations(membre)
         medias_qs = MediaCommentaire.objects.order_by('position', 'id')
@@ -71,7 +74,7 @@ class CommentaireService:
             .annotate(**annotations)
             .order_by('created_at', 'id')
         )
-        racines = (
+        return (
             Commentaire.objects.filter(publication_id=publication_id, parent__isnull=True)
             .select_related('auteur', 'option')
             .annotate(**annotations)
@@ -81,7 +84,6 @@ class CommentaireService:
             )
             .order_by('created_at', 'id')
         )
-        return list(racines)
 
     NATURE_RETOUR_APP = 'RETOUR_APP'
 
@@ -229,7 +231,79 @@ class CommentaireService:
                     created_by=created_by,
                     updated_by=updated_by,
                 )
+
+        self._maybe_reply_as_selina(
+            actor=auteur,
+            publication=publication,
+            commentaire=commentaire,
+            texte=texte,
+        )
         return self.get_by_id(commentaire.id, membre=auteur)
+
+    def _maybe_reply_as_selina(
+        self,
+        *,
+        actor: User,
+        publication: Publication,
+        commentaire: Commentaire,
+        texte: str,
+    ) -> None:
+        """Si le texte mentionne @selina et l'auteur a ai.chat, publie une réponse Selina."""
+        from app.ai.models import AiConversation
+        from app.ai.selina_user import SELINA_MENTION_RE, ensure_selina_user, get_selina_user
+        from app.ai.services.chat_service import ChatService
+
+        if not re.search(SELINA_MENTION_RE, texte or ""):
+            return
+        if not getattr(actor, "is_authenticated", False):
+            return
+        if not actor.is_active or not actor.has_permission("ai.chat"):
+            return
+
+        selina = get_selina_user() or ensure_selina_user()
+        # Parent visible dans le fil (1 niveau) : racine du thread.
+        selina_parent = (
+            commentaire if commentaire.parent_id is None else commentaire.parent
+        )
+        if selina_parent is None:
+            selina_parent = commentaire
+
+        pub_excerpt = (getattr(publication, "description", None) or "").strip()[:2000]
+        context_text = (
+            f"Publication #{publication.id} (type={publication.type}).\n"
+            f"Extrait publication :\n{pub_excerpt}\n\n"
+            f"Commentaire de {actor.username} :\n{texte[:2000]}"
+        )
+
+        try:
+            result = ChatService().chat(
+                actor,
+                message=texte,
+                consumer=AiConversation.CONSUMER_SELINA,
+                context_text=context_text,
+                title=f"Forum @{publication.id}",
+            )
+            reply_text = (result.get("assistant_message") or "").strip()
+            if not reply_text:
+                return
+            self.commentaire_repository.create(
+                publication=publication,
+                auteur=selina,
+                parent=selina_parent,
+                option=None,
+                nature=self.NATURE_COMMENTAIRE,
+                texte=reply_text[:8000],
+                est_anonyme=False,
+                created_by=selina.id,
+                updated_by=selina.id,
+            )
+        except Exception:
+            # Le commentaire utilisateur reste publié ; pas de demi-réponse fantôme.
+            logger.exception(
+                "Échec réponse @selina (publication=%s commentaire=%s)",
+                publication.id,
+                commentaire.id,
+            )
 
     def create(self, commentaire_data: Dict[str, Any]) -> Commentaire:
         self.validate_data(commentaire_data)

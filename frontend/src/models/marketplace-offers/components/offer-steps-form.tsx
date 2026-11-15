@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { CityField, CountryField } from "@/components/geo/geo-form-fields";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -21,7 +22,7 @@ import {
   TextField,
 } from "@/models/marketplace-space/components/form-fields";
 import { applySubmitError } from "@/models/marketplace-space/components/submit-error";
-import { COUNTRIES, CURRENCIES, countryName } from "@/models/marketplace-space/options";
+import { CURRENCIES, countryName } from "@/models/marketplace-space/options";
 import { useCreateMyOfferMutation, useUpdateMyOfferMutation } from "../api";
 import {
   DURATION_UNIT_LABELS,
@@ -48,7 +49,6 @@ const PERIOD_LABELS: Record<string, string> = {
   fixed: "Forfait",
 };
 const periodOptions = toOptions(PERIOD_LABELS);
-const countryOptions = COUNTRIES.map((country) => ({ value: country.code, label: country.name }));
 const currencyOptions = CURRENCIES.map((currency) => ({ value: currency.code, label: currency.code }));
 
 type Step = {
@@ -254,8 +254,8 @@ export function OfferStepsForm({
 
         <div className={cn("grid gap-4 sm:grid-cols-2", stepIndex !== 1 && "hidden")}>
           <SelectField control={form.control} name="work_mode" label="Mode de travail" options={workModeOptions} />
-          <SelectField control={form.control} name="country" label="Pays" options={countryOptions} />
-          <TextField control={form.control} name="city" label="Ville" />
+          <CountryField control={form.control} name="country" label="Pays" resetOnChange={["city"]} />
+          <CityField control={form.control} name="city" label="Ville" countryName="country" />
           <DateField
             control={form.control}
             name="start_date"

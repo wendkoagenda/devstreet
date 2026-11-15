@@ -361,7 +361,7 @@ function FollowProfileButton({
     try {
       const result = await toggleSuivre(userId).unwrap();
       toast.success(
-        result.following ? "Tu suis ce membre" : "Tu ne suis plus ce membre"
+        result.following ? "Vous suivez ce membre" : "Vous ne suivez plus ce membre"
       );
     } catch {
       toast.error("Impossible de mettre à jour le suivi");

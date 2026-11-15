@@ -1,3 +1,5 @@
+import { CountrySelect } from "@/components/geo/country-select";
+import { CitySelect } from "@/components/geo/city-select";
 import { SkillMultiSelect } from "@/models/skill/components/skill-multi-select";
 import { ProfilSelect } from "@/models/profil/components/profil-select";
 import { CompanySelect } from "@/models/company/components/company-select";
@@ -391,7 +393,7 @@ export default function CreateOfferDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     Country *                  </FormLabel>
                   <FormControl>
-                    <Input {...formField} className="h-10" />
+                    <CountrySelect value={formField.value ?? ""} onChange={(code) => { if (code !== formField.value) form.setValue("city", ""); formField.onChange(code); }} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -405,7 +407,7 @@ export default function CreateOfferDialogContent() {
                   <FormLabel className="text-sm font-medium">
                     City                  </FormLabel>
                   <FormControl>
-                    <Input {...formField} className="h-10" />
+                    <CitySelect country={form.watch("country")} value={formField.value ?? ""} onChange={formField.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

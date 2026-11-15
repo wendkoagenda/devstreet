@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { CityField, CountryField, PhoneField } from "@/components/geo/geo-form-fields";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -9,7 +10,7 @@ import {
   useCreateMyCompanyMutation,
   useUpdateMyCompanyMutation,
 } from "../api";
-import { COMPANY_SIZES, COUNTRIES, SECTORS } from "../options";
+import { COMPANY_SIZES, SECTORS } from "../options";
 import {
   companyFormSchema,
   companyToForm,
@@ -35,10 +36,6 @@ type CompanyFormProps = {
   onUpdated?: () => void;
 };
 
-const countryOptions = COUNTRIES.map((country) => ({
-  value: country.code,
-  label: country.name,
-}));
 
 /** Formulaire de l'entreprise de l'utilisateur (création, puis modification par son propriétaire). */
 export function CompanyForm({ company, canEdit, onCreated, onUpdated }: CompanyFormProps) {
@@ -110,13 +107,13 @@ export function CompanyForm({ company, canEdit, onCreated, onUpdated }: CompanyF
             label="Taille"
             options={COMPANY_SIZES}
           />
-          <SelectField
+          <CountryField
             control={form.control}
             name="country"
             label="Pays"
-            options={countryOptions}
+            resetOnChange={["city"]}
           />
-          <TextField control={form.control} name="city" label="Ville" />
+          <CityField control={form.control} name="city" label="Ville" countryName="country" />
           <TextField
             control={form.control}
             name="address"
@@ -129,7 +126,7 @@ export function CompanyForm({ company, canEdit, onCreated, onUpdated }: CompanyF
             label="E-mail de contact"
             type="email"
           />
-          <TextField control={form.control} name="phone" label="Téléphone" />
+          <PhoneField control={form.control} name="phone" label="Téléphone" countryName="country" />
           <TextField
             control={form.control}
             name="website"

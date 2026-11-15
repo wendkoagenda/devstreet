@@ -1,5 +1,6 @@
 import { ProfileInitialsAvatar } from "@/components/ui/profile-initials-avatar";
 import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Building2, ChevronUp, Code2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -38,43 +39,60 @@ import {
 import { SwipeDeck, type CardFacts } from "../components/swipe-deck";
 import type { ActingAs, DeckCard, NetworkRequest } from "../schema";
 
-function describe(card: DeckCard): CardFacts {
-  if (card.type === "entreprise") {
+function useDescribeCard() {
+  const { t } = useTranslation();
+  return (card: DeckCard): CardFacts => {
+    if (card.type === "entreprise") {
+      return {
+        k1: t("marketplace.network.type_company"),
+        v1: card.company?.name ?? "—",
+        k2: t("marketplace.network.city"),
+        v2: card.city || card.country,
+        proof: card.company?.is_verified
+          ? t("marketplace.network.company_verified_proof")
+          : t("marketplace.network.company_on_devstreet"),
+        source: t("marketplace.network.company_source"),
+      };
+    }
+    const common = card.common_skills ?? [];
     return {
-      k1: "Entreprise",
-      v1: card.company?.name ?? "—",
-      k2: "Ville",
+      k1: t("marketplace.network.in_common"),
+      v1:
+        common.length > 0
+          ? t("marketplace.network.skills_count", { count: common.length })
+          : t("marketplace.network.skills_none"),
+      k2: t("marketplace.network.city"),
       v2: card.city || card.country,
-      proof: card.company?.is_verified ? "Entreprise vérifiée." : "Entreprise présente sur DevStreet.",
-      source: "Profil entreprise du réseau",
+      proof:
+        common.length > 0
+          ? t("marketplace.network.shared_skills", { list: common.join(", ") })
+          : t("marketplace.network.years_exp_short", {
+              count: card.years_of_experience,
+            }),
+      source: t("marketplace.network.dev_source"),
     };
-  }
-  const common = card.common_skills ?? [];
-  return {
-    k1: "En commun",
-    v1: common.length > 0 ? `${common.length} compétence(s)` : "Aucune pour l'instant",
-    k2: "Ville",
-    v2: card.city || card.country,
-    proof:
-      common.length > 0
-        ? `Compétences partagées : ${common.join(", ")}.`
-        : `${card.years_of_experience} an(s) d'expérience.`,
-    source: "Dev proche de vous : compétences et ville en commun",
   };
 }
 
 /** Choix du profil avec lequel on agit dans le réseau (pour un membre qui a un profil dev et un profil entreprise). */
 function ActingSwitch({ value, onChange }: { value: ActingAs; onChange: (value: ActingAs) => void }) {
+  const { t } = useTranslation();
   const options: { id: ActingAs; label: string; icon: typeof Code2 }[] = [
-    { id: "dev", label: "Dev", icon: Code2 },
-    { id: "entreprise", label: "Entreprise", icon: Building2 },
+    { id: "dev", label: t("marketplace.network.type_dev"), icon: Code2 },
+    {
+      id: "entreprise",
+      label: t("marketplace.network.type_company"),
+      icon: Building2,
+    },
   ];
   return (
     <div className="mx-auto flex flex-col items-center gap-1.5">
-      <span className="text-xs text-muted-foreground">Agir en tant que</span>
+      <span className="text-xs text-muted-foreground">
+        {t("marketplace.network.act_as")}
+      </span>
       <div
         role="group"
-        aria-label="Profil utilisé dans le réseau"
+        aria-label={t("marketplace.network.act_as_aria")}
         className="inline-flex rounded-xl border border-brand-soft-border bg-card p-1 shadow-sm"
       >
         {options.map(({ id, label, icon: Icon }) => (
@@ -87,7 +105,9 @@ function ActingSwitch({ value, onChange }: { value: ActingAs; onChange: (value: 
             onClick={() => onChange(id)}
             className={cn(
               "h-8 gap-1.5 rounded-lg px-3",
-              value === id ? "bg-brand-soft text-brand-strong hover:bg-brand-soft" : "text-muted-foreground"
+              value === id
+                ? "bg-brand-soft text-brand-strong hover:bg-brand-soft"
+                : "text-muted-foreground"
             )}
           >
             <Icon className="size-4" aria-hidden />
@@ -101,6 +121,7 @@ function ActingSwitch({ value, onChange }: { value: ActingAs; onChange: (value: 
 
 /** Cellule « membre » des tableaux : initiales, nom (lien vers sa page de profil) et type de profil. */
 function MemberCell({ member }: { member: TalentCard }) {
+  const { t } = useTranslation();
   const isCompany = member.type === "entreprise";
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -119,10 +140,14 @@ function MemberCell({ member }: { member: TalentCard }) {
             {member.name}
           </Link>
         ) : (
-          <span className="truncate text-sm font-medium text-foreground">{member.name}</span>
+          <span className="truncate text-sm font-medium text-foreground">
+            {member.name}
+          </span>
         )}
         <span className="truncate text-xs text-muted-foreground">
-          {isCompany ? (member.company?.name ?? "Entreprise") : member.headline || "Dev"}
+          {isCompany
+            ? (member.company?.name ?? t("marketplace.network.type_company"))
+            : member.headline || t("marketplace.network.type_dev")}
         </span>
       </div>
     </div>
@@ -130,17 +155,26 @@ function MemberCell({ member }: { member: TalentCard }) {
 }
 
 function TypeBadge({ member }: { member: TalentCard }) {
+  const { t } = useTranslation();
   const isCompany = member.type === "entreprise";
   return (
     <Badge
       variant="outline"
       className={cn(
         "gap-1",
-        isCompany ? "border-brand bg-brand-soft text-brand-strong" : "border-border text-muted-foreground"
+        isCompany
+          ? "border-brand bg-brand-soft text-brand-strong"
+          : "border-border text-muted-foreground"
       )}
     >
-      {isCompany ? <Building2 className="size-3" aria-hidden /> : <Code2 className="size-3" aria-hidden />}
-      {isCompany ? "Entreprise" : "Dev"}
+      {isCompany ? (
+        <Building2 className="size-3" aria-hidden />
+      ) : (
+        <Code2 className="size-3" aria-hidden />
+      )}
+      {isCompany
+        ? t("marketplace.network.type_company")
+        : t("marketplace.network.type_dev")}
     </Badge>
   );
 }
@@ -169,33 +203,44 @@ function TableSection({
 }
 
 function ConnectionsTable() {
+  const { t } = useTranslation();
   const { data, isLoading } = useGetConnectionsQuery();
   const rows = data ?? [];
   return (
     <TableSection
       count={rows.length}
       isLoading={isLoading}
-      empty="Pas encore de connexion : quand deux membres, devs ou entreprises, se choisissent mutuellement, ils apparaissent ici."
+      empty={t("marketplace.network.empty_connections")}
     >
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Membre</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Connectés le</TableHead>
-            <TableHead className="text-right">Contact</TableHead>
+            <TableHead>{t("marketplace.network.col_member")}</TableHead>
+            <TableHead>{t("marketplace.network.col_type")}</TableHead>
+            <TableHead>{t("marketplace.network.col_connected_on")}</TableHead>
+            <TableHead className="text-right">
+              {t("marketplace.network.col_contact")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell><MemberCell member={row} /></TableCell>
-              <TableCell><TypeBadge member={row} /></TableCell>
-              <TableCell className="text-muted-foreground">{formatDate(row.matched_at)}</TableCell>
+              <TableCell>
+                <MemberCell member={row} />
+              </TableCell>
+              <TableCell>
+                <TypeBadge member={row} />
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDate(row.matched_at)}
+              </TableCell>
               <TableCell className="text-right">
                 {row.email ? (
                   <Button asChild size="sm" variant="outline">
-                    <a href={`mailto:${row.email}`}>Lui écrire</a>
+                    <a href={`mailto:${row.email}`}>
+                      {t("marketplace.network.write_them")}
+                    </a>
                   </Button>
                 ) : null}
               </TableCell>
@@ -208,28 +253,39 @@ function ConnectionsTable() {
 }
 
 function PendingTable({ rows, isLoading }: { rows: NetworkRequest[]; isLoading: boolean }) {
+  const { t } = useTranslation();
   return (
     <TableSection
       count={rows.length}
       isLoading={isLoading}
-      empty="Aucune demande en attente : celles que vous envoyez apparaissent ici jusqu'à la réponse."
+      empty={t("marketplace.network.empty_pending")}
     >
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Membre</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Envoyée le</TableHead>
-            <TableHead className="text-right">Statut</TableHead>
+            <TableHead>{t("marketplace.network.col_member")}</TableHead>
+            <TableHead>{t("marketplace.network.col_type")}</TableHead>
+            <TableHead>{t("marketplace.network.col_sent_on")}</TableHead>
+            <TableHead className="text-right">
+              {t("marketplace.network.col_status")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell><MemberCell member={row} /></TableCell>
-              <TableCell><TypeBadge member={row} /></TableCell>
-              <TableCell className="text-muted-foreground">{formatDate(row.requested_at)}</TableCell>
-              <TableCell className="text-right text-xs text-muted-foreground">En attente de réponse</TableCell>
+              <TableCell>
+                <MemberCell member={row} />
+              </TableCell>
+              <TableCell>
+                <TypeBadge member={row} />
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDate(row.requested_at)}
+              </TableCell>
+              <TableCell className="text-right text-xs text-muted-foreground">
+                {t("marketplace.network.pending_status")}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -247,6 +303,7 @@ function ReceivedTable({
   isLoading: boolean;
   onAnswered: () => void;
 }) {
+  const { t } = useTranslation();
   const [swipe, { isLoading: answering }] = useSwipeMutation();
 
   const answer = async (row: NetworkRequest, direction: "like" | "pass") => {
@@ -258,11 +315,13 @@ function ReceivedTable({
         acting: row.acting,
       }).unwrap();
       if (direction === "like" && result.matched) {
-        CreationSuccessSonner(`Vous êtes maintenant connecté avec ${row.name}`);
+        CreationSuccessSonner(
+          t("marketplace.network.matched", { name: row.name })
+        );
       }
       onAnswered();
     } catch {
-      CreationErrorSonner("Impossible d'enregistrer votre réponse");
+      CreationErrorSonner(t("marketplace.network.answer_error"));
     }
   };
 
@@ -270,27 +329,40 @@ function ReceivedTable({
     <TableSection
       count={rows.length}
       isLoading={isLoading}
-      empty="Aucune demande reçue pour le moment."
+      empty={t("marketplace.network.empty_received")}
     >
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Membre</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Reçue le</TableHead>
-            <TableHead className="text-right">Réponse</TableHead>
+            <TableHead>{t("marketplace.network.col_member")}</TableHead>
+            <TableHead>{t("marketplace.network.col_type")}</TableHead>
+            <TableHead>{t("marketplace.network.col_received_on")}</TableHead>
+            <TableHead className="text-right">
+              {t("marketplace.network.col_reply")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell><MemberCell member={row} /></TableCell>
-              <TableCell><TypeBadge member={row} /></TableCell>
-              <TableCell className="text-muted-foreground">{formatDate(row.requested_at)}</TableCell>
+              <TableCell>
+                <MemberCell member={row} />
+              </TableCell>
+              <TableCell>
+                <TypeBadge member={row} />
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDate(row.requested_at)}
+              </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button type="button" size="sm" disabled={answering} onClick={() => void answer(row, "like")}>
-                    Accepter
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={answering}
+                    onClick={() => void answer(row, "like")}
+                  >
+                    {t("marketplace.network.accept")}
                   </Button>
                   <Button
                     type="button"
@@ -299,7 +371,7 @@ function ReceivedTable({
                     disabled={answering}
                     onClick={() => void answer(row, "pass")}
                   >
-                    Refuser
+                    {t("marketplace.network.decline")}
                   </Button>
                 </div>
               </TableCell>
@@ -323,28 +395,54 @@ function NetworkPanel({
   onOpenChange: (open: boolean) => void;
   onAnswered: () => void;
 }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<PanelTab>("connections");
   const { data, isLoading } = useGetNetworkRequestsQuery(undefined, { skip: !open });
   const { data: connections } = useGetConnectionsQuery(undefined, { skip: !open });
   const received = data?.received ?? [];
 
-  const tabs: { id: PanelTab; label: string; count: number | undefined; accent?: boolean }[] = [
-    { id: "connections", label: "Connexions", count: connections?.length },
-    { id: "pending", label: "Demandes en attente", count: data?.sent.length },
-    { id: "received", label: "Demandes reçues", count: data?.received.length, accent: received.length > 0 },
+  const tabs: {
+    id: PanelTab;
+    label: string;
+    count: number | undefined;
+    accent?: boolean;
+  }[] = [
+    {
+      id: "connections",
+      label: t("marketplace.network.tab_connections"),
+      count: connections?.length,
+    },
+    {
+      id: "pending",
+      label: t("marketplace.network.tab_pending"),
+      count: data?.sent.length,
+    },
+    {
+      id: "received",
+      label: t("marketplace.network.tab_received"),
+      count: data?.received.length,
+      accent: received.length > 0,
+    },
   ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="mx-auto max-h-[85vh] w-full max-w-4xl overflow-y-auto rounded-t-2xl">
+      <SheetContent
+        side="bottom"
+        className="mx-auto max-h-[85vh] w-full max-w-4xl overflow-y-auto rounded-t-2xl"
+      >
         <SheetHeader className="mb-3 text-left">
-          <SheetTitle>Mon réseau</SheetTitle>
+          <SheetTitle>{t("marketplace.network.panel_title")}</SheetTitle>
           <SheetDescription className="sr-only">
-            Vos connexions, les demandes que vous avez envoyées et celles que vous avez reçues.
+            {t("marketplace.network.panel_desc")}
           </SheetDescription>
         </SheetHeader>
 
-        <div role="tablist" aria-label="Mon réseau" className="mb-4 flex gap-1 overflow-x-auto border-b border-border">
+        <div
+          role="tablist"
+          aria-label={t("marketplace.network.panel_title")}
+          className="mb-4 flex gap-1 overflow-x-auto border-b border-border"
+        >
           {tabs.map((item) => {
             const selected = tab === item.id;
             return (
@@ -367,7 +465,9 @@ function NetworkPanel({
                 {item.count !== undefined ? (
                   <Badge
                     variant={item.accent && !selected ? "default" : "secondary"}
-                    className={cn(item.accent && !selected && "bg-brand text-brand-foreground")}
+                    className={cn(
+                      item.accent && !selected && "bg-brand text-brand-foreground"
+                    )}
                   >
                     {item.count}
                   </Badge>
@@ -384,9 +484,15 @@ function NetworkPanel({
           className="pb-4"
         >
           {tab === "connections" ? <ConnectionsTable /> : null}
-          {tab === "pending" ? <PendingTable rows={data?.sent ?? []} isLoading={isLoading} /> : null}
+          {tab === "pending" ? (
+            <PendingTable rows={data?.sent ?? []} isLoading={isLoading} />
+          ) : null}
           {tab === "received" ? (
-            <ReceivedTable rows={received} isLoading={isLoading} onAnswered={onAnswered} />
+            <ReceivedTable
+              rows={received}
+              isLoading={isLoading}
+              onAnswered={onAnswered}
+            />
           ) : null}
         </div>
       </SheetContent>
@@ -399,6 +505,7 @@ function NetworkPanel({
  * signale les demandes reçues auxquelles on n'a pas encore répondu.
  */
 function NetworkLink({ onOpen }: { onOpen: () => void }) {
+  const { t } = useTranslation();
   const { data } = useStats("network");
   const received = data?.pending_received ?? 0;
 
@@ -409,12 +516,14 @@ function NetworkLink({ onOpen }: { onOpen: () => void }) {
       aria-haspopup="dialog"
       className="mx-auto inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-brand-strong underline-offset-4 transition-colors hover:bg-brand-soft hover:underline"
     >
-      Voir mon réseau
+      {t("marketplace.network.see_my_network")}
       <ChevronUp className="size-4" aria-hidden />
       {received > 0 ? (
         <span
           className="rounded-full bg-brand px-2 py-0.5 text-xs font-semibold leading-none text-brand-foreground"
-          aria-label={`${received} demande(s) reçue(s)`}
+          aria-label={t("marketplace.network.received_aria", {
+            count: received,
+          })}
         >
           {received}
         </span>
@@ -424,6 +533,8 @@ function NetworkLink({ onOpen }: { onOpen: () => void }) {
 }
 
 function NetworkContent() {
+  const { t } = useTranslation();
+  const describe = useDescribeCard();
   const { hasProfil, isRecruiter } = useMySpace();
   // Un membre qui a les deux profils choisit avec lequel il agit ; sinon le serveur prend son seul profil
   const hasBoth = hasProfil && isRecruiter;
@@ -456,24 +567,32 @@ function NetworkContent() {
         <Skeleton className="mx-auto h-96 w-full max-w-md" />
       ) : isError || !data ? (
         <p className="mx-auto max-w-md rounded-lg border border-destructive/40 bg-card p-6 text-sm text-destructive">
-          Impossible de charger les profils. Réessayez dans un instant.
+          {t("marketplace.network.load_error")}
         </p>
       ) : (
         <SwipeDeck
           // Le paquet repart de zéro quand on change de profil ou après une réponse depuis le panneau
           key={`${acting ?? "auto"}-${deckVersion}`}
           cards={data}
-          title="Réseau"
+          title={t("marketplace.network.title")}
           hideHeader
-          likeVerb="proposer de se connecter"
-          likeStamp="Connexion"
-          likeAria="Se connecter"
+          likeVerb={t("marketplace.network.like_verb")}
+          likeStamp={t("marketplace.network.like_stamp")}
+          likeAria={t("marketplace.network.like_aria")}
           describe={describe}
           matchedText={(name) =>
-            `${name} souhaite aussi se connecter avec vous. Vous pouvez maintenant échanger.`
+            t("marketplace.network.matched_text", { name })
           }
-          matchedAction={<Button onClick={() => setPanelOpen(true)}>Voir mes connexions</Button>}
-          emptyAction={<Badge variant="secondary">Revenez demain</Badge>}
+          matchedAction={
+            <Button onClick={() => setPanelOpen(true)}>
+              {t("marketplace.network.see_connections")}
+            </Button>
+          }
+          emptyAction={
+            <Badge variant="secondary">
+              {t("marketplace.network.come_back_tomorrow")}
+            </Badge>
+          }
           onSwipe={async (card, direction) => {
             try {
               return await swipe({
@@ -483,7 +602,7 @@ function NetworkContent() {
                 acting,
               }).unwrap();
             } catch {
-              CreationErrorSonner("Impossible d'enregistrer ce choix");
+              CreationErrorSonner(t("marketplace.swipe_error"));
               return null;
             }
           }}
@@ -492,14 +611,18 @@ function NetworkContent() {
               await undo({ context: "network", acting }).unwrap();
               return true;
             } catch {
-              CreationErrorSonner("Impossible d'annuler le dernier choix");
+              CreationErrorSonner(t("marketplace.undo_error"));
               return false;
             }
           }}
         />
       )}
 
-      <NetworkPanel open={panelOpen} onOpenChange={setPanelOpen} onAnswered={() => void handleAnswered()} />
+      <NetworkPanel
+        open={panelOpen}
+        onOpenChange={setPanelOpen}
+        onAnswered={() => void handleAnswered()}
+      />
     </div>
   );
 }

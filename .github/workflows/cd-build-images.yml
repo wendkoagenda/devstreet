@@ -144,17 +144,40 @@ jobs:
           set -eu
           api_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_URL" '.[$k] // empty')"
           api_v1_url="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_API_V1_URL" '.[$k] // empty')"
-          use_s3="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_USE_S3" '.[$k] // empty')"
+          use_s3_raw="$(printf '%s' "$VARS_JSON" | jq -r --arg k "VITE_USE_S3" '.[$k] // empty')"
+          backend_s3_raw="$(printf '%s' "$VARS_JSON" | jq -r --arg k "USE_S3" '.[$k] // empty')"
           for pair in "VITE_API_URL=$api_url" "VITE_API_V1_URL=$api_v1_url"; do
             if [ -z "${pair#*=}" ]; then
               echo "::error::Variable ${pair%%=*} absente (voir deploy/README.md)."
               exit 1
             fi
           done
+          # Normalise true/True/1/yes → true (sinon le JS figé sert /media/ alors que MinIO détient les fichiers).
+          normalize_flag() {
+            case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
+              true|1|yes) printf 'true' ;;
+              false|0|no|"") printf '' ;;
+              *)
+                echo "::error::Valeur invalide pour $2='$1' (attendu : true/false)."
+                exit 1
+                ;;
+            esac
+          }
+          use_s3="$(normalize_flag "$use_s3_raw" VITE_USE_S3)"
+          backend_s3="$(normalize_flag "$backend_s3_raw" USE_S3)"
+          if [ "$backend_s3" = "true" ] && [ "$use_s3" != "true" ]; then
+            echo "::error::USE_S3=True côté backend mais VITE_USE_S3 n'est pas true (frontend.env / variable GitHub). Sans cela le build sert /media/ et les images 404 en prod."
+            exit 1
+          fi
+          if [ "$backend_s3" != "true" ] && [ "$use_s3" = "true" ]; then
+            echo "::error::VITE_USE_S3=true mais USE_S3 n'est pas True côté backend : les URL /api/v1/files/ ne correspondraient pas au stockage."
+            exit 1
+          fi
           # Valeurs publiques (integrees au JavaScript) : leur empreinte distingue deux configurations du meme commit.
           config="$(printf '%s\n%s\n%s\n' "$api_url" "$api_v1_url" "$use_s3" | sha256sum | cut -c1-8)"
           image="$FRONTEND_BASE:$BRANCHE-$SHA-$config"
           echo "frontend_image=$image" >> "$GITHUB_OUTPUT"
+          echo "VITE_USE_S3(normalise)=$use_s3 USE_S3(normalise)=$backend_s3" >> "$GITHUB_STEP_SUMMARY"
           if docker manifest inspect "$image" > /dev/null 2>&1; then
             echo "$image existe deja : pas de reconstruction." >> "$GITHUB_STEP_SUMMARY"
             exit 0

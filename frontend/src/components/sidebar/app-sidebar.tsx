@@ -35,7 +35,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="p-0">
         <AppSidebarHeader />
       </SidebarHeader>
-      <SidebarContent className="gap-0 overflow-x-hidden overflow-y-auto px-2 py-2">
+      <SidebarContent className="gap-0 overflow-x-hidden overflow-y-auto px-2 py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <AppSidebarMainMenu />
       </SidebarContent>
       <SidebarRail />

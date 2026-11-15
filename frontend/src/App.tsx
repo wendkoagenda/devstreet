@@ -57,6 +57,7 @@ import MessagesPage from "./models/forum/pages/messages-page";
 import AccountAccessGate from "./components/layouts/account-access-gate";
 import OnboardingPage from "./models/onboarding/pages/onboarding-page";
 import PublicationDetailPage from "./models/forum/pages/publication-detail-page";
+import GuidePage from "./models/guide/pages/guide-page";
 import { useAuthSlice } from "./models/auth/slice";
 import { useEffect } from "react";
 
@@ -103,6 +104,8 @@ function App() {
           />
 
           <Route element={<PrivateRoute />}>
+            <Route element={<GuidePage />} path="/aide" />
+            <Route element={<GuidePage />} path="/aide/*" />
             <Route element={<FeedPage />} path="/" />
             <Route
               element={<PublicationDetailPage />}

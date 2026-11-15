@@ -32,10 +32,11 @@ il faut encore enregistrer. Une génération n'écrit jamais la présentation du
 | POST /api/v1/projects/{id}/presentation/suggestions | description et language (fr/en), retourne une analyse presentation-v1, 202 ou 200 |
 | GET /api/v1/analyses/{id} | Lecture bornée jusqu'au résultat ; quotas partagés avec l'atelier IA |
 
-Les images sont vérifiées puis réencodées en JPEG sans métadonnées. Leur stockage est séparé
-de MEDIA_ROOT, dans `backend/private_uploads/project_images` (setting Django
-`DEVSTREET_HUB_PRIVATE_IMAGE_ROOT`). Prévoir un volume persistant et sa sauvegarde en production,
-sans publication directe de ce répertoire par le serveur web.
+Les images sont vérifiées puis réencodées en JPEG sans métadonnées. Avec `USE_S3=True`, elles
+sont stockées dans MinIO sous le préfixe `hub_project_images/` (même bucket privé que le reste,
+mais **jamais** via `/api/v1/files/` — uniquement la route présentation ci-dessus). Sans S3,
+elles restent sur le disque `DEVSTREET_HUB_PRIVATE_IMAGE_ROOT` (`backend/private_uploads/project_images`),
+hors de `MEDIA_ROOT` et non publié par le serveur web.
 
 L'amélioration réutilise le worker d'analyses et la configuration OpenAI existants. En local,
 `DEVSTREET_HUB_AI_INLINE_WORKER=true` permet le traitement immédiat ; sinon lancer
