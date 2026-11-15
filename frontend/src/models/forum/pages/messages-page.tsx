@@ -53,7 +53,6 @@ import {
   parseRichMessage,
 } from "../lib/rich-message";
 import type { Espace } from "../schema";
-import type { AppDispatch } from "@/redux/store";
 
 function memberLabel(member: ConversationMember | null | undefined) {
   if (!member) return "Membre";

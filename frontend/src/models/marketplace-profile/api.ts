@@ -1,5 +1,6 @@
 import { marketplaceSpaceApi } from "@/models/marketplace-space/api";
 import type { Availability, Experience, PendingReview, Prestation } from "./schema";
+import type { CvSettings, CvSettingsPayload } from "./cv-settings";
 
 /** Calendrier, expériences et prestations du profil connecté (endpoints injectés dans l'API « espace marketplace »). */
 export const marketplaceProfileApi = marketplaceSpaceApi.injectEndpoints({
@@ -78,6 +79,20 @@ export const marketplaceProfileApi = marketplaceSpaceApi.injectEndpoints({
       query: (body) => ({ url: "/marketplace/me/reviews", method: "POST", body }),
       invalidatesTags: ["PendingReviews", "MyReviews"],
     }),
+
+    // Réglages de style du CV automatique (couleur, police, mise en page…)
+    getMyCvSettings: builder.query<CvSettingsPayload, void>({
+      query: () => "/marketplace/me/cv-settings",
+      providesTags: ["CvSettings"],
+    }),
+    updateMyCvSettings: builder.mutation<CvSettingsPayload, Partial<CvSettings>>({
+      query: (body) => ({ url: "/marketplace/me/cv-settings", method: "PATCH", body }),
+      invalidatesTags: ["CvSettings"],
+    }),
+    resetMyCvSettings: builder.mutation<CvSettingsPayload, void>({
+      query: () => ({ url: "/marketplace/me/cv-settings", method: "DELETE" }),
+      invalidatesTags: ["CvSettings"],
+    }),
   }),
 });
 
@@ -96,4 +111,7 @@ export const {
   useDeletePrestationMutation,
   useGetPendingReviewsQuery,
   useCreateReviewMutation,
+  useGetMyCvSettingsQuery,
+  useUpdateMyCvSettingsMutation,
+  useResetMyCvSettingsMutation,
 } = marketplaceProfileApi;

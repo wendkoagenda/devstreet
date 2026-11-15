@@ -202,6 +202,8 @@ export function draftToForm(draft: OfferAiDraft): OfferFormValues {
     experience_level: draft.experience_level,
     work_mode: draft.work_mode,
     contract_duration: draft.contract_duration != null ? String(draft.contract_duration) : "",
+    // Le brouillon IA exprime la durée en mois (bornée de 1 à 36 côté serveur)
+    contract_duration_unit: "month",
     budget_min: draft.budget_min != null ? String(draft.budget_min) : "",
     budget_max: draft.budget_max != null ? String(draft.budget_max) : "",
     currency: draft.currency || "XOF",
