@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { KeyRound } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { CreationErrorSonner, CreationSuccessSonner } from "@/helpers/api/feed-backs";
 import { ConnectedComputersSection } from "@/models/devstreet-hub/components/connected-computers-section";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGetMySpaceQuery, useUpdateMyProfilMutation } from "@/models/marketplace-space/api";
 import { useGetMyProfileQuery, useUpdateMyProfileMutation } from "../api";
 import type { User } from "../schema";
 import { useAuthSlice, useChangePasswordDialogStore } from "../slice";
@@ -51,7 +53,7 @@ type EditProfileDialogProps = {
 
 /**
  * Boîte de dialogue « Modifier le profil » : tout ce qui se modifie sur son compte, sans quitter la page.
- * Identité (prénom, nom, nom d'utilisateur), mot de passe et ordinateurs connectés.
+ * Identité (prénom, nom, nom d'utilisateur), disponibilité (open to work), mot de passe et ordinateurs connectés.
  * La photo et la bannière se changent directement sur la page de profil, avec leurs petits boutons.
  */
 export function EditProfileDialog({
@@ -125,6 +127,8 @@ export function EditProfileDialog({
           />
           )}
 
+          <OpenToWorkSection open={open} onUpdated={onUpdated} />
+
           <Separator />
 
           <section className="flex flex-col gap-3">
@@ -146,6 +150,50 @@ export function EditProfileDialog({
 
       {/* Boîte de dialogue du changement de mot de passe, ouverte depuis la section Sécurité */}
       <ChangePasswordDialog />
+    </>
+  );
+}
+
+/** Disponibilité « open to work » du profil dev (absente sans profil dev), enregistrée dès qu'on la change. */
+function OpenToWorkSection({ open, onUpdated }: { open: boolean; onUpdated?: () => void }) {
+  const { data } = useGetMySpaceQuery(undefined, { skip: !open });
+  const [updateProfil, { isLoading }] = useUpdateMyProfilMutation();
+  const profil = data?.profil;
+  if (!profil) return null;
+
+  const toggle = async (checked: boolean) => {
+    try {
+      await updateProfil({ is_open_to_work: checked }).unwrap();
+      CreationSuccessSonner(checked ? "Vous êtes open to work" : "Open to work désactivé");
+      onUpdated?.();
+    } catch {
+      CreationErrorSonner("Impossible de modifier votre disponibilité");
+    }
+  };
+
+  return (
+    <>
+      <Separator />
+      <section className="flex flex-col gap-3">
+        <h3 className="text-sm font-semibold text-foreground">Disponibilité</h3>
+        <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+          <Checkbox
+            id="profile-open-to-work"
+            checked={profil.is_open_to_work}
+            disabled={isLoading}
+            onCheckedChange={(checked) => void toggle(checked === true)}
+            className="mt-0.5"
+          />
+          <div className="flex flex-col gap-0.5">
+            <Label htmlFor="profile-open-to-work" className="cursor-pointer">
+              Open to work
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Affiche l'anneau « open to work » sur votre profil et vous fait apparaître dans les recommandations.
+            </p>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
