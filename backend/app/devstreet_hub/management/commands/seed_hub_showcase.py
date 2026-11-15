@@ -58,7 +58,10 @@ class Command(BaseCommand):
                 "Lance d'abord : python manage.py seed_forum_showcase"
             )
 
-        developer = Role.objects.get(name="DevStreet Hub Developer")
+        developer, _ = Role.objects.get_or_create(
+            name="DevStreet Hub Developer",
+            defaults={"description": "Membre contributeur DevStreet Hub"},
+        )
         for user in users.values():
             user.roles.add(developer)
 
