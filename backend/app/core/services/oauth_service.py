@@ -285,10 +285,6 @@ def resolve_user(profile: OAuthProfile):
             provider_user_id=profile.provider_user_id,
             email=profile.email,
         )
-        # Alerte de sécurité : un nouveau moyen de connexion vient d'être ajouté au compte
-        EmailService().queue(
-            email_catalog.provider_linked(user.email, user.first_name or user.username, profile.provider)
-        )
         return user
 
     username = _unique_username(profile.email.split('@')[0])

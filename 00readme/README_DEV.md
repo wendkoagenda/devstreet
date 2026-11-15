@@ -1,6 +1,6 @@
 # Coder avec devstreet : règles du CD
 
-Pour les développeurs. Mise en place de la VM et des environnements : [`README_ONBOARDING.md`](./README_ONBOARDING.md) et [`README_CD.md`](./README_CD.md).
+Pour les développeurs. Vue d'ensemble de la chaîne CI/CD : [`README_PIPELINE_CI_CD.md`](./README_PIPELINE_CI_CD.md). Mise en place de la VM et des environnements : [`README_ONBOARDING.md`](./README_ONBOARDING.md) et [`README_CD.md`](./README_CD.md).
 
 ## Principe
 
@@ -101,8 +101,8 @@ push sandbox / main / prod ─► CI - ORCHESTRATEUR ─► (CI verte) ─► CD
 
 | Workflow                           | Rôle                                                                                | Se lance                                      |
 | ---------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------- |
-| `CI - ORCHESTRATEUR`               | Appelle les quatre contrôles ci-dessous, puis le CD sur un push de branche déployée | PR, revue de PR, push `develop`/`main`/`prod` |
-| `CI - BACKEND`                     | Conflits de migrations, migrations manquantes, tests Django                         | par l'orchestrateur                           |
+| `CI - ORCHESTRATEUR`               | Appelle les quatre contrôles ci-dessous, puis le CD sur un push de branche déployée | PR, revue de PR, push `sandbox`/`main`/`prod` |
+| `CI - BACKEND`                     | Conflits de migrations, migrations manquantes (les tests Django ne tournent plus en CI) | par l'orchestrateur                       |
 | `CI - FRONTEND`                    | Lint, tests, build de production                                                    | par l'orchestrateur                           |
 | `CI - SECURITE`                    | Scanner de sécurité                                                                 | par l'orchestrateur                           |
 | `CI - NON-REGRESSION`              | Signale les zones protégées touchées, bloque jusqu'à l'approbation d'un responsable | par l'orchestrateur                           |
@@ -116,7 +116,7 @@ push sandbox / main / prod ─► CI - ORCHESTRATEUR ─► (CI verte) ─► CD
 
 - Les quatre contrôles de la CI sont obligatoires pour merger.
 - Une CI rouge ne déploie rien. Une PR ne déploie jamais.
-- Un workflow manuel s'exécute sur la branche choisie dans « Use workflow from » : c'est elle qui donne accès à l'environnement GitHub du même nom (`develop`, `main`, `prod`).
+- Un workflow manuel s'exécute sur la branche choisie dans « Use workflow from » : c'est elle qui donne accès à l'environnement GitHub du même nom (`sandbox`, `main`, `prod`).
 - Si un push plus récent arrive pendant la CI, le commit plus ancien n'est pas déployé.
 - Si `GIT-CLI - ENFORCEMENT` échoue, un commit ou une PR n'est pas passé par `git-cli/`, ou le flux de branches n'est pas respecté.
 

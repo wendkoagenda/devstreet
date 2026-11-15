@@ -1,13 +1,13 @@
 # Plan du déploiement (CD)
 
-Décisions prises le 2026-10-22, révisées le 2026-10-23 (environnements GitHub). Les workflows de déploiement s'appellent `cd-*.yml` ; ceux qui valident une pull request restent `ci-*.yml` (voir [`README_CI.md`](./README_CI.md)). Le contrat du reverse proxy est décrit dans [`README_SAME_ORIGIN_COOKIES.md`](./README_SAME_ORIGIN_COOKIES.md) §3.2.
+Décisions prises le 2026-10-22, révisées le 2026-10-23 (environnements GitHub) et le 2026-11-12 (`sandbox` remplace `develop` comme branche déployée ; `develop` n'est jamais déployée). Vue d'ensemble de la chaîne : [`README_PIPELINE_CI_CD.md`](./README_PIPELINE_CI_CD.md). Les workflows de déploiement s'appellent `cd-*.yml` ; ceux qui valident une pull request restent `ci-*.yml` (voir [`README_CI.md`](./README_CI.md)). Le contrat du reverse proxy est décrit dans [`README_SAME_ORIGIN_COOKIES.md`](./README_SAME_ORIGIN_COOKIES.md) §3.2.
 
 ## Décisions
 
 | Sujet | Décision |
 |---|---|
-| Namespace | Une instance déployée de l'application (ex. `devstreet-develop`) : projet Docker Compose (`-p`), conteneurs, réseau et volumes propres, dossier `/opt/apps/<namespace>/` |
-| Environnements | Un **environnement GitHub** par branche déployée, du même nom : `develop`, `main`, `prod`, **réservé à cette seule branche** (règle « Deployment branches and tags »). Chaque branche peut viser une VM différente |
+| Namespace | Une instance déployée de l'application (ex. `devstreet-sandbox`) : projet Docker Compose (`-p`), conteneurs, réseau et volumes propres, dossier `/opt/apps/<namespace>/` |
+| Environnements | Un **environnement GitHub** par branche déployée, du même nom : `sandbox`, `main`, `prod`, **réservé à cette seule branche** (règle « Deployment branches and tags »). Chaque branche peut viser une VM différente |
 | Variables et secrets | Dans l'environnement de la branche, sous leur nom simple (`SECRET_KEY`, `VM_SSH_HOST`…), sans valeur partagée entre branches ni au niveau du dépôt. GitHub fait foi ; modifiables par `deploy_env.py` ou dans l'interface GitHub |
 | Liste de référence | `backend/.env.example` et `frontend/.env.example` : ligne active = obligatoire, `# NOM=` = facultative, marqueur `# @secret` = secret GitHub (sinon variable). Seuls les noms listés sont transmis aux conteneurs |
 | Définir les valeurs | Script local `git-cli/deploy_env.py`, réservé aux `GIT_MASTER_USERS` : crée l'environnement et sa règle de branche, puis écrit les valeurs. Pas un workflow : les champs d'un lancement manuel ne sont pas masqués, et le jeton d'un workflow ne peut pas créer d'environnement (il faudrait stocker un jeton administrateur) |
@@ -20,12 +20,12 @@ Décisions prises le 2026-10-22, révisées le 2026-10-23 (environnements GitHub
 | `/static` et `/media` | Servis par le proxy depuis `/srv/public/<namespace>/` (monté en lecture seule), avec `Content-Disposition: attachment` et `nosniff` sur `/media` |
 | Santé | Route `/api/health` (200 si la base répond, 503 sinon, sans détail), vérifications de santé Docker, contrôle de bout en bout depuis le runner |
 | Retour arrière | Manuel seulement (relance avec un SHA) : les migrations déjà appliquées peuvent rendre l'ancienne image incompatible |
-| Déclenchement | Automatique uniquement sur un push ou un merge vers `develop`, `main` ou `prod` : le job `deploiement` de `ci-orchestrateur` appelle `cd-orchestrateur` une fois la CI verte, sur la branche poussée (seule à avoir accès à son environnement). Un commit qui n'est plus la pointe de la branche n'est pas déployé. Manuel : « Use workflow from » = la branche, SHA facultatif, réservé aux `GIT_MASTER_USERS` |
+| Déclenchement | Automatique uniquement sur un push ou un merge vers `sandbox`, `main` ou `prod` : le job `deploiement` de `ci-orchestrateur` appelle `cd-orchestrateur` une fois la CI verte, sur la branche poussée (seule à avoir accès à son environnement). Un commit qui n'est plus la pointe de la branche n'est pas déployé. Manuel : « Use workflow from » = la branche, SHA facultatif, réservé aux `GIT_MASTER_USERS` |
 | Transport | `DEPLOY_ACCES` : `ssh` (IP publique et clé privée) ou `gcp` (IAP, sans IP publique, sans clé). Les scripts exécutés sur la VM sont communs aux deux |
 
 ## Limites assumées
 
-- **L'isolation repose sur la règle de branche de chaque environnement** et sur la protection des branches `develop`, `main` et `prod` : si la règle est retirée dans l'interface, ou si quelqu'un peut pousser sans revue sur une de ces branches, les secrets de son environnement deviennent lisibles. `deploy_env.py etat` contrôle la règle. Atténuation complémentaire : `deploy/`, `git-cli/deploy_env.py` et `cd-*.yml` dans la zone protégée `deploiement-ci` et dans `PROTECTED_PATHS`.
+- **L'isolation repose sur la règle de branche de chaque environnement** et sur la protection des branches `sandbox`, `main` et `prod` : si la règle est retirée dans l'interface, ou si quelqu'un peut pousser sans revue sur une de ces branches, les secrets de son environnement deviennent lisibles. `deploy_env.py etat` contrôle la règle. Atténuation complémentaire : `deploy/`, `git-cli/deploy_env.py` et `cd-*.yml` dans la zone protégée `deploiement-ci` et dans `PROTECTED_PATHS`.
 - **Aucune sauvegarde** de la base dans un conteneur.
 - **Courte coupure** à chaque déploiement (remplacement des conteneurs, migrations au démarrage).
 - **`deploy` vaut presque `root`** : appartenir au groupe `docker` le permet.

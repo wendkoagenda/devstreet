@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { CityField, CountryField, PhoneField } from "@/components/geo/geo-form-fields";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -32,10 +33,6 @@ type ProfilFormProps = {
   profil: MyProfil | null;
 };
 
-const countryOptions = COUNTRIES.map((country) => ({
-  value: country.code,
-  label: country.name,
-}));
 const timezoneOptions = TIMEZONES.map((zone) => ({ value: zone, label: zone }));
 const currencyOptions = CURRENCIES.map((currency) => ({
   value: currency.code,
@@ -104,21 +101,21 @@ export function ProfilForm({ profil }: ProfilFormProps) {
             description="Résumé affiché en tête de votre CV."
             className="sm:col-span-2"
           />
-          <SelectField
+          <CountryField
             control={form.control}
             name="country"
             label="Pays"
-            options={countryOptions}
+            resetOnChange={["city"]}
             onValueChange={suggestTimezone}
           />
-          <TextField control={form.control} name="city" label="Ville" />
+          <CityField control={form.control} name="city" label="Ville" countryName="country" />
           <SelectField
             control={form.control}
             name="timezone"
             label="Fuseau horaire"
             options={timezoneOptions}
           />
-          <TextField control={form.control} name="phone" label="Téléphone" />
+          <PhoneField control={form.control} name="phone" label="Téléphone" countryName="country" />
           <TextField
             control={form.control}
             name="languages"

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { INVALID_PHONE_MESSAGE, isValidOptionalPhone } from "@/components/geo/phone";
 
 /** Profil de l'utilisateur connecté, tel que renvoyé par GET /marketplace/me. */
 export type MyProfil = {
@@ -85,7 +86,11 @@ const country = z.string().regex(/^[A-Za-z]{2}$/, "Choisissez un pays");
 export const profilFormSchema = z.object({
   headline: z.string().trim().max(160, "160 caractères au maximum"),
   bio: z.string().trim(),
-  phone: z.string().trim().max(20, "20 caractères au maximum"),
+  phone: z
+    .string()
+    .trim()
+    .max(20, "20 caractères au maximum")
+    .refine(isValidOptionalPhone, INVALID_PHONE_MESSAGE),
   country,
   city: z.string().trim().max(100),
   languages: z.string().trim(),
@@ -136,7 +141,11 @@ export const companyFormSchema = z.object({
       (value) => value === "" || /^\S+@\S+\.\S+$/.test(value),
       "E-mail invalide"
     ),
-  phone: z.string().trim().max(20, "20 caractères au maximum"),
+  phone: z
+    .string()
+    .trim()
+    .max(20, "20 caractères au maximum")
+    .refine(isValidOptionalPhone, INVALID_PHONE_MESSAGE),
   country,
   city: z.string().trim().max(100),
   address: z.string().trim().max(255),

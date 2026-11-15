@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { CountryField } from "@/components/geo/geo-form-fields";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
@@ -8,14 +9,10 @@ import { CreationSuccessSonner } from "@/helpers/api/feed-backs";
 import { useCreateMyCompanyMutation } from "@/models/marketplace-space/api";
 import { SelectField, TextField } from "@/models/marketplace-space/components/form-fields";
 import { applySubmitError } from "@/models/marketplace-space/components/submit-error";
-import { COMPANY_SIZES, COUNTRIES, SECTORS } from "@/models/marketplace-space/options";
+import { COMPANY_SIZES, SECTORS } from "@/models/marketplace-space/options";
 import { companyStepSchema, type CompanyStepValues } from "../schema";
 import { OnboardingShell } from "./onboarding-shell";
 
-const countryOptions = COUNTRIES.map((country) => ({
-  value: country.code,
-  label: country.name,
-}));
 
 /** Étape entreprise : l'essentiel (nom, secteur, taille, pays) sur un seul écran. */
 export function CompanyStep({
@@ -64,7 +61,7 @@ export function CompanyStep({
             <SelectField control={form.control} name="sector" label="Secteur" options={SECTORS} />
             <SelectField control={form.control} name="size" label="Taille" options={COMPANY_SIZES} />
           </div>
-          <SelectField control={form.control} name="country" label="Pays" options={countryOptions} />
+          <CountryField control={form.control} name="country" label="Pays" />
 
           {globalError ? (
             <div role="alert" className="text-sm text-destructive">

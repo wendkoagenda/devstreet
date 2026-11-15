@@ -68,4 +68,5 @@ Détail : [`git-cli/README.md`](git-cli/README.md)
 | [`frontend/README.md`](frontend/README.md) | Install, `.env`, commandes |
 | [`backend/scripts/README.md`](backend/scripts/README.md) | Générateur CRUD (backend + frontend) |
 | [`git-cli/README.md`](git-cli/README.md) | Workflow Git obligatoire |
+| [`00readme/README_PIPELINE_CI_CD.md`](00readme/README_PIPELINE_CI_CD.md) | Vue d'ensemble de la chaîne CI/CD (poste, CI, CD, VM, maintenance) |
 | [`00readme/`](00readme/) | Onboarding, CI, CD, sécurité, etc. |
