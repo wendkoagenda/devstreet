@@ -16,7 +16,7 @@ def run_seed_showcase(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0008_username_unique_insensible_casse"),
+        ("core", "0011_password_challenge_purpose"),
         ("communaute", "0020_seed_tag_aliases_catalog"),
         ("marketplace", "0008_profil_cv_settings"),
         ("projects", "0005_git_oauth_authorization"),
