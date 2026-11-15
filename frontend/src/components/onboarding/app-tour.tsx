@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useState,
   type CSSProperties,
 } from "react";
@@ -12,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useAuthSlice } from "@/models/auth/slice";
-import { APP_TOUR_STEPS, tourStorageKey, type TourStep } from "./tour-steps";
+import { getTourSteps, tourStorageKey, type TourStep } from "./tour-steps";
+import { useAccountType } from "@/models/auth/account-type/use-account-type";
 
 type Spot = { top: number; left: number; width: number; height: number };
 
@@ -115,7 +117,8 @@ export function AppTour() {
   const [index, setIndex] = useState(0);
   const [spot, setSpot] = useState<Spot | null>(null);
 
-  const steps = APP_TOUR_STEPS;
+  const { isEntrepriseOnly } = useAccountType();
+  const steps = useMemo(() => getTourSteps(isEntrepriseOnly), [isEntrepriseOnly]);
   const step = steps[index];
 
   useEffect(() => {

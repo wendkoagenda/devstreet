@@ -40,6 +40,11 @@ class Command(BaseCommand):
             help='Ne pas créer l\'utilisateur admin par défaut',
         )
         parser.add_argument(
+            '--only-admin',
+            action='store_true',
+            help="Ne créer que l'utilisateur admin par défaut (les rôles doivent déjà exister)",
+        )
+        parser.add_argument(
             '--admin-email',
             type=str,
             default=None,
@@ -56,6 +61,16 @@ class Command(BaseCommand):
         """
         Exécute la commande d'initialisation.
         """
+        if options['only_admin']:
+            # Utilisé par la migration finale : le compte admin utilise le vrai modèle User,
+            # il doit donc être créé quand toutes les colonnes de la table existent.
+            with transaction.atomic():
+                self._create_admin_user(
+                    options['admin_email'] or settings.ADMIN_EMAIL,
+                    options['admin_password'] or settings.ADMIN_PASSWORD,
+                )
+            return
+
         self.stdout.write(
             self.style.SUCCESS('🚀 Initialisation des données de base...')
         )

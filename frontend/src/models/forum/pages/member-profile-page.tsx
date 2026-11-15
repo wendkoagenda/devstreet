@@ -34,6 +34,7 @@ import { FeedComposer } from "../components/feed-composer";
 import { ForumAvatar } from "../components/forum-avatar";
 import { ProfileCompanySection } from "../components/profile-company-section";
 import { ProfileDevSection } from "../components/profile-dev-section";
+import { useAccountType } from "@/models/auth/account-type/use-account-type";
 import { PublicationCard } from "../components/publication-card";
 
 const SECTIONS: ProfileSection[] = [
@@ -60,6 +61,9 @@ const NAV_ITEMS: {
   { id: "entreprise", label: "Entreprise", icon: Building2 },
 ];
 
+/** Onglets du forum : absents pour un compte entreprise seule. */
+const FORUM_SECTIONS: ProfileSection[] = ["publications", "projets", "contributions"];
+
 const ME_ALIASES = ["me", "moi"];
 
 export default function MemberProfilePage() {
@@ -68,10 +72,11 @@ export default function MemberProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentUser = useAuthSlice((state) => state.user);
   const currentUserId = currentUser?.id ?? null;
+  const { isEntrepriseOnly: viewerEntrepriseOnly } = useAccountType();
 
   const rawUsername = (params.username ?? "").trim();
   const isMeAlias = ME_ALIASES.includes(rawUsername.toLowerCase());
-  const section = parseSection(searchParams.get("section"));
+  const requestedSection = parseSection(searchParams.get("section"));
   const [editOpen, setEditOpen] = useState(false);
 
   const setSection = (next: ProfileSection) => {
@@ -160,6 +165,16 @@ export default function MemberProfilePage() {
   const banner =
     profile.banner || (isOwnProfile ? currentUser?.banner : "") || "";
   const bannerUrl = banner ? buildMediaUrl(banner) : null;
+
+  // Un compte entreprise seule ne voit pas les onglets du forum ; sur son propre profil, il n'a pas non plus
+  // l'onglet dev (il peut ajouter cet espace depuis le menu). Il arrive sur l'onglet utile.
+  const hiddenForViewer = (id: ProfileSection) =>
+    viewerEntrepriseOnly && (FORUM_SECTIONS.includes(id) || (id === "dev" && isOwnProfile));
+  const section: ProfileSection = hiddenForViewer(requestedSection)
+    ? !isOwnProfile && profile.profil_dev
+      ? "dev"
+      : "entreprise"
+    : requestedSection;
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5">
@@ -254,6 +269,7 @@ export default function MemberProfilePage() {
         <aside className="space-y-2 lg:sticky lg:top-4 lg:self-start">
           <nav className="rounded-2xl border border-border bg-card p-2 shadow-sm">
             {NAV_ITEMS.filter((item) => {
+              if (hiddenForViewer(item.id)) return false;
               // Les onglets Profil dev et Entreprise n'apparaissent que si le profil existe
               // (ou, sur son propre profil, pour proposer de le créer)
               if (item.id === "dev") return Boolean(profile.profil_dev) || isOwnProfile;

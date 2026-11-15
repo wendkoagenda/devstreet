@@ -18,7 +18,7 @@ from django.contrib.auth import get_user_model
 from django.core import signing
 from django.db import transaction
 
-from app.core.models import Role, SocialAccount
+from app.core.models import SocialAccount
 from app.core.username_rules import check_username
 
 logger = logging.getLogger(__name__)
@@ -251,20 +251,13 @@ def _unique_username(base: str) -> str:
     return candidate
 
 
-def _ensure_member_role_name() -> str:
-    """Délègue la création du rôle membre au helper auth existant."""
-    from app.core.views.auth_views import _ensure_default_member_role
-
-    return _ensure_default_member_role()
-
-
 @transaction.atomic
 def resolve_user(profile: OAuthProfile):
     """
     Retrouve ou crée l'utilisateur DevStreet pour un profil OAuth.
     - SocialAccount existant → cet utilisateur
     - E-mail déjà en base → lie le provider puis connecte
-    - Sinon → crée un compte (mot de passe inutilisable) + rôle membre
+    - Sinon → crée un compte (mot de passe inutilisable) ; le type de compte et le rôle sont choisis à l'onboarding
     """
     existing_link = (
         SocialAccount.objects.select_related('user')
@@ -292,8 +285,6 @@ def resolve_user(profile: OAuthProfile):
         )
         return user
 
-    role_name = _ensure_member_role_name()
-    role = Role.objects.get(name=role_name)
     username = _unique_username(profile.email.split('@')[0])
     user = User(
         email=profile.email,
@@ -304,7 +295,6 @@ def resolve_user(profile: OAuthProfile):
     )
     user.set_unusable_password()
     user.save()
-    user.roles.add(role)
     SocialAccount.objects.create(
         user=user,
         provider=profile.provider,

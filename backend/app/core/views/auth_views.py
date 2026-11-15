@@ -21,6 +21,7 @@ from django.contrib.auth import get_user_model
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from app.core.serializers import (
+    AccountTypeSerializer,
     UserSerializer,
     PasswordChangeSerializer,
     UserLoginSerializer,
@@ -31,8 +32,8 @@ from app.core.serializers import (
     VerifyResetCodeSerializer,
     ResetPasswordSerializer,
 )
+from app.core.services.account_type_service import AccountTypeService
 from app.core.services.user_service import UserService
-from app.core.models import Role
 from app.core.services.forgot_password_service import (
     ForgotPasswordService,
     PasswordResetError,
@@ -263,6 +264,29 @@ def me_view(request):
     """Identité, rôles et permissions de l'utilisateur, relus en base (donc à jour sans reconnexion)."""
     data = UserLoginSerializer(request.user).data
     return Response({'user': data, 'permissions': request.user.get_all_permissions()}, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_description=(
+        "Choisit le type de compte (dev, entreprise, both) à l'onboarding, ou ajoute le type manquant plus tard. "
+        "Un type déjà porté n'est jamais retiré ; les rôles correspondants sont attribués."
+    ),
+    request_body=AccountTypeSerializer,
+    responses={200: "Utilisateur et permissions à jour", 400: "Type invalide", 401: "Non authentifié"},
+    tags=['Auth']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def account_type_view(request):
+    """Enregistre le type de compte choisi et renvoie la session à jour (utilisateur + permissions)."""
+    serializer = AccountTypeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = AccountTypeService.add_type(request.user, serializer.validated_data['account_type'])
+    return Response(
+        {'user': UserLoginSerializer(user).data, 'permissions': user.get_all_permissions()},
+        status=status.HTTP_200_OK,
+    )
 
 
 @swagger_auto_schema(
@@ -611,42 +635,6 @@ def user_roles_view(request):
     }, status=status.HTTP_200_OK)
 
 
-def _ensure_default_member_role() -> str:
-    """Garantit l'existence du rôle membre public avec ses droits forum, projets, marketplace et IA."""
-    from app.communaute.permission_codes import COMMUNAUTE_PERMISSION_CODES
-    from app.core.models import Permission
-    from app.devstreet_hub.management.commands.init_devstreet_hub import DEVELOPER_CODES
-    from app.marketplace.permission_codes import MARKETPLACE_PERMISSION_CODES
-
-    role_name = 'DevStreet Hub Developer'
-    role, _ = Role.objects.get_or_create(
-        name=role_name,
-        defaults={
-            'description': (
-                'Membre DevStreet (forum, likes/commentaires, projets, marketplace)'
-            ),
-        },
-    )
-    needed_codes = (
-        set(COMMUNAUTE_PERMISSION_CODES)
-        | set(DEVELOPER_CODES)
-        | set(MARKETPLACE_PERMISSION_CODES)
-        | {'ai.chat'}
-    )
-    existing_codes = set(role.permissions.values_list('code', flat=True))
-    missing_codes = needed_codes - existing_codes
-    if missing_codes:
-        perms = [
-            Permission.objects.get_or_create(
-                code=code,
-                defaults={'description': f'Permission {code}'},
-            )[0]
-            for code in sorted(missing_codes)
-        ]
-        role.permissions.add(*perms)
-    return role_name
-
-
 @swagger_auto_schema(
     method='post',
     operation_description="Inscription publique : crée le compte membre, pose les cookies JWT",
@@ -671,7 +659,8 @@ def register_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     data = serializer.validated_data
-    role_names = [_ensure_default_member_role()]
+    # Le rôle est attribué au choix du type de compte (onboarding), pas à l'inscription
+    role_names = []
 
     try:
         user = UserService().create_user(

@@ -81,5 +81,15 @@ export const APP_TOUR_STEPS: TourStep[] = [
   },
 ];
 
+/** Étapes visibles d'un compte entreprise seule : pas de forum, de communautés, de chaînes, de favoris ni de projets. */
+const ENTREPRISE_TOUR_STEP_IDS = ["welcome", "messages", "marketplace", "search"];
+
+/** Étapes de la visite, limitées à ce que le menu du compte affiche réellement. */
+export function getTourSteps(entrepriseOnly: boolean): TourStep[] {
+  return entrepriseOnly
+    ? APP_TOUR_STEPS.filter((step) => ENTREPRISE_TOUR_STEP_IDS.includes(step.id))
+    : APP_TOUR_STEPS;
+}
+
 export const tourStorageKey = (userId: number | string) =>
   `devstreet.tour.v1.${userId}`;
