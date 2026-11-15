@@ -105,7 +105,6 @@
         ".github/**",
         ".githooks/**",
         "git-cli/**",
-        "terraform/**",
         "deploy/**",
         "backend/scripts/deploy_env/**",
         "frontend/Dockerfile",
