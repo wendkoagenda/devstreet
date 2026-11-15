@@ -297,9 +297,13 @@ class Command(BaseCommand):
 
     # ── Avis, swipes, connexions ─────────────────────────────────────────────
 
+    def _dev_profil(self, key: str) -> Profil:
+        """Profil type=dev de la personne (les avis n'acceptent que des profils dev)."""
+        return Profil.objects.get(user=self.users[key], type=Profil.TYPE_DEV)
+
     def _reviews(self):
         for author_key, target_key, rating, comment, link, public in demo.REVIEWS:
-            author, target = self.profils[author_key], self.profils[target_key]
+            author, target = self._dev_profil(author_key), self._dev_profil(target_key)
             candidature = (
                 Candidature.objects.filter(offer=self.offers[link[0]], profil=self.profils[link[1]]).first() if link else None
             )
