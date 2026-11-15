@@ -9,6 +9,7 @@ from app.core.views.auth_views import (
     logout_view,
     csrf_view,
     me_view,
+    account_type_view,
     profile_view,
     public_profile_view,
     profile_photo_view,
@@ -69,6 +70,9 @@ urlpatterns = [
 
     # Utilisateur connecté + permissions (lus en base)
     path('auth/me', me_view, name='me'),
+
+    # Choix du type de compte (onboarding) ou ajout d'un type
+    path('auth/account-type', account_type_view, name='account_type'),
 
     # Déconnexion (blacklist du token de rafraîchissement)
     path('auth/logout', logout_view, name='logout'),

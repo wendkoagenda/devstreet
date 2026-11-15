@@ -54,6 +54,8 @@ import LegacyProfileRedirectPage from "./models/forum/pages/legacy-profile-redir
 import EntrepriseInvitationPage from "./models/marketplace-space/pages/entreprise-invitation-page";
 import FavoritesPage from "./models/forum/pages/favorites-page";
 import MessagesPage from "./models/forum/pages/messages-page";
+import AccountAccessGate from "./components/layouts/account-access-gate";
+import OnboardingPage from "./models/onboarding/pages/onboarding-page";
 import PublicationDetailPage from "./models/forum/pages/publication-detail-page";
 import { useAuthSlice } from "./models/auth/slice";
 import { useEffect } from "react";
@@ -69,6 +71,8 @@ function App() {
     <>
       <Routes>
         <Route element={<AppLayout />}>
+         {/* Garde selon le type de compte : choix imposé, entreprise limitée à la marketplace */}
+         <Route element={<AccountAccessGate />}>
           <Route
             element={<Navigate to="/hub/projects" replace />}
             path="/hub"
@@ -202,6 +206,12 @@ function App() {
             path="/my-account"
           />
           </Route>
+         </Route>
+        </Route>
+
+        {/* Assistant d'onboarding : plein écran, hors du layout et de son menu */}
+        <Route element={<PrivateRoute />}>
+          <Route element={<OnboardingPage />} path="/onboarding" />
         </Route>
 
         <Route element={<LandingPage />} path="/welcome" />

@@ -3,6 +3,7 @@ Serializers for the core application API.
 """
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from app.core.account_types import CHOOSABLE_TYPES
 from app.core.models import Role, Permission
 from app.core.username_rules import check_username
 
@@ -358,14 +359,33 @@ class BulkPermissionCreateSerializer(serializers.Serializer):
 
 class UserLoginSerializer(serializers.ModelSerializer):
     roles = serializers.SerializerMethodField()
+    is_admin = serializers.SerializerMethodField()
+    onboarding_required = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "username", "first_name", "last_name", "full_name", "photo", "banner", "roles")
+        fields = (
+            "id", "email", "username", "first_name", "last_name", "full_name", "photo", "banner",
+            "roles", "account_type", "is_admin", "onboarding_required",
+        )
         read_only_fields = fields
 
     def get_roles(self, obj):
         return obj.get_roles() if hasattr(obj, 'get_roles') else []
+
+    def get_is_admin(self, obj) -> bool:
+        return obj.is_platform_admin()
+
+    def get_onboarding_required(self, obj) -> bool:
+        from app.core.services.account_type_service import AccountTypeService
+
+        return AccountTypeService.onboarding_required(obj)
+
+
+class AccountTypeSerializer(serializers.Serializer):
+    """Choix du type de compte à l'onboarding (ou ajout d'un type plus tard)."""
+
+    account_type = serializers.ChoiceField(choices=CHOOSABLE_TYPES)
 
 
 class PublicProfileSerializer(serializers.ModelSerializer):

@@ -23,6 +23,7 @@ import {
   Home,
   Mail,
   Network,
+  Plus,
   Radio,
   Shield,
   Store,
@@ -34,6 +35,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useAuthSlice } from "@/models/auth/slice";
+import { useAccountType } from "@/models/auth/account-type/use-account-type";
 import { MARKETPLACE_ADMIN_PAGES } from "@/models/marketplace-space/admin-pages";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 import { useGetActivityBadgesQuery } from "@/models/forum/api";
@@ -198,6 +200,7 @@ export default function PlatformMenu() {
   const { isMobile, setOpenMobile } = useSidebar();
   const permissions = usePermissions();
   const { hasProfil, isRecruiter, company } = useMySpace();
+  const { showDevSpace, showEntrepriseSpace, showCommunity, missingType } = useAccountType();
   const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
   const userId = useAuthSlice((state) => state.user?.id ?? null);
   const { data: badges } = useGetActivityBadgesQuery(undefined, {
@@ -346,14 +349,31 @@ export default function PlatformMenu() {
 
   const activeTag = new URLSearchParams(search).get("tag");
 
+  // Compte entreprise seule : pas de forum ni de projets, mais la messagerie reste accessible
+  const messagesOnlyItems = principalItems.filter((item) => item.tourId === "nav-messages");
+
+  // Invitation à ajouter le type manquant (relance l'assistant pour ce seul type)
+  const addTypeItem: NavItem | null =
+    missingType === "entreprise"
+      ? { title: "Ajouter un espace entreprise", url: "/onboarding?add=entreprise&resume=1", icon: Plus }
+      : missingType === "dev"
+        ? { title: "Ajouter un espace dev", url: "/onboarding?add=dev&resume=1", icon: Plus }
+        : null;
+
   return (
     <>
-      <SidebarGroup className="p-0 px-1">
-        <SidebarGroupLabel className={sectionLabelClass}>
-          Principal
-        </SidebarGroupLabel>
-        <NavList items={principalItems} path={path} search={search} onGo={go} />
-      </SidebarGroup>
+      {showCommunity ? (
+        <SidebarGroup className="p-0 px-1">
+          <SidebarGroupLabel className={sectionLabelClass}>
+            Principal
+          </SidebarGroupLabel>
+          <NavList items={principalItems} path={path} search={search} onGo={go} />
+        </SidebarGroup>
+      ) : (
+        <SidebarGroup className="p-0 px-1">
+          <NavList items={messagesOnlyItems} path={path} search={search} onGo={go} />
+        </SidebarGroup>
+      )}
 
       <Separator className="mx-3 bg-sidebar-border/70" />
 
@@ -369,49 +389,67 @@ export default function PlatformMenu() {
           search={search}
           onGo={go}
         />
-        <MenuSection
-          id="dev"
-          label="Mon espace dev"
-          items={devItems}
-          invite={
-            hasProfil
-              ? undefined
-              : { title: "Créer mon profil dev", url: "/profil/me?section=dev", icon: Code2 }
-          }
-          path={path}
-          search={search}
-          onGo={go}
-        />
-        <MenuSection
-          id="entreprise"
-          label={company?.name ?? "Mon entreprise"}
-          items={entrepriseItems}
-          invite={
-            isRecruiter
-              ? undefined
-              : { title: "Créer mon entreprise", url: "/profil/me?section=entreprise", icon: Building2 }
-          }
-          path={path}
-          search={search}
-          onGo={go}
-        />
+        {showDevSpace ? (
+          <MenuSection
+            id="dev"
+            label="Mon espace dev"
+            items={devItems}
+            invite={
+              hasProfil
+                ? undefined
+                : { title: "Créer mon profil dev", url: "/profil/me?section=dev", icon: Code2 }
+            }
+            path={path}
+            search={search}
+            onGo={go}
+          />
+        ) : null}
+        {showEntrepriseSpace ? (
+          <MenuSection
+            id="entreprise"
+            label={company?.name ?? "Mon entreprise"}
+            items={entrepriseItems}
+            invite={
+              isRecruiter
+                ? undefined
+                : { title: "Créer mon entreprise", url: "/profil/me?section=entreprise", icon: Building2 }
+            }
+            path={path}
+            search={search}
+            onGo={go}
+          />
+        ) : null}
+        {addTypeItem ? (
+          <div className="mt-1.5">
+            <NavList
+              items={[addTypeItem]}
+              path={path}
+              search={search}
+              onGo={go}
+            />
+          </div>
+        ) : null}
       </SidebarGroup>
 
-      <Separator className="mx-3 bg-sidebar-border/70" />
-
-      <SidebarGroup className="p-0 px-1" data-tour="nav-projects">
-        <SidebarGroupLabel className={sectionLabelClass}>
-          Projets
-        </SidebarGroupLabel>
-        <NavList items={hubItems} path={path} search={search} onGo={go} />
-      </SidebarGroup>
-
-      {isAuthenticated ? (
+      {showCommunity ? (
         <>
           <Separator className="mx-3 bg-sidebar-border/70" />
-          <SidebarGroup className="p-0 px-1">
-            <HubMesFavoris activeTag={activeTag} path={path} onGo={go} />
+
+          <SidebarGroup className="p-0 px-1" data-tour="nav-projects">
+            <SidebarGroupLabel className={sectionLabelClass}>
+              Projets
+            </SidebarGroupLabel>
+            <NavList items={hubItems} path={path} search={search} onGo={go} />
           </SidebarGroup>
+
+          {isAuthenticated ? (
+            <>
+              <Separator className="mx-3 bg-sidebar-border/70" />
+              <SidebarGroup className="p-0 px-1">
+                <HubMesFavoris activeTag={activeTag} path={path} onGo={go} />
+              </SidebarGroup>
+            </>
+          ) : null}
         </>
       ) : null}
     </>

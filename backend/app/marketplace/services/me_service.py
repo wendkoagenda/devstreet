@@ -12,6 +12,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.text import slugify
 
+from app.core.account_types import TYPE_DEV, TYPE_ENTREPRISE
+from app.core.services.account_type_service import AccountTypeService
 from app.marketplace.models import Company, Profil
 
 
@@ -61,9 +63,12 @@ class MeService:
             raise ValidationError("Vous avez déjà un profil marketplace.")
         full_name = f"{user.first_name} {user.last_name}".strip()
         slug = cls._unique_slug(Profil, full_name or user.email.split("@")[0], "profil")
-        return Profil.objects.create(
+        profil = Profil.objects.create(
             user=user, type=Profil.TYPE_DEV, slug=slug, created_by=user.id, updated_by=user.id, **data
         )
+        # Le type de compte suit la création du profil (rôles inclus)
+        AccountTypeService.add_type(user, TYPE_DEV)
+        return profil
 
     @classmethod
     def update_profil(cls, user, data: Dict[str, Any]) -> Optional[Profil]:
@@ -94,6 +99,8 @@ class MeService:
         """Crée le profil entreprise d'un membre pour l'entreprise donnée (un seul par membre)."""
         full_name = f"{user.first_name} {user.last_name}".strip() or user.email.split("@")[0]
         slug = cls._unique_slug(Profil, f"{full_name}-{company.name}", "profil-entreprise")
+        # Le type de compte suit la création du profil entreprise (création ou acceptation d'invitation)
+        AccountTypeService.add_type(user, TYPE_ENTREPRISE)
         return Profil.objects.create(
             user=user,
             type=Profil.TYPE_ENTREPRISE,

@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase, override_settings
 from rest_framework.test import APIClient
 
-from app.core.models import Role, SocialAccount
+from app.core.models import SocialAccount
 from app.core.services.oauth_service import (
     OAuthError,
     OAuthProfile,
@@ -31,12 +31,6 @@ User = get_user_model()
     PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
 )
 class OAuthServiceTests(TestCase):
-    def setUp(self):
-        self.role = Role.objects.create(
-            name='DevStreet Hub Developer',
-            description='Membre',
-        )
-
     def test_configured_providers(self):
         flags = configured_providers()
         self.assertTrue(flags['google'])
@@ -55,8 +49,7 @@ class OAuthServiceTests(TestCase):
         with self.assertRaises(OAuthError):
             unsign_state(state, 'github')
 
-    @patch('app.core.services.oauth_service._ensure_member_role_name', return_value='DevStreet Hub Developer')
-    def test_resolve_creates_user(self, _mock_role):
+    def test_resolve_creates_user(self):
         profile = OAuthProfile(
             provider='google',
             provider_user_id='g-1',
@@ -72,10 +65,11 @@ class OAuthServiceTests(TestCase):
                 user=user, provider='google', provider_user_id='g-1'
             ).exists()
         )
-        self.assertTrue(user.roles.filter(name='DevStreet Hub Developer').exists())
+        # Le rôle et le type de compte sont attribués à l'onboarding, pas à la création du compte
+        self.assertEqual(user.roles.count(), 0)
+        self.assertEqual(user.account_type, '')
 
-    @patch('app.core.services.oauth_service._ensure_member_role_name', return_value='DevStreet Hub Developer')
-    def test_resolve_links_existing_email(self, _mock_role):
+    def test_resolve_links_existing_email(self):
         existing = User.objects.create_user(
             email='same@example.com',
             username='sameuser',

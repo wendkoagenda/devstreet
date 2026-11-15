@@ -5,8 +5,12 @@ from django.db import migrations
 
 
 def run_init_data(apps, schema_editor):
-    """Seed permissions, rôles, admin et seeds metier (idempotent)."""
-    call_command('init_data')
+    """Seed permissions, rôles et seeds metier (idempotent).
+
+    Le compte admin est créé par la migration 0010 : il utilise le vrai modèle User, dont les colonnes
+    ajoutées après cette migration (ex. account_type) n'existent pas encore ici.
+    """
+    call_command('init_data', skip_admin=True)
 
 
 class Migration(migrations.Migration):

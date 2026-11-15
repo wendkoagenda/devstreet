@@ -2,16 +2,32 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccountType } from "@/models/auth/account-type/use-account-type";
 import { useMySpace } from "../hooks/use-my-space";
 
-function Gate({ title, text, cta }: { title: string; text: string; cta: string }) {
+/** Cible par défaut : création du profil dev. */
+const DEV_PROFILE_PATH = "/profil/me?section=dev";
+/** Un compte entreprise crée son entreprise dans l'assistant (sans passer par un profil dev). */
+const ONBOARDING_RESUME_PATH = "/onboarding?resume=1";
+
+function Gate({
+  title,
+  text,
+  cta,
+  to = DEV_PROFILE_PATH,
+}: {
+  title: string;
+  text: string;
+  cta: string;
+  to?: string;
+}) {
   return (
     <div className="mx-auto w-full max-w-lg">
       <section className="flex flex-col items-center rounded-xl border border-dashed border-input bg-card px-6 py-14 text-center shadow-sm">
         <h1 className="mb-2 text-xl font-semibold text-foreground">{title}</h1>
         <p className="mb-6 max-w-md text-sm text-muted-foreground">{text}</p>
         <Button asChild>
-          <Link to="/profil/me?section=dev">{cta}</Link>
+          <Link to={to}>{cta}</Link>
         </Button>
       </section>
     </div>
@@ -46,8 +62,20 @@ export function RequireProfil({ children }: { children: ReactNode }) {
 /** Affiche son contenu si le membre a un profil dev ou un profil entreprise ; sinon l'invite à créer un profil. */
 export function RequireMarketplaceMember({ children }: { children: ReactNode }) {
   const { hasAnyProfile, isLoading } = useMySpace();
+  const { hasEntrepriseType, hasDevType } = useAccountType();
   if (isLoading) return <Loading />;
   if (!hasAnyProfile) {
+    // Compte entreprise seule : c'est l'entreprise qu'il faut créer, pas un profil dev
+    if (hasEntrepriseType && !hasDevType) {
+      return (
+        <Gate
+          title="Créez votre entreprise pour continuer"
+          text="Votre entreprise est nécessaire pour utiliser la marketplace."
+          cta="Créer mon entreprise"
+          to={ONBOARDING_RESUME_PATH}
+        />
+      );
+    }
     return (
       <Gate
         title="Créez votre profil pour continuer"
@@ -62,9 +90,21 @@ export function RequireMarketplaceMember({ children }: { children: ReactNode }) 
 /** Réservé aux recruteurs (profil entreprise) ; sinon explique comment le devenir. */
 export function RequireRecruiter({ children }: { children: ReactNode }) {
   const { hasProfil, isRecruiter, isLoading } = useMySpace();
+  const { hasEntrepriseType } = useAccountType();
   if (isLoading) return <Loading />;
   // Un membre invité n'a qu'un profil entreprise : le profil dev n'est pas nécessaire pour recruter
   if (!isRecruiter) {
+    // Type entreprise choisi : l'entreprise se crée directement dans l'assistant
+    if (hasEntrepriseType) {
+      return (
+        <Gate
+          title="Espace recruteur"
+          text="Créez votre entreprise pour publier des offres et découvrir des talents."
+          cta="Créer mon entreprise"
+          to={ONBOARDING_RESUME_PATH}
+        />
+      );
+    }
     return (
       <Gate
         title="Espace recruteur"

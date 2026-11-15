@@ -59,6 +59,9 @@ export interface Auth {
   username: string;
   password: string;
 }
+/** Type de compte choisi à l'onboarding ("" tant que le membre n'a pas choisi). */
+export type AccountType = "" | "dev" | "entreprise" | "both";
+
 export interface User {
   id: number;
   first_name?: string;
@@ -70,6 +73,12 @@ export interface User {
   banner?: string;
   roles?: string[];
   permissions?: string[];
+  /** Type de compte (dev, entreprise, les deux) ; vide tant que le choix n'est pas fait. */
+  account_type?: AccountType;
+  /** Compte d'administration de la plateforme : pas d'onboarding, menu Administration conservé. */
+  is_admin?: boolean;
+  /** Vrai tant que le membre (hors administrateur) n'a pas choisi son type de compte. */
+  onboarding_required?: boolean;
 }
 
 export interface AuthState {
