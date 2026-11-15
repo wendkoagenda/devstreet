@@ -21,22 +21,22 @@ import {
   Terminal,
   Users,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 const STATS = [
-  { value: "3", label: "espaces liés" },
-  { value: "1", label: "compte unique" },
-  { value: "CV", label: "généré en 1 clic" },
-  { value: "Git", label: "dépôts connectés" },
+  { value: "3", labelKey: "landing.stat_spaces" },
+  { value: "1", labelKey: "landing.stat_account" },
+  { value: "CV", labelKey: "landing.stat_cv" },
+  { value: "Git", labelKey: "landing.stat_git" },
 ] as const;
 
 type FeatureCard = {
   id: string;
-  label: string;
-  title: string;
-  body: string;
-  tags: string[];
-  cta: string;
+  labelKey: string;
+  titleKey: string;
+  bodyKey: string;
+  ctaKey: string;
   href: string;
   panelClass: string;
   gridClass: string;
@@ -48,11 +48,10 @@ type FeatureCard = {
 const FEATURES: FeatureCard[] = [
   {
     id: "communauté",
-    label: "Communauté",
-    title: "Des échanges techniques qui aboutissent vraiment",
-    body: "Chaînes thématiques, communautés sur invitation, messages vocaux et réponses validées — sans le bruit d’un chat générique.",
-    tags: ["Entraide validée", "Sondages d’archi", "Vocaux & fichiers"],
-    cta: "Découvrir la communauté",
+    labelKey: "landing.features.community_label",
+    titleKey: "landing.features.community_title",
+    bodyKey: "landing.features.community_body",
+    ctaKey: "landing.features.community_cta",
     href: "/login?mode=register",
     panelClass:
       "bg-[hsl(160_28%_94%)] dark:bg-[hsl(160_18%_14%)]",
@@ -82,11 +81,10 @@ const FEATURES: FeatureCard[] = [
   },
   {
     id: "marketplace",
-    label: "Marketplace",
-    title: "Un profil qui match sur la stack, pas sur des mots-clés",
-    body: "Compétences pondérées, disponibilités réelles, CV PDF à jour. Côté recruteur : offres et candidatures triées par prérequis techniques.",
-    tags: ["Match score", "CV PDF", "Dispo live"],
-    cta: "Voir le marketplace",
+    labelKey: "landing.features.marketplace_label",
+    titleKey: "landing.features.marketplace_title",
+    bodyKey: "landing.features.marketplace_body",
+    ctaKey: "landing.features.marketplace_cta",
     href: "/login?mode=register",
     panelClass: "bg-brand-soft",
     gridClass:
@@ -112,11 +110,10 @@ const FEATURES: FeatureCard[] = [
   },
   {
     id: "hub",
-    label: "DevStreet Hub",
-    title: "Du ticket ouvert au code fusionné",
-    body: "Cadrez un projet, ouvrez des tâches, connectez le dépôt Git et validez les contributions — avec l’atelier IA si besoin.",
-    tags: ["Tâches ouvertes", "Revue PR", "Atelier IA"],
-    cta: "Explorer le Hub",
+    labelKey: "landing.features.hub_label",
+    titleKey: "landing.features.hub_title",
+    bodyKey: "landing.features.hub_body",
+    ctaKey: "landing.features.hub_cta",
     href: "/login?mode=register",
     panelClass:
       "bg-[hsl(210_40%_94%)] dark:bg-[hsl(210_20%_14%)]",
@@ -146,6 +143,7 @@ const FEATURES: FeatureCard[] = [
 ];
 
 export default function LandingPage() {
+  const { t } = useTranslation();
   return (
     <div id="top" className="min-h-svh bg-background text-foreground">
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
@@ -154,43 +152,43 @@ export default function LandingPage() {
             <Link
               to="/welcome"
               className="flex items-center gap-2.5"
-              aria-label="DevStreet — accueil"
+              aria-label={t("landing.home_aria")}
             >
               <span className="flex size-8 items-center justify-center rounded-xl bg-foreground text-background">
                 <Terminal className="size-4" aria-hidden />
               </span>
               <span className="text-[1.05rem] font-bold tracking-tight">
-                DevStreet
+                {t("sidebar.brand")}
               </span>
             </Link>
 
             <nav
-              aria-label="Découvrir DevStreet"
+              aria-label={t("landing.nav_aria")}
               className="hidden items-center gap-8 text-[0.9375rem] font-medium text-muted-foreground md:flex"
             >
               <a
                 href="#produit"
                 className="transition-colors hover:text-foreground"
               >
-                Produit
+                {t("landing.nav_product")}
               </a>
               <a
                 href="#communauté"
                 className="transition-colors hover:text-foreground"
               >
-                Communauté
+                {t("landing.nav_community")}
               </a>
               <a
                 href="#marketplace"
                 className="transition-colors hover:text-foreground"
               >
-                Marketplace
+                {t("landing.nav_marketplace")}
               </a>
               <a
                 href="#hub"
                 className="transition-colors hover:text-foreground"
               >
-                Hub Git
+                {t("landing.nav_hub")}
               </a>
             </nav>
           </div>
@@ -204,14 +202,14 @@ export default function LandingPage() {
               size="sm"
               className="hidden text-[0.9375rem] font-medium sm:inline-flex"
             >
-              <Link to="/login">Connexion</Link>
+              <Link to="/login">{t("landing.login")}</Link>
             </Button>
             <Button
               asChild
               size="sm"
               className="h-10 rounded-xl bg-foreground px-4 text-background hover:bg-foreground/90"
             >
-              <Link to="/login?mode=register">Créer mon compte</Link>
+              <Link to="/login?mode=register">{t("landing.create_account")}</Link>
             </Button>
           </div>
         </div>
@@ -221,20 +219,19 @@ export default function LandingPage() {
         <section className="relative overflow-hidden pb-16 pt-14 sm:pb-24 sm:pt-20">
           <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6">
             <p className="inline-flex items-center rounded-full bg-foreground px-3.5 py-1.5 text-xs font-semibold text-background">
-              Forum · Marketplace · Hub Git
+              {t("landing.badge")}
             </p>
 
             <h1 className="mt-7 text-[2.35rem] font-bold leading-[1.08] tracking-tight sm:text-6xl sm:leading-[1.05]">
-              Discutez code.
+              {t("landing.hero_line1")}
               <br />
-              Décrochez vos missions.
+              {t("landing.hero_line2")}
               <br />
-              <span className="text-brand">Livrez à plusieurs.</span>
+              <span className="text-brand">{t("landing.hero_line3")}</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Un seul compte pour l&apos;entraide technique, un profil qui match
-              vraiment, et des projets Git où l&apos;on contribue ensemble.
+              {t("landing.hero_sub")}
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
@@ -243,20 +240,20 @@ export default function LandingPage() {
                 size="lg"
                 className="h-12 rounded-xl bg-foreground px-7 text-background hover:bg-foreground/90"
               >
-                <Link to="/login?mode=register">Créer mon compte</Link>
+                <Link to="/login?mode=register">{t("landing.create_account")}</Link>
               </Button>
               <Link
                 to="/login"
                 className="text-[0.9375rem] font-medium text-foreground underline-offset-4 transition-colors hover:underline"
               >
-                J&apos;ai déjà un compte
+                {t("landing.have_account")}
               </Link>
             </div>
 
             <div className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-y-8 sm:grid-cols-4 sm:gap-0">
               {STATS.map((stat, i) => (
                 <div
-                  key={stat.label}
+                  key={stat.labelKey}
                   className={`flex flex-col items-center px-2 sm:px-4 ${
                     i > 0 ? "sm:border-l sm:border-border" : ""
                   }`}
@@ -265,7 +262,7 @@ export default function LandingPage() {
                     {stat.value}
                   </span>
                   <span className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    {stat.label}
+                    {t(stat.labelKey)}
                   </span>
                 </div>
               ))}
@@ -289,12 +286,11 @@ export default function LandingPage() {
                 className="mt-1.5 h-8 w-1 shrink-0 rounded-full bg-brand"
               />
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl sm:leading-tight">
-                Tout ce qu&apos;il faut pour construire, recruter et livrer.
+                {t("landing.product_title")}
               </h2>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground lg:pb-1 lg:text-right">
-              Trois espaces, une identité. Moins d&apos;onglets, plus de preuves
-              concrètes de ce que vous savez faire.
+              {t("landing.product_sub")}
             </p>
           </div>
         </section>
@@ -315,19 +311,15 @@ export default function LandingPage() {
           />
           <div className="relative mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl sm:leading-tight">
-              Un seul compte pour le forum, les missions et vos projets Git.
+              {t("landing.cta_title")}
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Créez votre profil, explorez les espaces, puis livrez là où ça
-              compte — une conversation, une offre, un dépôt.
-            </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button
                 asChild
                 size="lg"
                 className="h-12 rounded-xl bg-foreground px-7 text-background hover:bg-foreground/90"
               >
-                <Link to="/login?mode=register">Créer mon compte</Link>
+                <Link to="/login?mode=register">{t("landing.cta_button")}</Link>
               </Button>
               <Button
                 asChild
@@ -335,7 +327,7 @@ export default function LandingPage() {
                 variant="outline"
                 className="h-12 rounded-xl border-border bg-card px-7"
               >
-                <Link to="/login">Se connecter</Link>
+                <Link to="/login">{t("landing.login")}</Link>
               </Button>
             </div>
           </div>
@@ -353,12 +345,11 @@ export default function LandingPage() {
                 </span>
               </div>
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-[hsl(270_8%_62%)]">
-                La rue des builders : entraide technique, marketplace de missions
-                et Hub Git pour livrer à plusieurs.
+                {t("landing.footer_tagline")}
               </p>
               <p className="mt-5 inline-flex items-center gap-2 text-xs font-medium text-[hsl(160_40%_55%)]">
                 <span className="size-1.5 rounded-full bg-[hsl(160_50%_45%)]" />
-                Plateforme en ligne
+                {t("landing.footer_online")}
               </p>
             </div>
 
@@ -366,58 +357,58 @@ export default function LandingPage() {
               {(
                 [
                   {
-                    title: "Produit",
+                    titleKey: "landing.footer_product",
                     links: [
-                      { label: "Communauté", href: "#communauté" },
-                      { label: "Marketplace", href: "#marketplace" },
-                      { label: "Hub Git", href: "#hub" },
+                      { labelKey: "landing.footer_community", href: "#communauté" },
+                      { labelKey: "landing.footer_marketplace", href: "#marketplace" },
+                      { labelKey: "landing.footer_hub", href: "#hub" },
                     ],
                   },
                   {
-                    title: "Espace",
+                    titleKey: "landing.footer_space",
                     links: [
-                      { label: "Connexion", to: "/login" },
-                      { label: "Inscription", to: "/login?mode=register" },
-                      { label: "Accueil", href: "#produit" },
+                      { labelKey: "landing.footer_login", to: "/login" },
+                      { labelKey: "landing.footer_register", to: "/login?mode=register" },
+                      { labelKey: "landing.footer_home", href: "#produit" },
                     ],
                   },
                   {
-                    title: "Pour qui",
+                    titleKey: "landing.footer_audience",
                     links: [
-                      { label: "Développeurs", href: "#marketplace" },
-                      { label: "Recruteurs", href: "#marketplace" },
-                      { label: "Mainteneurs", href: "#hub" },
+                      { labelKey: "landing.footer_devs", href: "#marketplace" },
+                      { labelKey: "landing.footer_recruiters", href: "#marketplace" },
+                      { labelKey: "landing.footer_maintainers", href: "#hub" },
                     ],
                   },
                   {
-                    title: "Légal",
+                    titleKey: "landing.footer_legal",
                     links: [
-                      { label: "Confidentialité", href: "#produit" },
-                      { label: "Conditions", href: "#produit" },
+                      { labelKey: "landing.footer_privacy", href: "#produit" },
+                      { labelKey: "landing.footer_terms", href: "#produit" },
                     ],
                   },
                 ] as const
               ).map((col) => (
-                <div key={col.title}>
+                <div key={col.titleKey}>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(270_8%_48%)]">
-                    {col.title}
+                    {t(col.titleKey)}
                   </p>
                   <ul className="mt-4 space-y-2.5 text-sm text-[hsl(270_10%_72%)]">
                     {col.links.map((link) => (
-                      <li key={link.label}>
+                      <li key={link.labelKey}>
                         {"to" in link && link.to ? (
                           <Link
                             to={link.to}
                             className="transition-colors hover:text-[hsl(270_12%_96%)]"
                           >
-                            {link.label}
+                            {t(link.labelKey)}
                           </Link>
                         ) : (
                           <a
                             href={"href" in link ? link.href : "#"}
                             className="transition-colors hover:text-[hsl(270_12%_96%)]"
                           >
-                            {link.label}
+                            {t(link.labelKey)}
                           </a>
                         )}
                       </li>
@@ -429,12 +420,12 @@ export default function LandingPage() {
           </div>
 
           <div className="mx-auto flex max-w-6xl flex-col gap-3 border-t border-white/10 px-4 py-6 text-xs text-[hsl(270_8%_48%)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p>© {new Date().getFullYear()} DevStreet. Tous droits réservés.</p>
+            <p>{t("landing.footer_rights", { year: new Date().getFullYear() })}</p>
             <a
               href="#top"
               className="inline-flex items-center gap-1.5 transition-colors hover:text-[hsl(270_12%_92%)]"
             >
-              Haut de page
+              {t("landing.footer_top")}
               <ArrowUp className="size-3.5" aria-hidden />
             </a>
           </div>
@@ -456,6 +447,7 @@ export default function LandingPage() {
 
 /** Empilement sticky type Monerails : chaque carte reste, la suivante glisse par-dessus. */
 function FeatureStack() {
+  const { t } = useTranslation();
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
   const [scales, setScales] = useState(() => FEATURES.map(() => 1));
 
@@ -537,30 +529,20 @@ function FeatureStack() {
                   }`}
                 >
                   <p className="inline-flex w-fit rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                    {feature.label}
+                    {t(feature.labelKey)}
                   </p>
                   <h3 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl sm:leading-tight">
-                    {feature.title}
+                    {t(feature.titleKey)}
                   </h3>
                   <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                    {feature.body}
+                    {t(feature.bodyKey)}
                   </p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {feature.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
                   <Button
                     asChild
                     className="mt-8 h-11 w-fit rounded-xl bg-foreground px-5 text-background hover:bg-foreground/90"
                   >
                     <Link to={feature.href}>
-                      {feature.cta}
+                      {t(feature.ctaKey)}
                       <ArrowRight className="ml-1.5 size-4" aria-hidden />
                     </Link>
                   </Button>
@@ -582,7 +564,7 @@ function FeatureStack() {
                   {nextId ? (
                     <a
                       href={`#${nextId}`}
-                      aria-label={`Aller à ${FEATURES[index + 1].label}`}
+                      aria-label={t(FEATURES[index + 1].labelKey)}
                       className="absolute right-4 top-4 z-20 flex size-10 items-center justify-center rounded-full bg-foreground text-background shadow-md transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <ArrowDown className="size-4" aria-hidden />

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
 import { CreateOfferDialog } from "@/models/marketplace-offers/components/create-offer-dialog";
@@ -10,17 +11,17 @@ import { ExploreStatsStrip } from "@/models/marketplace-stats/components/page-st
 import { RequireMarketplaceMember } from "@/models/marketplace-space/components/guards";
 import { useMySpace } from "@/models/marketplace-space/hooks/use-my-space";
 import { useGetOffersQuery } from "../api";
-import { OFFER_TYPE_LABELS } from "../labels";
+import { offerTypeLabelEntries } from "../labels";
 import { OfferCard } from "../components/offer-card";
 
-const TYPE_FILTERS = Object.entries(OFFER_TYPE_LABELS);
-
 function OffersContent() {
+  const { t } = useTranslation();
   const { isRecruiter } = useMySpace();
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const debouncedSearch = useDebouncedValue(search);
+  const typeFilters = useMemo(() => Object.entries(offerTypeLabelEntries()), [t]);
   const { data, isFetching, isError } = useGetOffersQuery({
     search: debouncedSearch,
     type,
@@ -32,13 +33,13 @@ function OffersContent() {
       <ExploreStatsStrip />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-foreground">Offres pour vous</h1>
+          <h1 className="text-xl font-semibold text-foreground">{t("marketplace.offers_for_you")}</h1>
           <p className="text-sm text-muted-foreground">
-            Classées selon la correspondance avec votre profil.
+            {t("marketplace.offers_for_you_sub")}
           </p>
         </div>
         {isRecruiter ? (
-          <CreateOfferDialog label="Publier une offre" size="default" redirectToList />
+          <CreateOfferDialog label={t("marketplace.publish_offer")} size="default" redirectToList />
         ) : null}
       </div>
 
@@ -47,15 +48,15 @@ function OffersContent() {
         <Input
           type="search"
           className="pl-9"
-          placeholder="Rechercher missions, technos, entreprises..."
+          placeholder={t("marketplace.search_offers_placeholder")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          aria-label="Rechercher une offre"
+          aria-label={t("marketplace.search_offer_aria")}
         />
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {TYPE_FILTERS.map(([value, label]) => (
+        {typeFilters.map(([value, label]) => (
           <Button
             key={value}
             type="button"
@@ -74,13 +75,13 @@ function OffersContent() {
           aria-pressed={remoteOnly}
           onClick={() => setRemoteOnly(!remoteOnly)}
         >
-          À distance
+          {t("marketplace.labels.work_mode.remote")}
         </Button>
       </div>
 
       {isError ? (
         <p className="rounded-lg border border-destructive/40 bg-card p-6 text-sm text-destructive">
-          Impossible de charger les offres. Réessayez dans un instant.
+          {t("marketplace.load_offers_error")}
         </p>
       ) : isFetching && !data ? (
         <div className="flex flex-col gap-3">
@@ -97,12 +98,12 @@ function OffersContent() {
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-input bg-card p-8 text-center">
           <p className="text-sm text-muted-foreground">
             {isRecruiter
-              ? "Aucune offre d’une autre entreprise pour le moment. Vos propres offres sont dans « Mes offres » — vous ne pouvez pas postuler chez vous."
-              : "Aucune offre ne correspond pour le moment."}
+              ? t("marketplace.empty_offers_other")
+              : t("marketplace.empty_offers")}
           </p>
           {isRecruiter ? (
             <Button asChild size="sm" variant="outline">
-              <Link to="/marketplace/my-offers">Voir mes offres</Link>
+              <Link to="/marketplace/my-offers">{t("marketplace.see_my_offers")}</Link>
             </Button>
           ) : null}
         </div>
