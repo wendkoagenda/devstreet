@@ -818,7 +818,23 @@
         "manage": "Gestion du projet",
         "publish": "Publier le projet",
         "archive": "Archiver le projet",
-        "remove_member": "Retirer le membre"
+        "remove_member": "Retirer le membre",
+        "share_forum": "Partager sur le forum"
+      },
+      "share_forum": {
+        "intent_application": "Vitrine Application",
+        "intent_discussion": "Ouvrir une discussion",
+        "intent_entraide": "Demander de l'entraide",
+        "dialog_title_application": "Publier une vitrine du projet",
+        "dialog_title_discussion": "Discussion depuis le projet",
+        "dialog_title_entraide": "Entraide depuis le projet",
+        "toast_success": "Publication liée au projet créée",
+        "open_forum": "Voir sur le forum",
+        "existing_showcase": "Une vitrine Application existe déjà pour ce projet.",
+        "errors": {
+          "demo_required": "Ajoute une URL de démo au projet avant de publier une vitrine.",
+          "list_failed": "Impossible de vérifier les publications liées."
+        }
       },
       "confirm": {
         "publish": "Publier ce projet le rendra visible dans le Hub. Continuer ?",

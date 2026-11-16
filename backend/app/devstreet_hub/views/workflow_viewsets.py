@@ -34,6 +34,9 @@ from app.devstreet_hub.api_serializers import (
     AdoptSuggestionSerializer,
     DiscussionWriteSerializer,
     DiscussionSerializer,
+    ForumPostWriteSerializer,
+    ForumPostListQuerySerializer,
+    ForumLinkedPublicationSerializer,
     AssistantChatSerializer,
 )
 from app.ai.serializers import AiChatResponseSerializer
@@ -432,6 +435,37 @@ class ProjectViewSet(
             request.user,
             self.get_object(),
             validated(DiscussionWriteSerializer, request.data),
+        )
+        return Response(DiscussionSerializer(obj).data, status=201)
+
+    @swagger_auto_schema(
+        method="get",
+        query_serializer=ForumPostListQuerySerializer,
+        responses={200: ForumLinkedPublicationSerializer(many=True)},
+        tags=["V1 - Project"],
+    )
+    @swagger_auto_schema(
+        method="post",
+        request_body=ForumPostWriteSerializer,
+        responses={201: DiscussionSerializer},
+        tags=["V1 - Project"],
+    )
+    @action(detail=True, methods=["get", "post"], url_path="forum-posts")
+    def forum_posts(self, request, pk=None):
+        project = self.get_object()
+        service = WorkflowService()
+        if request.method == "GET":
+            query = validated(ForumPostListQuerySerializer, request.query_params)
+            items = service.list_forum_posts(
+                request.user, project, kind=query.get("kind")
+            )
+            page = self.paginate_queryset(items)
+            serializer = ForumLinkedPublicationSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        obj = service.link_forum_post(
+            request.user,
+            project,
+            validated(ForumPostWriteSerializer, request.data),
         )
         return Response(DiscussionSerializer(obj).data, status=201)
 

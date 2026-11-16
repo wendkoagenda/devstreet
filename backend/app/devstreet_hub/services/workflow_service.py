@@ -1127,6 +1127,86 @@ class WorkflowService:
                 **{k: data[k] for k in ("request_key", "title", "body")}
             )
 
+    def list_forum_posts(self, actor, project, kind=None):
+        """Liste les publications forum déjà liées à ce projet."""
+        require_permission(actor, "projects.discuss")
+        if project.status == "archived":
+            raise Conflict("Ce projet est archivé.")
+        adapter_path = config("FORUM_ADAPTER")
+        if not adapter_path:
+            raise ExternalUnavailable("Le module forum n’est pas encore raccordé.")
+        from app.communaute.services.project_topics import list_linked_publications
+
+        return list_linked_publications(project_id=project.pk, kind=kind)
+
+    def link_forum_post(self, actor, project, data):
+        """
+        Crée une publication forum (DISCUSSION / APPLICATION / ENTRAIDE)
+        liée au projet, avec ``projet_id`` renseigné.
+        """
+        require_permission(actor, "projects.discuss")
+        if project.status == "archived":
+            raise Conflict("Impossible de publier depuis un projet archivé.")
+
+        kind = str(data.get("kind") or "DISCUSSION").strip().upper()
+        if kind == "APPLICATION":
+            existing = self.list_forum_posts(actor, project, kind="APPLICATION")
+            if existing:
+                raise Conflict(
+                    f"Une vitrine Application existe déjà (publication #{existing[0]['id']})."
+                )
+            lien = (data.get("lien_app") or "").strip()
+            if not lien:
+                raise ValidationError(
+                    "Une vitrine Application exige un lien (démo ou URL du projet)."
+                )
+
+        with transaction.atomic():
+            self.repo.locked_project(project.pk)
+            existing_link = self.repo.discussion(data["request_key"])
+            if existing_link:
+                if (
+                    existing_link.project_id != project.pk
+                    or existing_link.requested_by_id != actor.pk
+                    or existing_link.title != data["title"]
+                    or existing_link.body != data["body"]
+                ):
+                    raise Conflict(
+                        "Clé d’idempotence déjà utilisée pour une autre demande."
+                    )
+                return existing_link
+
+            adapter_path = config("FORUM_ADAPTER")
+            if not adapter_path:
+                raise ExternalUnavailable("Le module forum n’est pas encore raccordé.")
+            adapter = import_string(adapter_path)
+            topic_id = adapter(
+                actor=actor,
+                project=project,
+                task=None,
+                title=data["title"],
+                body=data["body"],
+                request_key=str(data["request_key"]),
+                kind=kind,
+                lien_app=data.get("lien_app") or None,
+                plateforme_app=data.get("plateforme_app") or "WEB",
+                tags_data=data.get("tags_data") or [],
+                images=data.get("images_data") or [],
+            )
+            if not topic_id:
+                raise ExternalUnavailable(
+                    "Le forum n’a pas confirmé la création de la publication."
+                )
+            return self.repo.create_discussion(
+                project=project,
+                task=None,
+                requested_by=actor,
+                forum_topic_id=str(topic_id),
+                request_key=data["request_key"],
+                title=data["title"],
+                body=data["body"],
+            )
+
     def _assistant_context(self, actor, project, *, task_id=None, include_repo=True):
         """Assemble un contexte court pour l'assistant partagé (pas de clés, pas de secrets)."""
         project = self.repo.visible_project(actor, project.pk)
