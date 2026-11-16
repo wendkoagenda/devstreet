@@ -210,7 +210,10 @@ export default function MessagesPage() {
     page_size: 50,
   });
 
-  const conversations = conversationsData?.results ?? [];
+  const conversations = useMemo(
+    () => conversationsData?.results ?? [],
+    [conversationsData?.results]
+  );
   const groupes = useMemo(() => {
     const communautes =
       communautesData?.pages.flatMap((page) => page.results) ?? [];
@@ -293,7 +296,7 @@ export default function MessagesPage() {
     return () => {
       cancelled = true;
     };
-  }, [withUserId, currentUserId, openConversation, navigate]);
+  }, [withUserId, currentUserId, openConversation, navigate, t]);
 
   useEffect(() => {
     connectMessagingSocket();

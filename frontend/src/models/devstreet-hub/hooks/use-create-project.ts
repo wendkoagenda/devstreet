@@ -148,7 +148,10 @@ export function useCreateProject() {
     page_size: 100,
     ordering: "label",
   });
-  const technologies: Technology[] = techPage?.results ?? [];
+  const technologies: Technology[] = useMemo(
+    () => techPage?.results ?? [],
+    [techPage?.results]
+  );
 
   const [createProject, createState] = useCreateProjectMutation();
   const [resumeSetup, resumeState] = useResumeProjectSetupMutation();

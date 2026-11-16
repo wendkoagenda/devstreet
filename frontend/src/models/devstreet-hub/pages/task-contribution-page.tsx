@@ -77,12 +77,13 @@ export default function TaskContributionPage() {
   const [criteriaText, setCriteriaText] = useState("");
   const [confirmClose, setConfirmClose] = useState(false);
 
+  const task = detail.task;
   useEffect(() => {
-    if (!detail.task) return;
-    setEditTitle(detail.task.title);
-    setEditDescription(detail.task.description ?? "");
-    setCriteriaText((detail.task.acceptance_criteria ?? []).join("\n"));
-  }, [detail.task?.id, detail.task?.updated_at]);
+    if (!task) return;
+    setEditTitle(task.title);
+    setEditDescription(task.description ?? "");
+    setCriteriaText((task.acceptance_criteria ?? []).join("\n"));
+  }, [task]);
 
   if (!Number.isFinite(projectId) || !Number.isFinite(taskId)) {
     return (
