@@ -509,6 +509,22 @@
       "revoke": "Revoke",
       "revoke_confirm": "Confirm revocation"
     },
+    "git_setup": {
+      "page_title": "Link my computer to Git",
+      "page_subtitle": "Configure Git Credential Manager once per PC, then authorize on the first push. Already linked computers appear below.",
+      "dialog_title": "Link this computer before pushing",
+      "dialog_description": "No Git computer is registered on your account yet. Copy the config, paste it in a terminal, then continue. On the first git push, DevStreet will ask you to confirm.",
+      "continue": "I pasted the config, continue",
+      "open_page": "Git setup page",
+      "link_computer_cta": "Link my computer",
+      "login_required": "Sign in to see the Git config and your authorized computers.",
+      "back_hub": "Back to projects",
+      "config_error": "Unable to load the configuration commands.",
+      "config_empty": "No commands available right now.",
+      "no_computer_yet": "No authorized computer yet: after the first confirmed push, it will appear here.",
+      "has_computers": "{{count}} active computer(s). You can still copy the config again on a new PC.",
+      "reconfig_hint": "New PC or a push that opens Gitea?"
+    },
     "ai": {
       "title": "AI workshop",
       "description": "Describe a goal: AI analyzes the repository and suggests sourced tasks. To create a request without AI, use the project Contribute tab. Nothing is published automatically.",

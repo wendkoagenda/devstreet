@@ -6,7 +6,9 @@ import { CreateProjectFormSection } from "../components/create-project-form-sect
 import { CreateProjectPreview } from "../components/create-project-preview";
 import { CreateProjectRepoSection } from "../components/create-project-repo-section";
 import { CreateProjectStepper } from "../components/create-project-stepper";
+import { GitSetupDialog } from "../components/git-setup-dialog";
 import { useCreateProject } from "../hooks/use-create-project";
+import { useGitComputerSetup } from "../hooks/use-git-computer-setup";
 
 function initialsOf(name: string | undefined | null): string {
   if (!name) return "?";
@@ -22,6 +24,11 @@ export default function CreateProjectPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const wizard = useCreateProject();
+  const gitSetup = useGitComputerSetup({
+    skip: !wizard.isAuthenticated || !wizard.canCreateProject,
+  });
+  const showGitSetupDialog =
+    Boolean(wizard.project) && wizard.repoReady && gitSetup.shouldPrompt;
 
   if (!wizard.isInitialized || wizard.isHydratingDraft) {
     return (
@@ -218,6 +225,7 @@ export default function CreateProjectPage() {
               isResettingPassword={wizard.isResettingPassword}
               setupFailed={wizard.setupFailed}
               initMode={wizard.initMode}
+              needsGitLink={gitSetup.needsLink}
               onRetrySetup={() => {
                 void wizard.createMyProject();
               }}
@@ -251,6 +259,17 @@ export default function CreateProjectPage() {
           defaultBranch={wizard.defaultBranch}
         />
       </div>
+
+      <GitSetupDialog
+        open={showGitSetupDialog}
+        setup={gitSetup}
+        onOpenChange={(open) => {
+          if (!open) gitSetup.dismissForSession();
+        }}
+        onContinue={() => {
+          gitSetup.dismissForSession();
+        }}
+      />
     </div>
   );
 }

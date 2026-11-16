@@ -1,5 +1,6 @@
-import { Check, Copy, Sparkles } from "lucide-react";
+import { Check, Copy, Laptop, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +25,7 @@ interface CreateProjectRepoSectionProps {
   isResettingPassword: boolean;
   setupFailed: boolean;
   initMode: "readme" | "push_existing" | null;
+  needsGitLink?: boolean;
   onRetrySetup: () => void;
   onInitReadme: () => void;
   onInitPush: () => void;
@@ -41,6 +43,7 @@ export function CreateProjectRepoSection({
   projectSlug,
   isBusy,
   setupFailed,
+  needsGitLink = false,
   onRetrySetup,
   onFinalize,
 }: CreateProjectRepoSectionProps) {
@@ -120,6 +123,29 @@ export function CreateProjectRepoSection({
         </div>
       ) : (
         <>
+          {needsGitLink ? (
+            <div className="flex flex-col gap-2 rounded-lg border border-brand/30 bg-brand/5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2">
+                <Laptop aria-hidden className="mt-0.5 size-4 shrink-0 text-brand" />
+                <p className="text-xs text-muted-foreground">
+                  {t("hub.create.repo.git_setup_text_short")}
+                </p>
+              </div>
+              <Button asChild type="button" variant="outline" className="h-8 shrink-0 text-xs">
+                <Link to="/hub/git-setup">{t("hub.git_setup.link_computer_cta")}</Link>
+              </Button>
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              <Link
+                to="/hub/git-setup"
+                className="text-brand underline-offset-2 hover:underline"
+              >
+                {t("hub.create.repo.git_setup_title_short")}
+              </Link>
+            </p>
+          )}
+
           <div className="flex flex-col gap-1.5">
             {forgePath ? (
               <code className="truncate font-sans text-xs font-semibold text-foreground">
