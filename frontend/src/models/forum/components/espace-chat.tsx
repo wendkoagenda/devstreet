@@ -120,7 +120,7 @@ export function EspaceChat({
   const [deleteMessage] = useDeleteEspaceMessageMutation();
   const [reactMessage] = useReactEspaceMessageMutation();
 
-  const messages = data?.results ?? [];
+  const messages = useMemo(() => data?.results ?? [], [data?.results]);
 
   const threaded = useMemo(() => {
     const rows: Array<

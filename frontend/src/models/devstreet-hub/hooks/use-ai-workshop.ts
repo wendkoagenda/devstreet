@@ -177,11 +177,12 @@ export function useAiWorkshop(projectId: number) {
     [syncAnalysisUrl]
   );
 
+  const analysisId = analysis?.id;
   useEffect(() => {
-    if (!analysis) return;
+    if (analysisId == null) return;
     setSelectedSuggestion(0);
-    setAdoptedByIndex(readAdopted(analysis.id));
-  }, [analysis?.id]);
+    setAdoptedByIndex(readAdopted(analysisId));
+  }, [analysisId]);
 
   const mapError = useCallback(
     (error: unknown, fallbackKey: string) => {

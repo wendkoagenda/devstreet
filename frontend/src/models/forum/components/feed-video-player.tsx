@@ -69,8 +69,9 @@ export function FeedVideoPlayer({
   }, [inView, userActivated]);
 
   useEffect(() => {
+    const node = videoRef.current;
     return () => {
-      if (activeFeedVideo === videoRef.current) activeFeedVideo = null;
+      if (activeFeedVideo === node) activeFeedVideo = null;
     };
   }, []);
 
