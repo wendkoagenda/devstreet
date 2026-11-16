@@ -211,7 +211,7 @@ export default function GitAuthAuthorizePage() {
       </section>
 
       <p className="text-xs text-muted-foreground">
-        <Link to="/profil/me?edit=1" className="text-brand underline-offset-2 hover:underline">
+        <Link to="/hub/git-setup" className="text-brand underline-offset-2 hover:underline">
           {t("hub.git_auth.manage_computers")}
         </Link>
       </p>

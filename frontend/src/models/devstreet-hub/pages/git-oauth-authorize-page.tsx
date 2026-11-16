@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -167,6 +167,12 @@ export default function GitOAuthAuthorizePage() {
       {approveState.isError || denyState.isError ? (
         <p className="text-sm text-destructive">{t("hub.git_oauth.action_error")}</p>
       ) : null}
+
+      <p className="text-xs text-muted-foreground">
+        <Link to="/hub/git-setup" className="text-brand underline-offset-2 hover:underline">
+          {t("hub.git_setup.open_page")}
+        </Link>
+      </p>
     </main>
   );
 }

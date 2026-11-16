@@ -14,6 +14,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -175,6 +176,14 @@ export function CodeBrowser({
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("hub.detail.code.empty_push_hint")}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            <Link
+              to="/hub/git-setup"
+              className="text-brand underline-offset-2 hover:underline"
+            >
+              {t("hub.create.repo.git_setup_title_short")}
+            </Link>
           </p>
         </div>
         {pushCommands ? (
