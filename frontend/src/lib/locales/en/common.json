@@ -765,7 +765,23 @@
         "manage": "Project management",
         "publish": "Publish project",
         "archive": "Archive project",
-        "remove_member": "Remove member"
+        "remove_member": "Remove member",
+        "share_forum": "Share on the forum"
+      },
+      "share_forum": {
+        "intent_application": "Application showcase",
+        "intent_discussion": "Start a discussion",
+        "intent_entraide": "Ask for help",
+        "dialog_title_application": "Publish a project showcase",
+        "dialog_title_discussion": "Discussion from this project",
+        "dialog_title_entraide": "Help request from this project",
+        "toast_success": "Project-linked post created",
+        "open_forum": "Open on the forum",
+        "existing_showcase": "An Application showcase already exists for this project.",
+        "errors": {
+          "demo_required": "Add a demo URL to the project before publishing a showcase.",
+          "list_failed": "Could not check linked posts."
+        }
       },
       "confirm": {
         "publish": "Publishing makes this project visible in the Hub. Continue?",

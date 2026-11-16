@@ -16,6 +16,9 @@ import type {
   ContributionWrite,
   Discussion,
   DiscussionWrite,
+  ForumLinkedPublication,
+  ForumPostKind,
+  ForumPostWrite,
   CodeBlob,
   CodeBranch,
   CodeSummary,
@@ -185,6 +188,27 @@ export const devstreetHubApi = createApi({
     >({
       query: ({ projectId, body }) => ({
         url: `/projects/${projectId}/discussions`,
+        method: "POST",
+        body,
+      }),
+    }),
+
+    listProjectForumPosts: builder.query<
+      Paginated<ForumLinkedPublication>,
+      { projectId: number; kind?: ForumPostKind }
+    >({
+      query: ({ projectId, kind }) =>
+        `/projects/${projectId}/forum-posts${toQueryString(
+          kind ? { kind } : {}
+        )}`,
+    }),
+
+    createProjectForumPost: builder.mutation<
+      Discussion,
+      { projectId: number; body: ForumPostWrite }
+    >({
+      query: ({ projectId, body }) => ({
+        url: `/projects/${projectId}/forum-posts`,
         method: "POST",
         body,
       }),
@@ -572,6 +596,9 @@ export const {
   useReviewContributionMutation,
   useSubmitContributionMutation,
   useCreateProjectDiscussionMutation,
+  useListProjectForumPostsQuery,
+  useLazyListProjectForumPostsQuery,
+  useCreateProjectForumPostMutation,
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useProvisionForgeAccessMutation,

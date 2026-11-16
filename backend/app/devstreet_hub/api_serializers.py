@@ -413,6 +413,47 @@ class DiscussionWriteSerializer(serializers.Serializer):
     body = serializers.CharField(max_length=5000)
 
 
+class ForumPostWriteSerializer(serializers.Serializer):
+    """Création d'une publication forum liée au projet (vitrine / discussion / entraide)."""
+
+    request_key = serializers.UUIDField()
+    kind = serializers.ChoiceField(
+        choices=["DISCUSSION", "APPLICATION", "ENTRAIDE"]
+    )
+    title = serializers.CharField(max_length=180)
+    body = serializers.CharField(max_length=5000)
+    lien_app = serializers.URLField(required=False, allow_blank=True)
+    plateforme_app = serializers.ChoiceField(
+        choices=["WEB", "MOBILE", "LES_DEUX"],
+        required=False,
+        default="WEB",
+    )
+    tags_data = serializers.ListField(
+        child=serializers.CharField(max_length=48),
+        required=False,
+        max_length=3,
+    )
+    images_data = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        max_length=10,
+    )
+
+
+class ForumPostListQuerySerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(
+        choices=["DISCUSSION", "APPLICATION", "ENTRAIDE"],
+        required=False,
+    )
+
+
+class ForumLinkedPublicationSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    type = serializers.CharField()
+    titre = serializers.CharField()
+    created_at = serializers.CharField(allow_null=True, required=False)
+
+
 class AssistantChatSerializer(serializers.Serializer):
     message = serializers.CharField(max_length=8000)
     conversation_id = serializers.IntegerField(required=False, min_value=1)

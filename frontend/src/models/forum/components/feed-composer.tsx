@@ -31,6 +31,7 @@ import {
   type CreateChoixInput,
   type CreateDiscussionInput,
 } from "../schema";
+import { useCreateProjectForumPostMutation } from "@/models/devstreet-hub/api";
 import {
   useCreateApplicationMutation,
   useCreateChoixMutation,
@@ -49,18 +50,7 @@ const VIDEO_ACCEPT = "video/mp4,video/webm,video/quicktime";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
-type FeedComposerProps = {
-  onCreated?: (id: number) => void;
-  onCancel?: () => void;
-  espaceId?: number | null;
-  discussionOnly?: boolean;
-  /** Ouvre directement le formulaire (ex. dans une modale). */
-  forceExpanded?: boolean;
-  /** Retire le cadre carte (ex. déjà dans un Dialog). */
-  bare?: boolean;
-};
-
-type ComposerMode =
+export type ComposerMode =
   | "DISCUSSION"
   | "APPLICATION"
   | "ENTRAIDE"
@@ -71,6 +61,30 @@ type ComposerValues = CreateDiscussionInput &
   Partial<Pick<CreateApplicationInput, "lien_app" | "plateforme_app">> &
   Partial<Pick<CreateChoixInput, "contraintes" | "options_data">>;
 
+export type FeedComposerDefaultValues = Partial<ComposerValues>;
+
+type FeedComposerProps = {
+  onCreated?: (id: number) => void;
+  onCancel?: () => void;
+  espaceId?: number | null;
+  discussionOnly?: boolean;
+  /** Ouvre directement le formulaire (ex. dans une modale). */
+  forceExpanded?: boolean;
+  /** Retire le cadre carte (ex. déjà dans un Dialog). */
+  bare?: boolean;
+  /** Mode initial (hub partage, deep-link). */
+  initialMode?: ComposerMode;
+  /** Valeurs préremplies (titre, description, lien, tags…). */
+  defaultValues?: FeedComposerDefaultValues;
+  /** Sous-ensemble de modes visibles (ex. hub : APPLICATION/DISCUSSION/ENTRAIDE). */
+  allowedModes?: ComposerMode[];
+  /**
+   * Si défini, la publication passe par l’API hub
+   * (`POST /projects/:id/forum-posts`) pour lier `projet_id`.
+   */
+  linkedProjectId?: number;
+};
+
 function schemaForMode(mode: ComposerMode) {
   if (mode === "APPLICATION") return createApplicationSchema;
   if (mode === "ENTRAIDE") return createEntraideSchema;
@@ -79,6 +93,20 @@ function schemaForMode(mode: ComposerMode) {
   return createDiscussionSchema;
 }
 
+const EMPTY_COMPOSER_VALUES: ComposerValues = {
+  titre: "",
+  description: "",
+  images_data: [],
+  tags_data: [],
+  lien_app: "",
+  plateforme_app: "WEB",
+  contraintes: "",
+  options_data: [
+    { libelle: "", description: "", image_url: "", position: 0 },
+    { libelle: "", description: "", image_url: "", position: 1 },
+  ],
+};
+
 type ComposerFormProps = {
   mode: ComposerMode;
   onModeChange: (mode: ComposerMode) => void;
@@ -86,7 +114,17 @@ type ComposerFormProps = {
   onCancel: () => void;
   espaceId?: number | null;
   discussionOnly?: boolean;
+  defaultValues?: FeedComposerDefaultValues;
+  allowedModes?: ComposerMode[];
+  linkedProjectId?: number;
 };
+
+function newRequestKey(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `hub-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 function ComposerForm({
   mode,
@@ -95,6 +133,9 @@ function ComposerForm({
   onCancel,
   espaceId = null,
   discussionOnly = false,
+  defaultValues,
+  allowedModes,
+  linkedProjectId,
 }: ComposerFormProps) {
   const publicationImageInputRef = useRef<HTMLInputElement | null>(null);
   const publicationVideoInputRef = useRef<HTMLInputElement | null>(null);
@@ -120,6 +161,8 @@ function ComposerForm({
   const [createChoix, { isLoading: creatingChoix }] = useCreateChoixMutation();
   const [createSondage, { isLoading: creatingSondage }] =
     useCreateSondageMutation();
+  const [createProjectForumPost, { isLoading: creatingHubPost }] =
+    useCreateProjectForumPostMutation();
   const isLoading =
     uploadingImage ||
     uploadingVideo ||
@@ -127,7 +170,8 @@ function ComposerForm({
     creatingApplication ||
     creatingSondage ||
     creatingEntraide ||
-    creatingChoix;
+    creatingChoix ||
+    creatingHubPost;
 
   const {
     register,
@@ -141,17 +185,8 @@ function ComposerForm({
     // Remonté via key={mode} dans le parent pour recharger le resolver
     resolver: zodResolver(schemaForMode(mode)) as Resolver<ComposerValues>,
     defaultValues: {
-      titre: "",
-      description: "",
-      images_data: [],
-      tags_data: [],
-      lien_app: "",
-      plateforme_app: "WEB",
-      contraintes: "",
-      options_data: [
-        { libelle: "", description: "", image_url: "", position: 0 },
-        { libelle: "", description: "", image_url: "", position: 1 },
-      ],
+      ...EMPTY_COMPOSER_VALUES,
+      ...defaultValues,
     },
   });
 
@@ -199,17 +234,8 @@ function ComposerForm({
 
   const resetForm = () => {
     reset({
-      titre: "",
-      description: "",
-      images_data: [],
-      tags_data: [],
-      lien_app: "",
-      plateforme_app: "WEB",
-      contraintes: "",
-      options_data: [
-        { libelle: "", description: "", image_url: "", position: 0 },
-        { libelle: "", description: "", image_url: "", position: 1 },
-      ],
+      ...EMPTY_COMPOSER_VALUES,
+      ...defaultValues,
     });
     setOptionImageTarget(null);
   };
@@ -352,6 +378,39 @@ function ComposerForm({
   const onSubmit = handleSubmit(async (values) => {
     const tags_data = (values.tags_data ?? []).slice(0, 3);
     try {
+      if (linkedProjectId && (mode === "APPLICATION" || mode === "ENTRAIDE" || mode === "DISCUSSION")) {
+        const created = await createProjectForumPost({
+          projectId: linkedProjectId,
+          body: {
+            request_key: newRequestKey(),
+            kind: mode,
+            title: values.titre,
+            body: values.description,
+            ...(mode === "APPLICATION"
+              ? {
+                  lien_app: values.lien_app || "",
+                  plateforme_app: values.plateforme_app || "WEB",
+                }
+              : {}),
+            tags_data,
+            images_data: values.images_data ?? [],
+          },
+        }).unwrap();
+        const topicId = Number(created.forum_topic_id);
+        toast.success(
+          mode === "APPLICATION"
+            ? "Vitrine publiée sur le forum"
+            : mode === "ENTRAIDE"
+              ? "Entraide publiée sur le forum"
+              : "Discussion publiée sur le forum"
+        );
+        resetForm();
+        onCreated?.(
+          Number.isFinite(topicId) && topicId > 0 ? topicId : created.id
+        );
+        return;
+      }
+
       if (mode === "APPLICATION") {
         const created = await createApplication({
           titre: values.titre,
@@ -448,61 +507,30 @@ function ComposerForm({
     <form onSubmit={onSubmit} className="space-y-3">
       {!discussionOnly ? (
       <div className="flex flex-wrap gap-2" role="group" aria-label="Type de publication">
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === "DISCUSSION" ? "default" : "outline"}
-          className="gap-1.5"
-          aria-pressed={mode === "DISCUSSION"}
-          onClick={() => onModeChange("DISCUSSION")}
-        >
-          <MessageSquareText className="h-3.5 w-3.5" />
-          Discussion
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === "APPLICATION" ? "default" : "outline"}
-          className="gap-1.5"
-          aria-pressed={mode === "APPLICATION"}
-          onClick={() => onModeChange("APPLICATION")}
-        >
-          <AppWindow className="h-3.5 w-3.5" />
-          Application
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === "ENTRAIDE" ? "default" : "outline"}
-          className="gap-1.5"
-          aria-pressed={mode === "ENTRAIDE"}
-          onClick={() => onModeChange("ENTRAIDE")}
-        >
-          <LifeBuoy className="h-3.5 w-3.5" />
-          Entraide
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === "CHOIX" ? "default" : "outline"}
-          className="gap-1.5"
-          aria-pressed={mode === "CHOIX"}
-          onClick={() => onModeChange("CHOIX")}
-        >
-          <Scale className="h-3.5 w-3.5" />
-          Choix
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={mode === "SONDAGE" ? "default" : "outline"}
-          className="gap-1.5"
-          aria-pressed={mode === "SONDAGE"}
-          onClick={() => onModeChange("SONDAGE")}
-        >
-          <Vote className="h-3.5 w-3.5" />
-          Sondage
-        </Button>
+        {(
+          [
+            { id: "DISCUSSION" as const, label: "Discussion", Icon: MessageSquareText },
+            { id: "APPLICATION" as const, label: "Application", Icon: AppWindow },
+            { id: "ENTRAIDE" as const, label: "Entraide", Icon: LifeBuoy },
+            { id: "CHOIX" as const, label: "Choix", Icon: Scale },
+            { id: "SONDAGE" as const, label: "Sondage", Icon: Vote },
+          ] as const
+        )
+          .filter((item) => !allowedModes || allowedModes.includes(item.id))
+          .map(({ id, label, Icon }) => (
+            <Button
+              key={id}
+              type="button"
+              size="sm"
+              variant={mode === id ? "default" : "outline"}
+              className="gap-1.5"
+              aria-pressed={mode === id}
+              onClick={() => onModeChange(id)}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </Button>
+          ))}
       </div>
       ) : null}
 
@@ -905,21 +933,30 @@ export function FeedComposer({
   discussionOnly = false,
   forceExpanded = false,
   bare = false,
+  initialMode = "DISCUSSION",
+  defaultValues,
+  allowedModes,
+  linkedProjectId,
 }: FeedComposerProps) {
   const user = useAuthSlice((state) => state.user);
   const [expanded, setExpanded] = useState(forceExpanded);
-  const [mode, setMode] = useState<ComposerMode>("DISCUSSION");
+  const [mode, setMode] = useState<ComposerMode>(() => {
+    if (allowedModes?.length && !allowedModes.includes(initialMode)) {
+      return allowedModes[0];
+    }
+    return initialMode;
+  });
   const displayName = user?.full_name || user?.username || "Vous";
 
   const handleCreated = (id: number) => {
     if (!forceExpanded) setExpanded(false);
-    setMode("DISCUSSION");
+    setMode(initialMode);
     onCreated?.(id);
   };
 
   const handleCancel = () => {
     if (!forceExpanded) setExpanded(false);
-    setMode("DISCUSSION");
+    setMode(initialMode);
     onCancel?.();
   };
 
@@ -949,11 +986,14 @@ export function FeedComposer({
             </button>
           ) : (
             <ComposerForm
-              key={mode}
+              key={`${mode}-${linkedProjectId ?? "feed"}`}
               mode={mode}
               onModeChange={setMode}
               espaceId={espaceId}
               discussionOnly={discussionOnly || Boolean(espaceId)}
+              defaultValues={defaultValues}
+              allowedModes={allowedModes}
+              linkedProjectId={linkedProjectId}
               onCreated={handleCreated}
               onCancel={handleCancel}
             />

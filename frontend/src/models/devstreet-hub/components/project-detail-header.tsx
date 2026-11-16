@@ -1,4 +1,10 @@
-import { ExternalLink, MoreHorizontal, Sparkles, FolderGit2 } from "lucide-react";
+import {
+  ExternalLink,
+  MoreHorizontal,
+  Share2,
+  Sparkles,
+  FolderGit2,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -9,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import type { ComposerMode } from "@/models/forum/components/feed-composer";
 import type { Project, Technology } from "../schema";
 import type { ProjectStarView } from "../hooks/use-project-star";
 import { ProjectStatusBadge } from "./project-status-badge";
@@ -28,11 +35,13 @@ interface ProjectDetailHeaderProps {
   canCreateTask: boolean;
   canAnalyze: boolean;
   canReview: boolean;
+  canShareForum: boolean;
   isBusy: boolean;
   onToggleStar: () => void;
   onPublish: () => void;
   onArchive: () => void;
   onCreateTask: () => void;
+  onShareForum: (kind: ComposerMode) => void;
 }
 
 export function ProjectDetailHeader({
@@ -44,11 +53,13 @@ export function ProjectDetailHeader({
   canCreateTask,
   canAnalyze,
   canReview,
+  canShareForum,
   isBusy,
   onToggleStar,
   onPublish,
   onArchive,
   onCreateTask,
+  onShareForum,
 }: ProjectDetailHeaderProps) {
   const { t } = useTranslation();
   const demoUrl = project.demo_url?.trim() || null;
@@ -119,6 +130,32 @@ export function ProjectDetailHeader({
           >
             {t("hub.detail.actions.create_task")}
           </Button>
+        ) : null}
+        {canShareForum && project.status !== "archived" ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isBusy}
+                className={cn(headerActionClass)}
+              >
+                <Share2 aria-hidden className="size-3.5" />
+                {t("hub.detail.actions.share_forum")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[14rem]">
+              <DropdownMenuItem onClick={() => onShareForum("APPLICATION")}>
+                {t("hub.detail.share_forum.intent_application")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onShareForum("DISCUSSION")}>
+                {t("hub.detail.share_forum.intent_discussion")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onShareForum("ENTRAIDE")}>
+                {t("hub.detail.share_forum.intent_entraide")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : null}
         {showOwnerActions && isOwner ? (
           <DropdownMenu>

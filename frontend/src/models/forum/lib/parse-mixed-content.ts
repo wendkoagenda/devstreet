@@ -15,8 +15,9 @@ export type ContentSegment = TextSegment | CodeSegment;
 const FENCE_RE = /```([a-zA-Z0-9_+-]*)\r?\n?([\s\S]*?)```/g;
 const INLINE_CODE_RE = /`([^`\n]+)`/g;
 
+/** Motifs code (pas de markdown : ### titres / * listes). */
 const CODE_LINE_HINTS =
-  /^(?:#{1,3}\s|\/\/|\/\*|\*\/|\*|import\s|from\s|export\s|const\s|let\s|var\s|function\s|def\s|class\s|return\s|raise\s|throw\s|pass\b|break\b|continue\b|yield\s|assert\s|with\s|if\s*\(|elif\s|else\s*:|for\s*\(|while\s*\(|switch\s*\(|case\s|try\s*:|catch\s*\(|except\s|finally\s*:|await\s|async\s|public\s|private\s|protected\s|using\s|package\s|self\.|this\.|<?php|<\/?[a-zA-Z]|@\w+|@staticmethod|@classmethod|@property)/;
+  /^(?:\/\/|\/\*|\*\/|import\s|from\s|export\s|const\s|let\s|var\s|function\s|def\s|class\s|return\s|raise\s|throw\s|pass\b|break\b|continue\b|yield\s|assert\s|with\s|if\s*\(|elif\s|else\s*:|for\s*\(|while\s*\(|switch\s*\(|case\s|try\s*:|catch\s*\(|except\s|finally\s*:|await\s|async\s|public\s|private\s|protected\s|using\s|package\s|self\.|this\.|<?php|<\/?[a-zA-Z]|@(?:staticmethod|classmethod|property)\b)/;
 
 const CODE_TOKEN_HINTS =
   /[{};=<>]|=>|::|\(|\)|\[|\]|\b(?:null|undefined|True|False|None|self|this|new|raise|throw)\b/;
