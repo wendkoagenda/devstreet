@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ComposerMode } from "@/models/forum/components/feed-composer";
-import { HubAssistantPanel } from "@/models/ai/components/hub-assistant-panel";
+import { SelinaHubCta } from "@/models/ai/components/selina-hub-cta";
+import { useSelinaHubContext } from "@/models/ai/components/use-selina-hub-context";
 import { useLazyListProjectForumPostsQuery } from "../api";
 import { ProjectDetailHeader } from "../components/project-detail-header";
 import {
@@ -38,6 +39,8 @@ export default function ProjectDetailPage() {
     null
   );
   const repositoryReady = detail.repository?.status === "ready";
+
+  useSelinaHubContext(detail.project?.id, detail.project?.title);
 
   if (!Number.isFinite(projectId) || projectId <= 0) {
     return (
@@ -222,7 +225,7 @@ export default function ProjectDetailPage() {
         />
       ) : null}
 
-      <HubAssistantPanel projectId={project.id} projectTitle={project.title} />
+      <SelinaHubCta />
 
       <HubConfirmDialog
         open={confirmAction?.type === "publish"}

@@ -4,13 +4,13 @@ import {
   Loader2,
   SquarePen,
   ArrowUp,
-  Sparkles,
   ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { SafeMarkdown } from "@/models/devstreet-hub/functions/safe-markdown";
 import type { ChatTurn } from "../schema";
+import { SelinaMascotte } from "./selina-mascotte";
 import { SelinaRecents } from "./selina-recents";
 import { useSelina } from "./use-selina";
 
@@ -140,33 +140,84 @@ export function SelinaPanel() {
       role="complementary"
       aria-label={t("selina.title")}
     >
-      {/* Header Grok : icônes à droite uniquement */}
-      <header className="flex h-12 shrink-0 items-center justify-end gap-0.5 px-2.5">
-        <button
-          type="button"
-          onClick={() => selina.setRecentsOpen(true)}
-          className="inline-flex size-9 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={t("selina.history")}
-        >
-          <History className="size-[18px]" strokeWidth={1.75} aria-hidden />
-        </button>
-        <button
-          type="button"
-          onClick={selina.startNewConversation}
-          className="inline-flex size-9 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={t("selina.new")}
-        >
-          <SquarePen className="size-[18px]" strokeWidth={1.75} aria-hidden />
-        </button>
-        <button
-          type="button"
-          onClick={selina.close}
-          className="inline-flex size-9 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={t("selina.close")}
-        >
-          <ChevronDown className="size-[18px]" strokeWidth={1.75} aria-hidden />
-        </button>
+      <header className="flex h-12 shrink-0 items-center justify-between gap-0.5 px-2.5">
+        <div className="flex min-w-0 items-center gap-2 pl-1">
+          <SelinaMascotte size="sm" interactive ariaLabel={t("selina.mascotte_aria")} />
+          <div className="min-w-0">
+            <span className="block truncate text-sm font-semibold tracking-tight text-foreground">
+              {t("selina.title")}
+            </span>
+            {selina.hubContext ? (
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {selina.hubContext.includeTask && selina.hubContext.taskTitle
+                  ? `${selina.hubContext.projectTitle} · ${selina.hubContext.taskTitle}`
+                  : selina.hubContext.projectTitle}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => selina.setRecentsOpen(true)}
+            className="inline-flex size-9 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("selina.history")}
+          >
+            <History className="size-[18px]" strokeWidth={1.75} aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={selina.startNewConversation}
+            className="inline-flex size-9 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("selina.new")}
+          >
+            <SquarePen className="size-[18px]" strokeWidth={1.75} aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={selina.close}
+            className="inline-flex size-9 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("selina.close")}
+          >
+            <ChevronDown className="size-[18px]" strokeWidth={1.75} aria-hidden />
+          </button>
+        </div>
       </header>
+
+      {selina.hubContext ? (
+        <div className="flex flex-wrap gap-1.5 border-b border-border px-3 py-2">
+          {selina.hubContext.taskId ? (
+            <button
+              type="button"
+              className={cn(
+                "rounded-full border px-2.5 py-0.5 text-[11px] transition",
+                selina.hubContext.includeTask
+                  ? "border-border bg-muted text-foreground"
+                  : "border-dashed border-border text-muted-foreground"
+              )}
+              onClick={() =>
+                selina.setIncludeTask(!selina.hubContext?.includeTask)
+              }
+            >
+              {t("selina.hub_context_task")}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={cn(
+              "rounded-full border px-2.5 py-0.5 text-[11px] transition",
+              selina.hubContext.includeRepo
+                ? "border-border bg-muted text-foreground"
+                : "border-dashed border-border text-muted-foreground"
+            )}
+            onClick={() =>
+              selina.setIncludeRepo(!selina.hubContext?.includeRepo)
+            }
+          >
+            {t("selina.hub_context_repo")}
+          </button>
+        </div>
+      ) : null}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         <SelinaRecents />
@@ -177,16 +228,18 @@ export function SelinaPanel() {
         >
           {selina.turns.length === 0 && !selina.isBusy ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
-              <Sparkles
-                className="size-7 text-muted-foreground/70"
-                strokeWidth={1.5}
-                aria-hidden
+              <SelinaMascotte
+                size="md"
+                interactive
+                ariaLabel={t("selina.mascotte_aria")}
               />
               <p className="text-[17px] font-semibold tracking-tight text-foreground">
                 {t("selina.empty_title")}
               </p>
               <p className="max-w-[15rem] text-sm leading-snug text-muted-foreground">
-                {t("selina.empty")}
+                {selina.hubContext
+                  ? t("selina.hub_empty")
+                  : t("selina.empty")}
               </p>
             </div>
           ) : (

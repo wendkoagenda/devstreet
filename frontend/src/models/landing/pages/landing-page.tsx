@@ -23,6 +23,7 @@ import { AfricaCommunitySection } from "../components/africa-community-section";
 import { CountUp } from "../components/count-up";
 import { LandingFooter } from "../components/landing-footer";
 import { LandingHeader } from "../components/landing-header";
+import { LandingSelinaHost } from "../components/landing-selina-host";
 import { ProfilesMarquee } from "../components/profiles-marquee";
 import { Reveal } from "../components/reveal";
 import { ToolOrbits } from "../components/tool-orbits";
@@ -211,6 +212,13 @@ export default function LandingPage() {
                 >
                   {t("landing.have_account")}
                 </Link>
+              </div>
+
+              <div
+                className={`mt-10 ${HERO_ENTER}`}
+                style={{ animationDelay: "560ms" }}
+              >
+                <LandingSelinaHost />
               </div>
             </div>
           </section>

@@ -1,6 +1,12 @@
-import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type FeedScopeId = "pour-vous" | "abonnements";
 export type FeedTypeFilterId =
@@ -86,7 +92,7 @@ export function FeedTabs({
         <div
           role="group"
           aria-label={t("forum.feed_type_aria")}
-          className="flex flex-wrap gap-1.5"
+          className="flex min-w-0 flex-wrap gap-1.5"
         >
           {typeChips.map((chip) => {
             const active = typeFilter === chip.id;
@@ -109,23 +115,29 @@ export function FeedTabs({
           })}
         </div>
 
-        <label className="relative inline-flex items-center">
-          <span className="sr-only">{t("forum.feed_sort_aria")}</span>
-          <select
-            value={sort}
-            onChange={(event) =>
-              onSortChange(event.target.value as FeedSortId)
-            }
-            className="h-8 appearance-none rounded-lg border border-border bg-card py-1 pl-2.5 pr-7 text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-brand/30"
+        <Select
+          value={sort}
+          onValueChange={(value) => onSortChange(value as FeedSortId)}
+        >
+          <SelectTrigger
+            aria-label={t("forum.feed_sort_aria")}
+            className={cn(
+              "h-8 w-auto min-w-[9.5rem] shrink-0 gap-1.5 rounded-full border-border/80 bg-card px-3",
+              "text-xs font-medium text-muted-foreground shadow-none",
+              "hover:text-foreground focus:ring-2 focus:ring-brand/30"
+            )}
           >
-            <option value="recents">{t("forum.sort_recent")}</option>
-            <option value="populaires">{t("forum.sort_popular")}</option>
-          </select>
-          <ChevronDown
-            className="pointer-events-none absolute right-2 size-3.5 text-muted-foreground"
-            aria-hidden
-          />
-        </label>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end" className="min-w-[10rem] rounded-xl">
+            <SelectItem value="recents" className="text-xs">
+              {t("forum.sort_recent")}
+            </SelectItem>
+            <SelectItem value="populaires" className="text-xs">
+              {t("forum.sort_popular")}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
