@@ -18,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { HubAssistantPanel } from "@/models/ai/components/hub-assistant-panel";
+import { SelinaHubCta } from "@/models/ai/components/selina-hub-cta";
+import { useSelinaHubContext } from "@/models/ai/components/use-selina-hub-context";
 import { HubConfirmDialog } from "../components/hub-confirm-dialog";
 import { useTaskContribution } from "../hooks/use-task-contribution";
 import { SafeMarkdown } from "../functions/safe-markdown";
@@ -67,6 +68,13 @@ export default function TaskContributionPage() {
   const projectId = Number(params.id);
   const taskId = Number(params.taskId);
   const detail = useTaskContribution(projectId, taskId);
+
+  useSelinaHubContext(
+    detail.project?.id,
+    detail.project?.title,
+    detail.task?.id,
+    detail.task?.title
+  );
 
   const [summary, setSummary] = useState("");
   const [prNumber, setPrNumber] = useState("");
@@ -700,12 +708,7 @@ export default function TaskContributionPage() {
         </aside>
       </div>
 
-      <HubAssistantPanel
-        projectId={project.id}
-        projectTitle={project.title}
-        taskId={task.id}
-        taskTitle={task.title}
-      />
+      <SelinaHubCta />
 
       <HubConfirmDialog
         open={confirmClose}
