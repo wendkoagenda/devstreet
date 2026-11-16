@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Laptop, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,27 +8,42 @@ import {
   useRevokeGitConnectedComputerMutation,
 } from "../api";
 
+interface ConnectedComputersSectionProps {
+  /** Lien vers /hub/git-setup (désactivé sur la page elle-même). */
+  showSetupLink?: boolean;
+}
+
 /**
  * Liste des ordinateurs autorisés (PAT Gitea) + révocation serveur.
  */
-export function ConnectedComputersSection() {
+export function ConnectedComputersSection({
+  showSetupLink = true,
+}: ConnectedComputersSectionProps) {
   const { t } = useTranslation();
   const { data, isLoading, isError, refetch } = useGetGitConnectedComputersQuery();
   const [revoke, revokeState] = useRevokeGitConnectedComputerMutation();
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
   const computers = data ?? [];
+  const activeCount = computers.filter((c) => c.status === "active").length;
 
   return (
     <section className="mt-8 flex flex-col gap-4">
-      <div>
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <Laptop aria-hidden className="size-5 text-brand" />
-          {t("hub.git_computers.title")}
-        </h2>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          {t("hub.git_computers.hint")}
-        </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+            <Laptop aria-hidden className="size-5 text-brand" />
+            {t("hub.git_computers.title")}
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            {t("hub.git_computers.hint")}
+          </p>
+        </div>
+        {showSetupLink ? (
+          <Button asChild type="button" variant="outline" className="h-8 w-fit text-xs">
+            <Link to="/hub/git-setup">{t("hub.git_setup.open_page")}</Link>
+          </Button>
+        ) : null}
       </div>
 
       {isLoading ? (
@@ -40,9 +56,14 @@ export function ConnectedComputersSection() {
           </Button>
         </div>
       ) : computers.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border bg-secondary/40 px-4 py-3 text-sm text-muted-foreground">
-          {t("hub.git_computers.empty")}
-        </p>
+        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-secondary/40 px-4 py-3">
+          <p className="text-sm text-muted-foreground">{t("hub.git_computers.empty")}</p>
+          {showSetupLink ? (
+            <Button asChild type="button" className="h-8 w-fit text-xs font-semibold">
+              <Link to="/hub/git-setup">{t("hub.git_setup.link_computer_cta")}</Link>
+            </Button>
+          ) : null}
+        </div>
       ) : (
         <ul className="flex flex-col gap-2">
           {computers.map((computer) => {
@@ -115,6 +136,15 @@ export function ConnectedComputersSection() {
           })}
         </ul>
       )}
+
+      {!isLoading && !isError && activeCount > 0 && showSetupLink ? (
+        <p className="text-xs text-muted-foreground">
+          {t("hub.git_setup.reconfig_hint")}{" "}
+          <Link to="/hub/git-setup" className="text-brand underline-offset-2 hover:underline">
+            {t("hub.git_setup.open_page")}
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

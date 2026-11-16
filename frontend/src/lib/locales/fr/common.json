@@ -562,6 +562,22 @@
       "revoke": "Révoquer",
       "revoke_confirm": "Confirmer la révocation"
     },
+    "git_setup": {
+      "page_title": "Relier mon ordinateur à Git",
+      "page_subtitle": "Configure Git Credential Manager une fois par PC, puis autorise l'accès au premier push. Les ordinateurs déjà liés apparaissent en bas.",
+      "dialog_title": "Relier cet ordinateur avant de pousser",
+      "dialog_description": "Aucun ordinateur Git n'est encore enregistré sur ton compte. Copie la config, colle-la dans un terminal, puis continue. Au premier git push, DevStreet te demandera de confirmer.",
+      "continue": "J'ai collé la config, continuer",
+      "open_page": "Page de configuration Git",
+      "link_computer_cta": "Relier mon ordinateur",
+      "login_required": "Connecte-toi pour voir la config Git et tes ordinateurs autorisés.",
+      "back_hub": "Retour aux projets",
+      "config_error": "Impossible de charger les commandes de configuration.",
+      "config_empty": "Aucune commande disponible pour le moment.",
+      "no_computer_yet": "Aucun ordinateur autorisé pour l'instant : après le premier push confirmé, il apparaîtra ici.",
+      "has_computers": "{{count}} ordinateur(s) actif(s). Tu peux quand même recopier la config sur un nouveau PC.",
+      "reconfig_hint": "Nouveau PC ou push qui ouvre Gitea ?"
+    },
     "ai": {
       "title": "Atelier IA",
       "description": "Décris un objectif : l'IA analyse le dépôt et propose des suggestions de tâches sourcées. Pour créer une demande sans IA, utilise l'onglet Contribuer du projet. Rien n'est publié automatiquement.",

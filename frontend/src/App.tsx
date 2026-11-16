@@ -29,6 +29,7 @@ import ContributionReviewPage from "./models/devstreet-hub/pages/contribution-re
 import AiWorkshopPage from "./models/devstreet-hub/pages/ai-workshop-page";
 import GitAuthAuthorizePage from "./models/devstreet-hub/pages/git-auth-authorize-page";
 import GitOAuthAuthorizePage from "./models/devstreet-hub/pages/git-oauth-authorize-page";
+import GitSetupPage from "./models/devstreet-hub/pages/git-setup-page";
 import OffersPage from "./models/marketplace-offers/pages/offers-page";
 import OfferDetailPage from "./models/marketplace-offers/pages/offer-detail-page";
 import OfferApplyPage from "./models/marketplace-offers/pages/offer-apply-page";
@@ -103,6 +104,7 @@ function App() {
             element={<GitOAuthAuthorizePage />}
             path="/hub/git-oauth/authorize"
           />
+          <Route element={<GitSetupPage />} path="/hub/git-setup" />
 
           <Route element={<PrivateRoute />}>
             <Route element={<GuidePage />} path="/aide" />
