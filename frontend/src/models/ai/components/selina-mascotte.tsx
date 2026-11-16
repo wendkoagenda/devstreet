@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 
 const SIZE_PX = {
   sm: 40,
-  md: 88,
-  lg: 160,
+  md: 96,
+  lg: 168,
 } as const;
 
 export type SelinaMascotteSize = keyof typeof SIZE_PX;
@@ -95,20 +95,23 @@ export function SelinaMascotte({
   const label = ariaLabel ?? t("selina.mascotte_aria");
   const clickable = typeof onClick === "function";
   const fallback = <MascotteFallback px={px} />;
+  const clippedCircle = size === "sm";
 
   const sharedClassName = cn(
-    "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
-    "bg-gradient-to-b from-brand-soft/80 to-muted/40",
+    "relative inline-flex shrink-0 items-center justify-center",
+    clippedCircle
+      ? "overflow-hidden rounded-full bg-gradient-to-b from-brand-soft/80 to-muted/40 ring-1 ring-border/50"
+      : "overflow-visible bg-transparent",
     clickable &&
       "cursor-pointer transition hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40",
     className
   );
 
   const hoverHandlers = {
-    onMouseEnter: () => {
+    onPointerEnter: () => {
       if (interactive && !reducedMotion) setHovering(true);
     },
-    onMouseLeave: () => setHovering(false),
+    onPointerLeave: () => setHovering(false),
     onFocus: () => {
       if (interactive && !reducedMotion) setHovering(true);
     },
@@ -122,6 +125,7 @@ export function SelinaMascotte({
           hovering={hovering && interactive}
           reducedMotion={reducedMotion}
           px={px}
+          fitSize={size}
         />
       </Suspense>
     </SceneErrorBoundary>

@@ -16,11 +16,17 @@ import { useNavigate } from "react-router-dom";
 import {
   useCreateAiConversationMutation,
   useGetAiConversationQuery,
+  useHubAssistantChatMutation,
   useListAiConversationsQuery,
   useSendAiMessageMutation,
 } from "../api";
 import type { ChatTurn } from "../schema";
-import { SelinaContext, type SelinaContextValue } from "./selina-context";
+import {
+  SelinaContext,
+  type SelinaContextValue,
+  type SelinaHubContext,
+  type SelinaHubContextInput,
+} from "./selina-context";
 
 export function SelinaProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
@@ -35,13 +41,17 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [recentsOpen, setRecentsOpen] = useState(false);
   const [pendingLoadId, setPendingLoadId] = useState<number | null>(null);
+  const [hubContext, setHubContextState] = useState<SelinaHubContext | null>(
+    null
+  );
 
   const [createConversation] = useCreateAiConversationMutation();
   const [sendMessage, sendState] = useSendAiMessageMutation();
+  const [hubChat, hubChatState] = useHubAssistantChatMutation();
 
   const { data: recentsData, isFetching: recentsLoading } =
     useListAiConversationsQuery(
-      { consumer: "selina" },
+      { consumer: hubContext ? "hub" : "selina" },
       { skip: !isAuthenticated || !canChat || (!open && !recentsOpen) }
     );
 
@@ -56,7 +66,9 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
     setConversationId(loadedConversation.id);
     setTurns(
       loadedConversation.messages
-        .filter((message) => message.role === "user" || message.role === "assistant")
+        .filter(
+          (message) => message.role === "user" || message.role === "assistant"
+        )
         .map((message) => ({
           id: String(message.id),
           role: message.role as "user" | "assistant",
@@ -108,6 +120,48 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
 
+  const setHubContext = useCallback((context: SelinaHubContextInput | null) => {
+    if (!context) {
+      setHubContextState(null);
+      return;
+    }
+    setHubContextState((prev) => {
+      const next: SelinaHubContext = {
+        projectId: context.projectId,
+        projectTitle: context.projectTitle,
+        taskId: context.taskId,
+        taskTitle: context.taskTitle,
+        includeRepo: prev?.projectId === context.projectId ? prev.includeRepo : true,
+        includeTask:
+          prev?.projectId === context.projectId && prev?.taskId === context.taskId
+            ? prev.includeTask
+            : Boolean(context.taskId),
+      };
+      const changed =
+        !prev ||
+        prev.projectId !== next.projectId ||
+        prev.taskId !== next.taskId;
+      if (changed) {
+        setConversationId(null);
+        setTurns([]);
+        setPendingLoadId(null);
+      }
+      return next;
+    });
+  }, []);
+
+  const clearHubContext = useCallback(() => {
+    setHubContextState(null);
+  }, []);
+
+  const setIncludeRepo = useCallback((value: boolean) => {
+    setHubContextState((prev) => (prev ? { ...prev, includeRepo: value } : prev));
+  }, []);
+
+  const setIncludeTask = useCallback((value: boolean) => {
+    setHubContextState((prev) => (prev ? { ...prev, includeTask: value } : prev));
+  }, []);
+
   const send = useCallback(
     async (raw?: string) => {
       const message = (raw ?? draft).trim();
@@ -131,6 +185,34 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
       setOpen(true);
 
       try {
+        if (hubContext) {
+          const result = await hubChat({
+            projectId: hubContext.projectId,
+            body: {
+              message,
+              conversation_id: conversationId ?? undefined,
+              task_id:
+                hubContext.includeTask && hubContext.taskId
+                  ? hubContext.taskId
+                  : undefined,
+              include_repo: hubContext.includeRepo,
+            },
+          }).unwrap();
+
+          setConversationId(result.conversation_id);
+          setTurns((prev) => [
+            ...prev,
+            {
+              id: `a-${result.message_id}`,
+              role: "assistant",
+              content: result.assistant_message,
+              provider: result.provider,
+              failoverReason: result.failover_reason,
+            },
+          ]);
+          return true;
+        }
+
         let activeId = conversationId;
         if (!activeId) {
           const created = await createConversation({
@@ -182,6 +264,8 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
       conversationId,
       createConversation,
       draft,
+      hubChat,
+      hubContext,
       isAuthenticated,
       requestLogin,
       sendMessage,
@@ -211,7 +295,7 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
       setDraft,
       conversationId,
       turns,
-      isBusy: sendState.isLoading,
+      isBusy: sendState.isLoading || hubChatState.isLoading,
       recentsOpen,
       setRecentsOpen,
       startNewConversation,
@@ -226,12 +310,20 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
         updated_at: item.updated_at,
       })),
       recentsLoading,
+      hubContext,
+      setHubContext,
+      clearHubContext,
+      setIncludeRepo,
+      setIncludeTask,
     }),
     [
       canChat,
+      clearHubContext,
       close,
       conversationId,
       draft,
+      hubChatState.isLoading,
+      hubContext,
       isAuthenticated,
       loadConversation,
       open,
@@ -242,6 +334,9 @@ export function SelinaProvider({ children }: { children: ReactNode }) {
       requestLogin,
       send,
       sendState.isLoading,
+      setHubContext,
+      setIncludeRepo,
+      setIncludeTask,
       startNewConversation,
       t,
       turns,

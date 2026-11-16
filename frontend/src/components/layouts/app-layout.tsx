@@ -17,23 +17,33 @@ function AppShell() {
   return (
     <SidebarProvider
       defaultOpen
+      className="h-svh max-h-svh overflow-hidden"
       style={{ "--sidebar-width": "17rem" } as React.CSSProperties}
     >
       <AppSidebar />
 
-      <div
-        className={cn(
-          "min-w-0 flex-1 overflow-auto transition-[padding] duration-200",
-          dockOpen && "lg:pr-[400px]"
-        )}
-      >
-        <SidebarInset className="bg-background">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div
+          className={cn(
+            "shrink-0 transition-[padding] duration-200",
+            dockOpen && "lg:pr-[400px]"
+          )}
+        >
           <AppTopbar />
-          <div className="flex flex-col gap-6 px-4 pb-6 pt-1 sm:px-6 sm:pb-8 lg:px-8 lg:pb-10">
-            <OnboardingReminder />
-            <Outlet />
-          </div>
-        </SidebarInset>
+        </div>
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-y-auto transition-[padding] duration-200",
+            dockOpen && "lg:pr-[400px]"
+          )}
+        >
+          <SidebarInset className="bg-background">
+            <div className="flex flex-col gap-6 px-4 pb-6 pt-1 sm:px-6 sm:pb-8 lg:px-8 lg:pb-10">
+              <OnboardingReminder />
+              <Outlet />
+            </div>
+          </SidebarInset>
+        </div>
       </div>
       <AppTour />
       <SelinaPanel />

@@ -305,6 +305,10 @@
     "landing_gate_reply": "DevStreet is an awesome app for developers: community, projects, and opportunities. Sign in or create an account to discover more with me!",
     "landing_login_cta": "Sign in",
     "landing_register_cta": "Create an account",
+    "hub_ask": "Ask Selina",
+    "hub_empty": "Ask about this project, a task, or the repository.",
+    "hub_context_task": "Task",
+    "hub_context_repo": "Repository",
     "errors": {
       "forbidden": "You do not have permission to use Selina.",
       "unavailable": "Selina is unavailable. Try again later.",

@@ -888,14 +888,14 @@ export function PublicationCard({
 
         {publication.projet?.id ? (
           <div
-            className="flex flex-col gap-2.5 rounded-xl border border-brand-soft-border bg-brand-soft/50 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+            className="flex flex-col gap-2.5 rounded-xl border border-brand-soft-border bg-brand-soft/50 p-3"
             data-no-card-nav
           >
-            <div className="min-w-0 flex items-start gap-2.5">
+            <div className="flex min-w-0 items-start gap-2.5">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-brand-soft-border bg-card text-brand">
                 <FolderGit2 aria-hidden className="size-4" />
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-brand">
                   {t("forum.linked_project_badge")}
                 </p>
@@ -907,25 +907,31 @@ export function PublicationCard({
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0">
-              <Button asChild size="sm" className="h-8 gap-1.5 bg-brand text-brand-foreground hover:bg-brand/90">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <Button
+                asChild
+                size="sm"
+                className="h-8 min-w-0 gap-1.5 bg-brand text-brand-foreground hover:bg-brand/90"
+              >
                 <Link to={`/hub/projects/${publication.projet.id}`}>
-                  <FolderGit2 aria-hidden className="size-3.5" />
-                  {t("forum.linked_project_view")}
+                  <FolderGit2 aria-hidden className="size-3.5 shrink-0" />
+                  <span className="truncate">{t("forum.linked_project_view")}</span>
                 </Link>
               </Button>
-              <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
+              <Button asChild size="sm" variant="outline" className="h-8 min-w-0 gap-1.5">
                 <Link to={`/hub/projects/${publication.projet.id}?tab=code`}>
-                  <Code2 aria-hidden className="size-3.5" />
-                  {t("forum.linked_project_code")}
+                  <Code2 aria-hidden className="size-3.5 shrink-0" />
+                  <span className="truncate">{t("forum.linked_project_code")}</span>
                 </Link>
               </Button>
-              <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
+              <Button asChild size="sm" variant="outline" className="h-8 min-w-0 gap-1.5">
                 <Link
                   to={`/hub/projects/${publication.projet.id}?tab=contribute`}
                 >
-                  <GitBranch aria-hidden className="size-3.5" />
-                  {t("forum.linked_project_contribute")}
+                  <GitBranch aria-hidden className="size-3.5 shrink-0" />
+                  <span className="truncate">
+                    {t("forum.linked_project_contribute")}
+                  </span>
                 </Link>
               </Button>
             </div>

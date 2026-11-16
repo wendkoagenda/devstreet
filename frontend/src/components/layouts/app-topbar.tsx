@@ -66,7 +66,7 @@ export function AppTopbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 w-full bg-background/85 px-4 pb-2 pt-3 backdrop-blur-md pointer-events-auto sm:px-6 sm:pt-4 lg:px-8">
+      <header className="w-full bg-background/85 px-4 pb-2 pt-3 backdrop-blur-md pointer-events-auto sm:px-6 sm:pt-4 lg:px-8">
         <nav
           className={cn(
             "flex w-full items-center justify-between gap-2 rounded-full border border-border/80 bg-card/95 px-2.5 py-1.5 shadow-floating backdrop-blur-xl transition-all duration-300 sm:gap-4",
@@ -88,7 +88,6 @@ export function AppTopbar() {
                 interactive
                 ariaLabel={t("selina.open")}
                 onClick={() => selina.setOpen(true)}
-                className="ring-1 ring-border/60"
               />
             ) : (
               <Button
