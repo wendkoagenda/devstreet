@@ -37,6 +37,7 @@ import {
   type MediaCommentaire,
   type OptionPublication,
 } from "../schema";
+import { SafeMarkdown } from "@/models/devstreet-hub/functions/safe-markdown";
 import { ForumAudioPlayer } from "./forum-audio-player";
 import { ForumAvatar } from "./forum-avatar";
 import { ForumRichText } from "./forum-rich-text";
@@ -685,14 +686,20 @@ function CommentItem({
               ) : null}
             </div>
             {comment.texte?.trim() ? (
-              <ForumRichText
-                text={comment.texte}
-                compact
-                className={cn(
-                  "mt-1 text-foreground/90",
-                  isTechnical && "text-[13px]"
-                )}
-              />
+              isSelina ? (
+                <div className="mt-1 text-foreground/90">
+                  <SafeMarkdown content={comment.texte} />
+                </div>
+              ) : (
+                <ForumRichText
+                  text={comment.texte}
+                  compact
+                  className={cn(
+                    "mt-1 text-foreground/90",
+                    isTechnical && "text-[13px]"
+                  )}
+                />
+              )
             ) : null}
             <CommentMedias medias={comment.medias} />
           </div>

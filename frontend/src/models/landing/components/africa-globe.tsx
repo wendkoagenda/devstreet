@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
+  AFRICA_POLYGONS,
   ANTARCTIC_LATITUDE,
   INLAND_SEAS,
   LAND_POLYGONS,
@@ -13,16 +14,20 @@ import {
 } from "../data/showcase-profiles";
 
 const DEG = Math.PI / 180;
-const SAMPLE_COUNT = 9000;
-const TILT = 0.32;
-const INITIAL_ROTATION = -12 * DEG;
-const AUTO_SPEED = (2 * Math.PI) / 70000;
+const SAMPLE_COUNT = 16000;
+const AFRICA_CENTER = { lat: 2, lon: 18 };
+const TILT = 4 * DEG;
+const BASE_ROTATION = -AFRICA_CENTER.lon * DEG;
+const SWAY_AMPLITUDE = 11 * DEG;
+const SWAY_PERIOD_MS = 20000;
+const RETURN_MS = 380;
+const GLOBE_SCALE = 0.45;
 const ARC_STEPS = 48;
-const ARC_GROW_MS = 1400;
-const ARC_HOLD_MS = 1800;
+const ARC_GROW_MS = 1300;
+const ARC_HOLD_MS = 2000;
 const ARC_FADE_MS = 900;
 const ARC_LIFETIME_MS = ARC_GROW_MS + ARC_HOLD_MS + ARC_FADE_MS;
-const ARC_SPAWN_MS = 1900;
+const ARC_SPAWN_MS = 1700;
 const PULSE_MS = 2400;
 const DEPTH_BUCKETS = 4;
 
@@ -45,7 +50,7 @@ function toVector(lat: number, lon: number): Vec3 {
   return [cosLat * Math.sin(lon * DEG), Math.sin(lat * DEG), cosLat * Math.cos(lon * DEG)];
 }
 
-function insidePolygon(lon: number, lat: number, polygon: LonLat[]) {
+function insidePolygon(lon: number, lat: number, polygon: readonly LonLat[]) {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
     const [xi, yi] = polygon[i];
@@ -63,20 +68,24 @@ function isLand(lon: number, lat: number) {
   return LAND_POLYGONS.some((polygon) => insidePolygon(lon, lat, polygon));
 }
 
-let landCache: Float32Array | null = null;
+type LandSample = { positions: Float32Array; africa: Uint8Array };
+let landCache: LandSample | null = null;
 
 /** Échantillonnage de Fibonacci : une grille de points quasi uniforme sur la sphère. */
-function landPoints() {
+function landPoints(): LandSample {
   if (landCache) return landCache;
   const golden = Math.PI * (3 - Math.sqrt(5));
   const coords: number[] = [];
+  const africa: number[] = [];
   for (let i = 0; i < SAMPLE_COUNT; i++) {
     const y = 1 - (2 * (i + 0.5)) / SAMPLE_COUNT;
     const lat = Math.asin(y) / DEG;
     const lon = (((i * golden) % (2 * Math.PI)) - Math.PI) / DEG;
-    if (isLand(lon, lat)) coords.push(...toVector(lat, lon));
+    if (!isLand(lon, lat)) continue;
+    coords.push(...toVector(lat, lon));
+    africa.push(AFRICA_POLYGONS.some((polygon) => insidePolygon(lon, lat, polygon)) ? 1 : 0);
   }
-  landCache = Float32Array.from(coords);
+  landCache = { positions: Float32Array.from(coords), africa: Uint8Array.from(africa) };
   return landCache;
 }
 
@@ -87,7 +96,7 @@ function arcSamples(connection: GlobeConnection) {
   const dot = Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
   const omega = Math.acos(dot);
   const sinOmega = Math.sin(omega) || 1;
-  const lift = 0.06 + 0.28 * (omega / Math.PI);
+  const lift = 0.04 + 0.42 * (omega / Math.PI);
   const samples = new Float32Array((ARC_STEPS + 1) * 3);
   for (let s = 0; s <= ARC_STEPS; s++) {
     const t = s / ARC_STEPS;
@@ -114,11 +123,13 @@ function readPalette(): Palette {
   };
 }
 
-export function WorldGlobe({
+export function AfricaGlobe({
   className,
+  label,
   onConnection,
 }: {
   className?: string;
+  label: string;
   onConnection?: (connection: GlobeConnection) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -135,71 +146,68 @@ export function WorldGlobe({
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const land = landPoints();
+    const fontFamily = getComputedStyle(canvas).fontFamily;
+    const africaCenter = toVector(AFRICA_CENTER.lat, AFRICA_CENTER.lon);
     const markers = GLOBE_MARKERS.map((marker, i) => ({
       kind: marker.kind,
       vector: toVector(marker.lat, marker.lon),
       phase: (i * 0.137) % 1,
     }));
     const arcs = GLOBE_CONNECTIONS.map(arcSamples);
-    const endpoints = GLOBE_CONNECTIONS.map(
-      (c) => [toVector(c.dev.lat, c.dev.lon), toVector(c.company.lat, c.company.lon)] as const
-    );
 
     let palette = readPalette();
     let width = 0;
     let height = 0;
     let frame = 0;
-    let rotation = INITIAL_ROTATION;
-    let velocity = 0;
+    let swayClock = 0;
+    let dragOffset = 0;
     let dragging = false;
     let lastPointerX = 0;
-    let lastPointerTime = 0;
     let lastFrameTime = 0;
     let visible = false;
-    let active: ActiveArc[] = [];
+    let active: ActiveArc[] = reduceMotion
+      ? arcs.slice(0, 4).map((_, index) => ({ index, start: 0, frozen: true }))
+      : [];
     let nextSpawn = 0;
     let nextIndex = 0;
 
-    const facingZ = (v: Vec3) => {
-      const z = -v[0] * Math.sin(rotation) + v[2] * Math.cos(rotation);
-      return v[1] * Math.sin(TILT) + z * Math.cos(TILT);
-    };
-
-    if (reduceMotion) {
-      active = endpoints
-        .map((pair, index) => ({ index, ok: facingZ(pair[0]) > 0.15 && facingZ(pair[1]) > 0.15 }))
-        .filter((entry) => entry.ok)
-        .slice(0, 4)
-        .map(({ index }) => ({ index, start: 0, frozen: true }));
-    }
+    const rotation = () =>
+      BASE_ROTATION +
+      dragOffset +
+      (reduceMotion ? 0 : SWAY_AMPLITUDE * Math.sin((2 * Math.PI * swayClock) / SWAY_PERIOD_MS));
 
     const spawnArcs = (now: number) => {
       active = active.filter((arc) => now - arc.start < ARC_LIFETIME_MS);
       if (now < nextSpawn) return;
-      for (let k = 0; k < endpoints.length; k++) {
-        const index = (nextIndex + k) % endpoints.length;
-        if (active.some((arc) => arc.index === index)) continue;
-        const [from, to] = endpoints[index];
-        if (facingZ(from) > 0.12 && facingZ(to) > 0.12) {
-          active.push({ index, start: now });
-          nextIndex = index + 1;
-          nextSpawn = now + ARC_SPAWN_MS;
-          onConnectionRef.current?.(GLOBE_CONNECTIONS[index]);
-          return;
-        }
-      }
-      nextSpawn = now + 400;
+      const index = nextIndex % arcs.length;
+      active.push({ index, start: now });
+      nextIndex = index + 1;
+      nextSpawn = now + ARC_SPAWN_MS;
+      onConnectionRef.current?.(GLOBE_CONNECTIONS[index]);
+    };
+
+    const drawLabel = (text: string, x: number, y: number, alpha: number) => {
+      ctx.font = `500 11px ${fontFamily}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = hsla(palette.card, 0.92 * alpha);
+      ctx.strokeText(text, x, y);
+      ctx.fillStyle = hsla(palette.foreground, 0.9 * alpha);
+      ctx.fillText(text, x, y);
     };
 
     const draw = (now: number) => {
       if (!width || !height) return;
       ctx.clearRect(0, 0, width, height);
 
-      const radius = Math.min(width, height) * 0.42;
+      const radius = Math.min(width, height) * GLOBE_SCALE;
       const cx = width / 2;
       const cy = height / 2;
-      const cr = Math.cos(rotation);
-      const sr = Math.sin(rotation);
+      const angle = rotation();
+      const cr = Math.cos(angle);
+      const sr = Math.sin(angle);
       const ct = Math.cos(TILT);
       const st = Math.sin(TILT);
 
@@ -209,12 +217,12 @@ export function WorldGlobe({
         return [rx, y * ct - rz * st, y * st + rz * ct];
       };
 
-      const glow = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.32);
-      glow.addColorStop(0, hsla(palette.brand, 0.24));
+      const glow = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.3);
+      glow.addColorStop(0, hsla(palette.brand, 0.22));
       glow.addColorStop(1, hsla(palette.brand, 0));
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius * 1.32, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius * 1.3, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.beginPath();
@@ -237,24 +245,52 @@ export function WorldGlobe({
       ctx.strokeStyle = hsla(palette.border, 1);
       ctx.stroke();
 
-      const dotRadius = Math.max(0.6, radius * 0.0078);
-      const buckets = Array.from({ length: DEPTH_BUCKETS }, () => new Path2D());
-      for (let i = 0; i < land.length; i += 3) {
-        const [x, y, z] = project(land[i], land[i + 1], land[i + 2]);
+      const [ax, ay] = project(...africaCenter);
+      const spotlight = ctx.createRadialGradient(
+        cx + ax * radius,
+        cy - ay * radius,
+        0,
+        cx + ax * radius,
+        cy - ay * radius,
+        radius * 0.62
+      );
+      spotlight.addColorStop(0, hsla(palette.brand, 0.14));
+      spotlight.addColorStop(1, hsla(palette.brand, 0));
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.fillStyle = spotlight;
+      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+      ctx.restore();
+
+      const dotRadius = Math.max(0.6, radius * 0.0066);
+      const africaBuckets = Array.from({ length: DEPTH_BUCKETS }, () => new Path2D());
+      const worldPath = new Path2D();
+      const { positions, africa } = land;
+      for (let i = 0, p = 0; i < positions.length; i += 3, p++) {
+        const [x, y, z] = project(positions[i], positions[i + 1], positions[i + 2]);
         if (z <= 0) continue;
         const sx = cx + x * radius;
         const sy = cy - y * radius;
-        const path = buckets[Math.min(DEPTH_BUCKETS - 1, Math.floor(z * DEPTH_BUCKETS))];
+        const path = africa[p]
+          ? africaBuckets[Math.min(DEPTH_BUCKETS - 1, Math.floor(z * DEPTH_BUCKETS))]
+          : worldPath;
         path.moveTo(sx + dotRadius, sy);
         path.arc(sx, sy, dotRadius, 0, Math.PI * 2);
       }
-      buckets.forEach((path, i) => {
-        ctx.fillStyle = hsla(palette.foreground, 0.1 + (0.42 * (i + 1)) / DEPTH_BUCKETS);
+      ctx.fillStyle = hsla(palette.foreground, 0.11);
+      ctx.fill(worldPath);
+      africaBuckets.forEach((path, i) => {
+        ctx.fillStyle = hsla(palette.foreground, 0.3 + (0.5 * (i + 1)) / DEPTH_BUCKETS);
         ctx.fill(path);
       });
 
+      const labels: { text: string; x: number; y: number; alpha: number }[] = [];
+
       for (const arc of active) {
         const samples = arcs[arc.index];
+        const connection = GLOBE_CONNECTIONS[arc.index];
         const age = now - arc.start;
         const head = arc.frozen ? 1 : Math.min(1, age / ARC_GROW_MS);
         const fadeStart = ARC_GROW_MS + ARC_HOLD_MS;
@@ -267,22 +303,20 @@ export function WorldGlobe({
           samples[ARC_STEPS * 3 + 1],
           samples[ARC_STEPS * 3 + 2]
         );
-        const gradient = ctx.createLinearGradient(
-          cx + start[0] * radius,
-          cy - start[1] * radius,
-          cx + end[0] * radius,
-          cy - end[1] * radius
-        );
-        gradient.addColorStop(0, hsla(palette.brand, 0.9 * alpha));
-        gradient.addColorStop(1, hsla(palette.success, 0.9 * alpha));
+        const startX = cx + start[0] * radius;
+        const startY = cy - start[1] * radius;
+        const endX = cx + end[0] * radius;
+        const endY = cy - end[1] * radius;
+        const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+        gradient.addColorStop(0, hsla(palette.brand, 0.95 * alpha));
+        gradient.addColorStop(1, hsla(palette.success, 0.95 * alpha));
 
         ctx.beginPath();
         let penDown = false;
         let headPoint: Vec3 | null = null;
         for (let s = 0; s <= lastStep; s++) {
           const [x, y, z] = project(samples[s * 3], samples[s * 3 + 1], samples[s * 3 + 2]);
-          const shown = z > 0 || x * x + y * y > 1;
-          if (!shown) {
+          if (z <= 0 && x * x + y * y <= 1) {
             penDown = false;
             continue;
           }
@@ -294,15 +328,21 @@ export function WorldGlobe({
           if (s === lastStep) headPoint = [sx, sy, z];
         }
         ctx.strokeStyle = gradient;
-        ctx.lineWidth = Math.max(1, radius * 0.0055);
+        ctx.lineWidth = Math.max(1.2, radius * 0.006);
         ctx.lineCap = "round";
         ctx.stroke();
 
         if (headPoint && head < 1) {
           ctx.beginPath();
-          ctx.arc(headPoint[0], headPoint[1], Math.max(1.5, radius * 0.012), 0, Math.PI * 2);
+          ctx.arc(headPoint[0], headPoint[1], Math.max(1.8, radius * 0.013), 0, Math.PI * 2);
           ctx.fillStyle = hsla(palette.brand, 1);
           ctx.fill();
+        }
+
+        if (!arc.frozen && age > ARC_GROW_MS * 0.5) {
+          const labelAlpha = alpha * Math.min(1, (age - ARC_GROW_MS * 0.5) / 400);
+          labels.push({ text: connection.dev.city, x: startX, y: startY - 14, alpha: labelAlpha });
+          labels.push({ text: connection.company.city, x: endX, y: endY + 15, alpha: labelAlpha });
         }
       }
 
@@ -312,21 +352,23 @@ export function WorldGlobe({
         const sx = cx + x * radius;
         const sy = cy - y * radius;
         const color = marker.kind === "dev" ? palette.brand : palette.success;
-        const core = Math.max(1.6, radius * 0.011) * (0.65 + 0.35 * z);
+        const core = Math.max(1.6, radius * 0.0105) * (0.65 + 0.35 * z);
 
         if (!reduceMotion) {
           const pulse = (now / PULSE_MS + marker.phase) % 1;
           ctx.beginPath();
           ctx.arc(sx, sy, core * (1.4 + pulse * 2.8), 0, Math.PI * 2);
-          ctx.fillStyle = hsla(color, (1 - pulse) * 0.28 * z);
+          ctx.fillStyle = hsla(color, (1 - pulse) * 0.3 * z);
           ctx.fill();
         }
 
         ctx.beginPath();
         ctx.arc(sx, sy, core, 0, Math.PI * 2);
-        ctx.fillStyle = hsla(color, 0.45 + 0.55 * z);
+        ctx.fillStyle = hsla(color, 0.5 + 0.5 * z);
         ctx.fill();
       }
+
+      labels.forEach((item) => drawLabel(item.text, item.x, item.y, item.alpha));
     };
 
     const tick = (now: number) => {
@@ -335,18 +377,14 @@ export function WorldGlobe({
       lastFrameTime = now;
 
       if (!dragging) {
-        if (Math.abs(velocity) > 0.000005) {
-          rotation += velocity * dt;
-          velocity *= Math.pow(0.94, dt / 16);
-        } else {
-          velocity = 0;
-        }
-        if (!reduceMotion) rotation += AUTO_SPEED * dt;
+        swayClock += dt;
+        dragOffset *= Math.exp(-dt / RETURN_MS);
+        if (Math.abs(dragOffset) < 0.0002) dragOffset = 0;
       }
       if (!reduceMotion) spawnArcs(now);
       draw(now);
 
-      const animating = !reduceMotion || dragging || velocity !== 0;
+      const animating = !reduceMotion || dragging || dragOffset !== 0;
       if (visible && animating) frame = requestAnimationFrame(tick);
     };
 
@@ -369,22 +407,16 @@ export function WorldGlobe({
 
     const handlePointerDown = (event: PointerEvent) => {
       dragging = true;
-      velocity = 0;
       lastPointerX = event.clientX;
-      lastPointerTime = event.timeStamp;
       canvas.setPointerCapture(event.pointerId);
       schedule();
     };
 
     const handlePointerMove = (event: PointerEvent) => {
       if (!dragging) return;
-      const radius = Math.min(width, height) * 0.42 || 1;
-      const delta = (event.clientX - lastPointerX) / radius;
-      const elapsed = Math.max(1, event.timeStamp - lastPointerTime);
-      rotation += delta;
-      velocity = delta / elapsed;
+      const radius = Math.min(width, height) * GLOBE_SCALE || 1;
+      dragOffset += (event.clientX - lastPointerX) / radius;
       lastPointerX = event.clientX;
-      lastPointerTime = event.timeStamp;
       schedule();
     };
 
@@ -394,7 +426,6 @@ export function WorldGlobe({
       if (canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
-      if (event.timeStamp - lastPointerTime > 80) velocity = 0;
       schedule();
     };
 
@@ -441,7 +472,7 @@ export function WorldGlobe({
     <canvas
       ref={canvasRef}
       role="img"
-      aria-label="Globe terrestre montrant des développeurs et des entreprises répartis sur tous les continents"
+      aria-label={label}
       className={cn("size-full cursor-grab touch-pan-y active:cursor-grabbing", className)}
     />
   );

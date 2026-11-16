@@ -418,12 +418,51 @@ export const discussionSchema = z.object({
   created_at: z.string(),
 });
 
+export const forumPostKindSchema = z.enum([
+  "DISCUSSION",
+  "APPLICATION",
+  "ENTRAIDE",
+]);
+
+export const forumPostWriteSchema = z.object({
+  request_key: z.string().uuid(),
+  kind: forumPostKindSchema,
+  title: z.string().trim().min(1).max(180),
+  body: z.string().trim().min(1).max(5000),
+  lien_app: z.string().url().optional().or(z.literal("")),
+  plateforme_app: z.enum(["WEB", "MOBILE", "LES_DEUX"]).optional(),
+  tags_data: z.array(z.string().trim().min(1).max(48)).max(3).optional(),
+  images_data: z
+    .array(
+      z.object({
+        url: z.string(),
+        kind: z.enum(["IMAGE", "VIDEO"]).optional(),
+        texte_alternatif: z.string().optional(),
+        position: z.number().optional(),
+      })
+    )
+    .max(10)
+    .optional(),
+});
+
+export const forumLinkedPublicationSchema = z.object({
+  id: z.number(),
+  type: z.string(),
+  titre: z.string(),
+  created_at: z.string().nullable().optional(),
+});
+
 export type ContributionStatus = z.infer<typeof contributionStatusSchema>;
 export type Contribution = z.infer<typeof contributionSchema>;
 export type ContributionWrite = z.infer<typeof contributionWriteSchema>;
 export type TaskUpdate = z.infer<typeof taskUpdateSchema>;
 export type DiscussionWrite = z.infer<typeof discussionWriteSchema>;
 export type Discussion = z.infer<typeof discussionSchema>;
+export type ForumPostKind = z.infer<typeof forumPostKindSchema>;
+export type ForumPostWrite = z.infer<typeof forumPostWriteSchema>;
+export type ForumLinkedPublication = z.infer<
+  typeof forumLinkedPublicationSchema
+>;
 
 export type ContributionListParams = {
   page?: number;

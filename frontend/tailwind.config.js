@@ -31,10 +31,15 @@ module.exports = {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
           "50%": { opacity: "0.85", transform: "scale(0.96)" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
       },
       animation: {
         "marquee-right": "marquee-right var(--marquee-duration, 60s) linear infinite",
         "pulse-subtle": "pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        float: "float 8s ease-in-out infinite",
       },
       colors: {
         background: "hsl(var(--background))",

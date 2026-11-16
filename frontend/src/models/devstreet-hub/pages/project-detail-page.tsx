@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { ComposerMode } from "@/models/forum/components/feed-composer";
+import { HubAssistantPanel } from "@/models/ai/components/hub-assistant-panel";
+import { useLazyListProjectForumPostsQuery } from "../api";
 import { ProjectDetailHeader } from "../components/project-detail-header";
 import {
   CodePanel,
@@ -11,9 +14,10 @@ import {
 import { ContributeTasksPanel } from "../components/contribute-tasks-panel";
 import { CreateTaskForm } from "../components/create-task-form";
 import { HubConfirmDialog } from "../components/hub-confirm-dialog";
+import { ProjectShareForumDialog } from "../components/project-share-forum-dialog";
 import { ProjectDetailTabs } from "../components/project-detail-tabs";
 import { TeamPanel } from "../components/team-panel";
-import { HubAssistantPanel } from "@/models/ai/components/hub-assistant-panel";
+import { resolveShareForumIntent } from "../functions/resolve-share-forum-intent";
 import { useProjectDetail } from "../hooks/use-project-detail";
 
 type ConfirmAction =
@@ -23,10 +27,13 @@ type ConfirmAction =
 
 export default function ProjectDetailPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const params = useParams();
   const projectId = Number(params.id);
   const detail = useProjectDetail(projectId);
+  const [listForumPosts] = useLazyListProjectForumPostsQuery();
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [shareMode, setShareMode] = useState<ComposerMode | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(
     null
   );
@@ -95,6 +102,9 @@ export default function ProjectDetailPage() {
         canCreateTask={detail.access.canCreateTask}
         canAnalyze={detail.isOwner && detail.access.canAnalyze}
         canReview={detail.isOwner && detail.access.canReviewContributions}
+        canShareForum={
+          detail.access.isAuthenticated && detail.access.canDiscuss
+        }
         isBusy={detail.isBusy}
         onToggleStar={() => {
           void detail.toggleStar();
@@ -105,7 +115,39 @@ export default function ProjectDetailPage() {
           detail.setTab("contribute");
           setShowTaskForm(true);
         }}
+        onShareForum={(kind) => {
+          void (async () => {
+            if (!detail.access.isAuthenticated) {
+              detail.access.requestLogin();
+              return;
+            }
+            const resolved = await resolveShareForumIntent({
+              kind,
+              projectId: project.id,
+              demoUrl: project.demo_url,
+              listForumPosts,
+              t,
+              navigate,
+            });
+            if (resolved) setShareMode(resolved);
+          })();
+        }}
       />
+
+      {shareMode ? (
+        <ProjectShareForumDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) setShareMode(null);
+          }}
+          project={project}
+          technologies={project.technologies.flatMap((id) => {
+            const tech = detail.technologiesById.get(id);
+            return tech ? [tech] : [];
+          })}
+          initialMode={shareMode}
+        />
+      ) : null}
 
       <ProjectDetailTabs active={detail.tab} onChange={detail.setTab} />
 
