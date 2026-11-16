@@ -53,6 +53,7 @@ export const devstreetHubApi = createApi({
     "Projects",
     "Technologies",
     "Project",
+    "ProjectCode",
     "ProjectTasks",
     "ProjectMembers",
     "Task",
@@ -404,6 +405,7 @@ export const devstreetHubApi = createApi({
       invalidatesTags: (_result, _error, { projectId }) => [
         { type: "Projects", id: projectId },
         { type: "Project", id: projectId },
+        { type: "ProjectCode", id: projectId },
       ],
     }),
 
@@ -552,10 +554,16 @@ export const devstreetHubApi = createApi({
 
     getProjectCodeSummary: builder.query<CodeSummary, number>({
       query: (projectId) => `/projects/${projectId}/code/summary`,
+      providesTags: (_result, _error, projectId) => [
+        { type: "ProjectCode", id: projectId },
+      ],
     }),
 
     getProjectCodeBranches: builder.query<CodeBranch[], number>({
       query: (projectId) => `/projects/${projectId}/code/branches`,
+      providesTags: (_result, _error, projectId) => [
+        { type: "ProjectCode", id: projectId },
+      ],
     }),
 
     getProjectCodeTree: builder.query<
@@ -567,6 +575,9 @@ export const devstreetHubApi = createApi({
           ref: ref || undefined,
           path: path || undefined,
         })}`,
+      providesTags: (_result, _error, { projectId }) => [
+        { type: "ProjectCode", id: projectId },
+      ],
     }),
 
     getProjectCodeBlob: builder.query<
@@ -575,6 +586,9 @@ export const devstreetHubApi = createApi({
     >({
       query: ({ projectId, ref, path }) =>
         `/projects/${projectId}/code/blob${toQueryString({ ref, path })}`,
+      providesTags: (_result, _error, { projectId }) => [
+        { type: "ProjectCode", id: projectId },
+      ],
     }),
   }),
 });
