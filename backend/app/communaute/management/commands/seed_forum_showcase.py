@@ -19,8 +19,10 @@ from app.communaute.models import (
     Conversation,
     Espace,
     FavoriPublication,
+    ImagePublication,
     LikeCommentaire,
     LikePublication,
+    MediaCommentaire,
     Message,
     MessageGroupe,
     ParticipationEspace,
@@ -29,6 +31,7 @@ from app.communaute.models import (
 )
 from app.core.account_types import TYPE_BOTH
 from app.core.services.account_type_service import AccountTypeService
+from app.management.showcase_media import avatar_url, banner_url
 
 from . import _forum_showcase_data as data
 
@@ -108,6 +111,8 @@ class Command(BaseCommand):
             user.first_name = person["first"]
             user.last_name = person["last"]
             user.username = person["username"][:30]
+            user.photo = avatar_url(person["key"])
+            user.banner = banner_url(person["key"])
             user.set_password(SHOWCASE_PASSWORD)
             user.save()
             # Sans type de compte, le front redirige vers /onboarding (fil invisible).
@@ -220,11 +225,45 @@ class Command(BaseCommand):
                     for field, value in defaults.items():
                         setattr(existing, field, value)
                     existing.save()
-                ready += 1
-                continue
-            Publication.objects.create(auteur=auteur, titre=spec["titre"], **defaults)
+                publication = existing
+            else:
+                publication = Publication.objects.create(
+                    auteur=auteur, titre=spec["titre"], **defaults
+                )
+            self._sync_publication_medias(
+                publication,
+                spec.get("medias") or [],
+                auteur_id=auteur.id,
+                force=force,
+            )
             ready += 1
         return ready
+
+    def _sync_publication_medias(
+        self,
+        publication: Publication,
+        medias: list[dict],
+        *,
+        auteur_id: int,
+        force: bool,
+    ) -> None:
+        if not medias:
+            return
+        if publication.images.exists() and not force:
+            return
+        if force:
+            publication.images.all().delete()
+        for position, media in enumerate(medias):
+            kind = media.get("kind", ImagePublication.KIND_IMAGE)
+            ImagePublication.objects.create(
+                publication=publication,
+                kind=kind,
+                url=media["url"],
+                texte_alternatif=media.get("texte_alternatif", "")[:200],
+                position=position,
+                created_by=auteur_id,
+                updated_by=auteur_id,
+            )
 
     def _messages(
         self,
@@ -331,6 +370,13 @@ class Command(BaseCommand):
             else:
                 stats["comments"] += 1
 
+            self._sync_comment_medias(
+                comment,
+                spec.get("medias") or [],
+                auteur_id=auteur.id,
+                force=force,
+            )
+
             for liker_key in spec.get("likes", []):
                 liker = users.get(liker_key)
                 if not liker:
@@ -393,3 +439,28 @@ class Command(BaseCommand):
                 stats["favorites"] += 1
 
         return stats
+
+    def _sync_comment_medias(
+        self,
+        comment: Commentaire,
+        medias: list[dict],
+        *,
+        auteur_id: int,
+        force: bool,
+    ) -> None:
+        if not medias:
+            return
+        if comment.medias.exists() and not force:
+            return
+        if force:
+            comment.medias.all().delete()
+        for position, media in enumerate(medias):
+            MediaCommentaire.objects.create(
+                commentaire=comment,
+                kind=media.get("kind", MediaCommentaire.KIND_IMAGE),
+                url=media["url"],
+                texte_alternatif=media.get("texte_alternatif", "")[:200],
+                position=position,
+                created_by=auteur_id,
+                updated_by=auteur_id,
+            )

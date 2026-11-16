@@ -33,6 +33,7 @@ from app.marketplace.models import (
     Swipe,
 )
 from app.marketplace.services.scoring import mission_period
+from app.management.showcase_media import avatar_url, cover_url, logo_url
 
 from . import _demo_data as demo
 
@@ -110,6 +111,7 @@ class Command(BaseCommand):
             )
             user.first_name = person["first"]
             user.last_name = person["last"]
+            user.photo = avatar_url(person["key"])
             user.set_password(SHOWCASE_PASSWORD)
             user.save()
             users[person["key"]] = user
@@ -137,6 +139,7 @@ class Command(BaseCommand):
                     "name": item["name"], "description": item["description"], "sector": item["sector"], "size": item["size"],
                     "website": item["website"], "contact_email": item["contact_email"], "phone": item["phone"],
                     "country": item["country"], "city": item["city"], "address": item["address"],
+                    "logo": logo_url(item["key"]),
                     "is_verified": item["verified"], "verified_at": self.now if item["verified"] else None,
                     "created_by": SYSTEM_ID, "updated_by": SYSTEM_ID,
                 },
@@ -151,7 +154,8 @@ class Command(BaseCommand):
         for person in demo.RECRUITERS:
             base = {
                 "headline": person["headline"], "country": person["country"], "city": person["city"], "timezone": person["tz"],
-                "bio": "", "is_open_to_work": False, "cv_visibility": "private", "years_of_experience": 0,
+                "bio": "", "photo": avatar_url(person["key"]),
+                "is_open_to_work": False, "cv_visibility": "private", "years_of_experience": 0,
             }
             # Comme après la migration des profils existants : un profil dev (vide) et un profil entreprise
             self._save_profil(person, {**base, "company": None, "is_company_owner": False})
@@ -169,6 +173,7 @@ class Command(BaseCommand):
                     "years_of_experience": dev["years"], "daily_rate": dev["rate"], "currency": "XOF",
                     "languages": [{"language": name} for name in dev["languages"]], "github_url": dev["github"],
                     "cv_visibility": dev["cv"], "company": None, "is_company_owner": False,
+                    "photo": avatar_url(dev["key"]),
                 },
             )
         return profils
@@ -223,6 +228,7 @@ class Command(BaseCommand):
                 defaults={
                     "profil": profil, "title": title, "description": description, "category": category, "price": price,
                     "currency": "XOF", "delivery_days": days, "revisions": revisions, "is_active": True,
+                    "cover_image": cover_url(f"prestation-{dev['key']}"),
                     "created_by": profil.user_id, "updated_by": profil.user_id,
                 },
             )
