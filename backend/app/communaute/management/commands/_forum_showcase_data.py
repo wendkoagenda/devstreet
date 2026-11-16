@@ -2,7 +2,10 @@
 
 Destiné à peupler une instance vide (staging / prod vide) avec un contenu crédible.
 Les e-mails utilisent le domaine DEMO_DOMAIN ; les mots de passe sont générés hors dépôt.
+Médias : URLs externes via app.management.showcase_media.
 """
+
+from app.management.showcase_media import media_image, media_video
 
 DOMAIN = "showcase.devstreet.local"
 
@@ -306,6 +309,10 @@ PUBLICATIONS = [
             "Le paiement Wave parfois échoue après un retry. Vous stockez l'idempotency key "
             "côté device ou côté API ?"
         ),
+        "medias": [
+            media_image("flutter-offline-queue", "Schéma file hors-ligne"),
+            media_image("mobile-money-retry", "Capture retry Wave"),
+        ],
     },
     {
         "auteur": "ibrahim",
@@ -328,6 +335,9 @@ PUBLICATIONS = [
             "et des alertes. On hésite entre un job Pandas nocturne et des vues "
             "matérialisées Postgres. Retours bienvenus."
         ),
+        "medias": [
+            media_image("cereales-dashboard", "Courbes prix céréales"),
+        ],
     },
     {
         "auteur": "salif",
@@ -341,6 +351,11 @@ PUBLICATIONS = [
         ),
         "lien_app": "https://github.com/example/gestion-scolaire",
         "plateforme_app": "WEB",
+        "medias": [
+            media_image("gestion-scolaire-dashboard", "Dashboard notes"),
+            media_image("gestion-scolaire-mobile", "Vue mobile parents"),
+            media_video(0, "Parcours inscription (démo)"),
+        ],
     },
     {
         "auteur": "moussa",
@@ -353,6 +368,10 @@ PUBLICATIONS = [
         ),
         "lien_app": "https://github.com/example/sahel-ui",
         "plateforme_app": "WEB",
+        "medias": [
+            media_image("sahel-ui-kit", "Kit de composants"),
+            media_image("sahel-ui-dark", "Thème sombre"),
+        ],
     },
     {
         "auteur": "nadia",
@@ -395,6 +414,9 @@ PUBLICATIONS = [
             "Deux talks courts : saisie terrain hors-ligne, et dashboards pour coopératives. "
             "Puis networking. RSVP en commentaire (places ~40)."
         ),
+        "medias": [
+            media_image("meetup-dakar-agritech", "Affiche meetup Dakar"),
+        ],
     },
     {
         "auteur": "moussa",
@@ -417,6 +439,10 @@ PUBLICATIONS = [
             "• Hub : lien « Demander de l'aide » → discussion forum\n"
             "Détails et captures dans la doc interne."
         ),
+        "medias": [
+            media_image("devstreet-release-forum", "Capture fil forum"),
+            media_video(1, "Tour produit 30s"),
+        ],
     },
     {
         "auteur": "awa",
@@ -532,6 +558,20 @@ COMMENTS = [
         "replies": [
             ("awa", "On est déjà très couplés à RTK — le coût de migration me fait hésiter."),
             ("moussa", "Tu peux migrer module par module : c'est ce qu'on a fait sur Sahel UI."),
+        ],
+    },
+    {
+        "publication": "Flutter : sync hors-ligne + file d'attente Mobile Money",
+        "auteur": "nadia",
+        "nature": "COMMENTAIRE",
+        "texte": (
+            "Chez nous on stocke l'idempotency key côté API et on renvoie le même "
+            "statut si le device rejoue. Capture du flux ci-dessous."
+        ),
+        "likes": ["yao", "kossi"],
+        "replies": [],
+        "medias": [
+            media_image("comment-idempotency-flow", "Flux idempotency Mobile Money"),
         ],
     },
     {

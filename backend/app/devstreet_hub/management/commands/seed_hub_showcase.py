@@ -9,8 +9,12 @@ Usage :
 """
 from __future__ import annotations
 
+import urllib.error
+import urllib.request
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -21,11 +25,13 @@ from app.devstreet_hub.models import (
     Contribution,
     ContributionTask,
     Project,
+    ProjectImage,
     ProjectMember,
     Repository,
     Star,
     Technology,
 )
+from app.management.showcase_media import cover_url
 
 from app.communaute.management.commands import _forum_showcase_data as forum_data
 from . import _hub_showcase_data as data
@@ -209,6 +215,37 @@ class Command(BaseCommand):
                 else:
                     Contribution.objects.create(task=task, author=author, **defaults)
 
+            self._ensure_project_image(project)
             count += 1
             self.stdout.write(f"  Projet {project.slug} ({project.status})")
         return count
+
+    def _ensure_project_image(self, project: Project) -> None:
+        """Ajoute une image de présentation téléchargée (picsum) si le projet n'en a pas."""
+        if project.images.exists():
+            return
+        url = cover_url(project.slug)
+        try:
+            request = urllib.request.Request(
+                url,
+                headers={"User-Agent": "DevStreetHubSeed/1.0"},
+            )
+            with urllib.request.urlopen(request, timeout=20) as response:
+                payload = response.read()
+                content_type = response.headers.get_content_type()
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  Image projet {project.slug} ignorée ({exc})"
+                )
+            )
+            return
+
+        ext = "jpg"
+        if "png" in content_type:
+            ext = "png"
+        elif "webp" in content_type:
+            ext = "webp"
+        filename = f"{project.slug}-cover.{ext}"
+        image = ProjectImage(project=project, display_name=f"Couverture {project.title}")
+        image.file.save(filename, ContentFile(payload), save=True)
