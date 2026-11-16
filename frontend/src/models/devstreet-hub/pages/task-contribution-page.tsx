@@ -77,13 +77,14 @@ export default function TaskContributionPage() {
   const [criteriaText, setCriteriaText] = useState("");
   const [confirmClose, setConfirmClose] = useState(false);
 
-  const task = detail.task;
   useEffect(() => {
-    if (!task) return;
-    setEditTitle(task.title);
-    setEditDescription(task.description ?? "");
-    setCriteriaText((task.acceptance_criteria ?? []).join("\n"));
-  }, [task]);
+    if (!detail.task) return;
+    setEditTitle(detail.task.title);
+    setEditDescription(detail.task.description ?? "");
+    setCriteriaText((detail.task.acceptance_criteria ?? []).join("\n"));
+    // Resync uniquement quand l'identité ou la date de mise à jour change (pas à chaque nouvel objet).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail.task?.id, detail.task?.updated_at]);
 
   if (!Number.isFinite(projectId) || !Number.isFinite(taskId)) {
     return (
