@@ -48,6 +48,13 @@ function inline(text: string): ReactNode[] {
   return nodes;
 }
 
+const isHeading = (line: string) => /^#{1,3}\s/.test(line);
+const isFence = (line: string) => line.startsWith("```");
+const isBullet = (line: string) => /^[-*]\s+/.test(line);
+const isOrdered = (line: string) => /^\d+\.\s+/.test(line);
+const isBlockStart = (line: string) =>
+  isHeading(line) || isFence(line) || isBullet(line) || isOrdered(line);
+
 /**
  * Rendu Markdown minimal et sûr : titres, listes, code, liens http(s).
  * Le HTML source est toujours échappé — jamais exécuté.
@@ -60,11 +67,11 @@ export function SafeMarkdown({ content }: { content: string }) {
 
   while (i < lines.length) {
     const line = lines[i];
-    if (line.startsWith("```")) {
+    if (isFence(line)) {
       const lang = line.slice(3).trim();
       const code: string[] = [];
       i += 1;
-      while (i < lines.length && !lines[i].startsWith("```")) {
+      while (i < lines.length && !isFence(lines[i])) {
         code.push(lines[i]);
         i += 1;
       }
@@ -72,15 +79,17 @@ export function SafeMarkdown({ content }: { content: string }) {
       blocks.push(
         <pre
           key={key++}
-          className="overflow-x-auto rounded-lg border border-border bg-muted/60 p-3 font-mono text-xs leading-relaxed"
+          className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/60 p-3 font-mono text-xs leading-relaxed"
           data-language={lang || undefined}
         >
-          <code>{code.join("\n")}</code>
+          <code className="whitespace-pre-wrap break-words">
+            {code.join("\n")}
+          </code>
         </pre>
       );
       continue;
     }
-    if (/^#{1,3}\s/.test(line)) {
+    if (isHeading(line)) {
       const level = line.match(/^#+/)?.[0].length ?? 1;
       const text = line.replace(/^#{1,3}\s/, "");
       const Tag = (`h${Math.min(level + 1, 4)}` as "h2" | "h3" | "h4");
@@ -95,9 +104,9 @@ export function SafeMarkdown({ content }: { content: string }) {
       i += 1;
       continue;
     }
-    if (/^[-*]\s+/.test(line)) {
+    if (isBullet(line)) {
       const items: string[] = [];
-      while (i < lines.length && /^[-*]\s+/.test(lines[i])) {
+      while (i < lines.length && isBullet(lines[i])) {
         items.push(lines[i].replace(/^[-*]\s+/, ""));
         i += 1;
       }
@@ -110,12 +119,27 @@ export function SafeMarkdown({ content }: { content: string }) {
       );
       continue;
     }
+    if (isOrdered(line)) {
+      const items: string[] = [];
+      while (i < lines.length && isOrdered(lines[i])) {
+        items.push(lines[i].replace(/^\d+\.\s+/, ""));
+        i += 1;
+      }
+      blocks.push(
+        <ol key={key++} className="mb-3 list-decimal space-y-1 pl-5 text-sm">
+          {items.map((item, index) => (
+            <li key={index}>{inline(item)}</li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
     if (!line.trim()) {
       i += 1;
       continue;
     }
     const para: string[] = [];
-    while (i < lines.length && lines[i].trim() && !lines[i].startsWith("#") && !lines[i].startsWith("```") && !/^[-*]\s+/.test(lines[i])) {
+    while (i < lines.length && lines[i].trim() && !isBlockStart(lines[i])) {
       para.push(lines[i]);
       i += 1;
     }
@@ -126,5 +150,5 @@ export function SafeMarkdown({ content }: { content: string }) {
     );
   }
 
-  return <div className="safe-markdown max-w-none">{blocks}</div>;
+  return <div className="safe-markdown max-w-none break-words">{blocks}</div>;
 }
