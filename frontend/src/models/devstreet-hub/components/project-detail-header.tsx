@@ -67,13 +67,13 @@ export function ProjectDetailHeader({
     isOwner || canAnalyze || canReview || canCreateTask;
 
   return (
-    <header className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0 flex-1">
+    <header className="flex flex-col gap-3 border-b border-border pb-5">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-brand-soft-border bg-brand-soft text-brand">
             <FolderGit2 aria-hidden className="size-5" />
           </span>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {project.title}
           </h1>
           <ProjectStatusBadge status={project.status} />
@@ -83,7 +83,7 @@ export function ProjectDetailHeader({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <StarButton
           projectTitle={project.title}
           view={star}
@@ -137,14 +137,19 @@ export function ProjectDetailHeader({
               <Button
                 type="button"
                 variant="outline"
+                size="icon"
                 disabled={isBusy}
-                className={cn(headerActionClass)}
+                className="h-7 w-7 shrink-0 rounded-md shadow-none"
+                aria-label={t("hub.detail.actions.share_forum")}
+                title={t("hub.detail.actions.share_forum")}
               >
                 <Share2 aria-hidden className="size-3.5" />
-                {t("hub.detail.actions.share_forum")}
+                <span className="sr-only">
+                  {t("hub.detail.actions.share_forum")}
+                </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[14rem]">
+            <DropdownMenuContent align="start" className="min-w-[14rem]">
               <DropdownMenuItem onClick={() => onShareForum("APPLICATION")}>
                 {t("hub.detail.share_forum.intent_application")}
               </DropdownMenuItem>
@@ -164,13 +169,13 @@ export function ProjectDetailHeader({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-7 w-7 rounded-md shadow-none"
+                className="h-7 w-7 shrink-0 rounded-md shadow-none"
                 aria-label={t("hub.detail.actions.manage")}
               >
                 <MoreHorizontal aria-hidden className="size-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[12rem]">
+            <DropdownMenuContent align="start" className="min-w-[12rem]">
               {canPublish && project.status === "draft" ? (
                 <DropdownMenuItem
                   disabled={isBusy || project.repository?.status !== "ready"}
