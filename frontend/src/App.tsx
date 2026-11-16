@@ -17,6 +17,7 @@ import PublicRoute from "./components/layouts/public-route";
 import LoginPage from "./models/auth/pages/login-page";
 import ForgotPasswordPage from "./models/auth/pages/forgot-password-page";
 import LandingPage from "./models/landing/pages/landing-page";
+import LegalPage from "./models/landing/pages/legal-page";
 import AppLayout from "./components/layouts/app-layout";
 import UsersList from "./models/user/pages/users-list";
 import RolePermissionManagement from "./models/roles-permissions/pages/role-permissions-page";
@@ -218,6 +219,8 @@ function App() {
         </Route>
 
         <Route element={<LandingPage />} path="/welcome" />
+        <Route element={<LegalPage />} path="/confidentialite" />
+        <Route element={<LegalPage />} path="/conditions" />
         <Route
           element={<EntrepriseInvitationPage />}
           path="/entreprise/invitation/:token"
