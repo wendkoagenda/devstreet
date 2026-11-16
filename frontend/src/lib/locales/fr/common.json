@@ -352,6 +352,12 @@
     "mention_badge": "IA",
     "mention_hint": "Mentionne @selina pour une réponse automatique",
     "mention_suggest": "@selina",
+    "mascotte_aria": "Mascotte Selina",
+    "landing_welcome": "Salut ! Je suis Selina, la mascotte de DevStreet. Pose-moi une question pour découvrir la plateforme.",
+    "landing_prompt_placeholder": "Pose une question à Selina…",
+    "landing_gate_reply": "DevStreet est une app géniale pour les développeurs : communauté, projets et opportunités. Connecte-toi ou crée un compte pour découvrir davantage avec moi !",
+    "landing_login_cta": "Se connecter",
+    "landing_register_cta": "Créer un compte",
     "errors": {
       "forbidden": "Tu n'as pas la permission d'utiliser Selina.",
       "unavailable": "Selina est indisponible. Réessaie plus tard.",

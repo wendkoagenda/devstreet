@@ -1,34 +1,14 @@
-import { profilePath } from "@/helpers/routes/profile-path";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronDown,
-  LogOut,
-  Search,
-  SendHorizontal,
-  Sparkles,
-  UserRound,
-} from "lucide-react";
+import { Search, SendHorizontal, Sparkles } from "lucide-react";
 import { t } from "i18next";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import {
-  CreationErrorSonner,
-  CreationSuccessSonner,
-} from "@/helpers/api/feed-backs";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/models/auth/hooks/useAuth";
 import { useAuthSlice } from "@/models/auth/slice";
 import { useAccountType } from "@/models/auth/account-type/use-account-type";
 import { useSelina } from "@/models/ai/components/use-selina";
-import { ForumAvatar } from "@/models/forum/components/forum-avatar";
+import { SelinaMascotte } from "@/models/ai/components/selina-mascotte";
 import { ResumeNotificationBell } from "@/models/forum/components/resume-notification-bell";
 import { GlobalSearchDialog } from "./global-search-dialog";
 
@@ -39,8 +19,6 @@ function isMacPlatform() {
 
 export function AppTopbar() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
-  const user = useAuthSlice((state) => state.user);
   const isAuthenticated = useAuthSlice((state) => state.isAuthenticated);
   const authReady = useAuthSlice((state) => state.isInitialized);
   const { showCommunity } = useAccountType();
@@ -70,27 +48,8 @@ export function AppTopbar() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const displayName =
-    user?.full_name || user?.username || t("topbar.profile_fallback");
-
   const handlePublish = () => {
     navigate("/?publish=1", { flushSync: true });
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/welcome", { replace: true });
-      CreationSuccessSonner(t("auth.logout_success"));
-    } catch (error) {
-      console.error("Logout failed:", error);
-      CreationErrorSonner(t("auth.logout_error"));
-    }
-  };
-
-  const handleGoToProfile = () => {
-    if (user?.username) navigate(profilePath(user.username));
-    else navigate("/profil/me");
   };
 
   const handleOmnibarSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -115,7 +74,6 @@ export function AppTopbar() {
           )}
           aria-label={t("topbar.home_aria")}
         >
-          {/* Gauche : menu + avatar profil (réf. mock) */}
           <div className="flex shrink-0 items-center gap-1 pl-0.5 sm:gap-2 sm:pl-1">
             <SidebarTrigger className="rounded-full text-muted-foreground hover:text-foreground md:hidden" />
 
@@ -125,52 +83,13 @@ export function AppTopbar() {
                 aria-hidden
               />
             ) : isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "group flex items-center gap-1.5 rounded-full p-0.5 pr-2 transition-all",
-                      "hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-                    )}
-                    aria-label={t("topbar.account_menu_aria", {
-                      name: displayName,
-                    })}
-                  >
-                    <span className="relative shrink-0">
-                      <ForumAvatar
-                        name={displayName}
-                        photo={user?.photo}
-                        size="sm"
-                        tone="soft"
-                      />
-                      <span
-                        className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-card bg-success"
-                        aria-hidden
-                      />
-                    </span>
-                    <ChevronDown className="size-3.5 text-muted-foreground transition group-hover:text-foreground" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  sideOffset={8}
-                  className="w-52 rounded-xl"
-                >
-                  <DropdownMenuItem
-                    onClick={handleGoToProfile}
-                    className="gap-2"
-                  >
-                    <UserRound className="size-4" />
-                    {t("topbar.my_profile")}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="gap-2">
-                    <LogOut className="size-4" />
-                    {t("sidebar.disconnect")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SelinaMascotte
+                size="sm"
+                interactive
+                ariaLabel={t("selina.open")}
+                onClick={() => selina.setOpen(true)}
+                className="ring-1 ring-border/60"
+              />
             ) : (
               <Button
                 size="sm"
@@ -182,7 +101,6 @@ export function AppTopbar() {
             )}
           </div>
 
-          {/* Centre : omnibar Selina — tape ici ; Entrée ouvre le panneau + envoie */}
           <form
             className="relative mx-1 min-w-0 flex-1 max-w-xl sm:mx-2"
             onSubmit={handleOmnibarSubmit}
@@ -231,7 +149,6 @@ export function AppTopbar() {
             </label>
           </form>
 
-          {/* Droite : Publier, recherche, cloche */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
             {showCommunity ? (
               <button
