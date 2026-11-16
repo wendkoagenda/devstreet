@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import i18n from "i18next";
+import type { AppDispatch } from "@/redux/store";
 import {
   devstreetHubApi,
   useGetProjectCodeBlobQuery,
@@ -28,7 +29,7 @@ export function useProjectCode(
   options: { enabled: boolean; isOwner: boolean }
 ) {
   const { enabled, isOwner } = options;
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [searchParams, setSearchParams] = useSearchParams();
   const access = useHubAccess();
 
