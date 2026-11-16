@@ -20,7 +20,7 @@ import {
   useSendAiMessageMutation,
 } from "../api";
 import type { ChatTurn } from "../schema";
-import { SelinaContext } from "./selina-context";
+import { SelinaContext, type SelinaContextValue } from "./selina-context";
 
 export function SelinaProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
