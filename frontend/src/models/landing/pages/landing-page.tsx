@@ -355,10 +355,10 @@ export default function LandingPage() {
                   {
                     titleKey: "landing.footer_product",
                     links: [
-                      { label: "Communauté", href: "#communauté" },
-                      { label: "Marketplace", href: "#marketplace" },
-                      { label: "Hub Git", href: "#hub" },
-                      { label: "Dans le monde", href: "#monde" },
+                      { labelKey: "landing.footer_community", href: "#communauté" },
+                      { labelKey: "landing.footer_marketplace", href: "#marketplace" },
+                      { labelKey: "landing.footer_hub", href: "#hub" },
+                      { labelKey: "landing.footer_world", href: "#monde" },
                     ],
                   },
                   {
