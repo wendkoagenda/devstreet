@@ -198,6 +198,8 @@ export const LAND_POLYGONS: LonLat[][] = [
   ...OCEANIA_ISLANDS,
 ];
 
+export const AFRICA_POLYGONS: LonLat[][] = [AFRICA, MADAGASCAR];
+
 /** Mers intérieures englobées par le contour de l'Eurasie. */
 export const INLAND_SEAS: LonLat[][] = [
   [
