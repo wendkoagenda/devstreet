@@ -134,7 +134,15 @@ class WorkflowService:
         """Statistiques et métadonnées d'exploration ; pas de compteur d'étoiles Gitea."""
         project, repository = self._ready_repository(actor, project)
         meta = self.forge.get_repository_meta(repository)
-        is_empty = bool(meta["empty"]) if "empty" in meta else self.forge.repo_is_empty(repository)
+        # current_sha Hub prime : après init README, Gitea peut encore renvoyer empty=true un instant.
+        if repository.current_sha:
+            is_empty = False
+        else:
+            is_empty = (
+                bool(meta["empty"])
+                if "empty" in meta
+                else self.forge.repo_is_empty(repository)
+            )
         default_branch = (
             meta.get("default_branch")
             or repository.default_branch

@@ -1,8 +1,10 @@
 import { useCallback, useMemo } from "react";
+import { useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import i18n from "i18next";
 import {
+  devstreetHubApi,
   useGetProjectCodeBlobQuery,
   useGetProjectCodeBranchesQuery,
   useGetProjectCodeSummaryQuery,
@@ -26,6 +28,7 @@ export function useProjectCode(
   options: { enabled: boolean; isOwner: boolean }
 ) {
   const { enabled, isOwner } = options;
+  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const access = useHubAccess();
 
@@ -137,19 +140,38 @@ export function useProjectCode(
   const initReadme = useCallback(async () => {
     if (!isOwner) return false;
     try {
-      await initializeRepository({
+      const result = await initializeRepository({
         projectId,
         body: { mode: "readme" },
       }).unwrap();
+
+      // Patch immédiat : évite l'écran « dépôt vide » si Gitea/summary lagge.
+      dispatch(
+        devstreetHubApi.util.updateQueryData(
+          "getProjectCodeSummary",
+          projectId,
+          (draft) => {
+            draft.is_empty = result.is_empty;
+            if (result.repository?.default_branch) {
+              draft.default_branch = result.repository.default_branch;
+            }
+            if (result.repository) {
+              draft.repository = result.repository;
+            }
+          }
+        )
+      );
+
+      // Invalide summary/tree/branches (tags ProjectCode) ; ne pas refetch un tree encore skippé.
       await summaryQuery.refetch();
-      await treeQuery.refetch();
+      toast.success(i18n.t("hub.detail.code.init_readme_success"));
       return true;
     } catch (error) {
       console.error("Création du README initial impossible :", error);
       toast.error(i18n.t("hub.detail.code.init_readme_error"));
       return false;
     }
-  }, [initializeRepository, isOwner, projectId, summaryQuery, treeQuery]);
+  }, [dispatch, initializeRepository, isOwner, projectId, summaryQuery]);
 
   const errorStatus =
     httpStatusOf(summaryQuery.error) ??
@@ -166,7 +188,8 @@ export function useProjectCode(
     branches: branchesQuery.data ?? [],
     tree: treeQuery.currentData,
     blob: blobQuery.currentData,
-    isEmpty: Boolean(summaryQuery.data?.is_empty || treeQuery.currentData?.is_empty),
+    // Summary prime : un tree stale ne doit pas garder l'écran « dépôt vide ».
+    isEmpty: Boolean(summaryQuery.data?.is_empty),
     isLoading:
       (mode === "tree" && treeQuery.isFetching && !treeQuery.currentData) ||
       (mode === "blob" && blobQuery.isFetching && !blobQuery.currentData),

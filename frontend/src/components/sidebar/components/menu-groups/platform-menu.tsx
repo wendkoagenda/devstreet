@@ -21,6 +21,7 @@ import {
   FolderKanban,
   FolderOpen,
   Home,
+  Laptop,
   Mail,
   Network,
   Plus,
@@ -345,6 +346,13 @@ export default function PlatformMenu() {
             match: (p: string, s: string) =>
               p.startsWith("/hub/projects") &&
               new URLSearchParams(s).get("owner") === String(userId),
+          },
+          {
+            title: t("sidebar.git_setup"),
+            url: "/hub/git-setup",
+            icon: Laptop,
+            match: (p: string) =>
+              p === "/hub/git-setup" || p.startsWith("/hub/git-setup/"),
           },
         ]
       : []),
