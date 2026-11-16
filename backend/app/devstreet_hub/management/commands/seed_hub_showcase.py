@@ -221,9 +221,11 @@ class Command(BaseCommand):
         return count
 
     def _ensure_project_image(self, project: Project) -> None:
-        """Ajoute une image de présentation téléchargée (picsum) si le projet n'en a pas."""
-        if project.images.exists():
-            return
+        """Remplace la couverture showcase par un visuel tech (Unsplash)."""
+        # Toujours rafraîchir : les anciens seeds picsum / hors-thème doivent disparaître.
+        for old in project.images.all():
+            old.file.delete(save=False)
+            old.delete()
         url = cover_url(project.slug)
         try:
             request = urllib.request.Request(
